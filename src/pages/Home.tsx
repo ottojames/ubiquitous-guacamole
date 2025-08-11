@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
 import {
   FileText, MapPin, CheckCircle2, ClipboardCopy, CopyCheck,
-  MessageCircle, Printer, ArrowRight, Menu, X
+  MessageCircle, Printer, ArrowRight, Menu, X,
+  Upload, Search, Archive
 } from "lucide-react";
 import FilterBar from "../components/FilterBar";
 import { filterNotices, type Filters } from "../lib/filter";
@@ -259,7 +260,7 @@ export default function Home() {
               <nav className="hidden md:flex items-center gap-6">
                 {[
                   { href: "#notices", label: "Find notices" },
-                  { href: "#how-council", label: "For councils" },
+                  { href: "#for-councils", label: "For councils" },
                   { href: "#pricing", label: "Pricing" },
                   { href: "#docs", label: "Docs" },
                 ].map((link) => (
@@ -331,7 +332,7 @@ export default function Home() {
               <nav className="mt-6 flex flex-col gap-4">
                 {[
                   { href: "#notices", label: "Find notices" },
-                  { href: "#how-council", label: "For councils" },
+                  { href: "#for-councils", label: "For councils" },
                   { href: "#pricing", label: "Pricing" },
                   { href: "#docs", label: "Docs" },
                 ].map((link) => (
@@ -688,95 +689,77 @@ export default function Home() {
       </section>
 
       {/* -------- COUNCILS SECTION -------- */}
-      <section id="how-council" className="bg-[#f7fafc] py-14">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <h2 className="text-[32px] font-extrabold tracking-tight text-blue-900">How it works for councils</h2>
+      <section id="for-councils" className="bg-[#f7f9fb] py-16">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-900">How it works for councils</h2>
+          <p className="mt-4 text-sm text-blue-800/80">Trusted by 40+ UK councils</p>
 
-          {/* trust logos */}
-          <div className="mt-6 flex items-center gap-6">
-            <span className="text-sm font-semibold text-blue-900 whitespace-nowrap">Trusted by <span className="font-extrabold">40+ UK councils</span></span>
-            <div className="hidden md:flex items-center gap-8">
-              {councilLogos.map((l) => (
-                <img key={l.alt} src={l.src} alt={l.alt} width={l.width} height={l.height} loading="lazy" className="h-8 w-auto object-contain opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition" />
-              ))}
-            </div>
-            <div className="md:hidden relative flex-1 overflow-hidden">
-              <div className="flex items-center gap-10 animate-[marquee_18s_linear_infinite] will-change-transform">
-                {councilLogos.concat(councilLogos).map((l, i) => (
-                  <img key={i} src={l.src} alt="" aria-hidden="true" className="h-7 w-auto opacity-70 grayscale" />
-                ))}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 opacity-80">
+            {councilLogos.map((l) => (
+              <img
+                key={l.alt}
+                src={l.src}
+                alt={l.alt}
+                width={l.width}
+                height={l.height}
+                loading="lazy"
+                className="h-6 md:h-7 w-auto object-contain grayscale hover:grayscale-0 transition"
+              />
+            ))}
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 place-items-stretch">
+            {[
+              {
+                title: "Submit notices digitally",
+                blurb: "Upload, bulk import, or API. All statutory types supported.",
+                Icon: Upload,
+                link: { href: "/api-info", label: "Learn about integrations" },
+              },
+              {
+                title: "Public display & instant proofs",
+                blurb: "Timestamped, searchable, full audit trail. Residents can comment.",
+                Icon: Search,
+              },
+              {
+                title: "Export for legal compliance",
+                blurb: "CSV/JSON/PDF logs, FOI-ready packs, court-ready proofs.",
+                Icon: Archive,
+              },
+            ].map(({ Icon, title, blurb, link }) => (
+              <div key={title} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 text-left">
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-semibold text-blue-900">{title}</h3>
+                <p className="mt-2 text-blue-900/80">{blurb}</p>
+                {link && (
+                  <a
+                    className="mt-4 inline-flex items-center text-blue-700 hover:text-blue-800 font-medium"
+                    href={link.href}
+                  >
+                    {link.label}
+                    <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                  </a>
+                )}
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* connector */}
-          <div className="relative mt-6">
-            <div className="absolute left-0 right-0 top-6 hidden md:block">
-              <div className="h-px bg-slate-200/60" />
-            </div>
-
-            <ol className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  n: 1,
-                  title: "Submit notices digitally",
-                  blurb: "Upload, bulk import, or API. All statutory types supported.",
-                  Icon: () => (
-                    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v14l-5-3-5 3V5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg>
-                  ),
-                },
-                {
-                  n: 2,
-                  title: "Public display & instant proofs",
-                  blurb: "Timestamped, searchable, full audit trail. Residents can comment.",
-                  Icon: () => (
-                    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z" fill="none" stroke="currentColor" strokeWidth="1.7" /><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg>
-                  ),
-                },
-                {
-                  n: 3,
-                  title: "Export for legal compliance",
-                  blurb: "CSV/JSON/PDF logs, FOI-ready packs, court-ready proofs.",
-                  Icon: () => (
-                    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true"><path d="M12 2v14m0 0-4-4m4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.7" /><rect x="4" y="16" width="16" height="6" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" /></svg>
-                  ),
-                },
-              ].map(({ n, title, blurb, Icon }, i) => (
-                <li key={i} className="relative pt-10">
-                  <span aria-hidden="true" className="absolute top-0 left-0 right-0 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                    <Icon />
-                  </span>
-
-                  <div className="relative min-h-[200px] rounded-2xl bg-white p-6 ring-1 ring-blue-100 shadow-[0_8px_24px_rgba(2,6,23,.06)]">
-                    <span className="sr-only">{`Step ${n} of 3`}</span>
-                    <span className="absolute -top-2 left-4 inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold ring-1 ring-blue-100">
-                      {n}
-                    </span>
-
-                    <h3 className="text-[20px] font-semibold text-blue-900">{title}</h3>
-                    <p className="mt-2 text-[16px] leading-relaxed text-slate-700">{blurb}</p>
-
-                    {n === 1 && (
-                      <a href="/api-info" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
-                        Learn about integrations
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m0 0-6-6m6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>
-                      </a>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* single disclosure */}
-          <details className="mt-6 group">
-            <summary className="list-none inline-flex h-11 items-center gap-2 px-1 text-blue-800 font-semibold hover:text-blue-900 cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <details className="mt-10 mx-auto max-w-3xl text-left">
+            <summary className="cursor-pointer text-blue-700 hover:text-blue-800 font-medium">
               Advanced features
-              <svg className="h-4 w-4 transition-transform group-open:rotate-180" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>
             </summary>
-            <div className="mt-3 rounded-2xl bg-white p-5 ring-1 ring-blue-100">
+            <div className="mt-3 rounded-xl bg-white shadow-sm ring-1 ring-black/5 p-5 text-blue-900/85">
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-2">
-                {["API & webhooks","Single sign-on (SSO)","Role-based access","Retention & redaction","Rate limits & quotas","Immutable hash logs"].map((t) => (
+                {[
+                  "API & webhooks",
+                  "Single sign-on (SSO)",
+                  "Role-based access",
+                  "Retention & redaction",
+                  "Rate limits & quotas",
+                  "Immutable hash logs",
+                ].map((t) => (
                   <li key={t} className="inline-flex items-start gap-2 text-slate-700">
                     <svg className="mt-[3px] h-4 w-4 text-blue-600" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
                     <span className="text-sm">{t}</span>
@@ -786,8 +769,6 @@ export default function Home() {
             </div>
           </details>
         </div>
-
-        <style>{`@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}`}</style>
       </section>
 
       {/* -------- FOOTER -------- */}
