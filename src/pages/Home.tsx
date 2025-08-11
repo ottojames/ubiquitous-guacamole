@@ -502,6 +502,16 @@ export default function Home() {
               <span className="opacity-50">•</span>
               <span>Trusted by 40+ councils</span>
             </div>
+
+            <div className="mt-6 flex justify-center">
+              <a
+                href="/publish"
+                onClick={() => track("publish_started", { audience: "public" })}
+                className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                Publish a notice
+              </a>
+            </div>
           </div>
         </section>
       </div>
