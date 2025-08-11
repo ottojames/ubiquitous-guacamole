@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
 import {
   FileText, MapPin, CheckCircle2, ClipboardCopy, CopyCheck,
-  FileBadge, MessageCircle, Printer, ArrowRight, Menu, X
+  MessageCircle, Printer, ArrowRight, Menu, X
 } from "lucide-react";
+import FilterBar from "../components/FilterBar";
+import { filterNotices, type Filters } from "../lib/filter";
 
 // -------- analytics stub (replace with your pipe) --------
 function track(event: string, payload: Record<string, unknown> = {}) {
@@ -15,20 +17,7 @@ const fontImport = `
   html { font-family: 'Inter', Arial, sans-serif !important; }
 `;
 
-// -------- copy / helpers --------
-const TAG_INFO: Record<string, string> = {
-  "Traffic Order": "A legal notice for road closures, diversions, or changes to traffic rules.",
-  "Premises Licence": "A business is applying for permission to serve alcohol or operate late.",
-  "Planning": "Change to land use, new buildings, or business type (e.g. shop → restaurant).",
-  "Event": "Temporary event notice for entertainment or alcohol.",
-  "Restaurant": "Proposal to operate as a food & drink business.",
-  "Outdoor seating": "Request for outside tables or expanded trading area.",
-  "Late hours": "Permission to operate beyond standard opening times.",
-  "Alcohol": "Sale or supply of alcohol being requested.",
-  "Noise risk": "Work or venue may impact noise levels locally.",
-  "Roadworks": "Scheduled maintenance or construction affecting local roads."
-};
-
+// -------- demo data --------
 const demoNotices = [
   {
     id: 1,
@@ -47,6 +36,7 @@ const demoNotices = [
     proofId: "PL-134ABC",
     pdf: "/notices/134abc.pdf",
     pdfSizeKb: 312,
+    ward: "Hyde Park Ward",
     tags: ["Late hours", "Alcohol", "Noise risk"],
   },
   {
@@ -66,6 +56,7 @@ const demoNotices = [
     proofId: "TR-287YZA",
     pdf: "/notices/287yza.pdf",
     pdfSizeKb: 928,
+    ward: "Abbey Ward",
     tags: ["Roadworks", "Noise risk"],
   },
   {
@@ -85,6 +76,7 @@ const demoNotices = [
     proofId: "PL-398KLM",
     pdf: "/notices/398klm.pdf",
     pdfSizeKb: 611,
+    ward: "City Ward",
     tags: ["Restaurant", "Outdoor seating", "Noise risk"],
   },
 ];
@@ -149,6 +141,10 @@ export default function Home() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState("");
 
+  const [filters, setFilters] = useState<Filters>({ type: "", status: "", start: "", end: "", authority: "" });
+  const [mapView, setMapView] = useState(false);
+  const [showExplainer, setShowExplainer] = useState(false);
+
   // autocomplete
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
@@ -159,7 +155,6 @@ export default function Home() {
   const [notices, setNotices] = useState(demoNotices);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [copySuccess, setCopySuccess] = useState("");
-  const [activeTooltip, setActiveTooltip] = useState("");
 
   // testimonials
   const [testiIdx, setTestiIdx] = useState(0);
@@ -193,13 +188,13 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [postcode]);
 
-  function handleSearch(e: FormEvent) {
-    e.preventDefault();
+  function handleSearch(e?: FormEvent) {
+    if (e) e.preventDefault();
     setSearching(true);
     setGeoError("");
     track("search_submit", { source: "hero", query: postcode, geo_used: false, audience: "public" });
     setTimeout(() => {
-      const filtered = demoNotices.filter(n => n.distance <= radius);
+      const filtered = filterNotices(demoNotices, filters);
       setNotices(filtered);
       setSearching(false);
     }, 600);
@@ -245,25 +240,8 @@ export default function Home() {
   }
 
   const resultsCount = notices.length;
-
-  function TagWithTooltip({ tag, children }: { tag: string; children: ReactNode }) {
-    return (
-      <span className="relative group cursor-default">
-        <span
-          className="inline-flex items-center h-7 px-2.5 rounded-full text-xs bg-slate-100 text-slate-700"
-          onMouseEnter={() => setActiveTooltip(tag)}
-          onMouseLeave={() => setActiveTooltip("")}
-        >
-          {children}
-        </span>
-        {activeTooltip === tag && TAG_INFO[tag] && (
-          <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-50 bg-white border border-blue-200 rounded-2xl shadow-[0_8px_24px_rgba(2,6,23,.06)] p-3 text-xs text-blue-900 max-w-[220px]">
-            <span className="font-semibold">{tag}:</span> {TAG_INFO[tag]}
-          </div>
-        )}
-      </span>
-    );
-  }
+  const openCount = notices.filter(n => n.status === "Open").length;
+  const closedCount = notices.filter(n => n.status === "Closed").length;
 
   return (
     <div className="bg-[#f7f7f7] text-[#222d35] min-h-screen flex flex-col relative font-sans">
@@ -409,9 +387,19 @@ export default function Home() {
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 w-full">
             {/* H1 (56) — two lines max, tighter tracking */}
-            <h1 className="font-extrabold text-white drop-shadow leading-[1.12] tracking-tight mb-6" style={{ fontSize: "56px", letterSpacing: "-0.02em" }}>
+            <h1 className="font-extrabold text-white drop-shadow leading-[1.12] tracking-tight" style={{ fontSize: "56px", letterSpacing: "-0.02em" }}>
               Search, publish, and verify statutory notices — instantly, with an audit trail
             </h1>
+            <p className="mt-2 text-white/90 text-lg max-w-2xl">
+              Give residents a voice. Keep licensing transparent and accountable.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowExplainer(true)}
+              className="mt-2 text-sm text-white underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded"
+            >
+              What is a statutory notice?
+            </button>
 
             {/* Solid panel for the tool */}
             <div className="relative rounded-2xl bg-white/95 ring-1 ring-slate-200 shadow-[0_8px_24px_rgba(2,6,23,.06)] p-3 md:p-4">
@@ -486,6 +474,24 @@ export default function Home() {
               {geoError && <p className="mt-1 text-xs text-rose-600 px-1">{geoError}</p>}
             </div>
 
+            <FilterBar filters={filters} setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))} />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setFilters((prev) => ({ ...prev, status: "Open" })); handleSearch(); }}
+                className="px-3 py-2 text-sm rounded-lg bg-white/80 ring-1 ring-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                Open consultations near me
+              </button>
+              <button
+                type="button"
+                onClick={() => setMapView((v) => !v)}
+                className="px-3 py-2 text-sm rounded-lg bg-white/80 ring-1 ring-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                {mapView ? "List view" : "Map view"}
+              </button>
+            </div>
+
             {/* chips under input */}
             <div className="mt-5 flex flex-wrap items-center gap-3">
               {activityStats.map((s, i) => (
@@ -543,34 +549,30 @@ export default function Home() {
         {/* live region for count */}
         <p className="sr-only" aria-live="polite">{resultsCount} results</p>
 
-        <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
+        {mapView ? (
+          <div className="mx-auto max-w-6xl h-64 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-700">
+            Map view: {openCount} open / {closedCount} closed
+          </div>
+        ) : (
+          <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
           {notices.map((n) => {
             const dl = daysLeft(n.deadline);
-            const chips = n.tags.slice(0, 2);
-            const overflow = Math.max(0, n.tags.length - chips.length);
             return (
               <article key={n.id} className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(2,6,23,.06)] ring-1 ring-blue-50 flex flex-col min-h-[280px]" aria-label={`Notice: ${n.type}, ${n.address}`}>
                 {/* metadata */}
-                <div className="flex items-center gap-3 text-[13px] text-slate-700 mb-2">
-                  <span className="font-semibold">{n.type}</span>
+                <div className="flex items-center gap-2 text-[13px] text-slate-700 mb-2">
+                  <span className={`inline-flex items-center h-6 px-2 rounded-full text-xs ${n.type === 'Planning' ? 'bg-purple-100 text-purple-800' : n.type === 'Traffic Order' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`} aria-label={`Category: ${n.type}`}>{n.type}</span>
                   <span>•</span>
                   <span>{n.status === "Open" && dl > 0 ? `${dl} day${dl !== 1 ? "s" : ""} left` : "Closed"}</span>
                   <span>•</span>
                   <span className="capitalize">{n.status.toLowerCase()}</span>
+                  <span>•</span>
+                  <span>{n.ward}</span>
                 </div>
 
                 <h3 className="text-blue-900 font-extrabold text-[20px] mb-1">{n.address}</h3>
-                <p className="text-gray-700 mb-3 text-[16px]">{n.summary}</p>
-
-                {/* chips (max 2 + overflow) */}
-                <div className="flex gap-2 mb-4 flex-wrap">
-                  {chips.map((tag) => (
-                    <TagWithTooltip key={tag} tag={tag}>
-                      <span className="inline-flex items-center h-7 px-2.5 rounded-full text-xs bg-slate-100 text-slate-700">{tag}</span>
-                    </TagWithTooltip>
-                  ))}
-                  {overflow > 0 && <span className="inline-flex items-center h-7 px-2.5 rounded-full text-xs bg-slate-100 text-slate-700">+{overflow} tags</span>}
-                </div>
+                <p className="text-gray-700 mb-2 text-[16px]">{n.summary}</p>
+                <p className="text-xs text-slate-700 mb-3">Risks/Impacts: {n.tags.join(", ")}</p>
 
                 {/* actions */}
                 <div className="mt-auto pt-2 flex items-center justify-between border-t border-blue-50">
@@ -579,7 +581,7 @@ export default function Home() {
                     onClick={() => { const open = expandedCard === n.id ? null : n.id; setExpandedCard(open); track("notice_open", { id: n.id, source: "card", audience: "public" }); }}
                     aria-expanded={expandedCard === n.id}
                   >
-                    Open notice
+                    View notice
                   </button>
 
                   <a
@@ -588,11 +590,16 @@ export default function Home() {
                     rel="noopener noreferrer"
                     onClick={() => track("pdf_open", { id: n.id, size_kb: n.pdfSizeKb, audience: "public" })}
                     className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded"
-                    aria-label={`Open PDF (${n.pdfSizeKb} KB) in new tab`}
                   >
-                    <FileBadge className="w-4 h-4" aria-hidden="true" /> {n.pdfSizeKb} KB
+                    Download proof (PDF)
                   </a>
                 </div>
+
+                {n.status === "Open" && (
+                  <div className="mt-2">
+                    <button className="text-sm text-blue-600 underline hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">Comment</button>
+                  </div>
+                )}
 
                 {expandedCard === n.id && (
                   <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm shadow-inner">
@@ -621,7 +628,8 @@ export default function Home() {
               </article>
             );
           })}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* -------- PUBLISH (three steps) -------- */}
@@ -631,8 +639,8 @@ export default function Home() {
 
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <header className="text-center">
-            <h2 className="text-[32px] font-extrabold text-blue-900">Publish your notice in three steps</h2>
-            <p className="mt-2 text-[16px] text-blue-700">Instant, compliant, audit-ready</p>
+            <h2 className="text-[32px] font-extrabold text-blue-900">Publish in three steps</h2>
+            <p className="mt-2 text-[16px] text-blue-700">Thorough and compliant</p>
           </header>
 
           {/* connector line through icon centres */}
@@ -642,9 +650,9 @@ export default function Home() {
 
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
             {[
-              { n: 1, title: "Fill out the form", desc: "About 60 seconds", Icon: FileText },
-              { n: 2, title: "Choose the area", desc: "Postcode, ward, or UK-wide", Icon: MapPin },
-              { n: 3, title: "Download the certificate", desc: "Instant audit-ready proof", Icon: CheckCircle2 },
+              { n: 1, title: "Fill the form", desc: "Guided and validated", Icon: FileText },
+              { n: 2, title: "Choose area", desc: "Postcode, ward or UK-wide", Icon: MapPin },
+              { n: 3, title: "Download audit certificate", desc: "Instant proof", Icon: CheckCircle2 },
             ].map(({ n, title, desc, Icon }, i) => (
               <li key={i} className="relative pt-10">
                 <span aria-hidden="true" className="absolute top-[6px] left-0 right-0 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
@@ -663,6 +671,8 @@ export default function Home() {
               </li>
             ))}
           </ol>
+
+          <p className="mt-4 text-sm text-slate-700 text-center">Checks for required fields, timings, and statutory wording.</p>
 
           <div className="mt-10 flex justify-center">
             <a
@@ -789,6 +799,24 @@ export default function Home() {
         <a href="/contact" className="hover:underline hover:text-blue-700 transition">Contact</a>
         <a href="/case-studies" className="hover:underline hover:text-blue-700 transition">Case studies (40+ councils)</a>
       </footer>
+
+      {showExplainer && (
+        <dialog open className="fixed inset-0 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-2xl p-6 max-w-md">
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">What is a statutory notice?</h2>
+            <p className="text-sm text-slate-700 mb-4">
+              Statutory notices let residents know about licensing, planning and traffic changes in their area and give them a chance to respond.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowExplainer(false)}
+              className="mt-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </dialog>
+      )}
 
       {/* small utilities */}
       <style>{`
