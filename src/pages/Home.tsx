@@ -301,7 +301,7 @@ export default function Home() {
                 Sign in
               </a>
               <a
-                href="#publish"
+                href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
                 className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
@@ -312,7 +312,7 @@ export default function Home() {
             {/* Mobile: Publish stays visible + hamburger for sheet */}
             <div className="md:hidden flex items-center gap-2">
               <a
-                href="#publish"
+                href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
                 className="h-10 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
                 aria-label="Publish a notice"
@@ -370,7 +370,7 @@ export default function Home() {
                   Sign in
                 </a>
                 <a
-                  href="#publish"
+                  href="/publish"
                   onClick={() => { setMobileOpen(false); track("publish_started", { audience: "public" }); }}
                   className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
@@ -650,13 +650,14 @@ export default function Home() {
           </ol>
 
           <div className="mt-10 flex justify-center">
-            <button
+            <a
+              href="/publish"
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
               onClick={() => track("publish_started", { audience: "public" })}
             >
               Publish a notice
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
+            </a>
           </div>
         </div>
       </section>

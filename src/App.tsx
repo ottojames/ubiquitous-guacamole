@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
+import Publish from "./pages/Publish";
 
 export default function App() {
-  const [path, setPath] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const onPopState = () => setPath(window.location.pathname);
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
-
-  return path === "/dashboard" ? <Dashboard /> : <Home />;
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/publish" element={<Publish />} />
+      </Routes>
+    </Router>
+  );
 }
