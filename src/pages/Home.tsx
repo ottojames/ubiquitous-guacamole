@@ -208,7 +208,12 @@ export default function Home() {
   function handleGeo() {
     setGeoError("");
     setGeoLoading(true);
-    navigator.geolocation?.getCurrentPosition(
+    if (!navigator.geolocation) {
+      setGeoLoading(false);
+      setGeoError("Your browser doesn't support location. Enter postcode or ward.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGeoLoading(false);
         track("search_submit", { source: "hero", query: "geo", geo_used: true, audience: "public" });
