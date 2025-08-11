@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import {
   FileText, MapPin, CheckCircle2, ClipboardCopy, CopyCheck,
   FileBadge, MessageCircle, Printer, ArrowRight, Menu, X
 } from "lucide-react";
 
 // -------- analytics stub (replace with your pipe) --------
-function track(event: string, payload: Record<string, any> = {}) {
+function track(event: string, payload: Record<string, unknown> = {}) {
   console.log("[analytics]", event, payload);
 }
 
@@ -112,9 +112,6 @@ function daysLeft(deadline: string) {
   const d = Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   return d > 0 ? d : 0;
 }
-function isNewNotice(submitted: string) {
-  return Date.now() - new Date(submitted).getTime() < 2 * 24 * 60 * 60 * 1000;
-}
 function Spinner() {
   return (
     <svg className="animate-spin w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -143,7 +140,6 @@ export default function Home() {
     window.addEventListener("hashchange", fn);
     return () => window.removeEventListener("hashchange", fn);
   }, []);
-  const isActive = (hash: string) => (activeHash === hash ? "true" : "false");
 
   // hero search
   const [postcode, setPostcode] = useState("");
@@ -197,7 +193,7 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [postcode]);
 
-  function handleSearch(e: React.FormEvent) {
+  function handleSearch(e: FormEvent) {
     e.preventDefault();
     setSearching(true);
     setGeoError("");
@@ -225,7 +221,7 @@ export default function Home() {
     );
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (!suggestions.length) return;
     if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, suggestions.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
@@ -245,7 +241,7 @@ export default function Home() {
 
   const resultsCount = notices.length;
 
-  function TagWithTooltip({ tag, children }: { tag: string; children: React.ReactNode }) {
+  function TagWithTooltip({ tag, children }: { tag: string; children: ReactNode }) {
     return (
       <span className="relative group cursor-default">
         <span

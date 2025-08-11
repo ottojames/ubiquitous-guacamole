@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function Dashboard() {
   return (
     <main className="min-h-screen bg-white px-8 py-6">
