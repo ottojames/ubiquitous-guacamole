@@ -1,21 +1,44 @@
-# dependencies
-node_modules
+# Node dependencies
+node_modules/
 
-# build outputs
-.next
-dist
-build
+# Build outputs
+dist/
+build/
+out/
+.next/
+.vercel/
+.turbo/
+.pnpm-store/
 
-# OS files
-.DS_Store
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# logs
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# env files
-.env
-.env.local
-.env.*.local
+# IDE / Editor junk
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Supabase local state
+.supabase/
+
+# Misc
+*.local
+*.bak
+node_modules/
+node_modules/
