@@ -26,8 +26,9 @@ interface Props {
 }
 
 const activityOptions = [
-  'Sale of alcohol',
+  'Sale of alcohol on/off the premises',
   'Live music',
+  'Recorded music',
   'Late night refreshment',
 ];
 
@@ -105,7 +106,7 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
 
   return (
     <form onSubmit={submit} className="mt-6 space-y-5" aria-describedby="premises-desc">
-      <p id="premises-desc" className="sr-only">Premises licence application form</p>
+      <p id="premises-desc" className="sr-only">Premises Licence application form</p>
 
       <div className="space-y-2">
         <label htmlFor="addressSearch" className="block text-sm font-medium text-slate-700">

@@ -18,7 +18,7 @@ export default function PublishPage() {
     if (type && announceRef.current) {
       const label =
         type === 'premises'
-          ? 'Premises licence form'
+          ? 'Premises Licence form'
           : type === 'traffic'
           ? 'Traffic notice form'
           : 'Gambling licence form';
