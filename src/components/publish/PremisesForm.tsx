@@ -1,215 +1,667 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-interface AddressResult {
-  line1: string;
-  line2: string;
-  city: string;
-  postcode: string;
+export type ApplicationType =
+  | 'New Premises Licence'
+  | 'Variation of Premises Licence'
+  | 'Minor Variation'
+  | 'Club Premises Certificate (new)'
+  | 'Variation of Club Premises Certificate';
+
+const applicationTypes: ApplicationType[] = [
+  'New Premises Licence',
+  'Variation of Premises Licence',
+  'Minor Variation',
+  'Club Premises Certificate (new)',
+  'Variation of Club Premises Certificate',
+];
+
+const activityOptions = [
+  'Sale of alcohol (on premises)',
+  'Sale of alcohol (off premises)',
+  'Sale of alcohol (on & off)',
+  'Provision of late-night refreshment',
+  'Live music',
+  'Recorded music',
+  'Performance of dance',
+  'Anything of a similar description',
+];
+
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+interface Hours {
+  [day: string]: { start: string; end: string };
 }
 
 interface FormData {
-  address_line1: string;
-  address_line2: string;
-  city: string;
+  applicationType: ApplicationType;
+  premisesName: string;
+  premisesAddress: string;
   postcode: string;
+  applicantName: string;
+  councilName: string;
+  inspectionMethod: string;
+  representationMethod: string;
+  representationDeadline: string;
+  reference: string;
+
   activities: string[];
-  open_start: string;
-  open_end: string;
-  councilEmail: string;
+  activityHours: Record<string, Hours>;
+  openingHours: Hours;
+
   applicantEmail: string;
+  applicantPhone: string;
+  licenceNumber: string;
+  existingHours: string;
+  dpsDetails: string;
+  floorPlan?: File | null;
+  operatingSchedule: string;
+  paymentConfirmed: boolean;
+  variationSummary: string;
+  clubRules: string;
+  clubMembers: string;
 }
 
 interface Props {
-  onSubmit: (data: FormData) => Promise<void>;
+  onSubmit: (data: FormData) => Promise<void> | void;
   saving: boolean;
   autoFocusRef: React.RefObject<HTMLInputElement>;
 }
 
-const activityOptions = [
-  'Sale of alcohol on/off the premises',
-  'Live music',
-  'Recorded music',
-  'Late night refreshment',
-];
-
-export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) {
-  const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<AddressResult[]>([]);
-  const [form, setForm] = useState<FormData>({
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    postcode: '',
-    activities: [],
-    open_start: '',
-    open_end: '',
-    councilEmail: '',
-    applicantEmail: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // address autocomplete
-  useEffect(() => {
-    if (query.length < 3) { setSuggestions([]); return; }
-    const ctrl = new AbortController();
-    fetch(`/api/addresses?q=${encodeURIComponent(query)}&country=GB`, { signal: ctrl.signal })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then((data: AddressResult[]) => setSuggestions(data))
-      .catch(() => setSuggestions([]));
-    return () => ctrl.abort();
-  }, [query]);
-
-  const suggestionsRef = useRef<HTMLUListElement>(null);
-
-  function selectAddress(a: AddressResult) {
-    setForm(f => ({
-      ...f,
-      address_line1: a.line1,
-      address_line2: a.line2,
-      city: a.city,
-      postcode: a.postcode,
-    }));
-    setQuery(`${a.line1}, ${a.postcode}`);
-    setSuggestions([]);
+function WeeklyHoursInput({
+  value,
+  onChange,
+  label,
+}: {
+  value: Hours;
+  onChange: (h: Hours) => void;
+  label?: string;
+}) {
+  function setDay(day: string, field: 'start' | 'end', val: string) {
+    onChange({ ...value, [day]: { ...value[day], [field]: val } });
   }
 
-  function toggleActivity(v: string) {
-    setForm(f => {
-      const activities = f.activities.includes(v)
-        ? f.activities.filter(a => a !== v)
-        : [...f.activities, v];
-      return { ...f, activities };
+  return (
+    <div className="space-y-1">
+      {label && <p className="font-medium">{label}</p>}
+      <table className="w-full text-sm">
+        <tbody>
+          {days.map((d) => (
+            <tr key={d} className="odd:bg-slate-50">
+              <td className="pr-2 py-1 w-16">{d}</td>
+              <td className="pr-2">
+                <input
+                  type="time"
+                  value={value[d]?.start || ''}
+                  onChange={(e) => setDay(d, 'start', e.target.value)}
+                  className="w-full border rounded p-1"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  value={value[d]?.end || ''}
+                  onChange={(e) => setDay(d, 'end', e.target.value)}
+                  className="w-full border rounded p-1"
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function formatHours(hours: Hours): string {
+  const result: string[] = [];
+  let i = 0;
+  while (i < days.length) {
+    const day = days[i];
+    const h = hours[day];
+    if (!h?.start || !h?.end) {
+      i++;
+      continue;
+    }
+    const start = h.start;
+    const end = h.end;
+    let j = i + 1;
+    while (
+      j < days.length &&
+      hours[days[j]]?.start === start &&
+      hours[days[j]]?.end === end
+    ) {
+      j++;
+    }
+    const label = i + 1 === j ? days[i] : `${days[i]}–${days[j - 1]}`;
+    result.push(`${label}: ${start}–${end}`);
+    i = j;
+  }
+  return result.join('\n');
+}
+
+const templates: Record<ApplicationType, string> = {
+  'New Premises Licence': `APPLICATION FOR A {{APPLICATION_TYPE}}
+
+{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} at:
+{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
+
+Licensable activities and hours:
+{{ACTIVITY_HOURS_BLOCK}}
+
+Opening hours:
+{{OPENING_HOURS_BLOCK}}
+
+Inspection of the application:
+{{INSPECTION_METHOD}}
+
+Representations:
+Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
+{{REPRESENTATION_METHOD}}
+
+(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
+  'Variation of Premises Licence': `APPLICATION FOR A {{APPLICATION_TYPE}}
+
+{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} at:
+{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
+
+Summary of proposed variation:
+{{VARIATION_SUMMARY}}
+
+Licensable activities and hours (as varied):
+{{ACTIVITY_HOURS_BLOCK}}
+
+Opening hours (as varied):
+{{OPENING_HOURS_BLOCK}}
+
+Inspection of the application:
+{{INSPECTION_METHOD}}
+
+Representations:
+Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
+{{REPRESENTATION_METHOD}}
+
+(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
+  'Minor Variation': `APPLICATION FOR A {{APPLICATION_TYPE}}
+
+{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} at:
+{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
+
+Brief description of the proposed minor changes:
+{{VARIATION_SUMMARY}}
+
+Licensable activities/hours affected (if applicable):
+{{ACTIVITY_HOURS_BLOCK}}
+
+Inspection of the application:
+{{INSPECTION_METHOD}}
+
+Comments/Representations:
+Interested parties may submit comments by {{REPRESENTATION_DEADLINE}}.
+{{REPRESENTATION_METHOD}}`,
+  'Club Premises Certificate (new)': `APPLICATION FOR A {{APPLICATION_TYPE}}
+
+{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} for:
+{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
+
+Qualifying club activities and hours:
+{{ACTIVITY_HOURS_BLOCK}}
+
+Opening hours (if applicable):
+{{OPENING_HOURS_BLOCK}}
+
+Inspection of the application:
+{{INSPECTION_METHOD}}
+
+Representations:
+Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
+{{REPRESENTATION_METHOD}}
+
+(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
+  'Variation of Club Premises Certificate': `APPLICATION FOR A {{APPLICATION_TYPE}}
+
+{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} for:
+{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
+
+Qualifying club activities and hours:
+{{ACTIVITY_HOURS_BLOCK}}
+
+Opening hours (if applicable):
+{{OPENING_HOURS_BLOCK}}
+
+Inspection of the application:
+{{INSPECTION_METHOD}}
+
+Representations:
+Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
+{{REPRESENTATION_METHOD}}
+
+(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
+};
+
+export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) {
+  const [form, setForm] = useState<FormData>({
+    applicationType: 'New Premises Licence',
+    premisesName: '',
+    premisesAddress: '',
+    postcode: '',
+    applicantName: '',
+    councilName: '',
+    inspectionMethod: '',
+    representationMethod: '',
+    representationDeadline: '',
+    reference: '',
+    activities: [],
+    activityHours: {},
+    openingHours: {},
+    applicantEmail: '',
+    applicantPhone: '',
+    licenceNumber: '',
+    existingHours: '',
+    dpsDetails: '',
+    operatingSchedule: '',
+    paymentConfirmed: false,
+    variationSummary: '',
+    clubRules: '',
+    clubMembers: '',
+  });
+
+  const isClub = form.applicationType.includes('Club');
+  const isVariation = form.applicationType.includes('Variation');
+  const alcoholSelected = form.activities.some((a) => a.startsWith('Sale of alcohol'));
+  const needsDps = alcoholSelected && !isClub;
+
+  function toggleActivity(a: string) {
+    setForm((f) => {
+      const activities = f.activities.includes(a)
+        ? f.activities.filter((x) => x !== a)
+        : [...f.activities, a];
+      const activityHours = { ...f.activityHours };
+      if (activities.includes(a) && !activityHours[a]) activityHours[a] = {};
+      if (!activities.includes(a)) delete activityHours[a];
+      return { ...f, activities, activityHours };
     });
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+  function updateActivityHours(activity: string, hours: Hours) {
+    setForm((f) => ({
+      ...f,
+      activityHours: { ...f.activityHours, [activity]: hours },
+    }));
   }
 
-  function validate(): boolean {
-    const next: Record<string, string> = {};
-    if (!form.address_line1) next.address_line1 = 'Address is required';
-    if (!form.postcode) next.postcode = 'Postcode is required';
-    if (!form.open_start || !form.open_end) next.open_start = 'Opening hours required';
-    if (!form.councilEmail) next.councilEmail = 'Council email is required';
-    if (!form.applicantEmail) next.applicantEmail = 'Applicant email is required';
-    setErrors(next);
-    return Object.keys(next).length === 0;
+  const noticeText = useMemo(() => {
+    const activityBlock = form.activities
+      .map((a) => `${a}\n${formatHours(form.activityHours[a] || {})}`)
+      .join('\n\n');
+    const opening = formatHours(form.openingHours);
+    const template = templates[form.applicationType];
+    return template
+      .replace(/\{\{APPLICATION_TYPE\}\}/g, form.applicationType)
+      .replace(/\{\{COUNCIL_NAME\}\}/g, form.councilName)
+      .replace(/\{\{PREMISES_NAME\}\}/g, form.premisesName)
+      .replace(/\{\{PREMISES_ADDRESS\}\}/g, form.premisesAddress)
+      .replace(/\{\{POSTCODE\}\}/g, form.postcode)
+      .replace(/\{\{APPLICANT_NAME\}\}/g, form.applicantName)
+      .replace(/\{\{ACTIVITY_HOURS_BLOCK\}\}/g, activityBlock)
+      .replace(/\{\{OPENING_HOURS_BLOCK\}\}/g, opening)
+      .replace(/\{\{VARIATION_SUMMARY\}\}/g, form.variationSummary)
+      .replace(/\{\{INSPECTION_METHOD\}\}/g, form.inspectionMethod)
+      .replace(/\{\{REPRESENTATION_METHOD\}\}/g, form.representationMethod)
+      .replace(/\{\{REPRESENTATION_DEADLINE\}\}/g, form.representationDeadline)
+      .replace(/\{\{REFERENCE\}\}/g, form.reference);
+  }, [form]);
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) return;
     await onSubmit(form);
   }
 
   return (
-    <form onSubmit={submit} className="mt-6 space-y-5" aria-describedby="premises-desc">
-      <p id="premises-desc" className="sr-only">Premises Licence application form</p>
+    <form onSubmit={submit} className="mt-6 space-y-6" aria-describedby="premises-desc">
+      <p id="premises-desc" className="sr-only">
+        Premises Licence application form
+      </p>
 
       <div className="space-y-2">
-        <label htmlFor="addressSearch" className="block text-sm font-medium text-slate-700">
-          Address
+        <label htmlFor="applicationType" className="block text-sm font-medium text-slate-700">
+          Application type
         </label>
-        <input
-          id="addressSearch"
+        <select
+          id="applicationType"
+          name="applicationType"
+          value={form.applicationType}
+          onChange={handleChange}
           ref={autoFocusRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full rounded border border-slate-300 p-2"
-          placeholder="Start typing address"
-          autoComplete="off"
-        />
-        {suggestions.length > 0 && (
-          <ul
-            ref={suggestionsRef}
-            role="listbox"
-            className="mt-1 rounded border border-slate-300 bg-white shadow max-h-48 overflow-auto"
-          >
-            {suggestions.map((s, i) => (
-              <li key={i}>
-                <button
-                  type="button"
-                  className="w-full text-left px-3 py-2 hover:bg-slate-100"
-                  onClick={() => selectAddress(s)}
-                >
-                  {s.line1}, {s.postcode}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+          className="w-full rounded border border-slate-300 p-2 bg-white"
+        >
+          {applicationTypes.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="address_line1">Line 1</label>
-          <input id="address_line1" name="address_line1" value={form.address_line1} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
-          {errors.address_line1 && <p className="text-sm text-red-600 mt-1">{errors.address_line1}</p>}
+          <label className="block text-sm font-medium text-slate-700" htmlFor="premisesName">
+            Premises name
+          </label>
+          <input
+            id="premisesName"
+            name="premisesName"
+            value={form.premisesName}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="address_line2">Line 2</label>
-          <input id="address_line2" name="address_line2" value={form.address_line2} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
+          <label className="block text-sm font-medium text-slate-700" htmlFor="premisesAddress">
+            Premises address
+          </label>
+          <input
+            id="premisesAddress"
+            name="premisesAddress"
+            value={form.premisesAddress}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="city">City</label>
-          <input id="city" name="city" value={form.city} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
+          <label className="block text-sm font-medium text-slate-700" htmlFor="postcode">
+            Postcode
+          </label>
+          <input
+            id="postcode"
+            name="postcode"
+            value={form.postcode}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="postcode">Postcode</label>
-          <input id="postcode" name="postcode" value={form.postcode} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
-          {errors.postcode && <p className="text-sm text-red-600 mt-1">{errors.postcode}</p>}
+          <label className="block text-sm font-medium text-slate-700" htmlFor="applicantName">
+            Applicant name
+          </label>
+          <input
+            id="applicantName"
+            name="applicantName"
+            value={form.applicantName}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="councilName">
+            Council name
+          </label>
+          <input
+            id="councilName"
+            name="councilName"
+            value={form.councilName}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="representationDeadline">
+            Representation deadline
+          </label>
+          <input
+            type="date"
+            id="representationDeadline"
+            name="representationDeadline"
+            value={form.representationDeadline}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
         </div>
       </div>
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-slate-700">Licensable activities</legend>
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-slate-700">Licensable activities</p>
         {activityOptions.map((a) => (
-          <label key={a} className="flex items-center gap-2">
+          <label key={a} className="block">
             <input
               type="checkbox"
+              className="mr-2"
               checked={form.activities.includes(a)}
               onChange={() => toggleActivity(a)}
-              className="h-4 w-4 rounded border-slate-300"
             />
-            <span className="text-sm text-slate-700">{a}</span>
+            {a}
           </label>
         ))}
-      </fieldset>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="open_start" className="block text-sm font-medium text-slate-700">Opening time</label>
-          <input id="open_start" name="open_start" type="time" value={form.open_start} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
-        </div>
-        <div>
-          <label htmlFor="open_end" className="block text-sm font-medium text-slate-700">Closing time</label>
-          <input id="open_end" name="open_end" type="time" value={form.open_end} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
-        </div>
-      </div>
-      {errors.open_start && <p className="text-sm text-red-600">{errors.open_start}</p>}
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="councilEmail" className="block text-sm font-medium text-slate-700">Council email</label>
-          <input id="councilEmail" name="councilEmail" type="email" value={form.councilEmail} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
-          {errors.councilEmail && <p className="text-sm text-red-600 mt-1">{errors.councilEmail}</p>}
-        </div>
-        <div>
-          <label htmlFor="applicantEmail" className="block text-sm font-medium text-slate-700">Applicant email</label>
-          <input id="applicantEmail" name="applicantEmail" type="email" value={form.applicantEmail} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
-          {errors.applicantEmail && <p className="text-sm text-red-600 mt-1">{errors.applicantEmail}</p>}
-        </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="h-10 px-4 rounded bg-blue-600 text-white disabled:opacity-50"
-      >
-        {saving ? 'Saving...' : 'Submit'}
-      </button>
+      {form.activities.map((a) => (
+        <WeeklyHoursInput
+          key={a}
+          value={form.activityHours[a] || {}}
+          onChange={(h) => updateActivityHours(a, h)}
+          label={a}
+        />
+      ))}
+
+      <WeeklyHoursInput
+        value={form.openingHours}
+        onChange={(h) => setForm((f) => ({ ...f, openingHours: h }))}
+        label="Opening hours"
+      />
+
+      {isVariation && (
+        <div className="space-y-2">
+          <label htmlFor="variationSummary" className="block text-sm font-medium text-slate-700">
+            Summary of proposed variation
+          </label>
+          <textarea
+            id="variationSummary"
+            name="variationSummary"
+            value={form.variationSummary}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            rows={3}
+          />
+        </div>
+      )}
+
+      {needsDps && (
+        <div className="space-y-2">
+          <label htmlFor="dpsDetails" className="block text-sm font-medium text-slate-700">
+            Designated Premises Supervisor (DPS) details
+          </label>
+          <textarea
+            id="dpsDetails"
+            name="dpsDetails"
+            value={form.dpsDetails}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            rows={2}
+          />
+        </div>
+      )}
+
+      {isVariation && (
+        <div className="space-y-2">
+          <label htmlFor="existingHours" className="block text-sm font-medium text-slate-700">
+            Existing licensed hours
+          </label>
+          <textarea
+            id="existingHours"
+            name="existingHours"
+            value={form.existingHours}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            rows={2}
+          />
+        </div>
+      )}
+
+      {isVariation && (
+        <div className="space-y-2">
+          <label htmlFor="licenceNumber" className="block text-sm font-medium text-slate-700">
+            Premises licence number
+          </label>
+          <input
+            id="licenceNumber"
+            name="licenceNumber"
+            value={form.licenceNumber}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+          />
+        </div>
+      )}
+
+      {isClub && (
+        <div className="space-y-2">
+          <label htmlFor="clubRules" className="block text-sm font-medium text-slate-700">
+            Club rules & number of qualifying members
+          </label>
+          <textarea
+            id="clubRules"
+            name="clubRules"
+            value={form.clubRules}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            rows={2}
+          />
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <label htmlFor="inspectionMethod" className="block text-sm font-medium text-slate-700">
+          Inspection of the application
+        </label>
+        <textarea
+          id="inspectionMethod"
+          name="inspectionMethod"
+          value={form.inspectionMethod}
+          onChange={handleChange}
+          className="w-full rounded border border-slate-300 p-2"
+          rows={2}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="representationMethod" className="block text-sm font-medium text-slate-700">
+          Representation method
+        </label>
+        <textarea
+          id="representationMethod"
+          name="representationMethod"
+          value={form.representationMethod}
+          onChange={handleChange}
+          className="w-full rounded border border-slate-300 p-2"
+          rows={2}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="reference" className="block text-sm font-medium text-slate-700">
+          Reference (optional)
+        </label>
+        <input
+          id="reference"
+          name="reference"
+          value={form.reference}
+          onChange={handleChange}
+          className="w-full rounded border border-slate-300 p-2"
+        />
+      </div>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Internal fields</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700" htmlFor="applicantEmail">
+              Applicant email
+            </label>
+            <input
+              id="applicantEmail"
+              name="applicantEmail"
+              value={form.applicantEmail}
+              onChange={handleChange}
+              className="w-full rounded border border-slate-300 p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700" htmlFor="applicantPhone">
+              Applicant phone
+            </label>
+            <input
+              id="applicantPhone"
+              name="applicantPhone"
+              value={form.applicantPhone}
+              onChange={handleChange}
+              className="w-full rounded border border-slate-300 p-2"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-700" htmlFor="operatingSchedule">
+            Operating schedule
+          </label>
+          <textarea
+            id="operatingSchedule"
+            name="operatingSchedule"
+            value={form.operatingSchedule}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            rows={2}
+          />
+        </div>
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            name="paymentConfirmed"
+            checked={form.paymentConfirmed}
+            onChange={handleChange}
+          />
+          <span>Payment confirmed</span>
+        </label>
+      </section>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700" htmlFor="noticePreview">
+          Generated Blue Notice
+        </label>
+        <textarea
+          id="noticePreview"
+          value={noticeText}
+          readOnly
+          className="w-full h-64 rounded border border-slate-300 p-2 font-mono text-sm"
+        />
+        <button
+          type="button"
+          onClick={() => navigator.clipboard.writeText(noticeText)}
+          className="px-3 py-2 text-sm rounded bg-slate-800 text-white"
+        >
+          Copy to Clipboard
+        </button>
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Submit'}
+        </button>
+      </div>
     </form>
   );
 }
+
