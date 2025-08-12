@@ -8,7 +8,7 @@ interface Props {
 }
 
 const options: { value: NoticeType; label: string }[] = [
-  { value: 'premises', label: 'Premises licence' },
+  { value: 'premises', label: 'Premises Licence' },
   { value: 'traffic', label: 'Traffic notice' },
   { value: 'gambling', label: 'Gambling licence' },
 ];
