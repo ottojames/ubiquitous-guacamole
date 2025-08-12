@@ -1,39 +1,85 @@
+import { describe, expect, it } from 'vitest';
 import { generateNotice, Hours } from '../lib/noticeTemplate';
 
-describe('notice template', () => {
-  it('renders with substitutions', () => {
-    const hours: Hours = {};
-    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach((d) => {
-      hours[d] = { start: '09:00', end: '23:00' };
-    });
-    const form = {
-      applicationType: 'New Premises Licence',
-      applicantName: 'Jane Smith',
-      premisesName: 'The Bar',
-      premisesAddress: '1 High St, Town AB1 2CD',
-      councilName: 'Sample Council',
-      activities: ['Sale of alcohol (on premises)'],
-      activityHours: { 'Sale of alcohol (on premises)': hours },
-      openingHours: hours,
-      representationDeadline: '2025-01-01',
-      licensingManager: 'Manager Name',
-      councilDepartment: 'Licensing Dept',
-      councilOfficeAddress: '1 Council St',
-      viewingStartTime: '09:00',
-      viewingEndTime: '17:00',
-      viewingDays: 'Mon-Fri',
-      councilWebsite: 'http://council.example.com',
-      councilLicensingEmail: 'license@example.com',
-      applicationDate: '2025-01-02',
-    };
-    const expected = `Notice of Application for a New Premises Licence
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-I, Jane Smith Address of Premises: The Bar, 1 High St, Town, AB1 2CD have made the above application on 2025-01-02 to Sample Council for:
-Sale of alcohol (on premises)
-Mon–Sun: 09:00–23:00 and opening hours Monday to Sunday 09:00 to 23:00.
-The full application can be viewed at Sample Council. Contact Manager Name, Licensing Dept, 1 Council St, between the hours of 09:00 and 17:00 on Mon-Fri, visit http://council.example.com, or email: license@example.com.
-A Responsible Authority or Other Persons may make written representations about this application to the Licensing Office on or before 2025-01-01.
-It is an offence, knowingly or recklessly, to make a false statement in connection with an application, and on summary conviction is liable to an unlimited fine.`;
-    expect(generateNotice(form)).toBe(expected);
+function makeHours(start: string, end: string): Hours {
+  const h: Hours = {};
+  days.forEach((d) => {
+    h[d] = { start, end };
+  });
+  return h;
+}
+
+describe('notice template', () => {
+  const baseForm = {
+    applicationType: 'Grant of a Premises Licence',
+    applicantName: 'Jane Smith',
+    councilName: 'Sample Council',
+    premisesName: 'The Bar',
+    premisesAddress: '1 High St, Town, AB1 2CD',
+    councilPostalAddress: 'Sample Council, Plough Lane, HR4 0LE',
+    councilOfficeHours: '09:30 – 13:30',
+    councilApplicationsUrl: 'http://council.example.com',
+    representationDeadline: '1 February 2025',
+    activities: ['On and Off Sale of Alcohol'],
+    activityHours: { 'On and Off Sale of Alcohol': makeHours('11:00', '23:00') },
+  };
+
+  it('renders daily hours with DAILY label', () => {
+    const notice = generateNotice(baseForm);
+    expect(notice).toContain(
+      'On and Off Sale of Alcohol – 11:00 to 23:00hrs - DAILY'
+    );
+  });
+
+  it('groups day ranges', () => {
+    const hours: Hours = {
+      Mon: { start: '11:00', end: '23:00' },
+      Tue: { start: '11:00', end: '23:00' },
+      Wed: { start: '11:00', end: '23:00' },
+      Thu: { start: '11:00', end: '23:00' },
+      Fri: { start: '11:00', end: '01:00' },
+      Sat: { start: '11:00', end: '01:00' },
+      Sun: { start: '12:00', end: '22:30' },
+    };
+    const form = {
+      ...baseForm,
+      activityHours: { 'On and Off Sale of Alcohol': hours },
+    };
+    const notice = generateNotice(form);
+    expect(notice).toContain(
+      'On and Off Sale of Alcohol – 11:00 to 23:00hrs - Mon–Thu'
+    );
+    expect(notice).toContain(
+      'On and Off Sale of Alcohol – 11:00 to 01:00hrs - Fri–Sat'
+    );
+    expect(notice).toContain(
+      'On and Off Sale of Alcohol – 12:00 to 22:30hrs - Sun'
+    );
+  });
+
+  it('renders cross-midnight end time verbatim', () => {
+    const notice = generateNotice({
+      ...baseForm,
+      activityHours: {
+        'On and Off Sale of Alcohol': makeHours('10:00', '01:00'),
+      },
+    });
+    expect(notice).toContain('10:00 to 01:00');
+  });
+
+  it('omits premises name when empty', () => {
+    const notice = generateNotice({ ...baseForm, premisesName: '' });
+    expect(notice).toContain('at 1 High St, Town, AB1 2CD in which');
+    expect(notice).not.toContain('at ,');
+  });
+
+  it('uses manual representation deadline verbatim', () => {
+    const notice = generateNotice({
+      ...baseForm,
+      representationDeadline: '31 Dec 2025',
+    });
+    expect(notice).toContain('no later than: 31 Dec 2025');
   });
 });

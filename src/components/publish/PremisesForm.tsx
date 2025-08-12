@@ -2,29 +2,29 @@ import React, { useMemo, useState } from 'react';
 import { generateNotice } from '../../lib/noticeTemplate';
 
 export type ApplicationType =
-  | 'New Premises Licence'
-  | 'Variation of Premises Licence'
-  | 'Minor Variation'
-  | 'Club Premises Certificate (new)'
-  | 'Variation of Club Premises Certificate';
+  | 'Grant of a Premises Licence'
+  | 'Variation of a Premises Licence'
+  | 'Minor Variation of a Premises Licence'
+  | 'Grant of a Club Premises Certificate'
+  | 'Variation of a Club Premises Certificate';
 
 const applicationTypes: ApplicationType[] = [
-  'New Premises Licence',
-  'Variation of Premises Licence',
-  'Minor Variation',
-  'Club Premises Certificate (new)',
-  'Variation of Club Premises Certificate',
+  'Grant of a Premises Licence',
+  'Variation of a Premises Licence',
+  'Minor Variation of a Premises Licence',
+  'Grant of a Club Premises Certificate',
+  'Variation of a Club Premises Certificate',
 ];
 
 const activityOptions = [
-  'Sale of alcohol (on premises)',
-  'Sale of alcohol (off premises)',
-  'Sale of alcohol (on & off)',
-  'Provision of late-night refreshment',
-  'Live music',
-  'Recorded music',
-  'Performance of dance',
-  'Anything of a similar description',
+  'On and Off Sale of Alcohol',
+  'On Sale of Alcohol',
+  'Off Sale of Alcohol',
+  'Provision of Late Night Refreshment',
+  'Live Music',
+  'Recorded Music',
+  'Performance of Dance',
+  'Anything of a Similar Description',
 ];
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -39,6 +39,9 @@ interface FormData {
   premisesAddress: string;
   applicantName: string;
   councilName: string;
+  councilPostalAddress: string;
+  councilOfficeHours: string;
+  councilApplicationsUrl: string;
   inspectionMethod: string;
   representationMethod: string;
   representationDeadline: string;
@@ -140,11 +143,14 @@ export function WeeklyHoursInput({
 
 export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) {
   const [form, setForm] = useState<FormData>({
-    applicationType: 'New Premises Licence',
+    applicationType: 'Grant of a Premises Licence',
     premisesName: '',
     premisesAddress: '',
     applicantName: '',
     councilName: '',
+    councilPostalAddress: '',
+    councilOfficeHours: '',
+    councilApplicationsUrl: '',
     inspectionMethod: '',
     representationMethod: '',
     representationDeadline: '',
@@ -166,7 +172,7 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
 
   const isClub = form.applicationType.includes('Club');
   const isVariation = form.applicationType.includes('Variation');
-  const alcoholSelected = form.activities.some((a) => a.startsWith('Sale of alcohol'));
+  const alcoholSelected = form.activities.some((a) => a.includes('Sale of Alcohol'));
   const needsDps = alcoholSelected && !isClub;
 
   function toggleActivity(a: string) {
@@ -188,7 +194,13 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
     }));
   }
 
-  const noticeText = useMemo(() => generateNotice(form), [form]);
+  const noticeText = useMemo(() => {
+    try {
+      return generateNotice(form);
+    } catch (e) {
+      return (e as Error).message;
+    }
+  }, [form]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -286,10 +298,48 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
             Representation deadline
           </label>
           <input
-            type="date"
             id="representationDeadline"
             name="representationDeadline"
             value={form.representationDeadline}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="councilPostalAddress">
+            Council postal address
+          </label>
+          <input
+            id="councilPostalAddress"
+            name="councilPostalAddress"
+            value={form.councilPostalAddress}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="councilOfficeHours">
+            Council office hours
+          </label>
+          <input
+            id="councilOfficeHours"
+            name="councilOfficeHours"
+            value={form.councilOfficeHours}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="councilApplicationsUrl">
+            Council applications URL
+          </label>
+          <input
+            id="councilApplicationsUrl"
+            name="councilApplicationsUrl"
+            value={form.councilApplicationsUrl}
             onChange={handleChange}
             className="w-full rounded border border-slate-300 p-2"
             required
