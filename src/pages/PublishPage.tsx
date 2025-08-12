@@ -38,7 +38,6 @@ export default function PublishPage() {
         address_line1: data.address_line1 ?? null,
         address_line2: data.address_line2 ?? null,
         city: data.city ?? null,
-        postcode: data.postcode ?? null,
         status: 'draft',
       });
       if (error) throw error;
