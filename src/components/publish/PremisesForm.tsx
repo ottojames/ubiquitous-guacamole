@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { generateNotice } from '../../lib/noticeTemplate';
 
 export type ApplicationType =
   | 'New Premises Licence'
@@ -36,7 +37,6 @@ interface FormData {
   applicationType: ApplicationType;
   premisesName: string;
   premisesAddress: string;
-  postcode: string;
   applicantName: string;
   councilName: string;
   inspectionMethod: string;
@@ -67,7 +67,7 @@ interface Props {
   autoFocusRef: React.RefObject<HTMLInputElement>;
 }
 
-function WeeklyHoursInput({
+export function WeeklyHoursInput({
   value,
   onChange,
   label,
@@ -80,11 +80,36 @@ function WeeklyHoursInput({
     onChange({ ...value, [day]: { ...value[day], [field]: val } });
   }
 
+  function setEveryDay(field: 'start' | 'end', val: string) {
+    const updated: Hours = { ...value };
+    days.forEach((d) => {
+      updated[d] = { ...updated[d], [field]: val };
+    });
+    onChange(updated);
+  }
+
   return (
     <div className="space-y-1">
       {label && <p className="font-medium">{label}</p>}
       <table className="w-full text-sm">
         <tbody>
+          <tr className="odd:bg-slate-50">
+            <td className="pr-2 py-1 w-16">Every Day</td>
+            <td className="pr-2">
+              <input
+                type="time"
+                onChange={(e) => setEveryDay('start', e.target.value)}
+                className="w-full border rounded p-1"
+              />
+            </td>
+            <td>
+              <input
+                type="time"
+                onChange={(e) => setEveryDay('end', e.target.value)}
+                className="w-full border rounded p-1"
+              />
+            </td>
+          </tr>
           {days.map((d) => (
             <tr key={d} className="odd:bg-slate-50">
               <td className="pr-2 py-1 w-16">{d}</td>
@@ -112,138 +137,12 @@ function WeeklyHoursInput({
   );
 }
 
-function formatHours(hours: Hours): string {
-  const result: string[] = [];
-  let i = 0;
-  while (i < days.length) {
-    const day = days[i];
-    const h = hours[day];
-    if (!h?.start || !h?.end) {
-      i++;
-      continue;
-    }
-    const start = h.start;
-    const end = h.end;
-    let j = i + 1;
-    while (
-      j < days.length &&
-      hours[days[j]]?.start === start &&
-      hours[days[j]]?.end === end
-    ) {
-      j++;
-    }
-    const label = i + 1 === j ? days[i] : `${days[i]}–${days[j - 1]}`;
-    result.push(`${label}: ${start}–${end}`);
-    i = j;
-  }
-  return result.join('\n');
-}
-
-const templates: Record<ApplicationType, string> = {
-  'New Premises Licence': `APPLICATION FOR A {{APPLICATION_TYPE}}
-
-{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} at:
-{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
-
-Licensable activities and hours:
-{{ACTIVITY_HOURS_BLOCK}}
-
-Opening hours:
-{{OPENING_HOURS_BLOCK}}
-
-Inspection of the application:
-{{INSPECTION_METHOD}}
-
-Representations:
-Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
-{{REPRESENTATION_METHOD}}
-
-(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
-  'Variation of Premises Licence': `APPLICATION FOR A {{APPLICATION_TYPE}}
-
-{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} at:
-{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
-
-Summary of proposed variation:
-{{VARIATION_SUMMARY}}
-
-Licensable activities and hours (as varied):
-{{ACTIVITY_HOURS_BLOCK}}
-
-Opening hours (as varied):
-{{OPENING_HOURS_BLOCK}}
-
-Inspection of the application:
-{{INSPECTION_METHOD}}
-
-Representations:
-Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
-{{REPRESENTATION_METHOD}}
-
-(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
-  'Minor Variation': `APPLICATION FOR A {{APPLICATION_TYPE}}
-
-{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} at:
-{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
-
-Brief description of the proposed minor changes:
-{{VARIATION_SUMMARY}}
-
-Licensable activities/hours affected (if applicable):
-{{ACTIVITY_HOURS_BLOCK}}
-
-Inspection of the application:
-{{INSPECTION_METHOD}}
-
-Comments/Representations:
-Interested parties may submit comments by {{REPRESENTATION_DEADLINE}}.
-{{REPRESENTATION_METHOD}}`,
-  'Club Premises Certificate (new)': `APPLICATION FOR A {{APPLICATION_TYPE}}
-
-{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} for:
-{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
-
-Qualifying club activities and hours:
-{{ACTIVITY_HOURS_BLOCK}}
-
-Opening hours (if applicable):
-{{OPENING_HOURS_BLOCK}}
-
-Inspection of the application:
-{{INSPECTION_METHOD}}
-
-Representations:
-Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
-{{REPRESENTATION_METHOD}}
-
-(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
-  'Variation of Club Premises Certificate': `APPLICATION FOR A {{APPLICATION_TYPE}}
-
-{{APPLICANT_NAME}} has applied to {{COUNCIL_NAME}} for a {{APPLICATION_TYPE}} for:
-{{PREMISES_NAME}}, {{PREMISES_ADDRESS}}, {{POSTCODE}}.
-
-Qualifying club activities and hours:
-{{ACTIVITY_HOURS_BLOCK}}
-
-Opening hours (if applicable):
-{{OPENING_HOURS_BLOCK}}
-
-Inspection of the application:
-{{INSPECTION_METHOD}}
-
-Representations:
-Anyone wishing to make representations must do so by {{REPRESENTATION_DEADLINE}}.
-{{REPRESENTATION_METHOD}}
-
-(Representations must relate to the licensing objectives. It is an offence to knowingly or recklessly make a false statement in connection with an application.)`,
-};
 
 export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) {
   const [form, setForm] = useState<FormData>({
     applicationType: 'New Premises Licence',
     premisesName: '',
     premisesAddress: '',
-    postcode: '',
     applicantName: '',
     councilName: '',
     inspectionMethod: '',
@@ -289,27 +188,7 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
     }));
   }
 
-  const noticeText = useMemo(() => {
-    const activityBlock = form.activities
-      .map((a) => `${a}\n${formatHours(form.activityHours[a] || {})}`)
-      .join('\n\n');
-    const opening = formatHours(form.openingHours);
-    const template = templates[form.applicationType];
-    return template
-      .replace(/\{\{APPLICATION_TYPE\}\}/g, form.applicationType)
-      .replace(/\{\{COUNCIL_NAME\}\}/g, form.councilName)
-      .replace(/\{\{PREMISES_NAME\}\}/g, form.premisesName)
-      .replace(/\{\{PREMISES_ADDRESS\}\}/g, form.premisesAddress)
-      .replace(/\{\{POSTCODE\}\}/g, form.postcode)
-      .replace(/\{\{APPLICANT_NAME\}\}/g, form.applicantName)
-      .replace(/\{\{ACTIVITY_HOURS_BLOCK\}\}/g, activityBlock)
-      .replace(/\{\{OPENING_HOURS_BLOCK\}\}/g, opening)
-      .replace(/\{\{VARIATION_SUMMARY\}\}/g, form.variationSummary)
-      .replace(/\{\{INSPECTION_METHOD\}\}/g, form.inspectionMethod)
-      .replace(/\{\{REPRESENTATION_METHOD\}\}/g, form.representationMethod)
-      .replace(/\{\{REPRESENTATION_DEADLINE\}\}/g, form.representationDeadline)
-      .replace(/\{\{REFERENCE\}\}/g, form.reference);
-  }, [form]);
+  const noticeText = useMemo(() => generateNotice(form), [form]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -371,19 +250,6 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
             id="premisesAddress"
             name="premisesAddress"
             value={form.premisesAddress}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="postcode">
-            Postcode
-          </label>
-          <input
-            id="postcode"
-            name="postcode"
-            value={form.postcode}
             onChange={handleChange}
             className="w-full rounded border border-slate-300 p-2"
             required
