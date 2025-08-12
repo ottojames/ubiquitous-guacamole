@@ -3,8 +3,39 @@ export interface Hours {
 }
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-function formatHours(hours: Hours): string {
-  const result: string[] = [];
+
+const template = `Licensing Act 2003
+Notice of Application for the 
+{{HEADING_LINE_3}}
+
+{{APPLICANT_NAME}} gives notice that an application was made to {{COUNCIL_NAME}} for the {{HEADING_LINE_3}} at {{PREMISES_ADDRESS_FULL}} in which the following licensable activities are proposed…
+{{ACTIVITIES_BLOCK}}
+
+The full application, giving details about the proposed licensable activities, has been sent to the Licensing Section, {{COUNCIL_NAME}} and may be inspected, free of charge, at the offices of the council at:
+{{COUNCIL_POSTAL_ADDRESS}}
+between the hours of {{COUNCIL_OFFICE_HOURS}} (or by prior appointment)
+Monday to Friday or
+{{COUNCIL_APPLICATIONS_URL}}
+
+An interested party or Responsible Authority may make representations to the Licensing Section within 28 Consecutive Days of the day the application was made as detailed above, no later than: {{REPRESENTATION_DEADLINE}}
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and a person may be liable on summary conviction to an unlimited fine.`;
+
+function ensure(value: string, field: string): string {
+  if (!value) throw new Error(`${field} is required`);
+  return value;
+}
+
+function validateTime(value: string, allow24 = false): string {
+  const regex = allow24
+    ? /^(?:([01]\d|2[0-3]):[0-5]\d|24:00)$/
+    : /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (!regex.test(value)) throw new Error(`Invalid time: ${value}`);
+  return value;
+}
+
+function groupHours(hours: Hours) {
+  const groups: { start: string; end: string; days: string[] }[] = [];
   let i = 0;
   while (i < days.length) {
     const day = days[i];
@@ -13,8 +44,8 @@ function formatHours(hours: Hours): string {
       i++;
       continue;
     }
-    const start = h.start;
-    const end = h.end;
+    const start = validateTime(h.start);
+    const end = validateTime(h.end, true);
     let j = i + 1;
     while (
       j < days.length &&
@@ -23,73 +54,86 @@ function formatHours(hours: Hours): string {
     ) {
       j++;
     }
-    const label = i + 1 === j ? days[i] : `${days[i]}–${days[j - 1]}`;
-    result.push(`${label}: ${start}–${end}`);
+    groups.push({ start, end, days: days.slice(i, j) });
     i = j;
   }
-  return result.join('\n');
+  return groups;
 }
 
-function extractAddressAndPostcode(address: string): { address: string; postcode: string } {
-  const match = address.match(/(.*)\b([A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})$/i);
-  if (match) {
-    return {
-      address: match[1].trim().replace(/,?$/, ''),
-      postcode: match[2].toUpperCase(),
-    };
+function dayLabel(groupDays: string[]): string {
+  if (groupDays.length === 7) return 'DAILY';
+  if (groupDays.length === 1) return groupDays[0];
+  return `${groupDays[0]}\u2013${groupDays[groupDays.length - 1]}`;
+}
+
+function formatActivities(activities: string[], activityHours: Record<string, Hours>): string {
+  if (!activities || activities.length === 0) {
+    throw new Error('ACTIVITIES_BLOCK is required');
   }
-  return { address, postcode: '' };
-}
-
-function summarizeOpeningHours(hours: Hours): { days: string; start: string; end: string } {
-  const first = hours['Mon'];
-  if (!first?.start || !first?.end) return { days: '', start: '', end: '' };
-  const allSame = days.every((d) => hours[d]?.start === first.start && hours[d]?.end === first.end);
-  if (allSame) {
-    return { days: 'Monday to Sunday', start: first.start, end: first.end };
+  const lines: string[] = [];
+  for (const act of activities) {
+    const hours = activityHours[act];
+    if (!hours) throw new Error(`Hours required for activity: ${act}`);
+    const groups = groupHours(hours);
+    for (const g of groups) {
+      const dLabel = dayLabel(g.days);
+      const hLabel = `${g.start} to ${g.end}`;
+      lines.push(`${act} \u2013 ${hLabel}hrs - ${dLabel}`);
+    }
   }
-  return { days: '', start: '', end: '' };
+  if (lines.length === 0) throw new Error('ACTIVITIES_BLOCK is required');
+  return lines.join('\n');
 }
 
-const template = `Notice of Application for a [APPLICATION_TYPE]
+interface FormInput {
+  applicationType?: string;
+  applicantName?: string;
+  councilName?: string;
+  premisesName?: string;
+  premisesAddress?: string;
+  councilPostalAddress?: string;
+  councilOfficeHours?: string;
+  councilApplicationsUrl?: string;
+  representationDeadline?: string;
+  activities?: string[];
+  activityHours?: Record<string, Hours>;
+}
 
-I, [APPLICANT FULL NAME] Address of Premises: [PREMISES NAME], [PREMISES ADDRESS], [POSTCODE] have made the above application on [APPLICATION DATE] to [COUNCIL NAME] for:
-[LICENSABLE ACTIVITIES AND DESCRIPTION] and opening hours [DAYS] [START TIME] to [END TIME].
-The full application can be viewed at [COUNCIL NAME]. Contact [LICENSING MANAGER / OFFICER], [COUNCIL DEPARTMENT / OFFICE NAME], [COUNCIL OFFICE ADDRESS], between the hours of [VIEWING START TIME] and [VIEWING END TIME] on [VIEWING DAYS], visit [COUNCIL WEBSITE], or email: [COUNCIL LICENSING EMAIL].
-A Responsible Authority or Other Persons may make written representations about this application to the Licensing Office on or before [REPRESENTATION DEADLINE DATE].
-It is an offence, knowingly or recklessly, to make a false statement in connection with an application, and on summary conviction is liable to an unlimited fine.`;
+export function generateNotice(form: FormInput): string {
+  const heading = ensure(form.applicationType || '', 'HEADING_LINE_3');
+  const applicant = ensure(form.applicantName || '', 'APPLICANT_NAME');
+  const council = ensure(form.councilName || '', 'COUNCIL_NAME');
 
-export function generateNotice(form: any): string {
-  const { address, postcode } = extractAddressAndPostcode(form.premisesAddress || '');
-  const activityBlock = (form.activities || [])
-    .map((a: string) => `${a}\n${formatHours(form.activityHours?.[a] || {})}`)
-    .join('\n\n');
-  const opening = summarizeOpeningHours(form.openingHours || {});
+  const address = ensure(form.premisesAddress || '', 'PREMISES_ADDRESS_FULL');
+  if (!/[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/i.test(address)) {
+    throw new Error('PREMISES_ADDRESS_FULL must include postcode');
+  }
+  const premisesAddressFull = form.premisesName
+    ? `${form.premisesName}, ${address}`
+    : address;
+
+  const activities = formatActivities(form.activities || [], form.activityHours || {});
+
+  const councilPostal = ensure(form.councilPostalAddress || '', 'COUNCIL_POSTAL_ADDRESS');
+  const officeHours = ensure(form.councilOfficeHours || '', 'COUNCIL_OFFICE_HOURS');
+  const applicationsUrl = ensure(form.councilApplicationsUrl || '', 'COUNCIL_APPLICATIONS_URL');
+  const repDeadline = ensure(form.representationDeadline || '', 'REPRESENTATION_DEADLINE');
+
   const replacements: Record<string, string> = {
-    'APPLICATION_TYPE': form.applicationType || '',
-    'APPLICANT FULL NAME': form.applicantName || '',
-    'PREMISES NAME': form.premisesName || '',
-    'PREMISES ADDRESS': address,
-    'POSTCODE': postcode,
-    'APPLICATION DATE': form.applicationDate || new Date().toLocaleDateString('en-GB'),
-    'COUNCIL NAME': form.councilName || '',
-    'LICENSABLE ACTIVITIES AND DESCRIPTION': activityBlock,
-    'DAYS': opening.days,
-    'START TIME': opening.start,
-    'END TIME': opening.end,
-    'LICENSING MANAGER / OFFICER': form.licensingManager || '',
-    'COUNCIL DEPARTMENT / OFFICE NAME': form.councilDepartment || '',
-    'COUNCIL OFFICE ADDRESS': form.councilOfficeAddress || '',
-    'VIEWING START TIME': form.viewingStartTime || '',
-    'VIEWING END TIME': form.viewingEndTime || '',
-    'VIEWING DAYS': form.viewingDays || '',
-    'COUNCIL WEBSITE': form.councilWebsite || '',
-    'COUNCIL LICENSING EMAIL': form.councilLicensingEmail || form.councilEmail || '',
-    'REPRESENTATION DEADLINE DATE': form.representationDeadline || '',
+    HEADING_LINE_3: heading,
+    APPLICANT_NAME: applicant,
+    COUNCIL_NAME: council,
+    PREMISES_ADDRESS_FULL: premisesAddressFull,
+    ACTIVITIES_BLOCK: activities,
+    COUNCIL_POSTAL_ADDRESS: councilPostal,
+    COUNCIL_OFFICE_HOURS: officeHours,
+    COUNCIL_APPLICATIONS_URL: applicationsUrl,
+    REPRESENTATION_DEADLINE: repDeadline,
   };
+
   let text = template;
   for (const [key, value] of Object.entries(replacements)) {
-    text = text.replaceAll(`[${key}]`, value);
+    text = text.replace(`{{${key}}}`, value);
   }
   return text;
 }
