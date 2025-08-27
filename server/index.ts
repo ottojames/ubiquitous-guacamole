@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-import uploadsRouter from "./routes/uploads.js";
 
 const app = express();
 app.use(cors());
@@ -18,7 +17,6 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use("/api/uploads", uploadsRouter);
 
 const port = Number(process.env.PORT) || 5174;
 app.listen(port, () => {
