@@ -5,6 +5,7 @@ import TrafficForm from '../components/publish/TrafficForm';
 import GamblingForm from '../components/publish/GamblingForm';
 import Reveal from '../components/publish/Reveal';
 import { supabase } from '../lib/supabase';
+import SiteHeader from '../components/SiteHeader';
 
 export default function PublishPage() {
   const [type, setType] = useState<NoticeType | ''>('');
@@ -51,38 +52,48 @@ export default function PublishPage() {
   }
 
   return (
-    <main className="max-w-xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
-      <NoticeTypeSelect value={type} onChange={setType} />
-      <div ref={announceRef} aria-live="polite" className="sr-only" />
-      <Reveal show={type === 'premises'}>
-        {type === 'premises' && (
-          <PremisesForm
-            onSubmit={(d) => submit('premises', d as unknown as Record<string, unknown>)}
-            saving={saving}
-            autoFocusRef={firstFieldRef}
-          />
-        )}
-      </Reveal>
-      <Reveal show={type === 'traffic'}>
-        {type === 'traffic' && (
-          <TrafficForm
-            onSubmit={(d) => submit('traffic', d as unknown as Record<string, unknown>)}
-            saving={saving}
-            autoFocusRef={firstFieldRef}
-          />
-        )}
-      </Reveal>
-      <Reveal show={type === 'gambling'}>
-        {type === 'gambling' && (
-          <GamblingForm
-            onSubmit={(d) => submit('gambling', d as unknown as Record<string, unknown>)}
-            saving={saving}
-            autoFocusRef={firstFieldRef}
-          />
-        )}
-      </Reveal>
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-    </main>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background: 'linear-gradient(112deg, #192650 0%, #3866af 50%, #ffffff 100%)',
+      }}
+    >
+      <SiteHeader />
+      <main className="flex-1 flex items-start justify-center py-10 px-4">
+        <div className="w-full max-w-xl bg-white/95 rounded-2xl ring-1 ring-slate-200 shadow p-6">
+          <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
+          <NoticeTypeSelect value={type} onChange={setType} />
+          <div ref={announceRef} aria-live="polite" className="sr-only" />
+          <Reveal show={type === 'premises'}>
+            {type === 'premises' && (
+              <PremisesForm
+                onSubmit={(d) => submit('premises', d as unknown as Record<string, unknown>)}
+                saving={saving}
+                autoFocusRef={firstFieldRef}
+              />
+            )}
+          </Reveal>
+          <Reveal show={type === 'traffic'}>
+            {type === 'traffic' && (
+              <TrafficForm
+                onSubmit={(d) => submit('traffic', d as unknown as Record<string, unknown>)}
+                saving={saving}
+                autoFocusRef={firstFieldRef}
+              />
+            )}
+          </Reveal>
+          <Reveal show={type === 'gambling'}>
+            {type === 'gambling' && (
+              <GamblingForm
+                onSubmit={(d) => submit('gambling', d as unknown as Record<string, unknown>)}
+                saving={saving}
+                autoFocusRef={firstFieldRef}
+              />
+            )}
+          </Reveal>
+          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        </div>
+      </main>
+    </div>
   );
 }
