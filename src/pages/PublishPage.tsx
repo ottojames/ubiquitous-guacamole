@@ -6,6 +6,7 @@ import GamblingForm from '../components/publish/GamblingForm';
 import Reveal from '../components/publish/Reveal';
 import { supabase } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
+import BlueNoticeUpload from '../components/BlueNoticeUpload';
 
 export default function PublishPage() {
   const [type, setType] = useState<NoticeType | ''>('');
@@ -13,6 +14,11 @@ export default function PublishPage() {
   const [error, setError] = useState('');
   const firstFieldRef = useRef<HTMLInputElement>(null);
   const announceRef = useRef<HTMLDivElement>(null);
+
+  function handleUploaded(files: any[]) {
+    localStorage.setItem('blueNoticeUploads', JSON.stringify(files));
+    window.location.href = '/details';
+  }
 
   useEffect(() => {
     if (type && firstFieldRef.current) firstFieldRef.current.focus();
@@ -62,6 +68,7 @@ export default function PublishPage() {
       <main className="flex-1 flex items-start justify-center py-10 px-4">
         <div className="w-full max-w-xl bg-white/95 rounded-2xl ring-1 ring-slate-200 shadow p-6">
           <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
+          <BlueNoticeUpload onUploaded={handleUploaded} />
           <NoticeTypeSelect value={type} onChange={setType} />
           <div ref={announceRef} aria-live="polite" className="sr-only" />
           <Reveal show={type === 'premises'}>
