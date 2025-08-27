@@ -1,0 +1,33 @@
+export type NoticeType =
+  | "Premises Licence"
+  | "TEN"
+  | "Gambling"
+  | "Goods Vehicle Operator"
+  | "Traffic Order";
+
+export type UploadedFile = {
+  id: string;
+  filename: string;
+  url: string;
+  size: number;
+  mime: string;
+};
+
+export type NoticeDraft = {
+  id: string;
+  createdAt: string;
+  noticeType: NoticeType;
+  applicantName: string;
+  applicantEmail: string;
+  applicantPhone?: string;
+  premisesName?: string;
+  premisesAddress: string;
+  postcode: string;
+  council?: string;
+  consultationStart?: string; // yyyy-mm-dd
+  consultationEnd?: string;   // yyyy-mm-dd
+  blueNoticeUploads: UploadedFile[];
+  newspaperProofUploads?: UploadedFile[];
+  additionalDocs?: UploadedFile[];
+  status: "Draft" | "Submitted";
+};
