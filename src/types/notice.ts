@@ -24,6 +24,7 @@ export type NoticeDraft = {
   premisesAddress: string;
   postcode: string;
   council?: string;
+  councilEmail?: string;
   consultationStart?: string; // yyyy-mm-dd
   consultationEnd?: string;   // yyyy-mm-dd
   blueNoticeUploads: UploadedFile[];
