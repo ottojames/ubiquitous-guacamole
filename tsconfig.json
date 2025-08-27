@@ -9,7 +9,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "lodash.debounce": ["src/shims/lodash.debounce.ts"]
+    }
   },
   "include": [
     "next-env.d.ts",

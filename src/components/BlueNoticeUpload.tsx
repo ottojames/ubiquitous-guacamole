@@ -88,6 +88,9 @@ export default function BlueNoticeUpload({ onUploaded }: { onUploaded: (files: U
           <div>Drag & drop, or click to choose file(s)</div>
         </div>
       </div>
+      <p className="mt-2 text-xs text-slate-500">
+        After upload, you’ll see a preview below. Please check your notice for any mistakes.
+      </p>
       {status === "uploading" && <div className="mt-3 text-sm">Uploading…</div>}
       {status === "done" && <div className="mt-3 text-sm text-emerald-600">Uploaded. Redirecting…</div>}
       {status === "error" && <div className="mt-3 text-sm text-rose-600">{error}</div>}

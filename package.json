@@ -23,7 +23,8 @@
     "react-dropzone": "*",
     "multer": "*",
     "express": "*",
-    "cors": "*"
+    "cors": "*",
+    "lodash.debounce": "^4.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
