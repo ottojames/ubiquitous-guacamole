@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"ts-node-dev server/index.ts\"",
+    "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "build": "vite build",
     "lint": "eslint . --ext .ts,.tsx",
     "preview": "vite preview",
@@ -53,6 +53,7 @@
     "@types/express": "*",
     "@types/cors": "*",
     "ts-node-dev": "*",
-    "concurrently": "*"
+    "concurrently": "*",
+    "tsx": "*"
   }
 }
