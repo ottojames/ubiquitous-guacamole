@@ -59,13 +59,29 @@ export default function PublishPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
         background: 'linear-gradient(112deg, #192650 0%, #3866af 50%, #ffffff 100%)',
       }}
     >
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          background: 'radial-gradient(ellipse at 65% 40%, rgba(255,255,255,0.24) 0%, transparent 80%)',
+          mixBlendMode: 'lighten',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          background: 'linear-gradient(120deg, rgba(53,136,255,0.70) 0%, rgba(120,126,255,0.60) 50%, rgba(204,148,255,0.6) 100%)',
+          mixBlendMode: 'lighten',
+        }}
+      />
       <SiteHeader />
-      <main className="flex-1 flex items-start justify-center py-10 px-4">
+      <main className="relative z-10 flex-1 flex items-start justify-center py-10 px-4">
         <div className="w-full max-w-xl bg-white/95 rounded-2xl ring-1 ring-slate-200 shadow p-6">
           <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
           <BlueNoticeUpload onUploaded={handleUploaded} />
