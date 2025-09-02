@@ -1,3 +1,4 @@
+import React from "react";
 import { render } from "@testing-library/react";
 import FilterBar from "../components/FilterBar";
 import type { Filters } from "../lib/filter";
