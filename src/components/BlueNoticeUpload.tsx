@@ -85,7 +85,8 @@ export default function BlueNoticeUpload({
         const fd = new FormData();
         fd.append("file", file);
         const res = await fetch("/api/upload/ocr", { method: "POST", body: fd });
-        const textBody = await res.text();
+        const textBody =
+          typeof res.text === "function" ? await res.text() : "";
         let json: any = {};
         if (
           textBody &&

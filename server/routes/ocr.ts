@@ -70,16 +70,23 @@ async function extractText(buffer: Buffer, filename: string, mimeType: string) {
 }
 
 export function ocrUpload(req: Request, res: Response) {
-  const bb = busboy({ headers: req.headers });
+  const bb = busboy({
+    headers: req.headers,
+    limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  });
   let fileBuffer: Buffer = Buffer.alloc(0);
   let filename = "";
   let mimeType = "";
+  let tooLarge = false;
 
   bb.on("file", (_name, file, info) => {
     filename = info.filename;
     mimeType = info.mimeType;
     file.on("data", (data: Buffer) => {
       fileBuffer = Buffer.concat([fileBuffer, data]);
+    });
+    file.on("limit", () => {
+      tooLarge = true;
     });
   });
 
@@ -89,15 +96,24 @@ export function ocrUpload(req: Request, res: Response) {
   });
 
   bb.on("finish", async () => {
+    if (tooLarge) {
+      return res
+        .status(400)
+        .json({ text: "", meta: { error: "File must be 10 MB or less" } });
+    }
     if (!fileBuffer.length) {
-      return res.status(400).json({ text: "", meta: { error: "No file uploaded" } });
+      return res
+        .status(400)
+        .json({ text: "", meta: { error: "No file uploaded" } });
     }
     try {
       const text = await extractText(fileBuffer, filename, mimeType);
       res.json({ text: text.trim(), meta: { filename, mimeType } });
     } catch (err: any) {
       console.error(err);
-      res.status(400).json({ text: "", meta: { error: err?.message || String(err) } });
+      res
+        .status(400)
+        .json({ text: "", meta: { error: err?.message || String(err) } });
     }
   });
 
