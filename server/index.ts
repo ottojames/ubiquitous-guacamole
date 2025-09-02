@@ -3,12 +3,14 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import notifyRouter from "./routes/notify.js";
+import { ocrUpload } from "./routes/ocr.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/notify", notifyRouter);
+app.post("/api/upload/ocr", ocrUpload);
 
 // Static serving for uploads in dev
 const __filename = fileURLToPath(import.meta.url);

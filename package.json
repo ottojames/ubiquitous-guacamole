@@ -30,7 +30,9 @@
     "pdf-parse": "*",
     "tesseract.js": "*",
     "sharp": "*",
-    "file-type": "*"
+    "file-type": "*",
+    "busboy": "*",
+    "textract": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
