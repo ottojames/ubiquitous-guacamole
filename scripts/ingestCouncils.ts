@@ -12,7 +12,7 @@ async function parseDocx(filePath: string): Promise<CouncilRow[]> {
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean)
-    .map((line) => {
+    .map((line: { split: (arg0: RegExp) => [any, any]; }) => {
       const [name, email] = line.split(/\s+-\s+/);
       return { name, email, aliases: [] } as CouncilRow;
     });
