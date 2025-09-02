@@ -6,6 +6,8 @@ node_modules
 dist
 build
 *.tsbuildinfo
+coverage
+uploads
 
 # OS files
 .DS_Store
@@ -20,3 +22,6 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# misc
+*.log

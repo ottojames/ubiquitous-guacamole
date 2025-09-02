@@ -24,6 +24,7 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/*"],
       "lodash.debounce": ["src/shims/lodash.debounce.ts"]
     }
   },
