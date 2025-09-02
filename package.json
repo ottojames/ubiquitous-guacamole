@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "start": "vite preview",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ingest:councils": "tsx scripts/ingestCouncils.ts"
   },
   "dependencies": {
     "framer-motion": "^12.23.12",
@@ -24,7 +25,12 @@
     "multer": "*",
     "express": "*",
     "cors": "*",
-    "lodash.debounce": "^4.0.8"
+    "lodash.debounce": "^4.0.8",
+    "mammoth": "*",
+    "pdf-parse": "*",
+    "tesseract.js": "*",
+    "sharp": "*",
+    "file-type": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
