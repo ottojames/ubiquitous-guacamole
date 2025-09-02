@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import busboy from "busboy";
-import pdfParse from "pdf-parse";
+import pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import mammoth from "mammoth";
 import textract from "textract";
 import Tesseract from "tesseract.js";
@@ -32,8 +32,18 @@ async function extractText(buffer: Buffer, filename: string, mimeType: string) {
   const ext = path.extname(filename).toLowerCase();
   const type = mimeType || mimeFromExt(ext);
   if (type === "application/pdf" || ext === ".pdf") {
-    const data = await pdfParse(buffer);
-    return data.text;
+    const loadingTask = pdfjs.getDocument({ data: buffer });
+    const pdf = await loadingTask.promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const strings = content.items.map((item: any) =>
+        "str" in item ? (item.str as string) : ""
+      );
+      text += strings.join(" ") + "\n";
+    }
+    return text;
   }
   if (
     type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
