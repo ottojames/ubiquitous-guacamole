@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{
+  --brand:#1e50af;           /* your blue */
+  --shadow:0 8px 24px rgba(2,6,23,.06);
+}
