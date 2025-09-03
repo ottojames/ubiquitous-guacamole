@@ -59,7 +59,7 @@ export default function BlueNoticeUpload({
         // 2) Send to OCR (make JSON parsing robust)
         const fd = new FormData();
         fd.append("file", file);
-        const res = await fetch("/api/upload/ocr", { method: "POST", body: fd });
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
         const json = await res.json();
         onOcrComplete(json.text || "", json.meta || {});
         onChange(json.text || "");
