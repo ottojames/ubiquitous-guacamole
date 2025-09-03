@@ -130,7 +130,7 @@ export default function BlueNoticeUpload({
           }`,
         })}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps({ name: 'file' })} />
         <div className="text-sm text-slate-600">
           <div className="font-medium mb-1">
             PDF, PNG, JPG, DOC, DOCX, RTF or TXT

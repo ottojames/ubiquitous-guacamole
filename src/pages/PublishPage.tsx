@@ -1,9 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import BlueNoticeUpload from "../components/BlueNoticeUpload";
-import CouncilCombobox, { CouncilOption } from "../components/CouncilCombobox";
 import AddressAutocomplete, { AddressOption } from "../components/AddressAutocomplete";
 import NoFileBuilder from "../components/NoFileBuilder";
-import { validatePublishForm } from "../utils/validation";
 
 export default function PublishPage() {
   const [noticeText, setNoticeText] = useState("");
@@ -20,8 +18,49 @@ export default function PublishPage() {
     councilEmail: "",
     premisesAddress: { line1: "", line2: "", line3: "", city: "", postcode: "" },
   });
-  const errors = validatePublishForm({ ...form, noticeText });
-  const disabled = publishing || Object.keys(errors).length > 0;
+  const [councilQuery, setCouncilQuery] = useState("");
+  const [councilOptions, setCouncilOptions] = useState<{ name: string; email: string }[]>([]);
+  const [selectedCouncil, setSelectedCouncil] = useState<{ name: string; email: string } | null>(null);
+
+  useEffect(() => {
+    let cancel = false;
+    const run = async () => {
+      const q = councilQuery.trim().toLowerCase();
+      if (!q) {
+        setCouncilOptions([]);
+        return;
+      }
+      const res = await fetch('/councils.json');
+      const all = (await res.json()) as { name: string; email: string }[];
+      const matches = all.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 20);
+      if (!cancel) setCouncilOptions(matches);
+    };
+    const t = setTimeout(run, 150);
+    return () => {
+      cancel = true;
+      clearTimeout(t);
+    };
+  }, [councilQuery]);
+
+  const onPickCouncil = (c: { name: string; email: string }) => {
+    setSelectedCouncil(c);
+    setCouncilQuery(c.name);
+    setForm((f) => ({ ...f, councilName: c.name, councilEmail: c.email }));
+    setCouncilOptions([]);
+  };
+
+  const isEmail = (s: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
+  const councilValid =
+    selectedCouncil !== null ||
+    (form.councilName.trim() && form.councilEmail.trim());
+  const requiredFilled =
+    form.applicantName.trim() &&
+    isEmail(form.applicantEmail) &&
+    councilValid &&
+    (!form.councilEmail || isEmail(form.councilEmail)) &&
+    form.premisesAddress.line1.trim() &&
+    form.premisesAddress.postcode.trim();
+  const disabled = publishing || !requiredFilled;
 
   const handlePublish = async () => {
     if (disabled) return;
@@ -47,10 +86,6 @@ export default function PublishPage() {
     } finally {
       setPublishing(false);
     }
-  };
-
-  const handleCouncil = (c: CouncilOption) => {
-    setForm((f) => ({ ...f, councilName: c.name, councilEmail: c.email || '' }));
   };
 
   const handleAddress = (a: AddressOption) => {
@@ -102,7 +137,6 @@ export default function PublishPage() {
               value={form.applicantName}
               onChange={(e) => setForm({ ...form, applicantName: e.target.value })}
             />
-            {errors.applicantName && <p className="text-xs text-rose-600">{errors.applicantName}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium">
@@ -113,26 +147,41 @@ export default function PublishPage() {
               value={form.applicantEmail}
               onChange={(e) => setForm({ ...form, applicantEmail: e.target.value })}
             />
-            {errors.applicantEmail && <p className="text-xs text-rose-600">{errors.applicantEmail}</p>}
+          </div>
+          <div className="relative">
+            <label className="block text-sm font-medium">Council Name</label>
+            <input
+              className="w-full border rounded p-2"
+              value={councilQuery}
+              onChange={(e) => {
+                setCouncilQuery(e.target.value);
+                setForm({ ...form, councilName: e.target.value });
+              }}
+            />
+            {councilOptions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow">
+                {councilOptions.map((c) => (
+                  <div
+                    key={c.name}
+                    className="px-2 py-1 hover:bg-slate-100 cursor-pointer"
+                    onClick={() => onPickCouncil(c)}
+                  >
+                    {c.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
-            <CouncilCombobox onSelect={handleCouncil} />
-            {errors.councilName && <p className="text-xs text-rose-600">{errors.councilName}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">
-              Council Email<span className="text-rose-600 ml-0.5">*</span>
-            </label>
+            <label className="block text-sm font-medium">Council Email</label>
             <input
               className="w-full border rounded p-2"
               value={form.councilEmail}
               onChange={(e) => setForm({ ...form, councilEmail: e.target.value })}
             />
-            {errors.councilEmail && <p className="text-xs text-rose-600">{errors.councilEmail}</p>}
           </div>
           <div>
             <AddressAutocomplete onSelect={handleAddress} />
-            {errors.premisesAddress && <p className="text-xs text-rose-600">{errors.premisesAddress}</p>}
             {form.premisesAddress.line1 && (
               <div className="mt-2 space-y-1">
                 {(["line1", "line2", "line3", "city", "postcode"] as const).map((f) => (
