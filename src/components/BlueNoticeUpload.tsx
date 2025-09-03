@@ -1,5 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { createClient } from '@supabase/supabase-js';
+
+const sb = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
 
 interface Props {
   value: string;
@@ -11,7 +17,6 @@ interface Props {
   councilName?: string;
   councilEmail?: string;
   premisesAddress?: string;
-  uploaderId?: string;
 }
 
 const ACCEPT = {
@@ -36,7 +41,6 @@ export default function BlueNoticeUpload({
   councilName,
   councilEmail,
   premisesAddress,
-  uploaderId,
 }: Props) {
   const [status, setStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -56,7 +60,11 @@ export default function BlueNoticeUpload({
       if (councilName) fd.append('councilName', councilName);
       if (councilEmail) fd.append('councilEmail', councilEmail);
       if (premisesAddress) fd.append('premisesAddress', premisesAddress);
-      if (uploaderId) fd.append('uploaderId', uploaderId);
+
+      const {
+        data: { user },
+      } = await sb.auth.getUser();
+      if (user?.id) fd.append('uploaderId', user.id); // include only when logged in
 
       try {
         const res = await fetch(UPLOAD_URL, { method: 'POST', body: fd });
@@ -90,7 +98,6 @@ export default function BlueNoticeUpload({
       councilName,
       councilEmail,
       premisesAddress,
-      uploaderId,
       onChange,
       onOcrComplete,
     ],
