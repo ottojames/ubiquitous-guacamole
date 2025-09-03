@@ -7,15 +7,12 @@
     "node": ">=18.18"
   },
   "scripts": {
-    "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
+    "dev": "concurrently \"vite\" \"tsx watch --env-file=.env server/index.ts\"",
     "build": "vite build",
-    "lint": "eslint . --ext .ts,.tsx",
     "preview": "vite preview",
-    "test": "vitest run",
-    "start": "vite preview",
-    "test:watch": "vitest",
-    "ingest:councils": "tsx scripts/ingestCouncils.ts",
-    "dev:server": "ts-node server/index.ts"
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "fix": "eslint . --ext .ts,.tsx --fix && prettier --write ."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
