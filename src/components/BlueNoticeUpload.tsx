@@ -7,6 +7,39 @@ const sb = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY,
 );
 
+async function publish(
+  file: File,
+  form: {
+    applicantEmail: string;
+    applicantName?: string;
+    councilName?: string;
+    councilEmail?: string;
+    premisesAddress?: string;
+  },
+) {
+  const fd = new FormData();
+  fd.append('file', file); // must be 'file'
+  fd.append('applicantEmail', form.applicantEmail); // must be 'applicantEmail'
+  if (form.applicantName) fd.append('applicantName', form.applicantName);
+  if (form.councilName) fd.append('councilName', form.councilName);
+  if (form.councilEmail) fd.append('councilEmail', form.councilEmail);
+  if (form.premisesAddress) fd.append('premisesAddress', form.premisesAddress);
+
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (user?.id) fd.append('uploaderId', user.id); // include only if logged in
+
+  const res = await fetch('/api/upload', { method: 'POST', body: fd });
+  const ct = res.headers.get('content-type') || '';
+  const out = ct.includes('application/json')
+    ? await res.json()
+    : { ok: false, error: { message: await res.text() } };
+  if (!res.ok || !out.ok)
+    throw new Error(out?.error?.message ?? `Upload failed (${res.status})`);
+  return out;
+}
+
 interface Props {
   value: string;
   onChange: (v: string) => void;
@@ -28,8 +61,6 @@ const ACCEPT = {
   'text/plain': ['.txt'],
   'application/rtf': ['.rtf'],
 };
-
-const UPLOAD_URL = '/api/upload';
 
 export default function BlueNoticeUpload({
   value,
@@ -53,35 +84,14 @@ export default function BlueNoticeUpload({
       setError('');
       setStatus('uploading');
 
-      const fd = new FormData();
-      fd.append('file', file);
-      if (applicantEmail) fd.append('applicantEmail', applicantEmail);
-      if (applicantName) fd.append('applicantName', applicantName);
-      if (councilName) fd.append('councilName', councilName);
-      if (councilEmail) fd.append('councilEmail', councilEmail);
-      if (premisesAddress) fd.append('premisesAddress', premisesAddress);
-
-      const {
-        data: { user },
-      } = await sb.auth.getUser();
-      if (user?.id) fd.append('uploaderId', user.id); // include only when logged in
-
       try {
-        const res = await fetch(UPLOAD_URL, { method: 'POST', body: fd });
-        const ct = res.headers.get('content-type') || '';
-        let json: any;
-        if (ct.includes('application/json')) {
-          json = await res.json();
-        } else {
-          const text = await res.text();
-          throw new Error(text || 'Unexpected response');
-        }
-
-        if (!json.ok) {
-          setError(json.error?.message || 'Upload failed');
-          setStatus('error');
-          return;
-        }
+        const json = await publish(file, {
+          applicantEmail: applicantEmail!,
+          applicantName,
+          councilName,
+          councilEmail,
+          premisesAddress,
+        });
 
         setSignedUrl(json.signed_url || '');
         onOcrComplete(json.ocr_text || '', json);
