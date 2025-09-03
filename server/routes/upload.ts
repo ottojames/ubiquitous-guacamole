@@ -5,11 +5,14 @@ import { extname } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import slugify from 'slugify'
 import { ocrFile } from '../utils/ocr'
+ codex/patch-file-uploads-for-all-users-i0zf09
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
 })
+
+ main
 
 const router = Router()
 
@@ -38,6 +41,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     )
     const bucket = process.env.SUPABASE_BUCKET || 'notices'
 
+ codex/patch-file-uploads-for-all-users-i0zf09
     const uploaded = await supabase.storage
       .from(bucket)
       .upload(path, file.buffer, { contentType: file.mimetype })
@@ -79,6 +83,53 @@ router.post('/', upload.single('file'), async (req, res) => {
         ok: false,
         error: { code: 'DB_INSERT_FAIL', message: row.error.message },
       })
+
+  bb.on('close', async () => {
+    if (res.headersSent) return
+    if (!fileHandled || !fileBuffer) {
+      return res.status(400).json({ ok: false, code: 'NO_FILE', message: 'No file provided', requestId })
+    }
+    try {
+      const now = new Date()
+      const safeName = slugify(filename, { lower: true })
+      const path = `uploads/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}/${requestId}-${safeName}`
+      const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      const bucket = process.env.SUPABASE_BUCKET || 'notices'
+      const uploaded = await supabase.storage.from(bucket).upload(path, fileBuffer, { contentType: mimeType })
+      if (uploaded.error) throw uploaded.error
+      const signed = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 24 * 365 * 10)
+      if (signed.error) throw signed.error
+      const ocr_text = await ocrFile(fileBuffer, mimeType, extname(filename).toLowerCase())
+      const applicantEmail = fields['applicantEmail']
+      const uploaderId = fields['uploaderId']
+      const row = await supabase
+        .from('uploads')
+        .insert({
+          bucket,
+          path,
+          file_name: safeName,
+          mime_type: mimeType,
+          size_bytes: size,
+          applicant_email: applicantEmail,
+          ocr_text,
+          status: 'processed',
+          public_url: signed.data.signedUrl,
+          uploader_id: uploaderId ?? null, // allow NULL when anonymous
+        })
+        .select()
+        .single()
+      if (row.error) {
+        return res.status(500).json({
+          ok: false,
+          error: { code: 'DB_INSERT_FAIL', message: row.error.message },
+        })
+      }
+      console.log(`[upload] ${requestId} ${filename} ${size} -> ${path}`)
+      res.json({ ok: true, ...row.data, publicUrl: row.data?.public_url })
+    } catch (err: any) {
+      console.error(`[upload ERR] ${requestId}`, err)
+      res.status(500).json({ ok: false, error: { code: 'UPLOAD_FAILED', message: err?.message || 'Upload failed' }, requestId })
+      main
     }
 
     console.log(`[upload] ${requestId} ${file.originalname} ${file.size} -> ${path}`)
