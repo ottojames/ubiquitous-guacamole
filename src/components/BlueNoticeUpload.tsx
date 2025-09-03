@@ -1,21 +1,42 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { createClient } from '@supabase/supabase-js';
+
+const sb = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 async function uploadFile(
   file: File,
-  form: { applicantEmail: string; noticeType?: string }
+  form: {
+    applicantEmail: string;
+    applicantName?: string;
+    councilName?: string;
+    councilEmail?: string;
+    premisesAddress?: string;
+  }
 ) {
   const fd = new FormData();
-  fd.append('file', file);
+  fd.append('file', file); // must be 'file'
   fd.append('applicantEmail', form.applicantEmail);
-  if (form.noticeType) fd.append('noticeType', form.noticeType);
+  if (form.applicantName) fd.append('applicantName', form.applicantName);
+  if (form.councilName) fd.append('councilName', form.councilName);
+  if (form.councilEmail) fd.append('councilEmail', form.councilEmail);
+  if (form.premisesAddress) fd.append('premisesAddress', form.premisesAddress);
+
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (user?.id) fd.append('uploaderId', user.id);
+
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
   const ct = res.headers.get('content-type') || '';
   const out = ct.includes('application/json')
     ? await res.json()
-    : { ok: false, message: await res.text() };
+    : { ok: false, error: { message: await res.text() } };
   if (!res.ok || !out.ok) {
-    throw new Error(out?.message || `Upload failed (${res.status})`);
+    throw new Error(out?.error?.message || `Upload failed (${res.status})`);
   }
   return out;
 }
@@ -26,7 +47,10 @@ interface Props {
   onOcrComplete: (text: string, meta: any) => void;
   engine?: string;
   applicantEmail?: string;
-  noticeType?: string;
+  applicantName?: string;
+  councilName?: string;
+  councilEmail?: string;
+  premisesAddress?: string;
 }
 
 const ACCEPT = {
@@ -45,7 +69,10 @@ export default function BlueNoticeUpload({
   onOcrComplete,
   engine,
   applicantEmail,
-  noticeType,
+  applicantName,
+  councilName,
+  councilEmail,
+  premisesAddress,
 }: Props) {
   const [status, setStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -60,7 +87,10 @@ export default function BlueNoticeUpload({
       try {
         const json = await uploadFile(file, {
           applicantEmail,
-          noticeType,
+          applicantName,
+          councilName,
+          councilEmail,
+          premisesAddress,
         });
         setSignedUrl(json.publicUrl || '');
         onOcrComplete(json.ocr_text || '', json);
@@ -71,7 +101,15 @@ export default function BlueNoticeUpload({
         setStatus('error');
       }
     },
-    [applicantEmail, noticeType, onChange, onOcrComplete]
+    [
+      applicantEmail,
+      applicantName,
+      councilName,
+      councilEmail,
+      premisesAddress,
+      onChange,
+      onOcrComplete,
+    ]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
