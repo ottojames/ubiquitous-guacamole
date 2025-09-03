@@ -1,46 +1,57 @@
-import fs from 'fs/promises';
 import path from 'path';
-import mammoth from 'mammoth';
+import XLSX from 'xlsx';
 import { createClient } from '@supabase/supabase-js';
 
-interface CouncilRow { name: string; email: string; aliases: string[] }
+interface CouncilRow {
+  name: string;
+  email: string;
+}
 
-async function parseDocx(filePath: string): Promise<CouncilRow[]> {
-  const buffer = await fs.readFile(filePath);
-  const { value } = await mammoth.extractRawText({ buffer });
-  return value
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((line: { split: (arg0: RegExp) => [any, any]; }) => {
-      const [name, email] = line.split(/\s+-\s+/);
-      return { name, email, aliases: [] } as CouncilRow;
-    });
+function parseXlsx(filePath: string): CouncilRow[] {
+  const wb = XLSX.readFile(filePath);
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
+
+  return rows
+    .map((r) => {
+      const normalized = Object.fromEntries(
+        Object.entries(r).map(([k, v]) => [k.toLowerCase(), String(v).trim()])
+      );
+      const name =
+        normalized['council name'] ||
+        normalized['name'] ||
+        normalized['council'];
+      const email =
+        normalized['email'] ||
+        normalized['email address'] ||
+        normalized['council email'];
+      return { name, email } as CouncilRow;
+    })
+    .filter((r) => r.name && r.email);
 }
 
 async function main() {
-  const file = path.resolve('data/councils.docx');
-  const councils = await parseDocx(file);
-  await fs.writeFile('councils.json', JSON.stringify(councils, null, 2));
+  const file = path.resolve('Accurate_Council_Emails_From_PDF.xlsx');
+  const councils = parseXlsx(file);
 
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    '';
   if (!url || !key) {
     console.error('Missing Supabase credentials');
-    return;
+    process.exit(1);
   }
+
   const client = createClient(url, key);
-  for (const row of councils) {
-    await client.from('councils').upsert({
-      name: row.name,
-      email: row.email,
-      aliases: row.aliases,
-    });
-  }
-  console.log(`Uploaded ${councils.length} councils`);
+  await client.from('councils').upsert(councils, { onConflict: 'name' });
+
+  console.log(`Upserted ${councils.length} councils`);
 }
 
 main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+

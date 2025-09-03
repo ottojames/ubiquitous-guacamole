@@ -50,7 +50,7 @@ export default function PublishPage() {
   };
 
   const handleCouncil = (c: CouncilOption) => {
-    setForm((f) => ({ ...f, councilName: c.name, councilEmail: c.email || f.councilEmail }));
+    setForm((f) => ({ ...f, councilName: c.name, councilEmail: c.email || '' }));
   };
 
   const handleAddress = (a: AddressOption) => {
