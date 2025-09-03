@@ -9,7 +9,7 @@ export interface CouncilOption {
 
 export default function CouncilCombobox({ onSelect }: { onSelect: (c: CouncilOption) => void }) {
   const fetchOptions = async (q: string) => {
-    const res = await fetch(`/api/councils?query=${encodeURIComponent(q)}`);
+    const res = await fetch(`/api/councils?q=${encodeURIComponent(q)}`);
     if (!res.ok) return [];
     return res.json();
   };
