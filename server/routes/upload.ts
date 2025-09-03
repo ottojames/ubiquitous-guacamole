@@ -88,14 +88,14 @@ router.post('/', upload, async (req, res) => {
         ocr_text,
         status: 'processed',
         public_url: signedUrl,
-        uploader_id: uploaderId || null,
+        uploader_id: uploaderId ? uploaderId : null, // ← allowed to be NULL now
       })
       .select()
       .single();
     if (dbError) {
       return res
         .status(500)
-        .json({ ok: false, error: { code: 'DB_INSERT_FAILED', message: dbError.message } });
+        .json({ ok: false, error: { code: 'DB_INSERT_FAIL', message: dbError.message } });
     }
 
     sendConfirmation({
