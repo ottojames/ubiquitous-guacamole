@@ -1,21 +1,27 @@
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import notifyRouter from "./routes/notify.js";
-import { ocrUpload } from "./routes/ocr.js";
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import notifyRouter from './routes/notify';
+import uploadRouter from './routes/upload';
 
 const app = express();
 app.use(cors());
+app.use(helmet());
+app.use(morgan('dev'));
 app.use(express.json());
 
-app.use("/api/notify", notifyRouter);
-app.post("/api/upload/ocr", ocrUpload);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use('/api/notify', notifyRouter);
+app.use('/api/upload', uploadRouter);
 
 // Healthcheck
-app.get("/api/health", (_req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
+});
+
+app.use((err: any, _req: any, res: any, _next: any) => {
+  const status = err?.status || 500;
+  res.status(status).json({ ok: false, error: { code: 'UNHANDLED', message: err?.message || 'Server error' } });
 });
 
 const port = Number(process.env.PORT) || 5174;
