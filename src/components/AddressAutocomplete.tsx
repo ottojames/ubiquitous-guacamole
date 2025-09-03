@@ -15,7 +15,8 @@ export default function AddressAutocomplete({ onSelect }: { onSelect: (a: Addres
   const fetchOptions = async (q: string) => {
     const res = await fetch(`/api/address/search?q=${encodeURIComponent(q)}`);
     if (!res.ok) return [];
-    return res.json();
+    const json = await res.json();
+    return json.suggestions || [];
   };
   return (
     <AsyncCombobox<AddressOption>

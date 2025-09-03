@@ -1,42 +1,22 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { createClient } from '@supabase/supabase-js';
 
-const sb = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
-
-async function publish(
+async function uploadFile(
   file: File,
-  form: {
-    applicantEmail: string;
-    applicantName?: string;
-    councilName?: string;
-    councilEmail?: string;
-    premisesAddress?: string;
-  },
+  form: { applicantEmail: string; noticeType?: string }
 ) {
   const fd = new FormData();
-  fd.append('file', file); // must be 'file'
-  fd.append('applicantEmail', form.applicantEmail); // must be 'applicantEmail'
-  if (form.applicantName) fd.append('applicantName', form.applicantName);
-  if (form.councilName) fd.append('councilName', form.councilName);
-  if (form.councilEmail) fd.append('councilEmail', form.councilEmail);
-  if (form.premisesAddress) fd.append('premisesAddress', form.premisesAddress);
-
-  const {
-    data: { user },
-  } = await sb.auth.getUser();
-  if (user?.id) fd.append('uploaderId', user.id); // include only if logged in
-
+  fd.append('file', file);
+  fd.append('applicantEmail', form.applicantEmail);
+  if (form.noticeType) fd.append('noticeType', form.noticeType);
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
   const ct = res.headers.get('content-type') || '';
   const out = ct.includes('application/json')
     ? await res.json()
-    : { ok: false, error: { message: await res.text() } };
-  if (!res.ok || !out.ok)
-    throw new Error(out?.error?.message ?? `Upload failed (${res.status})`);
+    : { ok: false, message: await res.text() };
+  if (!res.ok || !out.ok) {
+    throw new Error(out?.message || `Upload failed (${res.status})`);
+  }
   return out;
 }
 
@@ -46,10 +26,7 @@ interface Props {
   onOcrComplete: (text: string, meta: any) => void;
   engine?: string;
   applicantEmail?: string;
-  applicantName?: string;
-  councilName?: string;
-  councilEmail?: string;
-  premisesAddress?: string;
+  noticeType?: string;
 }
 
 const ACCEPT = {
@@ -68,10 +45,7 @@ export default function BlueNoticeUpload({
   onOcrComplete,
   engine,
   applicantEmail,
-  applicantName,
-  councilName,
-  councilEmail,
-  premisesAddress,
+  noticeType,
 }: Props) {
   const [status, setStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -79,21 +53,16 @@ export default function BlueNoticeUpload({
 
   const onDrop = useCallback(
     async (accepted: File[]) => {
-      if (!accepted.length) return;
+      if (!accepted.length || !applicantEmail) return;
       const file = accepted[0];
       setError('');
       setStatus('uploading');
-
       try {
-        const json = await publish(file, {
-          applicantEmail: applicantEmail!,
-          applicantName,
-          councilName,
-          councilEmail,
-          premisesAddress,
+        const json = await uploadFile(file, {
+          applicantEmail,
+          noticeType,
         });
-
-        setSignedUrl(json.signed_url || '');
+        setSignedUrl(json.publicUrl || '');
         onOcrComplete(json.ocr_text || '', json);
         onChange(json.ocr_text || '');
         setStatus('idle');
@@ -102,21 +71,14 @@ export default function BlueNoticeUpload({
         setStatus('error');
       }
     },
-    [
-      applicantEmail,
-      applicantName,
-      councilName,
-      councilEmail,
-      premisesAddress,
-      onChange,
-      onOcrComplete,
-    ],
+    [applicantEmail, noticeType, onChange, onOcrComplete]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
     accept: ACCEPT,
+    disabled: status === 'uploading',
   });
 
   const wordCount = value ? value.trim().split(/\s+/).filter(Boolean).length : 0;
@@ -143,7 +105,16 @@ export default function BlueNoticeUpload({
         <div className="mt-2 text-sm">Uploading…</div>
       )}
       {status === 'error' && (
-        <div className="mt-2 text-sm text-rose-600">{error}</div>
+        <div className="mt-2 text-sm text-rose-600">
+          {error}
+          <button
+            type="button"
+            className="ml-2 underline"
+            onClick={() => setStatus('idle')}
+          >
+            Retry
+          </button>
+        </div>
       )}
       {signedUrl && (
         <div className="mt-2 text-sm">
