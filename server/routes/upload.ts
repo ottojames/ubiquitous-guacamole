@@ -76,7 +76,7 @@ router.post('/', upload, async (req, res) => {
     const ext = path.extname(sanitized).toLowerCase();
     const ocr_text = await ocrFile(file.buffer, file.mimetype, ext);
 
-    const { data: row, error: dbError } = await sb
+    const row = await sb
       .from('uploads')
       .insert({
         bucket: 'blue-notices',
@@ -88,14 +88,15 @@ router.post('/', upload, async (req, res) => {
         ocr_text,
         status: 'processed',
         public_url: signedUrl,
-        uploader_id: uploaderId ? uploaderId : null, // ← allowed to be NULL now
+        uploader_id: uploaderId ?? null, // allow NULL when anonymous
       })
       .select()
       .single();
-    if (dbError) {
-      return res
-        .status(500)
-        .json({ ok: false, error: { code: 'DB_INSERT_FAIL', message: dbError.message } });
+    if (row.error) {
+      return res.status(500).json({
+        ok: false,
+        error: { code: 'DB_INSERT_FAIL', message: row.error.message },
+      });
     }
 
     sendConfirmation({
@@ -108,7 +109,13 @@ router.post('/', upload, async (req, res) => {
       premisesAddress: premisesAddress || undefined,
     });
 
-    return res.json({ ok: true, id: row.id, path: filePath, signed_url: signedUrl, ocr_text });
+    return res.json({
+      ok: true,
+      id: row.data.id,
+      path: filePath,
+      signed_url: signedUrl,
+      ocr_text,
+    });
   } catch (err: any) {
     console.error(err);
     return res
