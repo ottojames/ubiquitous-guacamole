@@ -72,6 +72,11 @@ export default function PublishPage() {
               setEngine(m?.engine || "");
             }}
             engine={engine}
+            applicantName={form.applicantName}
+            applicantEmail={form.applicantEmail}
+            councilName={form.councilName}
+            councilEmail={form.councilEmail}
+            premisesAddress={JSON.stringify(form.premisesAddress)}
           />
           <div className="mt-4">
             <label className="inline-flex items-center gap-2" data-testid="toggle-no-file-builder">

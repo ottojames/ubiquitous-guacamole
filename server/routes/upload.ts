@@ -57,7 +57,7 @@ router.post('/', upload, async (req, res) => {
 
     const sanitized = file.originalname.replace(/[^a-z0-9_.-]/gi, '_');
     const uid = uploaderId || 'anon';
-    const filePath = `uploads/${uid}/${Date.now()}_${sanitized}`;
+    const filePath = `${uid}/${Date.now()}_${sanitized}`;
 
     const { error: uploadError } = await sb.storage
       .from('blue-notices')
@@ -100,10 +100,13 @@ router.post('/', upload, async (req, res) => {
 
     sendConfirmation({
       to: applicantEmail,
-      subject: 'Upload received',
-      text: `Your file ${sanitized} has been received`,
-      html: `<p>Your file ${sanitized} has been received.</p><p><a href="${signedUrl}">View file</a></p>`,
-    }).catch((e) => console.error('sendConfirmation', e));
+      applicantName: applicantName || undefined,
+      fileName: sanitized,
+      signedUrl,
+      councilName: councilName || undefined,
+      councilEmail: councilEmail || undefined,
+      premisesAddress: premisesAddress || undefined,
+    });
 
     return res.json({ ok: true, id: row.id, path: filePath, signed_url: signedUrl, ocr_text });
   } catch (err: any) {

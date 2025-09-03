@@ -1,27 +1,25 @@
 import nodemailer from 'nodemailer';
 
-export interface MailArgs {
+export interface ConfirmationArgs {
   to: string;
-  subject: string;
-  text: string;
-  html?: string;
+  applicantName?: string;
+  fileName: string;
+  signedUrl?: string;
+  councilName?: string;
+  councilEmail?: string;
+  premisesAddress?: string;
 }
 
-export async function sendConfirmation(args: MailArgs): Promise<void> {
+export async function sendConfirmation(args: ConfirmationArgs): Promise<void> {
   try {
     const resp = await fetch('http://localhost:5174/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: args.to,
-        subject: args.subject,
-        text: args.text,
-        html: args.html,
-      }),
+      body: JSON.stringify(args),
     });
     if (resp.ok) return;
   } catch (e) {
-    // ignore and fallback
+    // ignore and fallback to SMTP
   }
 
   try {
@@ -34,14 +32,21 @@ export async function sendConfirmation(args: MailArgs): Promise<void> {
         pass: process.env.SMTP_PASS,
       },
     });
+
+    const text = `Your file ${args.fileName} has been received.` +
+      (args.signedUrl ? ` View file: ${args.signedUrl}` : '');
+    const html = `<p>Your file ${args.fileName} has been received.</p>` +
+      (args.signedUrl ? `<p><a href="${args.signedUrl}">View file</a></p>` : '');
+
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: args.to,
-      subject: args.subject,
-      text: args.text,
-      html: args.html,
+      subject: 'Upload received',
+      text,
+      html,
     });
   } catch (e) {
     console.error('sendConfirmation error', e);
   }
 }
+

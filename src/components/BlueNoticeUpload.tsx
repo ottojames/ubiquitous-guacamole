@@ -1,95 +1,105 @@
-import React, { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { uploadBlueNotice } from "../lib/storage";
-
-interface UploadedFile {
-  name: string;
-  size: number;
-  type: string;
-  path: string;
-  publicUrl: string;
-}
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 
 interface Props {
   value: string;
   onChange: (v: string) => void;
   onOcrComplete: (text: string, meta: any) => void;
   engine?: string;
-  onUploaded?: (files: UploadedFile[]) => void;
+  applicantEmail?: string;
+  applicantName?: string;
+  councilName?: string;
+  councilEmail?: string;
+  premisesAddress?: string;
+  uploaderId?: string;
 }
 
-const ACCEPTED_TYPES = ["application/pdf", "image/png", "image/jpeg"];
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const ACCEPT = {
+  'application/pdf': ['.pdf'],
+  'image/png': ['.png'],
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'text/plain': ['.txt'],
+  'application/rtf': ['.rtf'],
+};
+
+const UPLOAD_URL = '/api/upload';
 
 export default function BlueNoticeUpload({
   value,
   onChange,
   onOcrComplete,
   engine,
-  onUploaded,
+  applicantEmail,
+  applicantName,
+  councilName,
+  councilEmail,
+  premisesAddress,
+  uploaderId,
 }: Props) {
-  const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
-  const [error, setError] = useState("");
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
+  const [error, setError] = useState('');
+  const [signedUrl, setSignedUrl] = useState('');
 
   const onDrop = useCallback(
     async (accepted: File[]) => {
       if (!accepted.length) return;
       const file = accepted[0];
-      setCurrentFile(file);
-      setError("");
+      setError('');
+      setStatus('uploading');
 
-      if (!ACCEPTED_TYPES.includes(file.type)) {
-        setStatus("error");
-        setError("Unsupported file. Allowed: PDF, PNG, JPG, TXT, RTF, DOC, DOCX");
-        return;
-      }
-      if (file.size > MAX_SIZE) {
-        setStatus("error");
-        setError("File must be 10 MB or less");
-        return;
-      }
+      const fd = new FormData();
+      fd.append('file', file);
+      if (applicantEmail) fd.append('applicantEmail', applicantEmail);
+      if (applicantName) fd.append('applicantName', applicantName);
+      if (councilName) fd.append('councilName', councilName);
+      if (councilEmail) fd.append('councilEmail', councilEmail);
+      if (premisesAddress) fd.append('premisesAddress', premisesAddress);
+      if (uploaderId) fd.append('uploaderId', uploaderId);
 
-      setStatus("uploading");
       try {
-        // 1) Upload to Supabase Storage
-        const { path, publicUrl } = await uploadBlueNotice(file);
-        onUploaded?.([{ name: file.name, size: file.size, type: file.type, path, publicUrl }]);
+        const res = await fetch(UPLOAD_URL, { method: 'POST', body: fd });
+        const ct = res.headers.get('content-type') || '';
+        let json: any;
+        if (ct.includes('application/json')) {
+          json = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error(text || 'Unexpected response');
+        }
 
-        // 2) Send to OCR (make JSON parsing robust)
-        const fd = new FormData();
-        fd.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: fd });
-        const json = await res.json();
-        onOcrComplete(json.text || "", json.meta || {});
-        onChange(json.text || "");
-        setStatus("idle");
+        if (!json.ok) {
+          setError(json.error?.message || 'Upload failed');
+          setStatus('error');
+          return;
+        }
+
+        setSignedUrl(json.signed_url || '');
+        onOcrComplete(json.ocr_text || '', json);
+        onChange(json.ocr_text || '');
+        setStatus('idle');
       } catch (e: any) {
-        console.error(e);
-        console.error({
-          env: {
-            hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
-            hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          bucket: "blue-notices",
-          file: { name: file.name, size: file.size, type: file.type },
-        });
-        setError(e?.message || "Upload failed");
-        setStatus("error");
+        setError(e?.message || 'Upload failed');
+        setStatus('error');
       }
     },
-    [onChange, onOcrComplete, onUploaded]
+    [
+      applicantEmail,
+      applicantName,
+      councilName,
+      councilEmail,
+      premisesAddress,
+      uploaderId,
+      onChange,
+      onOcrComplete,
+    ],
   );
 
-  // Do NOT use `accept` so we can allow doc/docx by extension even if MIME is missing.
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
-    accept: {
-      "application/pdf": [".pdf"],
-      "image/png": [".png"],
-      "image/jpeg": [".jpg", ".jpeg"],
-    },
+    accept: ACCEPT,
   });
 
   const wordCount = value ? value.trim().split(/\s+/).filter(Boolean).length : 0;
@@ -99,21 +109,30 @@ export default function BlueNoticeUpload({
       <div
         {...getRootProps({
           className: `cursor-pointer rounded-xl border-2 border-dashed p-6 text-center ${
-            isDragActive ? "bg-slate-50" : ""
+            isDragActive ? 'bg-slate-50' : ''
           }`,
         })}
       >
         <input {...getInputProps()} />
         <div className="text-sm text-slate-600">
-          <div className="font-medium mb-1">PDF, PNG or JPG</div>
+          <div className="font-medium mb-1">
+            PDF, PNG, JPG, DOC, DOCX, RTF or TXT
+          </div>
           <div>Drag & drop, or click to choose file</div>
         </div>
       </div>
 
-      {status === "uploading" && currentFile && (
-        <div className="mt-2 text-sm">Uploading {currentFile.name}…</div>
+      {status === 'uploading' && (
+        <div className="mt-2 text-sm">Uploading…</div>
       )}
-      {status === "error" && <div className="mt-2 text-sm text-rose-600">{error}</div>}
+      {status === 'error' && (
+        <div className="mt-2 text-sm text-rose-600">{error}</div>
+      )}
+      {signedUrl && (
+        <div className="mt-2 text-sm">
+          Uploaded file: <a className="underline" href={signedUrl}>{signedUrl}</a>
+        </div>
+      )}
 
       <textarea
         data-testid="notice-editor"
@@ -129,3 +148,4 @@ export default function BlueNoticeUpload({
     </div>
   );
 }
+
