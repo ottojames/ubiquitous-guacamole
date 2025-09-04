@@ -8,13 +8,14 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch --env-file=.env server/index.ts",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
     "test:watch": "vitest",
-    "ingest:councils": "tsx scripts/ingestCouncils.ts"
+    "start": "vite preview",
+    "ingest:councils": "tsx scripts/ingestCouncils.ts",
+    "dev:server": "tsx watch --env-file=.env server/index.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
