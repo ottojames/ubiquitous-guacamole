@@ -92,7 +92,7 @@ export default function BlueNoticeUpload({
           councilEmail,
           premisesAddress,
         });
-        setSignedUrl(json.publicUrl || '');
+        setSignedUrl(json.signed_url || '');
         onOcrComplete(json.ocr_text || '', json);
         onChange(json.ocr_text || '');
         setStatus('idle');
