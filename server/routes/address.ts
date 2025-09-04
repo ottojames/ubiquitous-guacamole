@@ -1,17 +1,23 @@
-import { Router } from 'express'
-import { searchAddress } from '../services/addressProvider'
+import { Router } from 'express';
+import { searchAddress } from '../services/addressProvider';
 
-const router = Router()
+const router = Router();
 
 router.get('/search', async (req, res) => {
-  try {
-    const q = String(req.query.q || '').trim()
-    if (!q) return res.json({ suggestions: [] })
-    const results = await searchAddress(q)
-    return res.json({ suggestions: results })
-  } catch (err) {
-    return res.json({ suggestions: [] })
-  }
-})
+  const q = String(req.query.q || '').trim();
+  if (!q) return res.json({ ok: true, results: [] });
 
-export default router
+  if (!process.env.ADDRESS_PROVIDER) {
+    return res.json({ ok: true, results: [] });
+  }
+
+  try {
+    const results = await searchAddress(q);
+    return res.json({ ok: true, results });
+  } catch (e) {
+    console.error('[ADDRESS_SEARCH_ERR]', e);
+    return res.json({ ok: true, results: [] });
+  }
+});
+
+export default router;

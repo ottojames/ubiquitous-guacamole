@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import AddressAutocomplete, { StructuredAddress } from "../components/AddressAutocomplete";
+import AddressAutocomplete, { AddressOption } from "../components/AddressAutocomplete";
 import { NoticeDraft, NoticeType, UploadedFile } from "../types/notice";
 import { uid, inferCouncil } from "../lib/utils";
+
 export default function DetailsPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [addrSearch, setAddrSearch] = useState("");
   const [form, setForm] = useState<Partial<NoticeDraft>>({
     noticeType: "Premises Licence",
     status: "Draft",
@@ -15,7 +15,7 @@ export default function DetailsPage() {
     if (raw) setFiles(JSON.parse(raw));
   }, []);
 
-  function update<K extends keyof NoticeDraft>(k: K, v: any) {
+  function update<K extends keyof NoticeDraft>(k: K, v: NoticeDraft[K]) {
     setForm((f) => ({ ...f, [k]: v }));
     if (k === "postcode") {
       const guess = inferCouncil(String(v));
@@ -23,8 +23,7 @@ export default function DetailsPage() {
     }
   }
 
-  function onAddressSelect(a: StructuredAddress) {
-    setAddrSearch([a.line1, a.city].filter(Boolean).join(", "));
+  function onAddressSelect(a: AddressOption) {
     update("premisesAddress", a.line1 + (a.city ? `, ${a.city}` : ""));
     if (a.postcode) update("postcode", a.postcode);
   }
@@ -55,7 +54,7 @@ export default function DetailsPage() {
       premisesAddress: form.premisesAddress!,
       postcode: form.postcode!,
       council: form.council,
-      councilEmail: (form as any).councilEmail,
+      councilEmail: form.councilEmail,
       consultationStart: form.consultationStart,
       consultationEnd: form.consultationEnd,
       blueNoticeUploads: files,
@@ -150,7 +149,7 @@ export default function DetailsPage() {
           <label className="text-sm">Notice Type</label>
           <select
             className="w-full border rounded p-2"
-            onChange={(e) => update("noticeType", e.target.value)}
+            onChange={(e) => update("noticeType", e.target.value as NoticeType)}
           >
             {["Premises Licence", "TEN", "Gambling", "Goods Vehicle Operator", "Traffic Order"].map((t) => (
               <option key={t} value={t}>
@@ -168,11 +167,7 @@ export default function DetailsPage() {
         </div>
         <div className="md:col-span-2">
           <label className="text-sm">Premises address</label>
-          <AddressAutocomplete
-            value={addrSearch}
-            onChange={setAddrSearch}
-            onSelect={onAddressSelect}
-          />
+          <AddressAutocomplete onSelect={onAddressSelect} />
           <input
             className="mt-2 w-full border rounded p-2"
             placeholder="Address line (editable)"
@@ -202,7 +197,7 @@ export default function DetailsPage() {
             type="email"
             className="w-full border rounded p-2"
             placeholder="e.g. licensing@council.gov.uk"
-            onChange={(e) => (update as any)("councilEmail", e.target.value)}
+            onChange={(e) => update("councilEmail", e.target.value)}
           />
           {form.postcode && form.council && (
             <div className="text-xs text-slate-500 mt-1">
