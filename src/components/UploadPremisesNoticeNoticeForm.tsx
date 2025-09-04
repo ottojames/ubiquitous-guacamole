@@ -63,7 +63,7 @@ const ACCEPT = {
   'application/rtf': ['.rtf'],
 };
 
-export default function BlueNoticeUpload({
+export default function UploadPremisesNoticeNoticeForm({
   value,
   onChange,
   onOcrComplete,
@@ -92,7 +92,7 @@ export default function BlueNoticeUpload({
           councilEmail,
           premisesAddress,
         });
-        setSignedUrl(json.publicUrl || '');
+        setSignedUrl(json.signed_url || '');
         onOcrComplete(json.ocr_text || '', json);
         onChange(json.ocr_text || '');
         setStatus('idle');

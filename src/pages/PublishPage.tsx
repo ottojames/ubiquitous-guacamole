@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import BlueNoticeUpload from "../components/BlueNoticeUpload";
+import UploadPremisesNoticeNoticeForm from "../components/UploadPremisesNoticeNoticeForm";
 import AddressAutocomplete, { AddressOption } from "../components/AddressAutocomplete";
 import NoFileBuilder from "../components/NoFileBuilder";
 
@@ -98,7 +98,7 @@ export default function PublishPage() {
       <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <BlueNoticeUpload
+          <UploadPremisesNoticeNoticeForm
             value={noticeText}
             onChange={setNoticeText}
             onOcrComplete={(text, m) => {
