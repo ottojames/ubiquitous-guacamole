@@ -9,6 +9,8 @@ export default function PublishPage() {
   const [meta, setMeta] = useState<any>({});
   const [useBuilder, setUseBuilder] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<AddressOption | null>(null);
+  const [manualEntry, setManualEntry] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const [form, setForm] = useState({
@@ -89,15 +91,38 @@ export default function PublishPage() {
   };
 
   const handleAddress = (a: AddressOption) => {
-    setForm((f) => ({ ...f, premisesAddress: a }));
+    setSelectedAddress(a);
+    setManualEntry(false);
     setEditingAddress(false);
+    setForm((f) => ({
+      ...f,
+      premisesAddress: {
+        line1: a.line1,
+        line2: a.line2 || "",
+        line3: a.line3 || "",
+        city: a.city || a.town || "",
+        postcode: a.postcode || "",
+        uprn: a.uprn,
+        latitude: a.latitude,
+        longitude: a.longitude,
+      },
+    }));
+  };
+
+  const handleManual = () => {
+    setSelectedAddress(null);
+    setManualEntry(true);
+    setForm((f) => ({
+      ...f,
+      premisesAddress: { line1: "", line2: "", line3: "", city: "", postcode: "" },
+    }));
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
+    <div className="max-w-5xl mx-auto p-4 md:p-6">
+      <h1 className="text-2xl font-semibold mb-6">Publish a Notice</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
+        <div className="rounded-2xl border shadow-sm p-4 md:p-6 bg-white">
           <UploadPremisesNoticeForm
             value={noticeText}
             onChange={setNoticeText}
@@ -127,13 +152,13 @@ export default function PublishPage() {
             {useBuilder && <NoFileBuilder councilEmail={form.councilEmail} onChange={setNoticeText} />}
           </div>
         </div>
-        <div className="space-y-3">
+        <div className="rounded-2xl border shadow-sm p-4 md:p-6 bg-white space-y-3">
           <div>
             <label className="block text-sm font-medium">
               Applicant Name<span className="text-rose-600 ml-0.5">*</span>
             </label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 focus-visible:ring-2 ring-offset-2"
               value={form.applicantName}
               onChange={(e) => setForm({ ...form, applicantName: e.target.value })}
             />
@@ -143,7 +168,7 @@ export default function PublishPage() {
               Applicant Email<span className="text-rose-600 ml-0.5">*</span>
             </label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 focus-visible:ring-2 ring-offset-2"
               value={form.applicantEmail}
               onChange={(e) => setForm({ ...form, applicantEmail: e.target.value })}
             />
@@ -151,7 +176,7 @@ export default function PublishPage() {
           <div className="relative">
             <label className="block text-sm font-medium">Council Name</label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 focus-visible:ring-2 ring-offset-2"
               value={councilQuery}
               onChange={(e) => {
                 setCouncilQuery(e.target.value);
@@ -175,21 +200,33 @@ export default function PublishPage() {
           <div>
             <label className="block text-sm font-medium">Council Email</label>
             <input
-              className="w-full border rounded p-2"
+              className="w-full border rounded p-2 focus-visible:ring-2 ring-offset-2"
               value={form.councilEmail}
               onChange={(e) => setForm({ ...form, councilEmail: e.target.value })}
             />
           </div>
           <div>
-            <AddressAutocomplete onSelect={handleAddress} />
-            {form.premisesAddress.line1 && (
+            {!selectedAddress && !manualEntry && (
+              <AddressAutocomplete onSelect={handleAddress} onManual={handleManual} />
+            )}
+            {selectedAddress && !manualEntry && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-slate-100 text-sm">
+                  {selectedAddress.label}
+                </span>
+                <button type="button" className="text-xs underline" onClick={handleManual}>
+                  Change
+                </button>
+              </div>
+            )}
+            {(selectedAddress || manualEntry) && (
               <div className="mt-2 space-y-1">
                 {(["line1", "line2", "line3", "city", "postcode"] as const).map((f) => (
                   <input
                     key={f}
-                    className="w-full border rounded p-2"
+                    className="w-full border rounded p-2 focus-visible:ring-2 ring-offset-2"
                     value={(form.premisesAddress as any)[f] || ""}
-                    readOnly={!editingAddress}
+                    readOnly={!editingAddress && f !== "line1" && f !== "postcode"}
                     placeholder={f}
                     onChange={(e) =>
                       setForm({
@@ -199,13 +236,15 @@ export default function PublishPage() {
                     }
                   />
                 ))}
-                <button
-                  type="button"
-                  className="text-xs underline"
-                  onClick={() => setEditingAddress((v) => !v)}
-                >
-                  {editingAddress ? "Done" : "Edit"}
-                </button>
+                {!manualEntry && (
+                  <button
+                    type="button"
+                    className="text-xs underline"
+                    onClick={() => setEditingAddress((v) => !v)}
+                  >
+                    {editingAddress ? "Done" : "Edit"}
+                  </button>
+                )}
               </div>
             )}
           </div>

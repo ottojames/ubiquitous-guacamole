@@ -35,7 +35,7 @@ export default function SiteHeader() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-slate-600 hover:text-slate-900 rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="text-sm text-slate-600 hover:text-slate-900 rounded focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
                 >
                   {link.label}
                 </a>
@@ -47,14 +47,14 @@ export default function SiteHeader() {
           <div className="hidden md:flex items-center gap-3">
             <a
               href="/#signin"
-              className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
             >
               Sign in
             </a>
             <a
               href="/publish"
               onClick={() => track('publish_started', { audience: 'public' })}
-              className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
             >
               Publish a notice
             </a>
@@ -65,7 +65,7 @@ export default function SiteHeader() {
             <a
               href="/publish"
               onClick={() => track('publish_started', { audience: 'public' })}
-              className="h-10 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="h-10 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
               aria-label="Publish a notice"
             >
               <FileText className="w-4 h-4 mr-1" aria-hidden="true" /> Publish
@@ -73,7 +73,7 @@ export default function SiteHeader() {
             <button
               aria-label="Open menu"
               onClick={() => setMobileOpen(true)}
-              className="h-9 w-9 grid place-items-center rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="h-9 w-9 grid place-items-center rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
             >
               <Menu className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -90,7 +90,7 @@ export default function SiteHeader() {
               <span className="font-extrabold text-slate-900">CivicNotices</span>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="h-9 w-9 grid place-items-center rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="h-9 w-9 grid place-items-center rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
@@ -107,7 +107,7 @@ export default function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="text-base text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded px-1 py-1"
+                  className="text-base text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2 rounded px-1 py-1"
                 >
                   {link.label}
                 </a>
@@ -116,14 +116,14 @@ export default function SiteHeader() {
             <div className="mt-auto flex items-center gap-3">
               <a
                 href="/#signin"
-                className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
               >
                 Sign in
               </a>
               <a
                 href="/publish"
                 onClick={() => { setMobileOpen(false); track('publish_started', { audience: 'public' }); }}
-                className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600 ring-offset-2"
               >
                 Publish a notice
               </a>

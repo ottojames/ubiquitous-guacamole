@@ -60,6 +60,7 @@ export default function UploadPremisesNoticeForm(props: UploadPremisesNoticeForm
         <input
           type="file"
           accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.doc,.docx"
+          className="block w-full text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-slate-100 focus-visible:ring-2 ring-offset-2"
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) void handleFileUpload(f);
@@ -70,7 +71,8 @@ export default function UploadPremisesNoticeForm(props: UploadPremisesNoticeForm
       <div>
         <label className="block text-sm font-medium mb-1">Notice text</label>
         <textarea
-          className="w-full min-h-[200px] border rounded p-2"
+          data-testid="notice-editor"
+          className="w-full min-h-[200px] border rounded p-2 focus-visible:ring-2 ring-offset-2"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Paste or edit the notice text…"
