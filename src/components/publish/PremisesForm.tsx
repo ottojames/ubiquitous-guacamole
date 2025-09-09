@@ -1,75 +1,102 @@
-import React, { useMemo, useState } from 'react';
-import { generateNotice } from '../../lib/noticeTemplate';
+import React, { useEffect, useMemo, useState, type ComponentProps } from "react";
+import { generateNotice } from "../../lib/noticeTemplate";
+import PremisesAddressPicker from "../PremisesAddressPicker";
+import { councils, type Council } from "../../data/councils";
+import { computeRepDeadline } from "../../lib/computeRepDeadline";
+import type { PremisesAddress } from "../../types/address";
 
-export type ApplicationType =
-  | 'Grant of a Premises Licence'
-  | 'Variation of a Premises Licence'
-  | 'Minor Variation of a Premises Licence'
-  | 'Grant of a Club Premises Certificate'
-  | 'Variation of a Club Premises Certificate';
+// Infer the picker prop types so TS matches whatever the component expects
+type PickerProps = ComponentProps<typeof PremisesAddressPicker>;
+type PickerValue = NonNullable<PickerProps["value"]>;
+
+type ApplicationType =
+  | "Grant of a Premises Licence"
+  | "Variation of a Premises Licence"
+  | "Minor Variation of a Premises Licence"
+  | "Grant of a Club Premises Certificate"
+  | "Variation of a Club Premises Certificate";
 
 const applicationTypes: ApplicationType[] = [
-  'Grant of a Premises Licence',
-  'Variation of a Premises Licence',
-  'Minor Variation of a Premises Licence',
-  'Grant of a Club Premises Certificate',
-  'Variation of a Club Premises Certificate',
+  "Grant of a Premises Licence",
+  "Variation of a Premises Licence",
+  "Minor Variation of a Premises Licence",
+  "Grant of a Club Premises Certificate",
+  "Variation of a Club Premises Certificate",
 ];
 
 const activityOptions = [
-  'On and Off Sale of Alcohol',
-  'On Sale of Alcohol',
-  'Off Sale of Alcohol',
-  'Provision of Late Night Refreshment',
-  'Live Music',
-  'Recorded Music',
-  'Performance of Dance',
-  'Anything of a Similar Description',
+  "Supply of Alcohol",
+  "Provision of Late Night Refreshment",
+  "Live Music",
+  "Recorded Music",
+  "Performance of Dance",
+  "Anything of a Similar Description",
 ];
 
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 interface Hours {
   [day: string]: { start: string; end: string };
 }
 
+type AlcoholConsumption = "On" | "Off" | "Both" | "";
+
 interface FormData {
   applicationType: ApplicationType;
-  premisesName: string;
-  premisesAddress: string;
-  applicantName: string;
-  councilName: string;
-  councilPostalAddress: string;
-  councilOfficeHours: string;
-  councilApplicationsUrl: string;
-  inspectionMethod: string;
-  representationMethod: string;
-  representationDeadline: string;
-  reference: string;
 
+  // Applicant & Premises
+  premisesName: string;
+  premisesAddress: string; // single-line composed view
+  // structured fields kept for storage + generator
+  addressLine1?: string;
+  addressLine2?: string;
+  addressCity?: string;
+  addressCounty?: string;
+  addressPostcode?: string;
+  premisesAddressObj?: PickerValue | null;
+
+  applicantName: string;
+  applicantEmail: string;
+  applicantPhone?: string;
+
+  // Activities & Hours
   activities: string[];
   activityHours: Record<string, Hours>;
   openingHours: Hours;
 
-  applicantEmail: string;
-  applicantPhone: string;
-  licenceNumber: string;
-  existingHours: string;
-  dpsDetails: string;
-  floorPlan?: File | null;
-  operatingSchedule: string;
-  paymentConfirmed: boolean;
-  variationSummary: string;
-  clubRules: string;
-  clubMembers: string;
+  // Alcohol extras
+  alcoholConsumption: AlcoholConsumption;
+  dpsName?: string;
+  dpsAddress?: string;
+
+  // Council & Statutory
+  applicationDate: string; // ISO yyyy-mm-dd
+  representationDeadline: string; // ISO
+  councilId: string;
+  councilName: string;
+  councilEmail: string;
+  councilPostalAddress: string;
+  councilOfficeHours?: string;
+  councilApplicationsUrl?: string;
+
+  // Misc
+  inspectionMethod: string;
+  representationMethod: string;
+  reference: string;
+  variationSummary?: string;
+  existingHours?: string;
+  licenceNumber?: string;
+  clubRules?: string;
+  clubMembers?: string;
 }
 
 interface Props {
   onSubmit: (data: FormData) => Promise<void> | void;
   saving: boolean;
-  autoFocusRef: React.RefObject<HTMLInputElement>;
+  autoFocusRef: React.RefObject<HTMLElement>;
 }
 
+/** Exported so tests can import it directly */
 export function WeeklyHoursInput({
   value,
   onChange,
@@ -79,56 +106,102 @@ export function WeeklyHoursInput({
   onChange: (h: Hours) => void;
   label?: string;
 }) {
-  function setDay(day: string, field: 'start' | 'end', val: string) {
-    onChange({ ...value, [day]: { ...value[day], [field]: val } });
+  // keep a local, always-updated copy so consecutive edits merge correctly
+  const pendingRef = React.useRef<Hours>(value);
+  React.useEffect(() => {
+    pendingRef.current = value;
+  }, [value]);
+
+  function setDay(day: string, field: "start" | "end", val: string) {
+    const next = {
+      ...pendingRef.current,
+      [day]: { ...(pendingRef.current[day] || {}), [field]: val },
+    };
+    pendingRef.current = next;
+    onChange(next);
   }
 
-  function setEveryDay(field: 'start' | 'end', val: string) {
-    const updated: Hours = { ...value };
+  function setEveryDay(field: "start" | "end", val: string) {
+    const next: Hours = { ...pendingRef.current };
     days.forEach((d) => {
-      updated[d] = { ...updated[d], [field]: val };
+      next[d] = { ...(next[d] || {}), [field]: val };
     });
-    onChange(updated);
+    pendingRef.current = next;
+    onChange(next);
   }
+
+  const idFor = (day: string, which: "start" | "end") =>
+    `${day.toLowerCase().replace(/\s+/g, "-")}-${which}-time`;
 
   return (
     <div className="space-y-1">
       {label && <p className="font-medium">{label}</p>}
       <table className="w-full text-sm">
         <tbody>
+          {/* Every Day row */}
           <tr className="odd:bg-slate-50">
-            <td className="pr-2 py-1 w-16">Every Day</td>
+            <td className="pr-2 py-1 w-16">
+              <span id="every-day-label">Every Day</span>
+            </td>
             <td className="pr-2">
+              <label htmlFor="every-day-start" className="sr-only">
+                Start time
+              </label>
               <input
+                id="every-day-start"
                 type="time"
-                onChange={(e) => setEveryDay('start', e.target.value)}
+                aria-label="Start time"
+                aria-labelledby="every-day-label"
+                onChange={(e) => setEveryDay("start", e.target.value)}
                 className="w-full border rounded p-1"
               />
             </td>
             <td>
+              <label htmlFor="every-day-end" className="sr-only">
+                End time
+              </label>
               <input
+                id="every-day-end"
                 type="time"
-                onChange={(e) => setEveryDay('end', e.target.value)}
+                aria-label="End time"
+                aria-labelledby="every-day-label"
+                onChange={(e) => setEveryDay("end", e.target.value)}
                 className="w-full border rounded p-1"
               />
             </td>
           </tr>
+
+          {/* Individual day rows */}
           {days.map((d) => (
             <tr key={d} className="odd:bg-slate-50">
-              <td className="pr-2 py-1 w-16">{d}</td>
+              <td className="pr-2 py-1 w-16">
+                <span id={`${idFor(d, "start")}-rowlabel`}>{d}</span>
+              </td>
               <td className="pr-2">
+                <label htmlFor={idFor(d, "start")} className="sr-only">
+                  Start time
+                </label>
                 <input
+                  id={idFor(d, "start")}
                   type="time"
-                  value={value[d]?.start || ''}
-                  onChange={(e) => setDay(d, 'start', e.target.value)}
+                  aria-label="Start time"
+                  aria-labelledby={`${idFor(d, "start")}-rowlabel`}
+                  value={value[d]?.start || ""}
+                  onChange={(e) => setDay(d, "start", e.target.value)}
                   className="w-full border rounded p-1"
                 />
               </td>
               <td>
+                <label htmlFor={idFor(d, "end")} className="sr-only">
+                  End time
+                </label>
                 <input
+                  id={idFor(d, "end")}
                   type="time"
-                  value={value[d]?.end || ''}
-                  onChange={(e) => setDay(d, 'end', e.target.value)}
+                  aria-label="End time"
+                  aria-labelledby={`${idFor(d, "start")}-rowlabel`}
+                  value={value[d]?.end || ""}
+                  onChange={(e) => setDay(d, "end", e.target.value)}
                   className="w-full border rounded p-1"
                 />
               </td>
@@ -140,73 +213,102 @@ export function WeeklyHoursInput({
   );
 }
 
-
-export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) {
+function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) {
   const [form, setForm] = useState<FormData>({
-    applicationType: 'Grant of a Premises Licence',
-    premisesName: '',
-    premisesAddress: '',
-    applicantName: '',
-    councilName: '',
-    councilPostalAddress: '',
-    councilOfficeHours: '',
-    councilApplicationsUrl: '',
-    inspectionMethod: '',
-    representationMethod: '',
-    representationDeadline: '',
-    reference: '',
+    applicationType: "Grant of a Premises Licence",
+
+    premisesName: "",
+    premisesAddress: "",
+    addressLine1: "",
+    addressLine2: "",
+    addressCity: "",
+    addressCounty: "",
+    addressPostcode: "",
+
+    applicantName: "",
+    applicantEmail: "",
+    applicantPhone: "",
+
     activities: [],
     activityHours: {},
     openingHours: {},
-    applicantEmail: '',
-    applicantPhone: '',
-    licenceNumber: '',
-    existingHours: '',
-    dpsDetails: '',
-    operatingSchedule: '',
-    paymentConfirmed: false,
-    variationSummary: '',
-    clubRules: '',
-    clubMembers: '',
+
+    alcoholConsumption: "",
+    dpsName: "",
+    dpsAddress: "",
+
+    applicationDate: "",
+    representationDeadline: "",
+    councilId: "",
+    councilName: "",
+    councilEmail: "",
+    councilPostalAddress: "",
+    councilOfficeHours: "",
+    councilApplicationsUrl: "",
+
+    inspectionMethod: "",
+    representationMethod: "",
+    reference: "",
   });
 
-  const isClub = form.applicationType.includes('Club');
-  const isVariation = form.applicationType.includes('Variation');
-  const alcoholSelected = form.activities.some((a) => a.includes('Sale of Alcohol'));
-  const needsDps = alcoholSelected && !isClub;
+  const isClub = form.applicationType.includes("Club");
+  const isVariation = form.applicationType.includes("Variation");
+  const isGrant = form.applicationType.includes("Grant");
+  const alcoholSelected = form.activities.includes("Supply of Alcohol");
+  const showDps = alcoholSelected && !isClub && (isGrant || isVariation);
+
+  // populate council read-only details
+  useEffect(() => {
+    const c = councils.find((x) => x.id === form.councilId);
+    if (!c) return;
+    setForm((f) => ({
+      ...f,
+      councilName: c.name,
+      councilEmail: c.licensingEmail ?? "",
+      councilPostalAddress: c.postalAddress ?? "",
+      councilApplicationsUrl: c.portalUrl ?? "",
+      councilOfficeHours: c.officeHours ?? "",
+    }));
+  }, [form.councilId]);
+
+  // derive reps deadline
+  useEffect(() => {
+    if (!form.applicationDate) return;
+    setForm((f) => ({ ...f, representationDeadline: computeRepDeadline(form.applicationDate) }));
+  }, [form.applicationDate]);
 
   function toggleActivity(a: string) {
     setForm((f) => {
-      const activities = f.activities.includes(a)
-        ? f.activities.filter((x) => x !== a)
-        : [...f.activities, a];
+      const activities = f.activities.includes(a) ? f.activities.filter((x) => x !== a) : [...f.activities, a];
       const activityHours = { ...f.activityHours };
       if (activities.includes(a) && !activityHours[a]) activityHours[a] = {};
       if (!activities.includes(a)) delete activityHours[a];
-      return { ...f, activities, activityHours };
+      const alcoholOn = activities.includes("Supply of Alcohol");
+      return { ...f, activities, activityHours, ...(alcoholOn ? {} : { alcoholConsumption: "", dpsName: "", dpsAddress: "" }) };
     });
   }
 
   function updateActivityHours(activity: string, hours: Hours) {
-    setForm((f) => ({
-      ...f,
-      activityHours: { ...f.activityHours, [activity]: hours },
-    }));
+    setForm((f) => ({ ...f, activityHours: { ...f.activityHours, [activity]: hours } }));
   }
+
+  const alcoholHoursWarning = useMemo(() => {
+    if (!alcoholSelected) return "";
+    const anyDay = days.some((d) => form.openingHours[d]?.start && form.openingHours[d]?.end);
+    return anyDay ? "" : "Supply of Alcohol selected, but opening hours are empty.";
+  }, [form.openingHours, alcoholSelected]);
 
   const noticeText = useMemo(() => {
     try {
-      return generateNotice(form);
+      return generateNotice(form as any);
     } catch (e) {
       return (e as Error).message;
     }
   }, [form]);
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value, type, checked } = e.target as HTMLInputElement;
-    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   }
 
   async function submit(e: React.FormEvent) {
@@ -214,37 +316,42 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
     await onSubmit(form);
   }
 
+  // Build value for the address picker. The picker expects PremisesAddress | null.
+  const pickerValue: PremisesAddress | null = (() => {
+    const lines = [form.addressLine1 ?? "", form.addressLine2 ?? ""].filter(Boolean) as string[];
+    const hasAny = lines.length > 0 || !!form.addressCity || !!form.addressCounty || !!form.addressPostcode;
+    if (!hasAny) return null;
+    return {
+      lines,
+      town: form.addressCity || "",
+      county: form.addressCounty || "",
+      postcode: form.addressPostcode || "",
+    } as PremisesAddress;
+  })();
+
   return (
     <form onSubmit={submit} className="mt-6 space-y-6" aria-describedby="premises-desc">
-      <p id="premises-desc" className="sr-only">
-        Premises Licence application form
-      </p>
+      <p id="premises-desc" className="sr-only">Premises Licence application form</p>
 
+      {/* Step: Application type */}
       <div className="space-y-2">
-        <label htmlFor="applicationType" className="block text-sm font-medium text-slate-700">
-          Application type
-        </label>
+        <label htmlFor="applicationType" className="block text-sm font-medium text-slate-700">Application type</label>
         <select
           id="applicationType"
           name="applicationType"
           value={form.applicationType}
           onChange={handleChange}
-          ref={autoFocusRef}
+          ref={autoFocusRef as React.RefObject<HTMLSelectElement>}
           className="w-full rounded border border-slate-300 p-2 bg-white"
         >
-          {applicationTypes.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
+          {applicationTypes.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
 
+      {/* Step: Applicant & Premises */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="premisesName">
-            Premises name
-          </label>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="premisesName">Premises name</label>
           <input
             id="premisesName"
             name="premisesName"
@@ -254,330 +361,203 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="premisesAddress">
-            Premises address
-          </label>
-          <input
-            id="premisesAddress"
-            name="premisesAddress"
-            value={form.premisesAddress}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
+          <label className="block text-sm font-medium text-slate-700">Premises address</label>
+          <PremisesAddressPicker
+            value={pickerValue}
+            onChange={(addr) => {
+              if (!addr) {
+                setForm((f) => ({
+                  ...f,
+                  addressLine1: "",
+                  addressLine2: "",
+                  addressCity: "",
+                  addressCounty: "",
+                  addressPostcode: "",
+                  premisesAddress: "",
+                  premisesAddressObj: null,
+                }));
+                return;
+              }
+              const [l1 = "", l2 = ""] = addr.lines ?? [];
+              const joined = [l1, l2, addr.town, addr.county, addr.postcode].filter(Boolean).join(", ");
+              setForm((f) => ({
+                ...f,
+                addressLine1: l1,
+                addressLine2: l2,
+                addressCity: addr.town || "",
+                addressCounty: addr.county || "",
+                addressPostcode: addr.postcode || "",
+                premisesAddress: joined,
+                premisesAddressObj: addr as any,
+              }));
+            }}
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="applicantName">
-            Applicant name
-          </label>
-          <input
-            id="applicantName"
-            name="applicantName"
-            value={form.applicantName}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
+          <label className="block text-sm font-medium text-slate-700" htmlFor="applicantName">Applicant name</label>
+          <input id="applicantName" name="applicantName" value={form.applicantName} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" required />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="councilName">
-            Council name
-          </label>
-          <input
-            id="councilName"
-            name="councilName"
-            value={form.councilName}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
+          <label className="block text-sm font-medium text-slate-700" htmlFor="applicantEmail">Applicant email</label>
+          <input id="applicantEmail" name="applicantEmail" type="email" value={form.applicantEmail} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" required />
+          <p className="text-xs text-slate-500 mt-1">We’ll send a magic link to resume your draft.</p>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="representationDeadline">
-            Representation deadline
-          </label>
-          <input
-            id="representationDeadline"
-            name="representationDeadline"
-            value={form.representationDeadline}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="councilPostalAddress">
-            Council postal address
-          </label>
-          <input
-            id="councilPostalAddress"
-            name="councilPostalAddress"
-            value={form.councilPostalAddress}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="councilOfficeHours">
-            Council office hours
-          </label>
-          <input
-            id="councilOfficeHours"
-            name="councilOfficeHours"
-            value={form.councilOfficeHours}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700" htmlFor="councilApplicationsUrl">
-            Council applications URL
-          </label>
-          <input
-            id="councilApplicationsUrl"
-            name="councilApplicationsUrl"
-            value={form.councilApplicationsUrl}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            required
-          />
+          <label className="block text-sm font-medium text-slate-700" htmlFor="applicantPhone">Applicant phone (optional)</label>
+          <input id="applicantPhone" name="applicantPhone" value={form.applicantPhone || ""} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-700">Licensable activities</p>
-        {activityOptions.map((a) => (
-          <label key={a} className="block">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={form.activities.includes(a)}
-              onChange={() => toggleActivity(a)}
-            />
-            {a}
-          </label>
-        ))}
-      </div>
+      {/* Activities */}
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-slate-700">Licensable activities</legend>
 
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {activityOptions.map((a) => (
+            <label key={a} className="flex items-center gap-2">
+              <input type="checkbox" checked={form.activities.includes(a)} onChange={() => toggleActivity(a)} />
+              <span>{a}</span>
+            </label>
+          ))}
+        </div>
+
+        {/* Alcohol consumption + DPS */}
+        {alcoholSelected && (
+          <div className="mt-2 grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Alcohol consumption</p>
+              <div className="flex flex-wrap gap-4 mt-1">
+                {(["On", "Off", "Both"] as AlcoholConsumption[]).map((opt) => (
+                  <label key={opt} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="alcoholConsumption"
+                      value={opt}
+                      checked={form.alcoholConsumption === opt}
+                      onChange={handleChange}
+                      required
+                    />
+                    <span>{opt === "On" ? "On the premises" : opt === "Off" ? "Off the premises" : "Both"}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {showDps && (
+              <div className="col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700" htmlFor="dpsName">DPS full name</label>
+                  <input id="dpsName" name="dpsName" value={form.dpsName || ""} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700" htmlFor="dpsAddress">DPS address</label>
+                  <input id="dpsAddress" name="dpsAddress" value={form.dpsAddress || ""} onChange={handleChange} className="w-full rounded border border-slate-300 p-2" required />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {alcoholHoursWarning && <p className="text-xs text-amber-700">{alcoholHoursWarning}</p>}
+      </fieldset>
+
+      {/* Hours */}
       {form.activities.map((a) => (
-        <WeeklyHoursInput
-          key={a}
-          value={form.activityHours[a] || {}}
-          onChange={(h) => updateActivityHours(a, h)}
-          label={a}
-        />
+        <WeeklyHoursInput key={a} value={form.activityHours[a] || {}} onChange={(h) => updateActivityHours(a, h)} label={a} />
       ))}
+      <WeeklyHoursInput value={form.openingHours} onChange={(h) => setForm((f) => ({ ...f, openingHours: h }))} label="Opening hours" />
 
-      <WeeklyHoursInput
-        value={form.openingHours}
-        onChange={(h) => setForm((f) => ({ ...f, openingHours: h }))}
-        label="Opening hours"
-      />
-
-      {isVariation && (
-        <div className="space-y-2">
-          <label htmlFor="variationSummary" className="block text-sm font-medium text-slate-700">
-            Summary of proposed variation
-          </label>
-          <textarea
-            id="variationSummary"
-            name="variationSummary"
-            value={form.variationSummary}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            rows={3}
-          />
-        </div>
-      )}
-
-      {needsDps && (
-        <div className="space-y-2">
-          <label htmlFor="dpsDetails" className="block text-sm font-medium text-slate-700">
-            Designated Premises Supervisor (DPS) details
-          </label>
-          <textarea
-            id="dpsDetails"
-            name="dpsDetails"
-            value={form.dpsDetails}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            rows={2}
-          />
-        </div>
-      )}
-
-      {isVariation && (
-        <div className="space-y-2">
-          <label htmlFor="existingHours" className="block text-sm font-medium text-slate-700">
-            Existing licensed hours
-          </label>
-          <textarea
-            id="existingHours"
-            name="existingHours"
-            value={form.existingHours}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            rows={2}
-          />
-        </div>
-      )}
-
-      {isVariation && (
-        <div className="space-y-2">
-          <label htmlFor="licenceNumber" className="block text-sm font-medium text-slate-700">
-            Premises licence number
-          </label>
+      {/* Council & Statutory */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="applicationDate">Application date given to the authority</label>
           <input
-            id="licenceNumber"
-            name="licenceNumber"
-            value={form.licenceNumber}
+            id="applicationDate"
+            name="applicationDate"
+            type="date"
+            value={form.applicationDate}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={handleChange}
             className="w-full rounded border border-slate-300 p-2"
+            required
           />
+          <p className="text-xs text-slate-500 mt-1">Used to compute the last date for representations.</p>
         </div>
-      )}
 
-      {isClub && (
-        <div className="space-y-2">
-          <label htmlFor="clubRules" className="block text-sm font-medium text-slate-700">
-            Club rules & number of qualifying members
-          </label>
-          <textarea
-            id="clubRules"
-            name="clubRules"
-            value={form.clubRules}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            rows={2}
-          />
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <label htmlFor="inspectionMethod" className="block text-sm font-medium text-slate-700">
-          Inspection of the application
-        </label>
-        <textarea
-          id="inspectionMethod"
-          name="inspectionMethod"
-          value={form.inspectionMethod}
-          onChange={handleChange}
-          className="w-full rounded border border-slate-300 p-2"
-          rows={2}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="representationMethod" className="block text-sm font-medium text-slate-700">
-          Representation method
-        </label>
-        <textarea
-          id="representationMethod"
-          name="representationMethod"
-          value={form.representationMethod}
-          onChange={handleChange}
-          className="w-full rounded border border-slate-300 p-2"
-          rows={2}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="reference" className="block text-sm font-medium text-slate-700">
-          Reference (optional)
-        </label>
-        <input
-          id="reference"
-          name="reference"
-          value={form.reference}
-          onChange={handleChange}
-          className="w-full rounded border border-slate-300 p-2"
-        />
-      </div>
-
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Internal fields</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700" htmlFor="applicantEmail">
-              Applicant email
-            </label>
-            <input
-              id="applicantEmail"
-              name="applicantEmail"
-              value={form.applicantEmail}
-              onChange={handleChange}
-              className="w-full rounded border border-slate-300 p-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700" htmlFor="applicantPhone">
-              Applicant phone
-            </label>
-            <input
-              id="applicantPhone"
-              name="applicantPhone"
-              value={form.applicantPhone}
-              onChange={handleChange}
-              className="w-full rounded border border-slate-300 p-2"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="operatingSchedule">
-            Operating schedule
-          </label>
-          <textarea
-            id="operatingSchedule"
-            name="operatingSchedule"
-            value={form.operatingSchedule}
-            onChange={handleChange}
-            className="w-full rounded border border-slate-300 p-2"
-            rows={2}
-          />
-        </div>
-        <label className="flex items-center space-x-2">
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Representations deadline</label>
           <input
-            type="checkbox"
-            name="paymentConfirmed"
-            checked={form.paymentConfirmed}
-            onChange={handleChange}
+            value={form.representationDeadline ? new Date(form.representationDeadline).toLocaleString("en-GB", { timeZone: "Europe/London" }) : ""}
+            readOnly
+            className="w-full rounded border border-slate-200 bg-slate-50 p-2"
           />
-          <span>Payment confirmed</span>
-        </label>
-      </section>
+        </div>
 
+        <div>
+          <label className="block text-sm font-medium text-slate-700" htmlFor="councilId">Council (licensing authority)</label>
+          <select
+            id="councilId"
+            name="councilId"
+            value={form.councilId}
+            onChange={handleChange}
+            className="w-full rounded border border-slate-300 p-2 bg-white"
+            required
+          >
+            <option value="" disabled>Select council…</option>
+            {councils.map((c: Council) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Read-only council details */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Licensing email</label>
+          <input value={form.councilEmail} readOnly className="w-full rounded border border-slate-200 bg-slate-50 p-2" />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-slate-700">Licensing postal address</label>
+          <input value={form.councilPostalAddress} readOnly className="w-full rounded border border-slate-200 bg-slate-50 p-2" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Applications portal URL</label>
+          <input value={form.councilApplicationsUrl || ""} readOnly className="w-full rounded border border-slate-200 bg-slate-50 p-2" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Office hours</label>
+          <input value={form.councilOfficeHours || ""} readOnly className="w-full rounded border border-slate-200 bg-slate-50 p-2" />
+        </div>
+        <div className="col-span-2">
+          <a href="mailto:support@yourservice.example?subject=Council%20details%20correction" className="text-xs text-slate-600 underline">
+            Report incorrect details
+          </a>
+        </div>
+      </div>
+
+      {/* Preview (read-only) */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-slate-700" htmlFor="noticePreview">
-          Generated Blue Notice
-        </label>
-        <textarea
-          id="noticePreview"
-          value={noticeText}
-          readOnly
-          className="w-full h-64 rounded border border-slate-300 p-2 font-mono text-sm"
-        />
-        <button
-          type="button"
-          onClick={() => navigator.clipboard.writeText(noticeText)}
-          className="px-3 py-2 text-sm rounded bg-slate-800 text-white"
-        >
-          Copy to Clipboard
-        </button>
+        <label htmlFor="noticePreview" className="block text-sm font-medium text-slate-700">Generated Blue Notice (read-only)</label>
+        <textarea id="noticePreview" value={noticeText} readOnly className="w-full h-56 rounded border border-slate-300 p-2 font-mono text-sm" />
+        <div className="flex gap-2">
+          <button type="button" onClick={() => navigator.clipboard.writeText(noticeText)} className="px-3 py-2 text-sm rounded bg-slate-800 text-white">
+            Copy
+          </button>
+          <button type="button" className="px-3 py-2 text-sm rounded border">Download Draft PDF</button>
+        </div>
       </div>
 
       <div>
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : 'Submit'}
+        <button type="submit" disabled={saving} className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50">
+          {saving ? "Saving…" : "Review & Pay"}
         </button>
       </div>
     </form>
   );
 }
 
+export default PremisesForm;

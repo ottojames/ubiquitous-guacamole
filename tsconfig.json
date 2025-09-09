@@ -13,14 +13,15 @@
     "baseUrl": ".",
     "paths": {
       "lodash.debounce": ["src/shims/lodash.debounce.ts"]
-    }
+    },
+    "jsx": "react-jsx",
+    "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "**/*.d.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

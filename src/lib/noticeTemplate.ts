@@ -1,8 +1,19 @@
+// --- types ---
 export interface Hours {
   [day: string]: { start: string; end: string };
 }
 
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+export interface PremisesAddress {
+  line1?: string;
+  line2?: string;
+  town?: string;
+  county?: string;
+  postcode?: string;      // CAPITALS preferred
+  formatted?: string;     // if your lookup already gives a single formatted line
+  nameOrNumber?: string;  // house no/name from lookup
+}
+
+const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 const template = `Licensing Act 2003
 Notice of Application for the 
@@ -21,6 +32,7 @@ An interested party or Responsible Authority may make representations to the Lic
 
 It is an offence to knowingly or recklessly make a false statement in connection with an application and a person may be liable on summary conviction to an unlimited fine.`;
 
+// --- helpers ---
 function ensure(value: string, field: string): string {
   if (!value) throw new Error(`${field} is required`);
   return value;
@@ -38,22 +50,13 @@ function groupHours(hours: Hours) {
   const groups: { start: string; end: string; days: string[] }[] = [];
   let i = 0;
   while (i < days.length) {
-    const day = days[i];
-    const h = hours[day];
-    if (!h?.start || !h?.end) {
-      i++;
-      continue;
-    }
+    const d = days[i];
+    const h = hours[d];
+    if (!h?.start || !h?.end) { i++; continue; }
     const start = validateTime(h.start);
     const end = validateTime(h.end, true);
     let j = i + 1;
-    while (
-      j < days.length &&
-      hours[days[j]]?.start === start &&
-      hours[days[j]]?.end === end
-    ) {
-      j++;
-    }
+    while (j < days.length && hours[days[j]]?.start === start && hours[days[j]]?.end === end) j++;
     groups.push({ start, end, days: days.slice(i, j) });
     i = j;
   }
@@ -67,9 +70,7 @@ function dayLabel(groupDays: string[]): string {
 }
 
 function formatActivities(activities: string[], activityHours: Record<string, Hours>): string {
-  if (!activities || activities.length === 0) {
-    throw new Error('ACTIVITIES_BLOCK is required');
-  }
+  if (!activities?.length) throw new Error('ACTIVITIES_BLOCK is required');
   const lines: string[] = [];
   for (const act of activities) {
     const hours = activityHours[act];
@@ -81,8 +82,44 @@ function formatActivities(activities: string[], activityHours: Record<string, Ho
       lines.push(`${act} \u2013 ${hLabel}hrs - ${dLabel}`);
     }
   }
-  if (lines.length === 0) throw new Error('ACTIVITIES_BLOCK is required');
+  if (!lines.length) throw new Error('ACTIVITIES_BLOCK is required');
   return lines.join('\n');
+}
+
+// Accept either a string address OR structured address
+function buildPremisesAddressFull(
+  rawAddress?: string,
+  structured?: PremisesAddress,
+  premisesName?: string
+): string {
+  let formatted = '';
+
+  if (structured) {
+    if (structured.formatted) {
+      formatted = structured.formatted;
+    } else {
+      const parts = [
+        structured.nameOrNumber,
+        structured.line1,
+        structured.line2,
+        structured.town,
+        structured.county,
+        structured.postcode,
+      ].filter(Boolean);
+      formatted = parts.join(', ');
+    }
+  } else if (rawAddress) {
+    formatted = rawAddress;
+  }
+
+  formatted = formatted.trim();
+
+  // postcode check (UK-ish)
+  if (!/[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/i.test(formatted)) {
+    throw new Error('PREMISES_ADDRESS_FULL must include postcode');
+  }
+
+  return premisesName ? `${premisesName}, ${formatted}` : formatted;
 }
 
 interface FormInput {
@@ -90,7 +127,12 @@ interface FormInput {
   applicantName?: string;
   councilName?: string;
   premisesName?: string;
+
+  // either provide this...
   premisesAddress?: string;
+  // ...or this (from AddressLookup)
+  premisesAddressObj?: PremisesAddress;
+
   councilPostalAddress?: string;
   councilOfficeHours?: string;
   councilApplicationsUrl?: string;
@@ -104,16 +146,13 @@ export function generateNotice(form: FormInput): string {
   const applicant = ensure(form.applicantName || '', 'APPLICANT_NAME');
   const council = ensure(form.councilName || '', 'COUNCIL_NAME');
 
-  const address = ensure(form.premisesAddress || '', 'PREMISES_ADDRESS_FULL');
-  if (!/[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/i.test(address)) {
-    throw new Error('PREMISES_ADDRESS_FULL must include postcode');
-  }
-  const premisesAddressFull = form.premisesName
-    ? `${form.premisesName}, ${address}`
-    : address;
+  const premisesAddressFull = buildPremisesAddressFull(
+    form.premisesAddress,
+    form.premisesAddressObj,
+    form.premisesName
+  );
 
   const activities = formatActivities(form.activities || [], form.activityHours || {});
-
   const councilPostal = ensure(form.councilPostalAddress || '', 'COUNCIL_POSTAL_ADDRESS');
   const officeHours = ensure(form.councilOfficeHours || '', 'COUNCIL_OFFICE_HOURS');
   const applicationsUrl = ensure(form.councilApplicationsUrl || '', 'COUNCIL_APPLICATIONS_URL');
@@ -131,9 +170,10 @@ export function generateNotice(form: FormInput): string {
     REPRESENTATION_DEADLINE: repDeadline,
   };
 
+  // Replace ALL occurrences of each token
   let text = template;
   for (const [key, value] of Object.entries(replacements)) {
-    text = text.replace(`{{${key}}}`, value);
+    text = text.replace(new RegExp(`{{${key}}}`, 'g'), value);
   }
   return text;
 }
