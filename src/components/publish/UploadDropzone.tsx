@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export type UploadDropzoneProps = {
   onText: (text: string) => void;
@@ -105,6 +106,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     if (input) input.value = '';
   };
 
+  useEffect(() => {
+    if (state === 'ready') {
+      document.getElementById('notice-preview')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [state]);
+
   return (
     <div className="rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
       <div className="mb-2">
@@ -114,7 +121,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       <div
         {...getRootProps()}
         ref={rootRef}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
         aria-label="Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload"
       >
         <input
@@ -128,19 +135,59 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         <div className="sr-only" aria-live="polite">Status: {state}</div>
       </div>
 
-      {(acceptedFiles[0] || lastFile) && (
-        <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
-          <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
-          <div className="flex gap-2">
-            {state === 'error' && <button className="rounded-md border px-2 py-1" onClick={retry}>Retry</button>}
-            <button className="rounded-md border px-2 py-1" onClick={remove}>Remove</button>
-          </div>
+      <AnimatePresence>
+        {(acceptedFiles[0] || lastFile) && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm shadow-sm"
+          >
+            <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
+            <div className="flex gap-2">
+              {state === 'error' && (
+                <button
+                  className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                  onClick={retry}
+                >
+                  Retry
+                </button>
+              )}
+              <button
+                className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                onClick={remove}
+              >
+                Remove
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {(state === 'uploading' || state === 'ocr') && (
+        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-200">
+          <div className="h-full w-full bg-gradient-to-r from-blue-400 via-blue-200 to-blue-400 bg-[length:200%_100%] animate-progress" />
         </div>
       )}
 
       <div className="mt-3 text-xs text-slate-600">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
+      {state === 'ready' && (
+        <div className="mt-3 space-y-2" aria-live="polite">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
+            Extracted {localText.length} characters from file
+          </div>
+          <details className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
+            <summary className="cursor-pointer list-none font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">OCR text preview</summary>
+            <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap break-words text-xs text-slate-700">
+              {localText.slice(0, 1500)}
+              {localText.length > 1500 ? '…' : ''}
+            </pre>
+          </details>
+        </div>
+      )}
       {error && (
-        <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2" role="status" aria-live="polite">
+        <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2 text-sm text-amber-700" role="status" aria-live="polite">
           {error}
         </div>
       )}
