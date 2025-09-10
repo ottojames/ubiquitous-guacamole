@@ -60,7 +60,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     } catch (e) {
       setState('failed');
       setElapsed(performance.now() - t0);
-      setError('Upload failed. You can still edit everything manually.');
+      setError("We couldn't process this file — retry or paste text manually");
     }
   };
 
@@ -169,7 +169,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
 
       {(state === 'uploading' || state === 'ocrRunning') && (
         <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full w-full bg-gradient-to-r from-blue-400 via-blue-200 to-blue-400 bg-[length:200%_100%] animate-shimmer" />
+          <div className="h-full w-full bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] animate-shimmer" />
         </div>
       )}
 

@@ -55,7 +55,7 @@ export default function ComplianceChecklist({ items }: { items: ChecklistItem[] 
                 <div className="flex items-center gap-2">
                   <span
                     aria-hidden
-                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${item.ok ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${item.ok ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}
                   >
                     {item.ok ? '✔' : '✘'}
                   </span>
