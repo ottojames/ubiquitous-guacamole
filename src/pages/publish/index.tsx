@@ -4,7 +4,7 @@ import AppShell from '@/components/publish/AppShell';
 import ApplicantPanel from '@/components/publish/ApplicantPanel';
 import ApplicationBasics, { type ApplicationBasicsValue } from '@/components/publish/ApplicationBasics';
 import ActivitiesHours, { type ActivityRow } from '@/components/publish/ActivitiesHours';
-import ComplianceChecklist, { type ChecklistItem } from '@/components/publish/ComplianceChecklist';
+import Checklist, { type ChecklistItem } from '@/components/publish/Checklist';
 import PublishNoticePreview from '@/components/publish/NoticePreview';
 import UploadDropzone from '@/components/publish/UploadDropzone';
 import { type PremisesData } from '@/schemas/premises';
@@ -61,6 +61,12 @@ export default function PublishPage() {
   ], [assembled]);
   const disabled = publishing || checklist.some((i) => !i.ok);
 
+  const handleFix = (target?: string) => {
+    const el = target ? document.getElementById(target) : null;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
+  };
+
   const handlePublish = async () => {
     if (disabled) return;
     setPublishing(true);
@@ -107,7 +113,13 @@ export default function PublishPage() {
       rail={(
         <div className="sticky top-6 space-y-4">
           <PublishNoticePreview text={previewText} />
-          <ComplianceChecklist items={checklist} />
+          <Checklist items={checklist} onFix={handleFix} />
+          <div className="rounded-2xl border border-slate-200 p-4 text-sm text-slate-700 shadow-inner">
+            <div><span className="font-medium">Applicant:</span> {form.applicantName || '—'}</div>
+            <div><span className="font-medium">Email:</span> {form.applicantEmail || '—'}</div>
+            <div><span className="font-medium">Council:</span> {form.councilName || '—'}</div>
+            <div><span className="font-medium">Council email:</span> {form.councilEmail || '—'}</div>
+          </div>
         </div>
       )}
       footer={(
@@ -148,7 +160,7 @@ export default function PublishPage() {
           onMeta={(m) => setMeta(m)}
         />
 
-        <div id="applicant-section">
+        <div id="applicant-section" className="[&>div>div:last-child]:hidden">
           <ApplicantPanel
             applicantName={form.applicantName}
             applicantEmail={form.applicantEmail}
