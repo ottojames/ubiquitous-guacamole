@@ -177,6 +177,9 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       {state === 'success' && (
         <div className="mt-4 grid gap-4 md:grid-cols-2" aria-live="polite">
           <div>
+            {lastFile && lastFile.type.startsWith('image') && (
+              <img src={URL.createObjectURL(lastFile)} alt="thumbnail" className="rounded border mb-2 max-h-48" />
+            )}
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
               Extracted {localText.length} characters from file
             </div>

@@ -1,0 +1,12 @@
+{
+  "id": "southwark",
+  "name": "Southwark Council",
+  "region": "england_wales",
+  "representation": {
+    "email": "licensing@southwark.gov.uk",
+    "postal": "Southwark Council, Licensing, 160 Tooley St, London SE1 2QH",
+    "portal": "https://www.southwark.gov.uk/licensing"
+  },
+  "consultationLength": 21,
+  "headingCase": "title"
+}

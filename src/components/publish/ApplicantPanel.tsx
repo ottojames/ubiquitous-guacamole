@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import AddressAutocomplete, { AddressOption } from '@/components/AddressAutocomplete';
 import councils from '@/data/councils.json';
+import { getAuthorityPack, AuthorityPack } from '@/lib/authorityPacks';
 
 export type CouncilDirectoryItem = {
   id: string;
@@ -28,18 +29,47 @@ type Props = {
 export default function ApplicantPanel({ applicantName, applicantEmail, councilName, councilEmail, address, onPatch, onSelectAddress, onCouncilMeta }: Props) {
   const directory = councils as CouncilDirectoryItem[];
   const selected = useMemo(() => directory.find((d) => d.name === councilName), [directory, councilName]);
+  const [pack, setPack] = useState<AuthorityPack | undefined>();
+  const [manualEmail, setManualEmail] = useState(false);
 
   function pickCouncil(id: string) {
     const c = directory.find((x) => x.id === id);
     if (!c) return;
-    onPatch({ councilName: c.name, councilEmail: c.licensingEmail });
+    const pack = getAuthorityPack(id);
+    setPack(pack);
+    onPatch({ councilName: c.name, councilEmail: pack?.representation.email || c.licensingEmail });
     onCouncilMeta?.(c);
+    setManualEmail(false);
+  }
+
+  // autosave with copy link chip
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    const payload = { applicantName, applicantEmail, councilName, councilEmail, address };
+    try {
+      localStorage.setItem('pn_draft_v2', JSON.stringify(payload));
+      setSaved(true);
+    } catch {}
+  }, [applicantName, applicantEmail, councilName, councilEmail, address]);
+
+  function copyLink() {
+    try {
+      const data = localStorage.getItem('pn_draft_v2');
+      const url = `${location.origin}/publish?draft=${encodeURIComponent(data || '')}`;
+      navigator.clipboard.writeText(url);
+    } catch {}
   }
 
   const applicantOk = applicantName.trim().length >= 2;
   const emailOk = /[^@\s]+@[^@\s]+\.[^@\s]+/.test(applicantEmail);
   const councilOk = !!(councilName && councilEmail && /[^@\s]+@[^@\s]+\.[^@\s]+/.test(councilEmail));
   const addressOk = !!(address?.line1 && address?.postcode);
+
+  useEffect(() => {
+    if (pack?.representation.email && councilEmail !== pack.representation.email) {
+      setManualEmail(true);
+    }
+  }, [councilEmail, pack]);
 
   return (
     <div className="md:sticky md:top-24 space-y-4" aria-label="Applicant and council details">
@@ -108,12 +138,24 @@ export default function ApplicantPanel({ applicantName, applicantEmail, councilN
         </div>
       </div>
       {/* Right rail intentionally shows only applicant/council summary */}
-      <div className="rounded-2xl shadow-inner border border-slate-200 p-4 text-sm text-slate-700">
+      <div className="rounded-2xl shadow-inner border border-slate-200 p-4 text-sm text-slate-700 space-y-1">
         <div><span className="font-medium">Applicant:</span> {applicantName || '—'}</div>
         <div><span className="font-medium">Email:</span> {applicantEmail || '—'}</div>
         <div><span className="font-medium">Council:</span> {councilName || '—'}</div>
-        <div><span className="font-medium">Council email:</span> {councilEmail || '—'}</div>
+        <div>
+          <span className="font-medium">Council email:</span> {councilEmail || '—'}
+          {manualEmail && <span className="text-amber-600 ml-1">(manual override)</span>}
+        </div>
+        {pack && (
+          <div className="pt-1 text-xs text-slate-500">Consultation length: {pack.consultationLength || 28} days</div>
+        )}
       </div>
+      {saved && (
+        <div className="flex items-center gap-2 text-xs text-slate-600" aria-live="polite">
+          <span>Draft saved</span>
+          <button type="button" className="underline" onClick={copyLink}>Copy link</button>
+        </div>
+      )}
     </div>
   );
 }
