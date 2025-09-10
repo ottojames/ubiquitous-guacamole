@@ -1,37 +1,81 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export type ChecklistProps = { issues: string[]; onFix: () => void };
+export type ChecklistItem = {
+  id: string;
+  label: string;
+  ok: boolean;
+  target: string;
+};
 
-export default function Checklist({ issues, onFix }: ChecklistProps) {
-  const hasIssues = (issues?.length || 0) > 0;
+export default function ComplianceChecklist({ items }: { items: ChecklistItem[] }) {
+  const prev = useRef<Record<string, boolean>>({});
+  const [announcement, setAnnouncement] = useState('');
+
+  useEffect(() => {
+    const turnedGreen = items.filter((i) => i.ok && prev.current[i.id] === false);
+    if (turnedGreen.length > 0) {
+      setAnnouncement(`${turnedGreen[0].label} resolved`);
+    }
+    items.forEach((i) => {
+      prev.current[i.id] = i.ok;
+    });
+  }, [items]);
+
+  const fix = (target: string) => {
+    const el = document.getElementById(target) as HTMLElement | null;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
+  };
+
+  const allGood = items.every((i) => i.ok);
+
   return (
-    <div className="rounded-xl border bg-white p-5 shadow-sm" role="region" aria-label="Publication-ready checklist">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold tracking-tight">Publication-ready checklist</h3>
-        {hasIssues && (
-          <button
-            type="button"
-            className="rounded-md border px-3 py-1.5 text-sm"
-            onClick={onFix}
-          >
-            Fix first issue
-          </button>
-        )}
-      </div>
-      <ul className="space-y-1 text-sm">
-        {!hasIssues && (
-          <li className="flex items-center gap-2 text-emerald-700">
-            <span aria-hidden className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-600" />
-            All checks passed — ready to publish
-          </li>
-        )}
-        {issues?.map((msg, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <span aria-hidden className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-amber-600" />
-            <span className="text-slate-800">{msg}</span>
-          </li>
-        ))}
+    <div className="rounded-xl border bg-white p-5 shadow-sm" role="region" aria-label="Compliance checklist">
+      <h3 className="mb-3 text-sm font-semibold tracking-tight">Compliance checklist</h3>
+      <ul className="space-y-2 text-sm">
+        <AnimatePresence initial={false}>
+          {allGood && (
+            <motion.li
+              layout
+              key="all-good"
+              className="flex items-center gap-2 text-emerald-700"
+            >
+              <span aria-hidden className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">✔</span>
+              All checks passed — ready to publish
+            </motion.li>
+          )}
+          {!allGood &&
+            items.map((item) => (
+              <motion.li
+                layout
+                key={item.id}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${item.ok ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}
+                  >
+                    {item.ok ? '✔' : '✘'}
+                  </span>
+                  <span className="text-slate-800">{item.label}</span>
+                </div>
+                {!item.ok && (
+                  <button
+                    className="ml-4 rounded-md border px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                    onClick={() => fix(item.target)}
+                  >
+                    Fix this
+                  </button>
+                )}
+              </motion.li>
+            ))}
+        </AnimatePresence>
       </ul>
+      <div className="sr-only" aria-live="polite">
+        {announcement}
+      </div>
     </div>
   );
 }

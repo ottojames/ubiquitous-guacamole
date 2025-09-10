@@ -4,12 +4,10 @@ import AppShell from '@/components/publish/AppShell';
 import ApplicantPanel from '@/components/publish/ApplicantPanel';
 import ApplicationBasics, { type ApplicationBasicsValue } from '@/components/publish/ApplicationBasics';
 import ActivitiesHours, { type ActivityRow } from '@/components/publish/ActivitiesHours';
-import Checklist from '@/components/publish/ComplianceChecklist';
-import NoticePreview from '@/components/NoticePreview';
-import PublishNoticePreview from '@/components/publish/NoticePreview';
+import ComplianceChecklist, { type ChecklistItem } from '@/components/publish/ComplianceChecklist';
+import NoticePreview from '@/components/publish/NoticePreview';
 import UploadDropzone from '@/components/publish/UploadDropzone';
 import { type PremisesData } from '@/schemas/premises';
-import { renderPremisesNotice } from '@/lib/renderNotice';
 
 export default function PublishPage() {
   const [noticeText, setNoticeText] = useState("");
@@ -24,8 +22,8 @@ export default function PublishPage() {
     councilEmail: "",
     premisesAddress: { line1: "", line2: "", line3: "", city: "", postcode: "" },
   });
-  const steps = ['Type', 'Upload or Build', 'Applicant', 'Details', 'Preview & Publish'] as const;
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const steps = ['Upload & OCR', 'Applicant', 'Details', 'Review'] as const;
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [noticeType, setNoticeType] = useState<'premises' | 'traffic' | 'gambling' | 'planning' | 'gvol' | 'probate'>('premises');
   const [basics, setBasics] = useState<ApplicationBasicsValue>({
     applicationType: 'grant',
@@ -54,17 +52,15 @@ export default function PublishPage() {
     variationSummary: basics.variationSummary,
     activities: activities as any,
   };
-  const issues = useMemo(() => {
-    const errs: string[] = [];
-    if (!assembled.applicantName?.trim()) errs.push('Applicant name is required');
-    if (!(assembled.councilId && assembled.councilEmail)) errs.push('Council and reps contact required');
-    if (!(assembled.premisesTradingName && assembled.address?.line1 && assembled.address?.postcode && assembled.address?.city)) errs.push('Trading name and full address required');
-    if (!assembled.applicationType) errs.push('Application type required');
-    if (!assembled.representationDeadline) errs.push('Representation deadline required');
-    if (!((assembled.activities || []).length > 0)) errs.push('List at least one licensable activity');
-    return errs;
-  }, [assembled]);
-  const disabled = publishing || issues.length > 0;
+  const checklist: ChecklistItem[] = useMemo(() => [
+    { id: 'applicant', label: 'Applicant name required', ok: !!assembled.applicantName?.trim(), target: 'applicant-section' },
+    { id: 'council', label: 'Council and reps contact required', ok: !!(assembled.councilId && assembled.councilEmail), target: 'applicant-section' },
+    { id: 'address', label: 'Trading name and full address required', ok: !!(assembled.premisesTradingName && assembled.address?.line1 && assembled.address?.postcode && assembled.address?.city), target: 'basics-section' },
+    { id: 'type', label: 'Application type required', ok: !!assembled.applicationType, target: 'basics-section' },
+    { id: 'deadline', label: 'Representation deadline required', ok: !!assembled.representationDeadline, target: 'basics-section' },
+    { id: 'activities', label: 'List at least one licensable activity', ok: (assembled.activities || []).length > 0, target: 'activities-section' },
+  ], [assembled]);
+  const disabled = publishing || checklist.some((i) => !i.ok);
 
   const handlePublish = async () => {
     if (disabled) return;
@@ -102,36 +98,17 @@ export default function PublishPage() {
     setForm((f) => ({ ...f, premisesAddress: { line1, line2, line3, city, postcode } }));
   };
 
-  const onFix = () => {
-    const el = document.querySelector('[data-error="true"]') as HTMLElement | null;
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
-  };
 
   return (
     <AppShell
       title="Publish a Notice"
       steps={steps}
       currentStep={currentStep}
-      onStepChange={setCurrentStep}
+      onStepChange={(i) => i <= currentStep && setCurrentStep(i)}
       rail={(
         <div className="sticky top-6 space-y-4">
-          <ApplicantPanel
-            applicantName={form.applicantName}
-            applicantEmail={form.applicantEmail}
-            councilName={form.councilName}
-            councilEmail={form.councilEmail}
-            address={form.premisesAddress}
-            onPatch={(patch) => setForm((f) => ({ ...f, ...(patch as any) }))}
-            onSelectAddress={handleAddress}
-            onCouncilMeta={(meta) => setCouncilMeta({
-              officeAddress: (meta as any).officeAddress,
-              licensingUrl: (meta as any).licensingUrl,
-              postalAddress: (meta as any).postalAddress || (meta as any).postal,
-              repsEmail: (meta as any).repsEmail,
-              repsUrl: (meta as any).repsUrl,
-            })}
-          />
+          <NoticePreview text={previewText} />
+          <ComplianceChecklist items={checklist} />
         </div>
       )}
       footer={(
@@ -172,21 +149,33 @@ export default function PublishPage() {
           }}
           onMeta={(m) => setMeta(m)}
         />
-        {previewText && <NoticePreview text={previewText} />}
 
-        <ApplicationBasics value={basics} onChange={setBasics} />
-        <ActivitiesHours rows={activities} onChange={setActivities} />
-        <Checklist issues={issues} onFix={onFix} />
-        <PublishNoticePreview text={renderPremisesNotice({
-          ...assembled,
-          councilName: form.councilName || 'Council',
-          officeAddress: councilMeta.officeAddress,
-          licensingUrl: councilMeta.licensingUrl,
-          postalAddress: councilMeta.postalAddress,
-          repsEmail: councilMeta.repsEmail,
-          repsUrl: councilMeta.repsUrl,
-          region: basics.region,
-        })} />
+        <div id="applicant-section">
+          <ApplicantPanel
+            applicantName={form.applicantName}
+            applicantEmail={form.applicantEmail}
+            councilName={form.councilName}
+            councilEmail={form.councilEmail}
+            address={form.premisesAddress}
+            onPatch={(patch) => setForm((f) => ({ ...f, ...(patch as any) }))}
+            onSelectAddress={handleAddress}
+            onCouncilMeta={(meta) => setCouncilMeta({
+              officeAddress: (meta as any).officeAddress,
+              licensingUrl: (meta as any).licensingUrl,
+              postalAddress: (meta as any).postalAddress || (meta as any).postal,
+              repsEmail: (meta as any).repsEmail,
+              repsUrl: (meta as any).repsUrl,
+            })}
+          />
+        </div>
+
+        <div id="basics-section">
+          <ApplicationBasics value={basics} onChange={setBasics} />
+        </div>
+
+        <div id="activities-section">
+          <ActivitiesHours rows={activities} onChange={setActivities} />
+        </div>
       </div>
     </AppShell>
   );
