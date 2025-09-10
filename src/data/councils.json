@@ -1,0 +1,13 @@
+[
+  {
+    "id": "lambeth",
+    "name": "London Borough of Lambeth",
+    "licensingEmail": "licensing@lambeth.gov.uk",
+    "postal": "Licensing Team, Civic Centre, 6 Brixton Hill, London SW2 1RW",
+    "postalAddress": "Licensing Team, Civic Centre, 6 Brixton Hill, London SW2 1RW",
+    "officeAddress": "Civic Centre, 6 Brixton Hill, London SW2 1RW",
+    "licensingUrl": "https://www.lambeth.gov.uk/licensing",
+    "repsEmail": "licensing@lambeth.gov.uk",
+    "repsUrl": "https://www.lambeth.gov.uk/licensing"
+  }
+]
