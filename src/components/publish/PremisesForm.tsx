@@ -67,7 +67,7 @@ interface FormData {
 interface Props {
   onSubmit: (data: FormData) => Promise<void> | void;
   saving: boolean;
-  autoFocusRef: React.RefObject<HTMLInputElement>;
+  autoFocusRef: React.RefObject<any>;
 }
 
 export function WeeklyHoursInput({
@@ -580,4 +580,3 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef }: Props) 
     </form>
   );
 }
-
