@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import AddressAutocomplete, { AddressOption } from '@/components/AddressAutocomplete';
 import councils from '@/data/councils.json';
-import { getAuthorityPack, AuthorityPack } from '@/lib/authorityPacks';
+import { getAuthorityPack, AuthorityPack, loadAuthorityPack } from '@/lib/authorityPacks';
 
 export type CouncilDirectoryItem = {
   id: string;
@@ -20,37 +20,56 @@ type Props = {
   applicantEmail: string;
   councilName: string;
   councilEmail: string;
-  address: { line1: string; line2?: string; line3?: string; city?: string; postcode?: string };
+  address: { line1: string; line2?: string; line3?: string; city?: string; postcode?: string; uprn?: string };
+  region?: string;
+  representationEmail?: string;
+  representationUrl?: string;
+  representationPostal?: string;
+  consultationDays?: number;
   onPatch: (patch: Partial<Props>) => void;
   onSelectAddress: (a: AddressOption) => void;
   onCouncilMeta?: (meta: CouncilDirectoryItem) => void;
 };
 
-export default function ApplicantPanel({ applicantName, applicantEmail, councilName, councilEmail, address, onPatch, onSelectAddress, onCouncilMeta }: Props) {
+export default function ApplicantPanel({ applicantName, applicantEmail, councilName, councilEmail, address, region, representationEmail, representationUrl, representationPostal, consultationDays, onPatch, onSelectAddress, onCouncilMeta }: Props) {
   const directory = councils as CouncilDirectoryItem[];
   const selected = useMemo(() => directory.find((d) => d.name === councilName), [directory, councilName]);
   const [pack, setPack] = useState<AuthorityPack | undefined>();
   const [manualEmail, setManualEmail] = useState(false);
+  const [manualRepEmail, setManualRepEmail] = useState(false);
+  const [manualRepUrl, setManualRepUrl] = useState(false);
+  const [manualRepPostal, setManualRepPostal] = useState(false);
 
-  function pickCouncil(id: string) {
+  async function pickCouncil(id: string) {
     const c = directory.find((x) => x.id === id);
     if (!c) return;
-    const pack = getAuthorityPack(id);
+    const pack = await loadAuthorityPack(id);
     setPack(pack);
-    onPatch({ councilName: c.name, councilEmail: pack?.representation.email || c.licensingEmail });
+    onPatch({
+      councilName: c.name,
+      councilEmail: pack?.representation.email || c.licensingEmail,
+      region: pack?.region,
+      representationEmail: pack?.representation.email,
+      representationUrl: pack?.representation.portal,
+      representationPostal: pack?.representation.postal,
+      consultationDays: pack?.consultationLength,
+    });
     onCouncilMeta?.(c);
     setManualEmail(false);
+    setManualRepEmail(false);
+    setManualRepUrl(false);
+    setManualRepPostal(false);
   }
 
   // autosave with copy link chip
   const [saved, setSaved] = useState(false);
   useEffect(() => {
-    const payload = { applicantName, applicantEmail, councilName, councilEmail, address };
+    const payload = { applicantName, applicantEmail, councilName, councilEmail, address, region, representationEmail, representationUrl, representationPostal, consultationDays };
     try {
       localStorage.setItem('pn_draft_v2', JSON.stringify(payload));
       setSaved(true);
     } catch {}
-  }, [applicantName, applicantEmail, councilName, councilEmail, address]);
+  }, [applicantName, applicantEmail, councilName, councilEmail, address, region, representationEmail, representationUrl, representationPostal, consultationDays]);
 
   function copyLink() {
     try {
@@ -69,7 +88,16 @@ export default function ApplicantPanel({ applicantName, applicantEmail, councilN
     if (pack?.representation.email && councilEmail !== pack.representation.email) {
       setManualEmail(true);
     }
-  }, [councilEmail, pack]);
+    if (pack?.representation.email && representationEmail !== pack.representation.email) {
+      setManualRepEmail(true);
+    }
+    if (pack?.representation.portal && representationUrl !== pack.representation.portal) {
+      setManualRepUrl(true);
+    }
+    if (pack?.representation.postal && representationPostal !== pack.representation.postal) {
+      setManualRepPostal(true);
+    }
+  }, [councilEmail, representationEmail, representationUrl, representationPostal, pack]);
 
   return (
     <div className="md:sticky md:top-24 space-y-4" aria-label="Applicant and council details">
@@ -125,6 +153,35 @@ export default function ApplicantPanel({ applicantName, applicantEmail, councilN
             />
           </div>
 
+          <div>
+            <label htmlFor="representationEmail" className="block text-sm font-medium">Representation Email</label>
+            <input
+              id="representationEmail"
+              type="email"
+              className="w-full rounded-lg border-slate-300 focus-visible:ring-2 focus-visible:ring-blue-500/30"
+              value={representationEmail || ''}
+              onChange={(e) => onPatch({ representationEmail: e.target.value })}
+            />
+          </div>
+          <div>
+            <label htmlFor="representationUrl" className="block text-sm font-medium">Representation URL</label>
+            <input
+              id="representationUrl"
+              className="w-full rounded-lg border-slate-300 focus-visible:ring-2 focus-visible:ring-blue-500/30"
+              value={representationUrl || ''}
+              onChange={(e) => onPatch({ representationUrl: e.target.value })}
+            />
+          </div>
+          <div>
+            <label htmlFor="representationPostal" className="block text-sm font-medium">Representation Postal</label>
+            <textarea
+              id="representationPostal"
+              className="w-full rounded-lg border-slate-300 focus-visible:ring-2 focus-visible:ring-blue-500/30"
+              value={representationPostal || ''}
+              onChange={(e) => onPatch({ representationPostal: e.target.value })}
+            />
+          </div>
+
           <div data-error={!addressOk}>
             <AddressAutocomplete onSelect={onSelectAddress} />
             {address?.line1 && (
@@ -146,9 +203,20 @@ export default function ApplicantPanel({ applicantName, applicantEmail, councilN
           <span className="font-medium">Council email:</span> {councilEmail || '—'}
           {manualEmail && <span className="text-amber-600 ml-1">(manual override)</span>}
         </div>
-        {pack && (
-          <div className="pt-1 text-xs text-slate-500">Consultation length: {pack.consultationLength || 28} days</div>
-        )}
+        <div>
+          <span className="font-medium">Reps email:</span> {representationEmail || '—'}
+          {manualRepEmail && <span className="text-amber-600 ml-1">(manual override)</span>}
+        </div>
+        <div>
+          <span className="font-medium">Reps URL:</span> {representationUrl || '—'}
+          {manualRepUrl && <span className="text-amber-600 ml-1">(manual override)</span>}
+        </div>
+        <div>
+          <span className="font-medium">Reps postal:</span> {representationPostal || '—'}
+          {manualRepPostal && <span className="text-amber-600 ml-1">(manual override)</span>}
+        </div>
+        <div><span className="font-medium">Region:</span> {region || '—'}</div>
+        <div><span className="font-medium">Consultation days:</span> {consultationDays || pack?.consultationLength || 28}</div>
       </div>
       {saved && (
         <div className="flex items-center gap-2 text-xs text-slate-600" aria-live="polite">

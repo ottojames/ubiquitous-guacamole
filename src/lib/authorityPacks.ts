@@ -35,3 +35,12 @@ export function getAuthorityPack(id: string): AuthorityPack | undefined {
 export function listAuthorityPacks(): AuthorityPack[] {
   return Object.values(packs);
 }
+
+export async function loadAuthorityPack(id: string): Promise<AuthorityPack | undefined> {
+  try {
+    const mod = await import(`../data/authorityPacks/${id}.json`);
+    return (mod as any).default as AuthorityPack;
+  } catch {
+    return undefined;
+  }
+}

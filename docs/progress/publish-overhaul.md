@@ -15,3 +15,4 @@
 - [x] OCR dual-view upload – `src/components/publish/UploadDropzone.tsx`
 - [x] Accessibility error summary – `src/components/publish/ErrorSummary.tsx`, `GVOLForm.tsx`, `TrafficForm.tsx`
 - [x] Documentation & progress log – `docs/progress/publish-overhaul.md`
+- [x] Publish page wiring – `src/pages/publish/index.tsx`
