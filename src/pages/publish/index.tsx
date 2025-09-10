@@ -5,12 +5,11 @@ import ApplicantPanel from '@/components/publish/ApplicantPanel';
 import ApplicationBasics, { type ApplicationBasicsValue } from '@/components/publish/ApplicationBasics';
 import ActivitiesHours, { type ActivityRow } from '@/components/publish/ActivitiesHours';
 import ComplianceChecklist, { type ChecklistItem } from '@/components/publish/ComplianceChecklist';
-import NoticePreview from '@/components/publish/NoticePreview';
+import PublishNoticePreview from '@/components/publish/NoticePreview';
 import UploadDropzone from '@/components/publish/UploadDropzone';
 import { type PremisesData } from '@/schemas/premises';
 
 export default function PublishPage() {
-  const [noticeText, setNoticeText] = useState("");
   const [previewText, setPreviewText] = useState("");
   const [meta, setMeta] = useState<any>({});
   const [publishing, setPublishing] = useState(false);
@@ -72,7 +71,7 @@ export default function PublishPage() {
         councilName: form.councilName,
         councilEmail: form.councilEmail,
         premisesAddress: form.premisesAddress,
-        noticeText,
+        noticeText: previewText,
         source: 'upload',
         meta,
       };
@@ -107,7 +106,7 @@ export default function PublishPage() {
       onStepChange={(i) => i <= currentStep && setCurrentStep(i)}
       rail={(
         <div className="sticky top-6 space-y-4">
-          <NoticePreview text={previewText} />
+          <PublishNoticePreview text={previewText} />
           <ComplianceChecklist items={checklist} />
         </div>
       )}
@@ -144,7 +143,6 @@ export default function PublishPage() {
 
         <UploadDropzone
           onText={(t) => {
-            setNoticeText(t);
             setPreviewText(t);
           }}
           onMeta={(m) => setMeta(m)}

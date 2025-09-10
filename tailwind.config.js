@@ -10,13 +10,13 @@ export default {
           '100%': { backgroundPosition: '200% 0%' },
         },
         shimmer: {
-          '0%': { backgroundPosition: '-200% 0%' },
-          '100%': { backgroundPosition: '200% 0%' },
+          '0%': { backgroundPosition: '0% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
       animation: {
         progress: 'progress 1.5s linear infinite',
-        shimmer: 'shimmer 1.5s linear infinite',
+        shimmer: 'shimmer 1.2s linear infinite',
       },
     },
   },
