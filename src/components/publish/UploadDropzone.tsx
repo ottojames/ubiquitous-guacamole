@@ -8,7 +8,7 @@ export type UploadDropzoneProps = {
 };
 
 export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) {
-  const [state, setState] = useState<'idle'|'uploading'|'ocr'|'ready'|'error'>('idle');
+  const [state, setState] = useState<'idle'|'uploading'|'ocr'|'done'|'failed'>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState('');
   const [localText, setLocalText] = useState('');
@@ -37,7 +37,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         setLocalText('hello');
         onText('hello');
         onMeta?.({ engine: 'test' });
-        setState('ready');
+        setState('done');
         setElapsed(performance.now() - t0);
         return;
       }
@@ -55,10 +55,10 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       if (data?.error === 'OCR_EMPTY') {
         setError("We couldn't read this file. Build from details instead.");
       }
-      setState('ready');
+      setState('done');
       setElapsed(performance.now() - t0);
     } catch (e) {
-      setState('error');
+      setState('failed');
       setElapsed(performance.now() - t0);
       setError('Upload failed. You can still edit everything manually.');
     }
@@ -81,9 +81,9 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     onDropRejected: () => setError('Unsupported file or file over 25MB.'),
   });
 
-  const statusLabel = state === 'ready'
-    ? 'Ready'
-    : state === 'error'
+  const statusLabel = state === 'done'
+    ? 'Done'
+    : state === 'failed'
     ? 'Failed'
     : state === 'ocr'
     ? 'OCR running…'
@@ -102,12 +102,14 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     setLastFile(null);
     setState('idle');
     setError('');
+    setLocalText('');
+    onText('');
     const input = rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null;
     if (input) input.value = '';
   };
 
   useEffect(() => {
-    if (state === 'ready') {
+    if (state === 'done') {
       document.getElementById('notice-preview')?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [state]);
@@ -132,7 +134,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         />
         <p className="text-sm text-slate-600">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
         <p className="mt-2 text-xs text-slate-500">OCR will appear below; you can still edit everything.</p>
-        <div className="sr-only" aria-live="polite">Status: {state}</div>
+        <div className="sr-only" aria-live="polite">Status: {statusLabel}</div>
       </div>
 
       <AnimatePresence>
@@ -146,7 +148,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
           >
             <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
             <div className="flex gap-2">
-              {state === 'error' && (
+              {state === 'failed' && (
                 <button
                   className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
                   onClick={retry}
@@ -167,12 +169,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
 
       {(state === 'uploading' || state === 'ocr') && (
         <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full w-full bg-gradient-to-r from-blue-400 via-blue-200 to-blue-400 bg-[length:200%_100%] animate-progress" />
+          <div className="h-full w-full bg-gradient-to-r from-blue-400 via-blue-200 to-blue-400 bg-[length:200%_100%] animate-shimmer" />
         </div>
       )}
 
-      <div className="mt-3 text-xs text-slate-600">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
-      {state === 'ready' && (
+      <div className="mt-3 text-xs text-slate-600">Status: {statusLabel} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
+      {state === 'done' && (
         <div className="mt-3 space-y-2" aria-live="polite">
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
             Extracted {localText.length} characters from file

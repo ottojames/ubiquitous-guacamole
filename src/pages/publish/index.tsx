@@ -5,13 +5,15 @@ import ApplicantPanel from '@/components/publish/ApplicantPanel';
 import ApplicationBasics, { type ApplicationBasicsValue } from '@/components/publish/ApplicationBasics';
 import ActivitiesHours, { type ActivityRow } from '@/components/publish/ActivitiesHours';
 import Checklist from '@/components/publish/ComplianceChecklist';
-import NoticePreview from '@/components/publish/NoticePreview';
+import NoticePreview from '@/components/NoticePreview';
+import PublishNoticePreview from '@/components/publish/NoticePreview';
 import UploadDropzone from '@/components/publish/UploadDropzone';
 import { type PremisesData } from '@/schemas/premises';
 import { renderPremisesNotice } from '@/lib/renderNotice';
 
 export default function PublishPage() {
   const [noticeText, setNoticeText] = useState("");
+  const [previewText, setPreviewText] = useState("");
   const [meta, setMeta] = useState<any>({});
   const [publishing, setPublishing] = useState(false);
 
@@ -163,12 +165,19 @@ export default function PublishPage() {
           </select>
         </div>
 
-        <UploadDropzone onText={(t) => setNoticeText(t)} onMeta={(m) => setMeta(m)} />
+        <UploadDropzone
+          onText={(t) => {
+            setNoticeText(t);
+            setPreviewText(t);
+          }}
+          onMeta={(m) => setMeta(m)}
+        />
+        {previewText && <NoticePreview text={previewText} />}
 
         <ApplicationBasics value={basics} onChange={setBasics} />
         <ActivitiesHours rows={activities} onChange={setActivities} />
         <Checklist issues={issues} onFix={onFix} />
-        <NoticePreview text={renderPremisesNotice({
+        <PublishNoticePreview text={renderPremisesNotice({
           ...assembled,
           councilName: form.councilName || 'Council',
           officeAddress: councilMeta.officeAddress,
