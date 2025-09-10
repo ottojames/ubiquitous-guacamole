@@ -1,0 +1,11 @@
+{
+  "id": "camden",
+  "name": "Camden Council",
+  "region": "england_wales",
+  "representation": {
+    "email": "licensing@camden.gov.uk"
+  },
+  "consultationLength": 28,
+  "headingCase": "upper",
+  "extraLines": ["Notice ID must be quoted in correspondence."]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "manchester",
+  "name": "Manchester City Council",
+  "region": "england_wales",
+  "representation": {
+    "portal": "https://licensing.manchester.gov.uk"
+  },
+  "consultationLength": 28,
+  "headingCase": "title"
+}
