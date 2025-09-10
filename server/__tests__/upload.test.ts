@@ -1,11 +1,9 @@
 /** @vitest-environment node */
 import { describe, it, expect, vi } from 'vitest';
-import { handleUploadCore } from '../routes/upload';
-
-// Mock OCR to avoid heavy dependencies in unit test
-vi.mock('../utils/ocr', () => ({
-  ocrFile: vi.fn(async () => 'unit-ocr-text'),
+vi.mock('../utils/extractText', () => ({
+  extractTextFromBuffer: vi.fn(async () => ({ text: 'unit-ocr-text', meta: { engine: 'mock' } }))
 }));
+import { handleUploadCore } from '../routes/upload';
 
 describe('upload handler (unit)', () => {
   it('returns OCR text locally when Supabase is not configured', async () => {
@@ -22,8 +20,8 @@ describe('upload handler (unit)', () => {
   });
 
   it('returns OCR_EMPTY when OCR yields empty text', async () => {
-    const { ocrFile } = await import('../utils/ocr');
-    (ocrFile as any).mockResolvedValueOnce('');
+    const { extractTextFromBuffer } = await import('../utils/extractText');
+    (extractTextFromBuffer as any).mockResolvedValueOnce({ text: '', meta: { engine: 'mock' } });
     const file = {
       originalname: 'blank.png',
       buffer: Buffer.from('dummy'),

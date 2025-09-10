@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export type ChecklistItem = { id: string; label: string; ok: boolean; target?: string };
+export type ChecklistItem = {
+  id: string;
+  label: string;
+  ok: boolean;
+  target?: string;
+  severity?: 'error' | 'warning';
+  rationale?: string;
+};
 
 type Props =
   | { items: ChecklistItem[]; onFix?: (target?: string) => void }
@@ -64,11 +71,16 @@ export default function Checklist(props: Props) {
                 <div className="flex items-center gap-2">
                   <span
                     aria-hidden
-                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${item.ok ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}
+                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${item.ok ? 'bg-emerald-600 text-white' : item.severity === 'warning' ? 'bg-amber-500 text-white' : 'bg-red-600 text-white'}`}
                   >
                     {item.ok ? '✔' : '✘'}
                   </span>
-                  <span className="text-slate-800">{item.label}</span>
+                  <div className="text-slate-800">
+                    <div>{item.label}</div>
+                    {!item.ok && item.rationale && (
+                      <div className="text-xs text-slate-600" data-testid="rationale">{item.rationale}</div>
+                    )}
+                  </div>
                 </div>
                 {!item.ok && (
                   <button

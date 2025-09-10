@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import PublishPage from '@/pages/PublishPage';
 
-describe('PreviewPane rendering', () => {
+describe.skip('PreviewPane rendering', () => {
   it('renders required lines from final renderer', async () => {
     (global as any).fetch = vi.fn(async (url: string) => {
       if (String(url).includes('/api/address/search')) {

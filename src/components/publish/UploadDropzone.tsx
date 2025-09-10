@@ -175,17 +175,43 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
 
       <div className="mt-3 text-xs text-slate-600">Status: {statusLabel} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
       {state === 'success' && (
-        <div className="mt-3 space-y-2" aria-live="polite">
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
-            Extracted {localText.length} characters from file
+        <div className="mt-4 grid gap-4 md:grid-cols-2" aria-live="polite">
+          <div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
+              Extracted {localText.length} characters from file
+            </div>
+            <div className="mt-2 text-xs text-slate-600">{lastFile?.name}</div>
           </div>
-          <details className="rounded-lg border border-slate-200 bg-white p-3 text-sm">
-            <summary className="cursor-pointer list-none font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">OCR text preview</summary>
-            <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap break-words text-xs text-slate-700">
-              {localText.slice(0, 1500)}
-              {localText.length > 1500 ? '…' : ''}
-            </pre>
-          </details>
+          <div>
+            <textarea
+              className="w-full rounded-lg border-slate-300 text-sm h-48"
+              value={localText}
+              onChange={(e) => {
+                setLocalText(e.target.value);
+                onText(e.target.value);
+              }}
+            />
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                className="rounded-md border px-2 py-1 text-xs"
+                onClick={() => onText(localText)}
+              >
+                Accept all
+              </button>
+              <button
+                type="button"
+                className="rounded-md border px-2 py-1 text-xs"
+                onClick={() => {
+                  const normalised = localText.replace(/\s+/g,' ').replace(/\b(\d{1,2})(am|pm)\b/gi, (m)=> m.toUpperCase());
+                  setLocalText(normalised);
+                  onText(normalised);
+                }}
+              >
+                Normalise caps/times/spacing
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {error && (

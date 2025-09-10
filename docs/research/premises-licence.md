@@ -1,76 +1,55 @@
-# Premises Licence Notice (Licensing Act 2003)
+# Premises Licence Public Notice Requirements
 
-This memo captures the minimum information a premises licence notice must contain
-and observations from a survey of council templates. Sources are internal GOV
-packs and publicly available council PDFs (Camden, Manchester, Edinburgh).
+This note summarises mandatory content and wording conventions for notices made under the Licensing Act 2003 for new grants, variations and reviews of premises licences. Guidance is drawn from Home Office regulations and examples from a cross‑section of councils.
 
 ## Mandatory lines
 
-- **Applicant/legal name** – company or individual applying
-- **Premises/trading name**
-- **Full address** – include postcode and, where known, Unique Property Reference
-  Number (UPRN)
-- **Licensable activities and opening hours** – alcohol on/off sales, late night
-  refreshment, live/recorded music, etc. Hours must state start & end per day
-- **Inspection details** – where the application can be inspected (usually the
-  council offices or website)
-- **Representation method** – email, web portal URL, or postal address for
-  objections
-- **Representation deadline** – 28 days from the day after the application date
-- **Offence warning** – “It is an offence to knowingly or recklessly make a false
-  statement in connection with an application. Those who do are liable on
-  summary conviction to a fine of up to level 5 on the standard scale.”
-- **Region‑specific lines**
-  - England & Wales – reference to Licensing Act 2003
-  - Scotland – refer to Licensing (Scotland) Act 2005 and include licensing board
-    contact
-  - Northern Ireland – Licensing (NI) Order 1996 wording and Department for
-    Communities guidance
+A compliant notice **must** include the following lines in this order:
 
-## Council wording quirks
+1. **Heading** – the words `LICENSING ACT 2003` in the case style required by the licensing authority. Many councils insist on full upper‑case.
+2. **Applicant** – full legal name of the applicant or partnership.
+3. **Premises** – trading name and full postal address including postcode.
+4. **Application type** – e.g. *to apply for a new premises licence* or *to vary the licence to include late night refreshment*.
+5. **Licensable activities and hours** – each activity with the proposed hours.
+6. **Inspection address** – where the application and register can be inspected. Usually the council’s licensing office or online portal.
+7. **Representation method** – how representations may be made: email, online form, or postal address.
+8. **Representation deadline** – last date for representations. The consultation window is normally 28 days from the day after the application date.
+9. **Offence warning** – a line such as *“It is an offence to knowingly or recklessly make a false statement in connection with an application.”* Some authorities add the £5,000 fine reference.
+10. **Date notice displayed** – optional but recommended by many councils.
 
-- **Channels** – some councils accept representations only by email (e.g.
-  Camden), others via web portal (Manchester) or allow postal submissions
-  (Edinburgh)
-- **Headings/casing** – Camden uses uppercase headings; Manchester uses title
-  case; Edinburgh prefixes notices with “PUBLIC NOTICE”
-- **Extra lines** – Manchester asks applicants to include the application
-  reference; Edinburgh requests the name of the local licensing board
+## Regional variations
 
-## Bank holiday adjustments
+- **England & Wales** – wording follows the Licensing Act 2003 regulations. Consultation length is 28 calendar days. Some Welsh councils require bilingual notices.
+- **Scotland** – Licensing (Scotland) Act 2005. Consultation is 28 days; representation wording differs (e.g. “objections and representations”); hours table often separated into “on‑sales” and “off‑sales”.
+- **Northern Ireland** – different statute; not covered here.
 
-The representation deadline is 28 days from the day after the application date.
-If the deadline falls on a weekend or bank holiday it moves to the next working
- day. Example:
+## Examples
 
-| Application date | Day after | +28 days | Deadline (BH adj.) |
-|------------------|-----------|----------|--------------------|
-| Fri 1 Mar 2024   | Sat 2 Mar | Fri 29 Mar (Good Friday) | Tue 2 Apr 2024 |
+| Council | Special requirements |
+|--------|---------------------|
+| Camden (England) | Heading in full caps; notice ID line. |
+| Manchester (England) | Requires postal address for representations. |
+| Edinburgh (Scotland) | Council name in heading; objections phrasing. |
+| Leeds (England) | Requests that applicant phone number be included. |
+| Bristol (England) | Provides online portal URL and prefers Title Case headings. |
 
-## Council templates
+## Consultation window rules
 
-| Council   | Representation method | Heading style | Notable wording |
-|-----------|----------------------|---------------|-----------------|
-| Camden    | Email: licensing@camden.gov.uk | UPPERCASE | Includes notice ID |
-| Manchester| Online portal URL | Title Case | Mentions web portal only |
-| Edinburgh | Email or post | "PUBLIC NOTICE" prefix | References Licensing Board |
+- Day 0 is the day after the application is delivered to the licensing authority.
+- If the deadline falls on a Saturday, Sunday or bank holiday, it is pushed to the next working day.
+- Bank holidays are those recognised in the relevant part of the UK.
 
-## Comparison with other notice regimes
+## Casing norms
 
-| Regime                     | Core fields                                   | Similarities to premises licence schema |
-|----------------------------|-----------------------------------------------|----------------------------------------|
-| Goods Vehicle Operator (GVOL)| Operator name, base, vehicle limit, period | Requires address, legal entity, deadlines |
-| Traffic Regulation Order (TRO)| Road name, restriction type, dates | Needs location and statutory period |
-| Planning applications       | Applicant, site address, proposal, comment deadline | Same pattern of applicant, site, deadline |
-| Gambling Act notices        | Premises, activities, inspection, reps deadline | Essentially identical schema with different activities |
-| Insolvency/Probate/Company  | Debtor/company, court ref, deadline for claims | Uses applicant, subject, deadlines |
+- Many councils require the heading line to be UPPER CASE.
+- Body text is usually in Sentence case.
+- Applicant and premises names should use legal casing as registered with Companies House or other official source.
 
-The schema can generalise by modelling:
+## Offence warning
 
-- **Subject entity** (applicant/debtor/operator)
-- **Location** (address/UPRN)
-- **Activities or proposal**
-- **Inspection/objection channels**
-- **Statutory deadline** rules
-- **Region/council‑specific wording packs**
+> *“It is an offence to knowingly or recklessly make a false statement in connection with an application and a person is liable on conviction for such an offence to a fine up to £5,000.”*
 
+## References
+
+- Licensing Act 2003 (Premises licences and club premises certificates) Regulations 2005.
+- Home Office Section 182 Guidance.

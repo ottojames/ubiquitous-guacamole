@@ -3,6 +3,8 @@
   "name": "Manchester City Council",
   "region": "england_wales",
   "representation": {
+    "email": "licensing@manchester.gov.uk",
+    "postal": "PO Box 532, Town Hall, Manchester M60 2LA",
     "portal": "https://licensing.manchester.gov.uk"
   },
   "consultationLength": 28,
