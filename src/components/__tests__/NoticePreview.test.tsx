@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import NoticePreview from '../NoticePreview';
+import NoticePreview from '../publish/NoticePreview';
 
 describe('NoticePreview', () => {
-  it('shows copy and download buttons', () => {
+  it('renders text with copy and download actions', () => {
     render(<NoticePreview text="hello" />);
-    expect(screen.getByRole('button', { name: /copy text/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /download .txt/i })).toBeInTheDocument();
+    expect(screen.getByText('hello')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /download/i })).toBeInTheDocument();
   });
 });

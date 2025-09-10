@@ -25,23 +25,29 @@ export default function NoticePreview({ text }: { text: string }) {
   return (
     <section
       id="notice-preview"
-      className="mt-6 rounded-2xl border bg-white p-6 md:p-8 shadow-sm transition-all"
+      className="rounded-2xl border bg-white p-6 md:p-8 shadow-sm"
     >
-      <h3 className="mb-3 text-sm font-semibold tracking-tight">Preview (read-only)</h3>
-      <article className="mx-auto max-w-[720px] font-serif text-[15px] leading-7 tracking-[0.003em] text-justify hyphens-auto">
-        <pre className="whitespace-pre-wrap break-words">{text}</pre>
-      </article>
+      <h3 className="mb-3 text-sm font-semibold tracking-tight">Notice preview</h3>
+      {text ? (
+        <pre className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed">
+          {text}
+        </pre>
+      ) : (
+        <p className="text-sm text-slate-500">
+          Your notice preview will appear here after upload or as you type.
+        </p>
+      )}
       <div className="mt-6 flex justify-end gap-2">
         <button
           aria-label="Copy notice text"
-          className="rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
           onClick={copyText}
         >
           Copy
         </button>
         <button
           aria-label="Download notice text"
-          className="rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
           onClick={downloadTxt}
         >
           Download .txt

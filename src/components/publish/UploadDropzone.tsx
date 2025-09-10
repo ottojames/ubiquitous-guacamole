@@ -8,7 +8,7 @@ export type UploadDropzoneProps = {
 };
 
 export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) {
-  const [state, setState] = useState<'idle'|'uploading'|'ocr'|'done'|'failed'>('idle');
+  const [state, setState] = useState<'idle'|'uploading'|'ocrRunning'|'success'|'failed'>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState('');
   const [localText, setLocalText] = useState('');
@@ -32,12 +32,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       const isTest = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
         || (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.MODE === 'test');
       if (isTest) {
-        setState('ocr');
+        setState('ocrRunning');
         await new Promise((r) => setTimeout(r, 10));
         setLocalText('hello');
         onText('hello');
         onMeta?.({ engine: 'test' });
-        setState('done');
+        setState('success');
         setElapsed(performance.now() - t0);
         return;
       }
@@ -45,7 +45,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      setState('ocr');
+      setState('ocrRunning');
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json(); // { text, meta, error? }
       const text = data?.text || '';
@@ -55,7 +55,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       if (data?.error === 'OCR_EMPTY') {
         setError("We couldn't read this file. Build from details instead.");
       }
-      setState('done');
+      setState('success');
       setElapsed(performance.now() - t0);
     } catch (e) {
       setState('failed');
@@ -81,12 +81,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     onDropRejected: () => setError('Unsupported file or file over 25MB.'),
   });
 
-  const statusLabel = state === 'done'
+  const statusLabel = state === 'success'
     ? 'Done'
     : state === 'failed'
     ? 'Failed'
-    : state === 'ocr'
-    ? 'OCR running…'
+    : state === 'ocrRunning'
+    ? 'Running OCR…'
     : state === 'uploading'
     ? 'Uploading…'
     : 'Idle';
@@ -109,7 +109,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
   };
 
   useEffect(() => {
-    if (state === 'done') {
+    if (state === 'success') {
       document.getElementById('notice-preview')?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [state]);
@@ -167,14 +167,14 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         )}
       </AnimatePresence>
 
-      {(state === 'uploading' || state === 'ocr') && (
+      {(state === 'uploading' || state === 'ocrRunning') && (
         <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-200">
           <div className="h-full w-full bg-gradient-to-r from-blue-400 via-blue-200 to-blue-400 bg-[length:200%_100%] animate-shimmer" />
         </div>
       )}
 
       <div className="mt-3 text-xs text-slate-600">Status: {statusLabel} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
-      {state === 'done' && (
+      {state === 'success' && (
         <div className="mt-3 space-y-2" aria-live="polite">
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
             Extracted {localText.length} characters from file
@@ -189,8 +189,24 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         </div>
       )}
       {error && (
-        <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2 text-sm text-amber-700" role="status" aria-live="polite">
-          {error}
+        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="status" aria-live="polite">
+          <div className="flex items-center justify-between gap-4">
+            <span>{error}</span>
+            <div className="flex gap-2 shrink-0">
+              <button
+                className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                onClick={retry}
+              >
+                Retry
+              </button>
+              <button
+                className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                onClick={remove}
+              >
+                Paste text manually
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {/* Hidden but present editor for tests and manual adjustments elsewhere can bind into it */}
