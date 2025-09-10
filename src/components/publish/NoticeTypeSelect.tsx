@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type NoticeType = 'premises' | 'traffic' | 'gambling';
+export type NoticeType = 'premises' | 'traffic' | 'gvol';
 
 interface Props {
   value: NoticeType | '';
@@ -9,8 +9,8 @@ interface Props {
 
 const options: { value: NoticeType; label: string }[] = [
   { value: 'premises', label: 'Premises Licence' },
+  { value: 'gvol', label: 'Goods vehicle operator' },
   { value: 'traffic', label: 'Traffic notice' },
-  { value: 'gambling', label: 'Gambling licence' },
 ];
 
 export default function NoticeTypeSelect({ value, onChange }: Props) {
