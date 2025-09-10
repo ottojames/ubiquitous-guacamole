@@ -13,6 +13,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
   const [error, setError] = useState('');
   const [localText, setLocalText] = useState('');
   const [lastFile, setLastFile] = useState<File | null>(null);
+  const [tokens, setTokens] = useState<{ text: string; confidence: number }[]>([]);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const pretty = (bytes: number) => bytes < 1024
     ? `${bytes} B`
@@ -52,6 +53,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       setLocalText(text);
       onText(text);
       onMeta?.(data?.meta || {});
+      if (data?.meta?.tokens) setTokens(data.meta.tokens);
       if (data?.error === 'OCR_EMPTY') {
         setError("We couldn't read this file. Build from details instead.");
       }
@@ -103,6 +105,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     setState('idle');
     setError('');
     setLocalText('');
+    setTokens([]);
     onText('');
     const input = rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null;
     if (input) input.value = '';
@@ -186,14 +189,31 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
             <div className="mt-2 text-xs text-slate-600">{lastFile?.name}</div>
           </div>
           <div>
-            <textarea
-              className="w-full rounded-lg border-slate-300 text-sm h-48"
-              value={localText}
-              onChange={(e) => {
-                setLocalText(e.target.value);
-                onText(e.target.value);
-              }}
-            />
+            {tokens.length ? (
+              <div
+                className="w-full rounded-lg border-slate-300 text-sm h-48 overflow-auto p-2 border"
+                contentEditable
+                suppressContentEditableWarning
+                onInput={(e) => {
+                  const text = (e.target as HTMLElement).innerText;
+                  setLocalText(text);
+                  onText(text);
+                }}
+              >
+                {tokens.map((t, i) => (
+                  <span key={i} className={t.confidence < 0.8 ? 'bg-yellow-200' : ''}>{t.text}</span>
+                ))}
+              </div>
+            ) : (
+              <textarea
+                className="w-full rounded-lg border-slate-300 text-sm h-48"
+                value={localText}
+                onChange={(e) => {
+                  setLocalText(e.target.value);
+                  onText(e.target.value);
+                }}
+              />
+            )}
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
