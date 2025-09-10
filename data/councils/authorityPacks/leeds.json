@@ -1,0 +1,12 @@
+{
+  "id": "leeds",
+  "name": "Leeds City Council",
+  "region": "england_wales",
+  "representation": {
+    "email": "entertainment.licensing@leeds.gov.uk",
+    "postal": "Entertainment Licensing, Leeds City Council, Merrion House, Leeds LS2 8BB",
+    "portal": "https://www.leeds.gov.uk/business/licensing"
+  },
+  "consultationLength": 28,
+  "headingCase": "upper"
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { calcRepDeadline } from '@/lib/date';
 
 export type ApplicationBasicsValue = {
   applicationType: 'grant' | 'variation' | 'review';
@@ -16,11 +17,9 @@ export default function ApplicationBasics({ value, onChange }: { value: Applicat
   const [editDeadline, setEditDeadline] = useState(false);
 
   const onAppDate = (iso: string) => {
-    const app = new Date(iso);
-    const dayAfter = new Date(app.getFullYear(), app.getMonth(), app.getDate() + 1);
-    const deadline = new Date(dayAfter.getFullYear(), dayAfter.getMonth(), dayAfter.getDate() + 28);
-    const isoDeadline = deadline.toISOString().slice(0, 10);
-    onChange({ ...value, applicationDate: iso, representationDeadline: isoDeadline });
+    const region = value.region === 'SC' ? 'scotland' : 'england_wales';
+    const deadline = calcRepDeadline(iso, region);
+    onChange({ ...value, applicationDate: iso, representationDeadline: deadline });
   };
 
   return (
@@ -88,7 +87,11 @@ export default function ApplicationBasics({ value, onChange }: { value: Applicat
             id="region"
             className="w-full rounded-lg border-slate-300 focus-visible:ring-2 focus-visible:ring-blue-500/30"
             value={value.region}
-            onChange={(e) => set('region', e.target.value as any)}
+            onChange={(e) => {
+              const region = e.target.value as any;
+              const deadline = calcRepDeadline(value.applicationDate, region === 'SC' ? 'scotland' : 'england_wales');
+              onChange({ ...value, region, representationDeadline: deadline });
+            }}
           >
             <option value="EW">England & Wales</option>
             <option value="SC">Scotland</option>

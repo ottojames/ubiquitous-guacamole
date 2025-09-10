@@ -1,0 +1,12 @@
+{
+  "id": "bristol",
+  "name": "Bristol City Council",
+  "region": "england_wales",
+  "representation": {
+    "email": "licensing@bristol.gov.uk",
+    "postal": "Licensing Team (100TS), PO Box 3399, Bristol BS1 9NE",
+    "portal": "https://www.bristol.gov.uk/licensing"
+  },
+  "consultationLength": 28,
+  "headingCase": "title"
+}

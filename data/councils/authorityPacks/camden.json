@@ -3,7 +3,9 @@
   "name": "Camden Council",
   "region": "england_wales",
   "representation": {
-    "email": "licensing@camden.gov.uk"
+    "email": "licensing@camden.gov.uk",
+    "postal": "Licensing Team, Camden Town Hall, London WC1H 9JE",
+    "portal": "https://www.camden.gov.uk/licensing"
   },
   "consultationLength": 28,
   "headingCase": "upper",

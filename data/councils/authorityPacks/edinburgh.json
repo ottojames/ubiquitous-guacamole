@@ -4,7 +4,8 @@
   "region": "scotland",
   "representation": {
     "email": "licensing@edinburgh.gov.uk",
-    "postal": "Licensing, 249 High St, Edinburgh EH1 1YJ"
+    "postal": "Licensing, 249 High St, Edinburgh EH1 1YJ",
+    "portal": "https://www.edinburgh.gov.uk/licensing"
   },
   "consultationLength": 28,
   "headingCase": "upper",

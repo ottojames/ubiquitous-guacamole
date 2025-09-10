@@ -23,6 +23,29 @@ export default function NoticePreview({ text }: { text: string }) {
     URL.revokeObjectURL(url);
   };
 
+  const downloadProof = async () => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text || '');
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const manifest = {
+      hash: hashArray,
+      generatedAt: new Date().toISOString(),
+      length: text.length,
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {
+      type: 'application/json',
+    });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    const a = document.createElement('a');
+    a.href = manifestUrl;
+    a.download = 'notice-manifest.json';
+    a.click();
+    URL.revokeObjectURL(manifestUrl);
+  };
+
   return (
     <section
       id="notice-preview"
@@ -68,6 +91,13 @@ export default function NoticePreview({ text }: { text: string }) {
           onClick={downloadTxt}
         >
           Download .txt
+        </button>
+        <button
+          aria-label="Download proof manifest"
+          className="rounded-lg px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+          onClick={downloadProof}
+        >
+          Proof
         </button>
       </div>
       <AnimatePresence>
