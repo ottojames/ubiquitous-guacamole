@@ -4,6 +4,15 @@ export default {
   theme: {
     extend: {
       fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+      keyframes: {
+        progress: {
+          '0%': { backgroundPosition: '0% 0%' },
+          '100%': { backgroundPosition: '200% 0%' },
+        },
+      },
+      animation: {
+        progress: 'progress 1.5s linear infinite',
+      },
     },
   },
   plugins: [],
