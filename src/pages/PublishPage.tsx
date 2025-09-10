@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from "react";
-import UploadPremisesNoticeForm from "@/components/UploadPremisesNoticeForm";
-import AddressAutocomplete, { AddressOption } from "../components/AddressAutocomplete";
-import NoFileBuilder from "../components/NoFileBuilder";
+import { useState } from 'react';
+import type { AddressOption } from '@/components/AddressAutocomplete';
+import AppShell from '@/components/publish/AppShell';
+import StickyRail from '@/components/publish/StickyRail';
+import UploadDropzone from '@/components/publish/UploadDropzone';
+import ApplicationBasics, { type ApplicationBasicsValue } from '@/components/publish/ApplicationBasics';
+import ActivitiesTable, { type ActivityRow } from '@/components/publish/ActivitiesTable';
+import PreviewPane from '@/components/publish/PreviewPane';
+import { PremisesSchema, type PremisesData } from '@/schemas/premises';
+import { renderPremisesNotice } from '@/lib/renderNotice';
 
 export default function PublishPage() {
   const [noticeText, setNoticeText] = useState("");
-  const [engine, setEngine] = useState("");
   const [meta, setMeta] = useState<any>({});
-  const [useBuilder, setUseBuilder] = useState(false);
-  const [editingAddress, setEditingAddress] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const [form, setForm] = useState({
@@ -18,49 +21,38 @@ export default function PublishPage() {
     councilEmail: "",
     premisesAddress: { line1: "", line2: "", line3: "", city: "", postcode: "" },
   });
-  const [councilQuery, setCouncilQuery] = useState("");
-  const [councilOptions, setCouncilOptions] = useState<{ name: string; email: string }[]>([]);
   const [selectedCouncil, setSelectedCouncil] = useState<{ name: string; email: string } | null>(null);
+  const steps = ['Type', 'Upload or Build', 'Applicant', 'Details', 'Preview & Publish'] as const;
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [noticeType, setNoticeType] = useState<'premises' | 'traffic' | 'gambling' | 'planning' | 'gvol' | 'probate'>('premises');
+  const [basics, setBasics] = useState<ApplicationBasicsValue>({
+    applicationType: 'grant',
+    premisesTradingName: '',
+    applicationDate: new Date().toISOString().slice(0, 10),
+    representationDeadline: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  });
+  const [activities, setActivities] = useState<ActivityRow[]>([]);
+  const [councilMeta, setCouncilMeta] = useState<{ officeAddress?: string; licensingUrl?: string; postalAddress?: string; repsEmail?: string; repsUrl?: string }>({});
 
-  useEffect(() => {
-    let cancel = false;
-    const run = async () => {
-      const q = councilQuery.trim().toLowerCase();
-      if (!q) {
-        setCouncilOptions([]);
-        return;
-      }
-      const res = await fetch('/councils.json');
-      const all = (await res.json()) as { name: string; email: string }[];
-      const matches = all.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 20);
-      if (!cancel) setCouncilOptions(matches);
-    };
-    const t = setTimeout(run, 150);
-    return () => {
-      cancel = true;
-      clearTimeout(t);
-    };
-  }, [councilQuery]);
-
-  const onPickCouncil = (c: { name: string; email: string }) => {
-    setSelectedCouncil(c);
-    setCouncilQuery(c.name);
-    setForm((f) => ({ ...f, councilName: c.name, councilEmail: c.email }));
-    setCouncilOptions([]);
+  const assembled: PremisesData = {
+    applicantName: form.applicantName || '',
+    applicantEmail: form.applicantEmail || '',
+    councilId: selectedCouncil?.name || form.councilName || '',
+    councilEmail: form.councilEmail || '',
+    premisesTradingName: basics.premisesTradingName || '',
+    address: {
+      line1: form.premisesAddress.line1 || '',
+      city: form.premisesAddress.city || '',
+      postcode: form.premisesAddress.postcode || '',
+    },
+    applicationType: basics.applicationType,
+    applicationDate: basics.applicationDate,
+    representationDeadline: basics.representationDeadline,
+    variationSummary: basics.variationSummary,
+    activities: activities as any,
   };
-
-  const isEmail = (s: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
-  const councilValid =
-    selectedCouncil !== null ||
-    (form.councilName.trim() && form.councilEmail.trim());
-  const requiredFilled =
-    form.applicantName.trim() &&
-    isEmail(form.applicantEmail) &&
-    councilValid &&
-    (!form.councilEmail || isEmail(form.councilEmail)) &&
-    form.premisesAddress.line1.trim() &&
-    form.premisesAddress.postcode.trim();
-  const disabled = publishing || !requiredFilled;
+  const gating = PremisesSchema.safeParse(assembled);
+  const disabled = publishing || !gating.success;
 
   const handlePublish = async () => {
     if (disabled) return;
@@ -73,7 +65,7 @@ export default function PublishPage() {
         councilEmail: form.councilEmail,
         premisesAddress: form.premisesAddress,
         noticeText,
-        source: useBuilder ? "form" : "upload",
+        source: 'upload',
         meta,
       };
       await fetch("/api/publish", {
@@ -89,136 +81,84 @@ export default function PublishPage() {
   };
 
   const handleAddress = (a: AddressOption) => {
-    setForm((f) => ({ ...f, premisesAddress: a }));
-    setEditingAddress(false);
+    const anyA = a as any;
+    const line1 = anyA.line1 ?? anyA.lines?.[0] ?? '';
+    const line2 = anyA.line2 ?? anyA.lines?.[1] ?? '';
+    const line3 = anyA.line3 ?? anyA.lines?.[2] ?? '';
+    const city = anyA.city ?? anyA.town ?? '';
+    const postcode = anyA.postcode ?? '';
+    setForm((f) => ({ ...f, premisesAddress: { line1, line2, line3, city, postcode } }));
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Publish a Notice</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <AppShell
+      title="Publish a Notice"
+      steps={steps}
+      currentStep={currentStep}
+      onStepChange={setCurrentStep}
+      rail={(
+        <StickyRail
+          applicantName={form.applicantName}
+          applicantEmail={form.applicantEmail}
+          councilName={form.councilName}
+          councilEmail={form.councilEmail}
+          address={form.premisesAddress}
+          onPatch={(patch) => setForm((f) => ({ ...f, ...(patch as any) }))}
+          onSelectAddress={handleAddress}
+          onCouncilMeta={(meta) => setCouncilMeta({
+            officeAddress: (meta as any).officeAddress,
+            licensingUrl: (meta as any).licensingUrl,
+            postalAddress: (meta as any).postalAddress || (meta as any).postal,
+            repsEmail: (meta as any).repsEmail,
+            repsUrl: (meta as any).repsUrl,
+          })}
+        />
+      )}
+      footer={(
+        <>
+          <div className="text-sm text-slate-600">{disabled ? 'Complete required fields to continue' : 'Ready to publish'}</div>
+          <button
+            data-testid="publish-btn"
+            className="px-5 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+            disabled={disabled}
+            onClick={handlePublish}
+          >
+            {publishing ? 'Publishing…' : 'Continue to Payment'}
+          </button>
+        </>
+      )}
+    >
+      <div className="space-y-6">
         <div>
-          <UploadPremisesNoticeForm
-            value={noticeText}
-            onChange={setNoticeText}
-            onOcrComplete={(text, m) => {
-              setNoticeText(text);
-              setMeta(m);
-              setEngine(m?.engine || "");
-            }}
-            engine={engine}
-            applicantName={form.applicantName}
-            applicantEmail={form.applicantEmail}
-            councilName={form.councilName}
-            councilEmail={form.councilEmail}
-            premisesAddress={JSON.stringify(form.premisesAddress)}
-          />
-          <div className="mt-4">
-            <label className="inline-flex items-center gap-2" data-testid="toggle-no-file-builder">
-              <input
-                type="checkbox"
-                checked={useBuilder}
-                onChange={(e) => {
-                  setUseBuilder(e.target.checked);
-                }}
-              />
-              <span>No file? Build my notice from details</span>
-            </label>
-            {useBuilder && <NoFileBuilder councilEmail={form.councilEmail} onChange={setNoticeText} />}
-          </div>
+          <label className="block text-sm font-medium mb-1">Notice Type</label>
+          <select
+            className="w-full rounded-lg border-slate-300"
+            value={noticeType}
+            onChange={(e) => setNoticeType(e.target.value as any)}
+          >
+            <option value="premises">Premises Licence</option>
+            <option value="traffic">Traffic Order</option>
+            <option value="gambling">Gambling Licence</option>
+            <option value="planning">Planning</option>
+            <option value="gvol">Goods Vehicle Operator</option>
+            <option value="probate">Probate</option>
+          </select>
         </div>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium">
-              Applicant Name<span className="text-rose-600 ml-0.5">*</span>
-            </label>
-            <input
-              className="w-full border rounded p-2"
-              value={form.applicantName}
-              onChange={(e) => setForm({ ...form, applicantName: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">
-              Applicant Email<span className="text-rose-600 ml-0.5">*</span>
-            </label>
-            <input
-              className="w-full border rounded p-2"
-              value={form.applicantEmail}
-              onChange={(e) => setForm({ ...form, applicantEmail: e.target.value })}
-            />
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium">Council Name</label>
-            <input
-              className="w-full border rounded p-2"
-              value={councilQuery}
-              onChange={(e) => {
-                setCouncilQuery(e.target.value);
-                setForm({ ...form, councilName: e.target.value });
-              }}
-            />
-            {councilOptions.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow">
-                {councilOptions.map((c) => (
-                  <div
-                    key={c.name}
-                    className="px-2 py-1 hover:bg-slate-100 cursor-pointer"
-                    onClick={() => onPickCouncil(c)}
-                  >
-                    {c.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Council Email</label>
-            <input
-              className="w-full border rounded p-2"
-              value={form.councilEmail}
-              onChange={(e) => setForm({ ...form, councilEmail: e.target.value })}
-            />
-          </div>
-          <div>
-            <AddressAutocomplete onSelect={handleAddress} />
-            {form.premisesAddress.line1 && (
-              <div className="mt-2 space-y-1">
-                {(["line1", "line2", "line3", "city", "postcode"] as const).map((f) => (
-                  <input
-                    key={f}
-                    className="w-full border rounded p-2"
-                    value={(form.premisesAddress as any)[f] || ""}
-                    readOnly={!editingAddress}
-                    placeholder={f}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        premisesAddress: { ...form.premisesAddress, [f]: e.target.value },
-                      })
-                    }
-                  />
-                ))}
-                <button
-                  type="button"
-                  className="text-xs underline"
-                  onClick={() => setEditingAddress((v) => !v)}
-                >
-                  {editingAddress ? "Done" : "Edit"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+
+        <UploadDropzone onText={(t) => setNoticeText(t)} onMeta={(m) => setMeta(m)} />
+
+        <ApplicationBasics value={basics} onChange={setBasics} />
+        <ActivitiesTable rows={activities} onChange={setActivities} />
+        <PreviewPane text={renderPremisesNotice({
+          ...assembled,
+          councilName: form.councilName || selectedCouncil?.name || 'Council',
+          officeAddress: councilMeta.officeAddress,
+          licensingUrl: councilMeta.licensingUrl,
+          postalAddress: councilMeta.postalAddress,
+          repsEmail: councilMeta.repsEmail,
+          repsUrl: councilMeta.repsUrl,
+        })} />
       </div>
-      <button
-        data-testid="publish-btn"
-        className="mt-6 px-4 py-2 bg-slate-800 text-white rounded disabled:opacity-50"
-        disabled={disabled}
-        onClick={handlePublish}
-      >
-        Publish
-      </button>
-    </div>
+    </AppShell>
   );
 }

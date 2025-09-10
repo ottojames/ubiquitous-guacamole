@@ -3,7 +3,7 @@ import React from "react";
 export default function Health() {
   const ping = async () => {
     try {
-      const { supabase } = await import("../lib/supabaseClient");
+      const { supabase } = await import("../lib/supabase");
       const { data, error } = await supabase.auth.getSession();
       if (error) {
         alert(`Supabase error: ${error.message}`);

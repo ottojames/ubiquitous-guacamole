@@ -14,7 +14,7 @@ export interface Filters {
   authority: string;
 }
 
-export function filterNotices(notices: Notice[], filters: Filters) {
+export function filterNotices<T extends Notice>(notices: T[], filters: Filters): T[] {
   return notices.filter((n) => {
     if (filters.type && n.type !== filters.type) return false;
     if (filters.status && n.status !== filters.status) return false;

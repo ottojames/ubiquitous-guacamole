@@ -1,26 +1,38 @@
 /** @vitest-environment node */
-import request from 'supertest'
-import { describe, it, expect, vi } from 'vitest'
-import { app } from '../index'
+import { describe, it, expect, vi } from 'vitest';
+import { handleUploadCore } from '../routes/upload';
 
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({
-    storage: {
-      from: () => ({
-        upload: async () => ({ data: {}, error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: 'https://example.com/file' } }),
-      }),
-    },
-  }),
-}))
+// Mock OCR to avoid heavy dependencies in unit test
+vi.mock('../utils/ocr', () => ({
+  ocrFile: vi.fn(async () => 'unit-ocr-text'),
+}));
 
-describe('upload api', () => {
-  it('accepts a file upload', async () => {
-    const res = await request(app)
-      .post('/api/upload')
-      .field('applicantEmail', 'test@example.com')
-      .attach('file', Buffer.from('hello world'), 'test.txt')
-    expect(res.status).toBe(200)
-    expect(res.body.ok).toBe(true)
-  })
-})
+describe('upload handler (unit)', () => {
+  it('returns OCR text locally when Supabase is not configured', async () => {
+    const file = {
+      originalname: 'hello.pdf',
+      buffer: Buffer.from('dummy'),
+      mimetype: 'application/pdf',
+      size: 12,
+    } as any;
+    const result = await handleUploadCore(file, {}, {}, {} as any);
+    expect(result.ok).toBe(true);
+    expect(result.text).toBe('unit-ocr-text');
+    expect(result.meta.engine).toBe('local');
+  });
+
+  it('returns OCR_EMPTY when OCR yields empty text', async () => {
+    const { ocrFile } = await import('../utils/ocr');
+    (ocrFile as any).mockResolvedValueOnce('');
+    const file = {
+      originalname: 'blank.png',
+      buffer: Buffer.from('dummy'),
+      mimetype: 'image/png',
+      size: 12,
+    } as any;
+    const result = await handleUploadCore(file, {}, {}, {} as any);
+    expect(result.ok).toBe(true);
+    expect(result.text).toBe('');
+    expect(result.error).toBe('OCR_EMPTY');
+  });
+});
