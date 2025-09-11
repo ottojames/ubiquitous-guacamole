@@ -70,9 +70,10 @@ export default function ActivitiesHoursGrid({ value, onChange }: ActivitiesHours
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 p-4 space-y-4" data-testid="activities-grid">
+    <div className="rounded-2xl border border-slate-200 p-4 space-y-4" data-testid="activities-grid" id="activities-grid" tabIndex={-1}>
       <h2 className="text-lg font-medium">Activities & hours</h2>
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[600px] text-sm">
         <thead className="text-left text-slate-600">
           <tr>
             <th className="py-2 pr-3">Activity</th>
@@ -126,6 +127,7 @@ export default function ActivitiesHoursGrid({ value, onChange }: ActivitiesHours
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
