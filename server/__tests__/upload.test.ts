@@ -16,7 +16,7 @@ describe('upload handler (unit)', () => {
     const result = await handleUploadCore(file, {}, {}, {} as any);
     expect(result.ok).toBe(true);
     expect(result.text).toBe('unit-ocr-text');
-    expect(result.meta.engine).toBe('local');
+    expect(result.meta.engine).toBe('mock');
   });
 
   it('returns OCR_EMPTY when OCR yields empty text', async () => {

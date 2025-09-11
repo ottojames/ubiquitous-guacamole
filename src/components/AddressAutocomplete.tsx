@@ -31,7 +31,7 @@ export function mapAddress(r: any): AddressOption {
   };
 }
 
-export default function AddressAutocomplete({ onSelect }: { onSelect: (a: AddressOption) => void }) {
+export default function AddressAutocomplete({ onSelect, label = "Premises Address" }: { onSelect: (a: AddressOption) => void; label?: string }) {
   const [selected, setSelected] = useState<AddressOption | null>(null);
 
   const fetchOptions = async (q: string) => {
@@ -45,7 +45,7 @@ export default function AddressAutocomplete({ onSelect }: { onSelect: (a: Addres
   return (
     <div>
       <AsyncCombobox<AddressOption>
-        label="Premises Address"
+        label={label}
         placeholder="Start typing an address…"
         fetchOptions={fetchOptions}
         onSelect={(opt) => {

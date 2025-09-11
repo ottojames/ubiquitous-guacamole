@@ -25,20 +25,22 @@ export function renderPremisesLicence(
     council.bankHolidays
   );
   const lines: string[] = [];
+  const formatAddress = (a: { line1: string; city: string; postcode: string }) =>
+    `${a.line1}, ${a.city} ${a.postcode}`;
   lines.push(formatHeading(council));
   lines.push(
-    `${data.applicant} has applied for a premises licence for ${data.premises}, ${data.address.line1}, ${data.address.city} ${data.address.postcode}.`
+    `An application has been made by ${data.applicant} of ${formatAddress(data.applicantAddress)} to ${data.council} for a Premises Licence at ${formatAddress(data.address)}.`
   );
-  lines.push('Licensable activities and hours:');
+  lines.push('The application proposes the following licensable activities and hours:');
   data.activities.forEach((a) => {
     const days = a.days.join(', ');
     lines.push(`- ${a.type.replace(/_/g, ' ')}: ${days} ${a.start}–${a.end}`);
   });
   lines.push(
-    `Representations must be made by ${deadline} via ${data.representation.method}: ${data.representation.value}.`
+    `Any person may make representations on this application to arrive no later than ${deadline}. Representations may be made via ${data.representation.method}: ${data.representation.value}.`
   );
   lines.push(
-    'It is an offence to knowingly or recklessly make a false statement in connection with an application. Those who do are liable on summary conviction to a fine of up to level 5 on the standard scale.'
+    'It is an offence to knowingly or recklessly make a false statement in connection with an application. Those who do are liable on summary conviction to an unlimited fine.'
   );
   if (council.extraLines) lines.push(...council.extraLines);
   return lines.join('\n');

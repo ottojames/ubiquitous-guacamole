@@ -4,6 +4,7 @@ import PublishPage from '@/pages/publish';
 
 describe('Preview template', () => {
   it('uses template for selected notice type and expands', async () => {
+    (HTMLFormElement.prototype as any).requestSubmit = () => {};
     render(<PublishPage />);
     // switch to GVOL for simpler form
     fireEvent.change(screen.getByLabelText('What type of notice do you require?'), { target: { value: 'gvol' } });
@@ -14,7 +15,7 @@ describe('Preview template', () => {
     fireEvent.change(screen.getByLabelText('Operator'), { target: { value: 'Acme' } });
     fireEvent.change(screen.getByLabelText('Vehicles'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Trailers'), { target: { value: '0' } });
-    fireEvent.click(screen.getByText('Submit'));
+    fireEvent.click(screen.getAllByText('Submit')[1]);
 
     expect(await screen.findByText(/goods vehicle operator licence/i)).toBeInTheDocument();
 

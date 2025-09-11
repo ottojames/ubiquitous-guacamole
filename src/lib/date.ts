@@ -25,7 +25,7 @@ function isHolidayUTC(d: Date, region: string): boolean {
 
 export function calcRepDeadline(applicationDate: string, region: string = 'england_wales'): string {
   const d = parseISODateUTC(applicationDate);
-  d.setUTCDate(d.getUTCDate() + 28);
+  d.setUTCDate(d.getUTCDate() + 29);
   while (isWeekendUTC(d) || isHolidayUTC(d, region)) {
     d.setUTCDate(d.getUTCDate() + 1);
   }

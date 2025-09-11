@@ -67,15 +67,17 @@ export async function handleUploadCore(
 
   const skipOcr = String(query.skipOcr) === "1";
   let ocr_text = "";
+  let meta: any = {};
 
   if (!skipOcr) {
     try {
-      const { text } = await extractTextFromBuffer(
+      const { text, meta: m } = await extractTextFromBuffer(
         file.buffer,
         file.originalname,
         file.mimetype
       );
       ocr_text = text;
+      meta = m;
     } catch (err: any) {
       const status = err?.status || 500;
       if (status === 415) {
@@ -100,14 +102,14 @@ export async function handleUploadCore(
         text: "",
         ocr_text: "",
         error: "OCR_EMPTY",
-        meta: { engine: "local", stored: false },
+        meta: { engine: meta.engine || "local", pages: meta.pages, bytes: file.size, stored: false },
       };
     }
     return {
       ok: true,
       text: ocr_text,
       ocr_text,
-      meta: { engine: "local", stored: false },
+      meta: { engine: meta.engine || "local", pages: meta.pages, bytes: file.size, stored: false },
     };
   }
 
@@ -157,7 +159,7 @@ export async function handleUploadCore(
     ocr_text,
     text: ocr_text,
     ...(ocr_text.trim() ? {} : { error: "OCR_EMPTY" }),
-    meta: { engine: "supabase", stored: true },
+    meta: { engine: meta.engine || "supabase", pages: meta.pages, bytes: file.size, stored: true },
   };
 }
 

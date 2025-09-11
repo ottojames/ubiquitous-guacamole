@@ -2,11 +2,11 @@ import React from 'react';
 import * as UI from '@/styles/ui';
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as const;
-const ACTIVITIES: {key: ActivityKey; label: string}[] = [
-  { key: 'alcohol_on', label: 'Alcohol (on sales)' },
-  { key: 'alcohol_off', label: 'Alcohol (off sales)' },
+const ACTIVITIES: {key: ActivityKey; label: string; tip?: string}[] = [
+  { key: 'alcohol_on', label: 'Alcohol (on sales)', tip: 'Consumption on the premises' },
+  { key: 'alcohol_off', label: 'Alcohol (off sales)', tip: 'Takeaway or delivery' },
   { key: 'alcohol_on_off', label: 'Alcohol (on & off)' },
-  { key: 'late_night_refreshment', label: 'Late night refreshment' },
+  { key: 'late_night_refreshment', label: 'Late night refreshment', tip: 'Hot food/drink 23:00–05:00' },
   { key: 'live_music', label: 'Live music' },
   { key: 'recorded_music', label: 'Recorded music' },
 ];
@@ -87,7 +87,12 @@ export default function ActivitiesHoursGrid({ value, onChange }: ActivitiesHours
         <tbody>
           {value.map((row, i) => (
             <tr key={row.activity} className="border-t align-top">
-              <td className="py-2 pr-3 font-medium">{ACTIVITIES.find(a => a.key===row.activity)?.label}</td>
+              <td className="py-2 pr-3 font-medium">
+                {ACTIVITIES.find(a => a.key===row.activity)?.label}
+                {ACTIVITIES.find(a => a.key===row.activity)?.tip && (
+                  <span className="ml-1 text-slate-500" title={ACTIVITIES.find(a => a.key===row.activity)!.tip}>i</span>
+                )}
+              </td>
               {DAYS.map((d) => {
                 const h = row.hours[d];
                 return (

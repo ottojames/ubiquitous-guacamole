@@ -3,6 +3,7 @@ import { PremisesLicenceSchema } from './premises-licence.schema';
 
 const base = {
   applicant: 'Alice Smith',
+  applicantAddress: { line1: '2 Main St', city: 'Townsville', postcode: 'AB1 2CD' },
   premises: 'The Red Lion',
   address: {
     line1: '1 High St',
