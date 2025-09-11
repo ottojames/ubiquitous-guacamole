@@ -3,6 +3,7 @@ import AddressAutocomplete, { type AddressOption } from '@/components/AddressAut
 import ActivitiesHoursGrid, { defaultGrid, type GridRow } from '@/components/publish/ActivitiesHoursGrid';
 import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary';
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
+import * as UI from '@/styles/ui';
 
 interface FormData {
   applicantName: string;
@@ -19,8 +20,6 @@ interface Props {
   autoFocusRef: React.RefObject<HTMLInputElement>;
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
 }
-
-const inputClass = 'h-10 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600';
 
 export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthorityChange }: Props) {
   const [form, setForm] = useState<FormData>({
@@ -91,20 +90,20 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthori
     <form onSubmit={handleSubmit} className="space-y-6">
       <ErrorSummary errors={errors} />
 
-      <div className="rounded-2xl border p-4 space-y-4">
-        <h2 className="text-lg font-medium">Applicant & Council</h2>
+      <section className={UI.section}>
+        <div className={UI.h2}>Applicant & Council</div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="applicantName" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="applicantName" className={UI.label}>
               Applicant name
             </label>
-            <input id="applicantName" ref={autoFocusRef} value={form.applicantName} onChange={(e) => setField('applicantName', e.target.value)} className={inputClass} />
+            <input id="applicantName" ref={autoFocusRef} value={form.applicantName} onChange={(e) => setField('applicantName', e.target.value)} className={UI.input} />
           </div>
           <div>
-            <label htmlFor="council" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="council" className={UI.label}>
               Council
             </label>
-            <select id="council" value={form.councilPack} onChange={(e) => selectPack(e.target.value)} className={inputClass}>
+            <select id="council" value={form.councilPack} onChange={(e) => selectPack(e.target.value)} className={UI.input}>
               <option value="">Select council</option>
               {packs.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -114,14 +113,14 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthori
             </select>
           </div>
           <div className="col-span-2">
-            <label htmlFor="councilEmail" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="councilEmail" className={UI.label}>
               Council email
             </label>
             <input
               id="councilEmail"
               value={form.councilEmail}
               onChange={(e) => setField('councilEmail', e.target.value)}
-              className={inputClass + ' w-full'}
+              className={UI.input + ' w-full'}
             />
             {pack && (
               <p className="mt-1 text-xs text-slate-500">
@@ -131,28 +130,28 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthori
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border p-4 space-y-4">
-        <h2 className="text-lg font-medium">Application basics</h2>
+      <section className={UI.section}>
+        <div className={UI.h2}>Application basics</div>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label htmlFor="premisesName" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="premisesName" className={UI.label}>
               Premises name
             </label>
-            <input id="premisesName" value={form.premisesName} onChange={(e) => setField('premisesName', e.target.value)} className={inputClass + ' w-full'} />
+            <input id="premisesName" value={form.premisesName} onChange={(e) => setField('premisesName', e.target.value)} className={UI.input + ' w-full'} />
           </div>
           <div className="col-span-2" id="premises-address">
             <AddressAutocomplete onSelect={(a) => setField('address', a)} />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border p-4 space-y-4">
+      <section className={UI.section}>
         <ActivitiesHoursGrid value={form.activities} onChange={(rows) => setField('activities', rows)} />
-      </div>
+      </section>
 
-      <button type="submit" disabled={saving} className="h-10 px-4 rounded-lg bg-blue-600 text-white disabled:opacity-50">
+      <button type="submit" disabled={saving} className={UI.pillBtn}>
         {saving ? 'Saving…' : 'Submit'}
       </button>
     </form>

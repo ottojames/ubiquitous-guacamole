@@ -1,4 +1,5 @@
 import React from 'react';
+import * as UI from '@/styles/ui';
 
 export type ErrorItem = { field: string; message: string };
 
@@ -6,14 +7,14 @@ export default function ErrorSummary({ errors }: { errors: ErrorItem[] }) {
   if (!errors.length) return null;
   return (
     <div
-      className="mb-4 border-l-4 border-rose-600 bg-rose-50 p-4"
+      className={UI.card + ' mb-4 border-red-200 bg-red-50 p-4 text-red-800'}
       role="alert"
       aria-labelledby="error-summary-title"
     >
-      <h2 id="error-summary-title" className="font-medium text-rose-700 mb-2">
+      <h2 id="error-summary-title" className="mb-2 font-semibold">
         There is a problem
       </h2>
-      <ul className="list-disc pl-5 text-sm text-rose-700">
+      <ul className="list-disc pl-5 text-sm space-y-1">
         {errors.map((e) => (
           <li key={e.field}>
             <a

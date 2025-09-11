@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary';
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
+import * as UI from '@/styles/ui';
 
 interface FormData {
   operator: string;
@@ -17,8 +18,6 @@ interface Props {
   autoFocusRef: React.RefObject<HTMLInputElement>;
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
 }
-
-const inputClass = 'h-10 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600';
 
 export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityChange }: Props) {
   const [form, setForm] = useState<FormData>({
@@ -79,20 +78,20 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
     <form onSubmit={submit} className="space-y-6" aria-describedby="gvol-desc">
       <ErrorSummary errors={errors} />
 
-      <div className="rounded-2xl border p-4 space-y-4">
-        <h2 className="text-lg font-medium">Applicant & Council</h2>
+      <section className={UI.section}>
+        <div className={UI.h2}>Applicant & Council</div>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label htmlFor="applicantEmail" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="applicantEmail" className={UI.label}>
               Applicant email
             </label>
-            <input id="applicantEmail" ref={autoFocusRef} type="email" value={form.applicantEmail} onChange={(e) => setField('applicantEmail', e.target.value)} className={inputClass + ' w-full'} />
+            <input id="applicantEmail" ref={autoFocusRef} type="email" value={form.applicantEmail} onChange={(e) => setField('applicantEmail', e.target.value)} className={UI.input + ' w-full'} />
           </div>
           <div>
-            <label htmlFor="council" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="council" className={UI.label}>
               Council
             </label>
-            <select id="council" value={form.councilPack} onChange={(e) => selectPack(e.target.value)} className={inputClass}>
+            <select id="council" value={form.councilPack} onChange={(e) => selectPack(e.target.value)} className={UI.input}>
               <option value="">Select council</option>
               {packs.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -102,7 +101,7 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
             </select>
           </div>
           <div>
-            <label htmlFor="councilEmail" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="councilEmail" className={UI.label}>
               Council email
             </label>
             <input
@@ -110,7 +109,7 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
               type="email"
               value={form.councilEmail}
               onChange={(e) => setField('councilEmail', e.target.value)}
-              className={inputClass}
+              className={UI.input}
             />
             {pack && (
               <p className="mt-1 text-xs text-slate-500">
@@ -120,33 +119,33 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border p-4 space-y-4">
-        <h2 className="text-lg font-medium">Application basics</h2>
+      <section className={UI.section}>
+        <div className={UI.h2}>Application basics</div>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label htmlFor="operator" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="operator" className={UI.label}>
               Operator
             </label>
-            <input id="operator" value={form.operator} onChange={(e) => setField('operator', e.target.value)} className={inputClass + ' w-full'} />
+            <input id="operator" value={form.operator} onChange={(e) => setField('operator', e.target.value)} className={UI.input + ' w-full'} />
           </div>
           <div>
-            <label htmlFor="vehicles" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="vehicles" className={UI.label}>
               Vehicles
             </label>
-            <input id="vehicles" type="number" value={form.vehicles} onChange={(e) => setField('vehicles', Number(e.target.value))} className={inputClass} />
+            <input id="vehicles" type="number" value={form.vehicles} onChange={(e) => setField('vehicles', Number(e.target.value))} className={UI.input} />
           </div>
           <div>
-            <label htmlFor="trailers" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="trailers" className={UI.label}>
               Trailers
             </label>
-            <input id="trailers" type="number" value={form.trailers} onChange={(e) => setField('trailers', Number(e.target.value))} className={inputClass} />
+            <input id="trailers" type="number" value={form.trailers} onChange={(e) => setField('trailers', Number(e.target.value))} className={UI.input} />
           </div>
         </div>
-      </div>
+      </section>
 
-      <button type="submit" disabled={saving} className="h-10 px-4 rounded-lg bg-blue-600 text-white disabled:opacity-50">
+      <button type="submit" disabled={saving} className={UI.pillBtn}>
         {saving ? 'Saving…' : 'Submit'}
       </button>
     </form>
