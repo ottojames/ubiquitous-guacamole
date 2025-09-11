@@ -1,12 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import PublishPage from '@/pages/publish';
+import PublishPage from '@/pages/PublishPage';
 
 describe('Preview template', () => {
   it('uses template for selected notice type and expands', async () => {
     (HTMLFormElement.prototype as any).requestSubmit = () => {};
     render(<PublishPage />);
-    // switch to GVOL for simpler form
+    fireEvent.click(screen.getByText('Upload via Template'));
     fireEvent.change(screen.getByLabelText('What type of notice do you require?'), { target: { value: 'gvol' } });
     // fill form
     fireEvent.change(screen.getByLabelText('Applicant email'), { target: { value: 'a@example.com' } });
