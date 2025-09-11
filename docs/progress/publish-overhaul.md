@@ -29,3 +29,4 @@
 - [x] Key dates tooltip & cost override – `src/components/publish/RightRail/KeyDatesCard.tsx`, `src/pages/publish/index.tsx`
 - [x] Activities grid overflow guard – `src/components/publish/ActivitiesHoursGrid.tsx`
 - [x] Layout & preview tests – `src/components/__tests__/{PublishLayout,PreviewTemplate,ActivitiesHoursGrid,ErrorSummary}.test.tsx`
+- [x] Design system tokens + /publish theming applied – `src/styles/ui.ts`, `tailwind.config.js`, `src/pages/publish/index.tsx`, `src/components/publish/{PremisesForm,GVOLForm,TrafficForm,ActivitiesHoursGrid,NoticeTypeSelect,ErrorSummary.tsx,RightRail/PreviewCard.tsx}`

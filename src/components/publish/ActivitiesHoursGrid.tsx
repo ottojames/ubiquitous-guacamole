@@ -1,4 +1,5 @@
 import React from 'react';
+import * as UI from '@/styles/ui';
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as const;
 const ACTIVITIES: {key: ActivityKey; label: string}[] = [
@@ -70,11 +71,11 @@ export default function ActivitiesHoursGrid({ value, onChange }: ActivitiesHours
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 p-4 space-y-4" data-testid="activities-grid" id="activities-grid" tabIndex={-1}>
-      <h2 className="text-lg font-medium">Activities & hours</h2>
-      <div className="overflow-x-auto">
+    <div className="space-y-4" data-testid="activities-grid" id="activities-grid" tabIndex={-1}>
+      <h2 className={UI.h2}>Activities & hours</h2>
+      <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card">
       <table className="w-full min-w-[600px] text-sm">
-        <thead className="text-left text-slate-600">
+        <thead className="sticky top-0 bg-white z-10 text-left text-slate-600">
           <tr>
             <th className="py-2 pr-3">Activity</th>
             {DAYS.map((d) => (
@@ -96,14 +97,14 @@ export default function ActivitiesHoursGrid({ value, onChange }: ActivitiesHours
                         type="time"
                         aria-label={`${d} start`}
                         value={h?.start || ''}
-                        className="w-24 rounded border-slate-300"
+                        className={UI.input + ' w-24 text-sm'}
                         onChange={(e) => setCell(i, d, { start: e.target.value, end: h?.end || '' })}
                       />
                       <input
                         type="time"
                         aria-label={`${d} end`}
                         value={h?.end || ''}
-                        className="w-24 rounded border-slate-300"
+                        className={UI.input + ' w-24 text-sm'}
                         onChange={(e) => setCell(i, d, { start: h?.start || '', end: e.target.value })}
                       />
                       {cellWarning(h) && (
@@ -115,10 +116,10 @@ export default function ActivitiesHoursGrid({ value, onChange }: ActivitiesHours
               })}
               <td className="py-2 px-2">
                 <div className="flex flex-col gap-1">
-                  <button type="button" className="text-xs underline" onClick={() => copyMonToThu(i)}>
+                  <button type="button" className={UI.ghostPill + ' text-xs'} onClick={() => copyMonToThu(i)}>
                     Copy Mon→Thu
                   </button>
-                  <button type="button" className="text-xs underline" onClick={() => closeAll(i)}>
+                  <button type="button" className={UI.ghostPill + ' text-xs'} onClick={() => closeAll(i)}>
                     Closed all day
                   </button>
                 </div>

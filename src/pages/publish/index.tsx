@@ -14,6 +14,7 @@ import { renderTrafficOrder } from '../../../templates/traffic-order.template';
 import { validatePremisesLicence } from '../../../schemas/rules/premises-licence.rules';
 import { validateGVOL } from '../../../schemas/rules/gvol.rules';
 import { validateTrafficOrder } from '../../../schemas/rules/traffic-order.rules';
+import * as UI from '@/styles/ui';
 
 export default function PublishPage() {
   const [noticeType, setNoticeType] = useState<NoticeType>('premises');
@@ -92,26 +93,52 @@ export default function PublishPage() {
   };
 
   return (
-    <div className="grid grid-cols-[minmax(0,720px),340px] gap-8" data-testid="publish-layout">
-      <main className="space-y-6">
-        <ErrorSummary errors={issues} />
-        <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
-        {noticeType === 'premises' && (
-          <PremisesForm onSubmit={handlePremisesSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
-        )}
-        {noticeType === 'gvol' && (
-          <GVOLForm onSubmit={handleGVOLSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
-        )}
-        {noticeType === 'traffic' && (
-          <TrafficForm onSubmit={handleTrafficSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
-        )}
-      </main>
-      <aside className="sticky top-6 w-[340px] space-y-4">
-        <PreviewCard text={preview} />
-        <ComplianceCard issues={issues} />
-        <KeyDatesCard representationDeadline={representationDeadline} consultationDays={consultationDays} />
-        <CostCard cost={cost} />
-      </aside>
+    <div className={UI.gradientBg}>
+      <div className={UI.container + ' py-8 md:py-10'}>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className={UI.h2}>Publish a notice</h1>
+          <div className="hidden md:flex items-center gap-2 text-sm">
+            <span className={UI.ghostPill}>Upload Blue Notice</span>
+            <span className="text-slate-400">/</span>
+            <span className={UI.ghostPill}>Build from Template</span>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8" data-testid="publish-layout">
+          <main className="md:col-span-2 space-y-6">
+            <ErrorSummary errors={issues} />
+            <section className={UI.section}>
+              <label htmlFor="notice-type" className={UI.label + ' mb-2'}>
+                What type of notice do you require?
+              </label>
+              <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
+            </section>
+            {noticeType === 'premises' && (
+              <PremisesForm onSubmit={handlePremisesSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
+            )}
+            {noticeType === 'gvol' && (
+              <GVOLForm onSubmit={handleGVOLSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
+            )}
+            {noticeType === 'traffic' && (
+              <TrafficForm onSubmit={handleTrafficSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
+            )}
+          </main>
+          <aside className="md:col-span-1 space-y-4">
+            <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
+              <PreviewCard text={preview} />
+            </div>
+            <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
+              <ComplianceCard issues={issues} />
+            </div>
+            <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
+              <KeyDatesCard representationDeadline={representationDeadline} consultationDays={consultationDays} />
+            </div>
+            <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
+              <CostCard cost={cost} />
+            </div>
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }
