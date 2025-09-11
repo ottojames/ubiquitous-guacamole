@@ -21,3 +21,5 @@
 
 - [x] Grid layout and right rail cards – `src/pages/publish/index.tsx`
 - [x] Notice form switching test – `src/components/__tests__/NoticeTypeSelect.test.tsx`
+- [x] Merge conflict guard – `src/components/__tests__/no-merge-markers.test.ts`
+- [x] Address UPRN chip – `src/components/AddressAutocomplete.tsx`, `src/components/__tests__/AddressAutocomplete.test.tsx`
