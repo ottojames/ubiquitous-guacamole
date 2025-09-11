@@ -22,8 +22,7 @@ type Props = {
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
 };
 
-// fall back to a sensible input class if UI.input isn't present in this project
-const inputClass = (UI as any).input ?? 'h-11 rounded-lg border border-slate-300 bg-white px-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-600';
+const inputClass = UI.input;
 
 export default function GVOLForm({
   value,
@@ -141,7 +140,7 @@ export default function GVOLForm({
               className={inputClass}
             />
             {pack && (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-brand-slate">
                 Council contact:{' '}
                 {pack.representation.email ||
                   pack.representation.portal ||

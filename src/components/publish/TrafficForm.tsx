@@ -21,8 +21,7 @@ type Props = {
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
 };
 
-const inputClass =
-  'h-10 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600';
+const inputClass = UI.input;
 
 export default function TrafficForm({
   value,
@@ -137,7 +136,7 @@ export default function TrafficForm({
               className={inputClass}
             />
             {pack && (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-brand-slate">
                 Council contact:{' '}
                 {pack.representation.email ||
                   pack.representation.portal ||
@@ -171,7 +170,7 @@ export default function TrafficForm({
               id="description"
               value={form.description || ''}
               onChange={(e) => setField('description', e.target.value)}
-              className="h-20 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 w-full"
+              className={UI.input + ' h-20 w-full'}
             />
           </div>
         </div>
