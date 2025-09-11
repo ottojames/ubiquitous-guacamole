@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
-import type { AddressOption } from '@/components/AddressAutocomplete';
-import AppShell from '@/components/publish/AppShell';
-import ApplicantPanel from '@/components/publish/ApplicantPanel';
 import NoticeTypeSelect, { type NoticeType } from '@/components/publish/NoticeTypeSelect';
 import PremisesForm from '@/components/publish/PremisesForm';
 import GVOLForm from '@/components/publish/GVOLForm';
 import TrafficForm from '@/components/publish/TrafficForm';
-import RightRail from '@/components/publish/RightRail';
 import ErrorSummary from '@/components/publish/ErrorSummary';
+import PreviewCard from '@/components/publish/RightRail/PreviewCard';
+import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
+import KeyDatesCard from '@/components/publish/RightRail/KeyDatesCard';
+import CostCard from '@/components/publish/RightRail/CostCard';
 import { renderPremisesLicence } from '../../../templates/premises-licence.template';
 import { renderGVOL } from '../../../templates/gvol.template';
 import { renderTrafficOrder } from '../../../templates/traffic-order.template';
@@ -22,46 +22,16 @@ export default function PublishPage() {
   const [representationDeadline, setRepresentationDeadline] = useState('');
   const autoFocusRef = useRef<HTMLInputElement>(null);
 
-  const [applicant, setApplicant] = useState({
-    applicantName: '',
-    applicantEmail: '',
-    councilName: '',
-    councilEmail: '',
-    address: { line1: '', city: '', postcode: '', uprn: '' },
-    region: '',
-    representationEmail: '',
-    representationUrl: '',
-    representationPostal: '',
-    consultationDays: 0,
-  });
-
-  const patchApplicant = (patch: Partial<typeof applicant>) =>
-    setApplicant((a) => ({ ...a, ...patch }));
-
-  const handleAddress = (a: AddressOption) => {
-    setApplicant((f) => ({
-      ...f,
-      address: {
-        line1: a.line1 || a.lines?.[0] || '',
-        line2: a.line2 || a.lines?.[1],
-        line3: a.line3 || a.lines?.[2],
-        city: a.city || a.town || '',
-        postcode: a.postcode || '',
-        uprn: a.uprn,
-      },
-    }));
-  };
-
   const handlePremisesSubmit = async (data: any) => {
     const payload: any = {
       applicant: data.applicantName,
       premises: data.premisesName,
-      address: { line1: data.premisesAddress, city: '', postcode: '', uprn: applicant.address.uprn },
+      address: { line1: data.premisesAddress, city: '', postcode: '', uprn: data.uprn },
       activities: [],
       applicationDate: new Date().toISOString().slice(0, 10),
       council: data.councilName,
-      region: applicant.region || 'england_wales',
-      representation: { method: 'email', value: data.councilEmail || applicant.representationEmail },
+      region: 'england_wales',
+      representation: { method: 'email', value: data.councilEmail },
     };
     const { issues, representationDeadline } = validatePremisesLicence(payload as any);
     setPreview(renderPremisesLicence(payload as any, { region: payload.region }));
@@ -72,20 +42,20 @@ export default function PublishPage() {
   const handleGVOLSubmit = async (data: any) => {
     const payload: any = {
       operator: data.operator,
-      address: applicant.address,
+      address: data.address,
       vehicles: data.vehicles,
       trailers: data.trailers,
       applicationDate: new Date().toISOString().slice(0, 10),
-      council: applicant.councilName,
-      region: applicant.region || 'england_wales',
+      council: data.councilName,
+      region: 'england_wales',
     };
     const { issues, representationDeadline } = validateGVOL(payload as any);
     setPreview(
       renderGVOL(payload as any, {
         id: '',
-        name: applicant.councilName,
+        name: data.councilName,
         region: payload.region,
-        representation: { email: applicant.representationEmail || applicant.councilEmail },
+        representation: { email: data.councilEmail },
       } as any),
     );
     setIssues(issues);
@@ -98,16 +68,16 @@ export default function PublishPage() {
       restriction: data.description,
       duration: '',
       applicationDate: new Date().toISOString().slice(0, 10),
-      council: applicant.councilName,
-      region: applicant.region || 'england_wales',
+      council: data.councilName,
+      region: 'england_wales',
     };
     const { issues, representationDeadline } = validateTrafficOrder(payload as any);
     setPreview(
       renderTrafficOrder(payload as any, {
         id: '',
-        name: applicant.councilName,
+        name: data.councilName,
         region: payload.region,
-        representation: { email: applicant.representationEmail || applicant.councilEmail },
+        representation: { email: data.councilEmail },
       } as any),
     );
     setIssues(issues);
@@ -115,27 +85,10 @@ export default function PublishPage() {
   };
 
   return (
-    <AppShell
-      title="Publish a Notice"
-      rail={<RightRail preview={preview} issues={issues} representationDeadline={representationDeadline} cost={49.99} />}
-    >
-      <div className="space-y-6">
+    <div className="grid grid-cols-[minmax(0,720px),340px] gap-8">
+      <main className="space-y-6">
         <ErrorSummary errors={issues} />
         <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
-        <ApplicantPanel
-          applicantName={applicant.applicantName}
-          applicantEmail={applicant.applicantEmail}
-          councilName={applicant.councilName}
-          councilEmail={applicant.councilEmail}
-          address={applicant.address}
-          region={applicant.region}
-          representationEmail={applicant.representationEmail}
-          representationUrl={applicant.representationUrl}
-          representationPostal={applicant.representationPostal}
-          consultationDays={applicant.consultationDays}
-          onPatch={patchApplicant}
-          onSelectAddress={handleAddress}
-        />
         {noticeType === 'premises' && (
           <PremisesForm onSubmit={handlePremisesSubmit} saving={false} autoFocusRef={autoFocusRef} />
         )}
@@ -145,7 +98,13 @@ export default function PublishPage() {
         {noticeType === 'traffic' && (
           <TrafficForm onSubmit={handleTrafficSubmit} saving={false} autoFocusRef={autoFocusRef} />
         )}
-      </div>
-    </AppShell>
+      </main>
+      <aside className="sticky top-6 w-[340px] space-y-4">
+        <PreviewCard text={preview} />
+        <ComplianceCard issues={issues} />
+        <KeyDatesCard representationDeadline={representationDeadline} />
+        <CostCard cost={49.99} />
+      </aside>
+    </div>
   );
 }
