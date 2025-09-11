@@ -23,27 +23,23 @@ export type NoticeDraft = {
   premisesName?: string;
   premisesAddress: string;
   postcode: string;
-  council?: string;
-  councilEmail?: string;
+  councilName: string;
+  councilEmail: string;
+  councilAddress: string;
   consultationStart?: string; // yyyy-mm-dd
   consultationEnd?: string;   // yyyy-mm-dd
   blueNoticeUploads: UploadedFile[];
   newspaperProofUploads?: UploadedFile[];
   additionalDocs?: UploadedFile[];
   status: "Draft" | "Submitted";
-  applicant?: string;
-  premisesName?: string;
-  premisesAddress?: string;
   applicationType?: 'Grant' | 'Variation' | 'Review';
   activities?: string[];
   hours?: Record<string, string>;
-  applicationDate?: string;
+  applicationDate: string;
   repsDeadline?: string;
   inspectionLocation?: string;
   repsMethod?: string;
   statutoryWarningPresent?: boolean;
-  councilName?: string;
-  councilEmail?: string;
   originalFileMeta?: any;
   finalText?: string;
   proofHash?: string;
