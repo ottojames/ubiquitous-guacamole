@@ -16,3 +16,8 @@
 - [x] Accessibility error summary – `src/components/publish/ErrorSummary.tsx`, `GVOLForm.tsx`, `TrafficForm.tsx`
 - [x] Documentation & progress log – `docs/progress/publish-overhaul.md`
 - [x] Publish page wiring – `src/pages/publish/index.tsx`
+
+## 2024-xx updates
+
+- [x] Grid layout and right rail cards – `src/pages/publish/index.tsx`
+- [x] Notice form switching test – `src/components/__tests__/NoticeTypeSelect.test.tsx`
