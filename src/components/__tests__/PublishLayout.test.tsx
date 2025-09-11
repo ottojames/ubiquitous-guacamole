@@ -17,7 +17,8 @@ describe('Publish layout', () => {
 
     // grid layout applied
     const layout = screen.getByTestId('publish-layout');
-    expect(layout.className).toContain('md:grid-cols-3');
+    const grid = layout.querySelector('div.grid');
+    expect(grid?.className).toContain('md:grid-cols-3');
 
     // switch form
     fireEvent.change(screen.getByLabelText('What type of notice do you require?'), { target: { value: 'gvol' } });

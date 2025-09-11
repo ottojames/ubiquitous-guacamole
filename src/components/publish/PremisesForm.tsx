@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AddressAutocomplete, { type AddressOption } from '@/components/AddressAutocomplete';
+import UploadDropzone from '@/components/publish/UploadDropzone';
 import ActivitiesHoursGrid, { defaultGrid, type GridRow } from '@/components/publish/ActivitiesHoursGrid';
 import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary';
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
@@ -28,6 +29,10 @@ export default function PremisesForm({
 }: Props) {
   const [form, setForm] = useState<any>({
     applicantName: '',
+    applicantAddress: '',
+    applicantCity: '',
+    applicantPostcode: '',
+    applicantUprn: undefined as string | undefined,
     councilPack: '',
     councilEmail: '',
     premisesName: '',
@@ -35,9 +40,11 @@ export default function PremisesForm({
     city: '',
     postcode: '',
     uprn: undefined as string | undefined,
+    applicationDate: '',
     activitiesGrid: defaultGrid(),
     activities: [] as any[],
   });
+  const [prefilled, setPrefilled] = useState(false);
   const [errors] = useState<ErrorItem[]>([]);
   const [pack, setPack] = useState<AuthorityPack | null>(null);
   const [override, setOverride] = useState(false);
@@ -89,6 +96,29 @@ export default function PremisesForm({
     onChange(next);
   }
 
+  function onApplicantAddressSelect(a: AddressWithUPRN) {
+    const next = {
+      ...form,
+      applicantAddress: a.line1 || '',
+      applicantCity: a.city || a.town || '',
+      applicantPostcode: a.postcode || '',
+      applicantUprn: a.uprn,
+    };
+    setForm(next);
+    onChange(next);
+  }
+
+  function prefillFromText(t: string) {
+    const nameMatch = t.match(/by\s+([^\n]+?)\s+of/i);
+    if (nameMatch) setField('applicantName', nameMatch[1].trim());
+    const addrMatch = t.match(/by[^\n]+? of ([^\n]+?) to/i);
+    if (addrMatch) setField('applicantAddress', addrMatch[1].trim());
+    const dateMatch = t.match(/(\d{4}-\d{2}-\d{2})/);
+    if (dateMatch) setField('applicationDate', dateMatch[1]);
+    const premMatch = t.match(/Premises Licence at\s+([^\.\n]+)/i);
+    if (premMatch) setField('premisesAddress', premMatch[1].trim());
+  }
+
   function flattenActivities(rows: GridRow[]) {
     const activities: any[] = [];
     rows.forEach((row) => {
@@ -107,6 +137,17 @@ export default function PremisesForm({
   return (
     <form className="space-y-6">
       <ErrorSummary errors={errors} />
+      <UploadDropzone
+        onText={(t) => {
+          prefillFromText(t);
+          setPrefilled(true);
+        }}
+      />
+      {prefilled && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">
+          Fields prefilled from upload — please verify
+        </div>
+      )}
 
       <section className="rounded-2xl border p-4 space-y-4">
         <h2 className="text-lg font-medium">Applicant &amp; Council</h2>
@@ -122,6 +163,9 @@ export default function PremisesForm({
               onChange={(e) => setField('applicantName', e.target.value)}
               className={inputClass}
             />
+          </div>
+          <div className="col-span-2" id="applicant-address">
+            <AddressAutocomplete label="Applicant address" onSelect={onApplicantAddressSelect} />
           </div>
           <div>
             <label htmlFor="council" className={UI.label}>
@@ -151,6 +195,9 @@ export default function PremisesForm({
               onChange={(e) => setField('councilEmail', e.target.value)}
               className={inputClass + ' w-full'} // fixed: use inputClass not UI.input
             />
+            {form.councilEmail && (
+              <p className="mt-1 text-xs text-emerald-700">✅ Proof will be sent to {form.councilEmail}</p>
+            )}
             {pack && (
               <p className="mt-1 text-xs text-slate-500">
                 Council contact:{' '}
@@ -179,7 +226,19 @@ export default function PremisesForm({
             />
           </div>
           <div className="col-span-2" id="premises-address">
-            <AddressAutocomplete onSelect={onAddressSelect} />
+            <AddressAutocomplete label="Premises address" onSelect={onAddressSelect} />
+          </div>
+          <div>
+            <label htmlFor="applicationDate" className={UI.label}>
+              Application date
+            </label>
+            <input
+              id="applicationDate"
+              type="date"
+              value={form.applicationDate || ''}
+              onChange={(e) => setField('applicationDate', e.target.value)}
+              className={inputClass}
+            />
           </div>
         </div>
       </section>

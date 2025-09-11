@@ -54,14 +54,28 @@ export async function extractTextFromBuffer(
 
   if (isType.pdf(mimetype, filename)) {
     const result = await parsePdf(buffer);
-    return {
-      text: (result.text || "").trim(),
-      meta: {
-        engine: "pdf-parse",
-        pages: (result as any).numpages ?? undefined,
-        info: (result as any).info ?? undefined,
-      },
-    };
+    let text = (result.text || "").trim();
+    if (text) {
+      return {
+        text,
+        meta: {
+          engine: "pdf-parse",
+          pages: (result as any).numpages ?? undefined,
+          info: (result as any).info ?? undefined,
+        },
+      };
+    }
+    try {
+      const worker = await createWorker("eng", 1, { logger: undefined });
+      const { data } = await worker.recognize(buffer);
+      await worker.terminate();
+      return {
+        text: (data.text || "").trim(),
+        meta: { engine: "tesseract", pages: (result as any).numpages ?? undefined },
+      };
+    } catch (e) {
+      return { text: "", meta: { engine: "tesseract", error: String(e) } };
+    }
   }
 
   if (isType.docx(mimetype, filename)) {
@@ -96,11 +110,19 @@ export async function extractTextFromBuffer(
   }
 
   if (isType.legacyDoc(mimetype, filename)) {
-    const err: any = new Error(
-      ".doc (legacy Word) is not supported. Please convert to .docx or PDF."
-    );
-    err.status = 415;
-    throw err;
+    try {
+      const textract = await import("textract").then((m) => m.default || (m as any));
+      const text: string = await new Promise((resolve, reject) => {
+        textract.fromBufferWithMime("application/msword", buffer, (err: any, t: string) => {
+          if (err) reject(err);
+          else resolve(t);
+        });
+      });
+      return { text: (text || "").trim(), meta: { engine: "textract" } };
+    } catch (err: any) {
+      err.status = 415;
+      throw err;
+    }
   }
 
   const err: any = new Error(

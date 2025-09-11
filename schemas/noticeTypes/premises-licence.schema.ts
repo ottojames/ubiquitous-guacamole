@@ -20,11 +20,13 @@ export const Activity = z.object({
 
 export const Activities = z.array(Activity).min(1);
 
+const POSTCODE = /[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}/i;
+
 export const Address = z.object({
   line1: z.string().min(1),
   line2: z.string().optional(),
   city: z.string().min(1),
-  postcode: z.string().min(1),
+  postcode: z.string().regex(POSTCODE),
   uprn: z.string().optional(),
 });
 
@@ -35,6 +37,7 @@ export const Representation = z.object({
 
 export const PremisesLicenceSchema = z.object({
   applicant: z.string().min(1),
+  applicantAddress: Address,
   premises: z.string().min(1),
   address: Address,
   activities: Activities,

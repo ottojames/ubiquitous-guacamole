@@ -42,6 +42,19 @@ export default function PublishPage() {
   const [representationDeadline, setRepresentationDeadline] = useState('');
   const [cost, setCost] = useState<number>(49.99);
   const [consultationDays, setConsultationDays] = useState<number>(28);
+  const checklist = useMemo(() => {
+    const d = premisesData;
+    const postcodeRe = /[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}/i;
+    return [
+      { id: 'applicant', label: 'Applicant name + postal address (incl. postcode)', ok: !!(d?.applicantName && postcodeRe.test(d?.applicantPostcode || '')) },
+      { id: 'premises', label: 'Premises address (incl. postcode)', ok: !!(d?.premisesAddress && postcodeRe.test(d?.postcode || '')) },
+      { id: 'council', label: 'Council selected + email present', ok: !!(d?.councilName && /[^@\s]+@[^@\s]+\.[^@\s]+/.test(d?.councilEmail || '')) },
+      { id: 'dates', label: 'Application date set + deadline computed correctly', ok: !!(d?.applicationDate && representationDeadline) },
+      { id: 'activities', label: 'If any activity is enabled, weekly hours valid', ok: (d?.activities?.length || 0) > 0 && !issues.some((i) => /Activity.*invalid|licensable activity/i.test(i.message)) },
+      { id: 'boilerplate', label: 'Statutory boilerplate present in preview', ok: /It is an offence to knowingly or recklessly make a false statement/i.test(preview) },
+    ];
+  }, [premisesData, representationDeadline, issues, preview]);
+  const canSubmit = checklist.every((c) => c.ok);
 
   // Authority pack hook (be lenient with keys)
   const handleAuthorityChange = (pack: any | null) => {
@@ -130,9 +143,9 @@ export default function PublishPage() {
 
         <aside className="md:col-span-1 sticky top-6 space-y-4">
           <PreviewCard text={preview} />
-          <ComplianceCard issues={issues} />
-          <KeyDatesCard representationDeadline={representationDeadline} consultationDays={consultationDays} />
-          <CostCard cost={cost} />
+          <ComplianceCard items={checklist} />
+          <KeyDatesCard applicationDate={premisesData?.applicationDate || ''} representationDeadline={representationDeadline} consultationDays={consultationDays} />
+          <CostCard cost={cost} canSubmit={canSubmit} />
         </aside>
       </div>
     </div>
@@ -143,6 +156,12 @@ export default function PublishPage() {
 function mapPremisesToPayload(d: any) {
   return {
     applicant: d?.applicantName || '',
+    applicantAddress: {
+      line1: d?.applicantAddress || '',
+      city: d?.applicantCity || '',
+      postcode: d?.applicantPostcode || '',
+      uprn: d?.applicantUprn,
+    },
     premises: d?.premisesName || '',
     address: {
       line1: d?.premisesAddress || '',
