@@ -9,7 +9,7 @@ export default function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
         <span>Confirm your Notice</span>
         <span>Pay</span>
       </div>
-      <div className="h-1 bg-white/40">
+      <div className="h-1 bg-brand-blue/5">
         <div className="h-1 bg-brand-blue" style={{ width: percent }} />
       </div>
     </div>

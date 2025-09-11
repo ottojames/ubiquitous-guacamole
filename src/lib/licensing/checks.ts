@@ -26,36 +26,29 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
     severity?: 'error' | 'warning'
   ) => items.push({ id, ok, label, target, severity });
 
-  push('applicantName', !!draft.applicantName, 'Applicant name present', 'applicantName');
-  push('premisesAddress', !!draft.premisesAddress, 'Premises full postal address present', 'premises-address');
-  push('premisesName', !!draft.premisesName, 'Premises name present');
-  push('applicationType', !!draft.applicationType, 'Application type present');
-  push('activities', !!(draft.activities && draft.activities.length), 'Activities applied for present');
-  push('hours', !!draft.hours, 'Hours of operation present');
-  push('councilName', !!draft.councilName, 'Council name present', 'councilName');
-  push('councilEmail', !!draft.councilEmail, 'Council email present', 'councilEmail');
-  push('councilAddress', !!draft.councilAddress, 'Council address present', 'councilAddress');
-  push('applicationDate', !!draft.applicationDate, 'Application date present', 'applicationDate');
+  push('applicantName', !!draft.applicantName?.trim(), 'Applicant name present', 'applicantName');
+  push('premisesAddress', !!draft.premisesAddress?.trim(), 'Premises full postal address present', 'premises-address');
+  push('councilName', !!draft.councilName?.trim(), 'Council name present', 'councilName');
+  push('councilEmail', !!draft.councilEmail?.trim(), 'Council email present', 'councilEmail');
+  push('councilAddress', !!draft.councilAddress?.trim(), 'Council address present', 'councilAddress');
+  push('applicationDate', !!draft.applicationDate?.trim(), 'Application date present', 'applicationDate');
   if (draft.repsDeadline) {
     const expected = calcRepsDeadline(draft.applicationDate);
     push(
       'repsDeadline',
       draft.repsDeadline === expected,
-      `Representation deadline = application date + 28 days (${expected})`,
+      'Representation deadline = submission date + 28 days',
       'applicationDate'
     );
   } else {
     push(
       'repsDeadline',
       false,
-      'This notice does not state the representation deadline — please enter manually.',
+      '⚠️ This notice does not state the representation deadline — please enter manually.',
       'applicationDate',
       'warning'
     );
   }
-  push('inspectionLocation', !!draft.inspectionLocation, 'Inspection location present');
-  push('repsMethod', !!draft.repsMethod, 'Representation method present');
-  push('statutoryWarning', !!draft.statutoryWarningPresent, 'Statutory warning line present');
 
   return items;
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as UI from '@/styles/ui';
 
 // Keep prop compatibility with UploadDropzone
 export type FileDropOCRProps = {
@@ -109,10 +110,10 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
   };
 
   return (
-    <div className="rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+    <div className={UI.card + ' p-6 md:p-8'}>
       <div className="mb-2">
-        <h2 className="mb-2 text-base font-semibold">Upload & OCR</h2>
-        <p id="ocr-upload-help" className="mb-4 text-sm text-muted-foreground">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
+        <h2 className="mb-2 text-base font-semibold text-brand-navy">Upload & OCR</h2>
+        <p id="ocr-upload-help" className="mb-4 text-sm text-brand-navy">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
       </div>
 
       <label className={`border-2 border-dashed rounded-xl p-8 block text-center cursor-pointer transition-colors ${state === 'uploading' ? 'bg-slate-100' : 'bg-slate-50 hover:bg-slate-100'}`}>
@@ -125,13 +126,13 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
           aria-describedby="ocr-upload-help"
           aria-live="polite"
         />
-        <div className="text-sm text-slate-600">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</div>
-        <div className="mt-2 text-xs text-slate-500">OCR will appear below; you can still edit everything.</div>
+        <div className="text-sm text-brand-navy">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</div>
+        <div className="mt-2 text-xs text-brand-navy">OCR will appear below; you can still edit everything.</div>
         <div className="sr-only" aria-live="polite">Status: {state}</div>
       </label>
 
       {lastFile && (
-        <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
+        <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm text-brand-navy">
           <span className="truncate">{lastFile.name} · {pretty(lastFile.size)} · {statusLabel}</span>
           <div className="flex gap-2">
             {state === 'error' && <button className="rounded-md border px-2 py-1" onClick={retry}>Retry</button>}
@@ -140,7 +141,7 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
         </div>
       )}
 
-      <div className="mt-3 text-xs text-slate-600">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
+      <div className="mt-3 text-xs text-brand-navy">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
       {error && (
         <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2" role="status" aria-live="polite">
           {error}
