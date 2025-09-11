@@ -11,7 +11,7 @@ export default function ErrorSummary({ errors }: { errors: ErrorItem[] }) {
       role="alert"
       aria-labelledby="error-summary-title"
     >
-      <h2 id="error-summary-title" className="mb-2 font-semibold">
+      <h2 id="error-summary-title" className="mb-2 font-bold text-red-900">
         There is a problem
       </h2>
       <ul className="list-disc pl-5 text-sm space-y-1">

@@ -11,19 +11,19 @@ export default function PreviewCard({ text }: { text: string }) {
           Expand
         </button>
       </div>
-      <div className={UI.prose + ' whitespace-pre-wrap min-h-[420px]'} id="notice-preview">
+      <div className={`${UI.prose} whitespace-pre-wrap min-h-[420px]`} id="notice-preview">
         {text}
       </div>
       {open && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] p-6 rounded-2xl shadow-card overflow-auto">
+          <div className={UI.card + ' max-w-3xl w-full h-full md:h-auto md:max-h-[90vh] p-6 md:p-8 overflow-auto'}>
             <div className="mb-4 flex items-center justify-between">
               <h4 className={UI.h2}>Notice preview</h4>
               <button onClick={() => setOpen(false)} aria-label="Close" className={UI.ghostPill}>
                 Close
               </button>
             </div>
-            <div className={UI.prose + ' whitespace-pre-wrap'}>{text}</div>
+            <div className={`${UI.prose} whitespace-pre-wrap text-base md:text-lg`}>{text}</div>
           </div>
         </div>
       )}

@@ -75,7 +75,7 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
   const packs = listAuthorityPacks();
 
   return (
-    <form onSubmit={submit} className="space-y-6" aria-describedby="gvol-desc">
+    <form onSubmit={submit} className="space-y-8" aria-describedby="gvol-desc">
       <ErrorSummary errors={errors} />
 
       <section className={UI.section}>

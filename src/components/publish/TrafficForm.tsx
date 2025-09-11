@@ -72,7 +72,7 @@ export default function TrafficForm({ onSubmit, saving, autoFocusRef, onAuthorit
   const packs = listAuthorityPacks();
 
   return (
-    <form onSubmit={submit} className="space-y-6" aria-describedby="traffic-desc">
+    <form onSubmit={submit} className="space-y-8" aria-describedby="traffic-desc">
       <ErrorSummary errors={errors} />
 
       <section className={UI.section}>

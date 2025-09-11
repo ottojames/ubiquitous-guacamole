@@ -94,9 +94,9 @@ export default function PublishPage() {
 
   return (
     <div className={UI.gradientBg}>
-      <div className={UI.container + ' py-8 md:py-10'}>
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className={UI.h2}>Publish a notice</h1>
+      <div className={UI.container + ' py-12'}>
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className={UI.h1}>Publish a notice</h1>
           <div className="hidden md:flex items-center gap-2 text-sm">
             <span className={UI.ghostPill}>Upload Blue Notice</span>
             <span className="text-slate-400">/</span>
@@ -104,8 +104,8 @@ export default function PublishPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8" data-testid="publish-layout">
-          <main className="md:col-span-2 space-y-6">
+        <div className="grid md:grid-cols-3 gap-10" data-testid="publish-layout">
+          <main className="md:col-span-2 space-y-8">
             <ErrorSummary errors={issues} />
             <section className={UI.section}>
               <label htmlFor="notice-type" className={UI.label + ' mb-2'}>
@@ -123,7 +123,7 @@ export default function PublishPage() {
               <TrafficForm onSubmit={handleTrafficSubmit} saving={false} autoFocusRef={autoFocusRef} onAuthorityChange={handleAuthorityChange} />
             )}
           </main>
-          <aside className="md:col-span-1 space-y-4">
+          <aside className="md:col-span-1 space-y-6">
             <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
               <PreviewCard text={preview} />
             </div>
@@ -131,7 +131,10 @@ export default function PublishPage() {
               <ComplianceCard issues={issues} />
             </div>
             <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
-              <KeyDatesCard representationDeadline={representationDeadline} consultationDays={consultationDays} />
+              <KeyDatesCard
+                representationDeadline={representationDeadline}
+                consultationDays={consultationDays}
+              />
             </div>
             <div className={UI.railCard + ' hover:shadow-[0_10px_34px_rgba(2,8,23,.10)]'}>
               <CostCard cost={cost} />

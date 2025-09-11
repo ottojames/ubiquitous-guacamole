@@ -87,7 +87,7 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthori
   const packs = listAuthorityPacks();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <ErrorSummary errors={errors} />
 
       <section className={UI.section}>

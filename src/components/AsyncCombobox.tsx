@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import * as UI from '@/styles/ui';
 
 function debounce<F extends (...args: any[]) => void>(fn: F, wait: number) {
   let t: any;
@@ -77,7 +78,7 @@ export default function AsyncCombobox<T>(props: AsyncComboboxProps<T>) {
 
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium mb-1">
+      <label className={UI.label + ' mb-1'}>
         {label}
         {required && <span className="text-rose-600 ml-0.5">*</span>}
       </label>
@@ -86,7 +87,7 @@ export default function AsyncCombobox<T>(props: AsyncComboboxProps<T>) {
         aria-expanded={open}
         aria-autocomplete="list"
         data-testid={inputTestId}
-        className="w-full border rounded p-2"
+        className={UI.input + ' w-full'}
         placeholder={placeholder}
         value={query}
         onChange={handleChange}
@@ -100,14 +101,14 @@ export default function AsyncCombobox<T>(props: AsyncComboboxProps<T>) {
         <ul
           role="listbox"
           ref={listRef}
-          className="border mt-1 rounded bg-white shadow max-h-60 overflow-auto"
+          className="border border-slate-200 mt-1 rounded-lg bg-white shadow-card max-h-60 overflow-auto"
         >
           {options.map((opt, idx) => (
             <li
               key={getKey(opt)}
               role="option"
               aria-selected={idx === highlight}
-              className={`px-3 py-2 cursor-pointer ${idx === highlight ? "bg-slate-100" : ""}`}
+              className={`px-3 py-2 cursor-pointer ${idx === highlight ? 'bg-slate-100' : ''}`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 handleSelect(opt);
