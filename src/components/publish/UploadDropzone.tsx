@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { AnimatePresence, motion } from 'framer-motion';
+import * as UI from '@/styles/ui';
 
 export type UploadDropzoneProps = {
   onText: (text: string) => void;
@@ -118,7 +119,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
   }, [state]);
 
   return (
-    <div className="rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+    <div className={UI.card + ' p-6 md:p-8'}>
       <div className="mb-2">
         <h2 className="mb-2 text-base font-semibold">Upload & OCR</h2>
         <p id="upload-help" className="mb-4 text-sm text-muted-foreground">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
@@ -126,7 +127,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       <div
         {...getRootProps()}
         ref={rootRef}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
         aria-label="Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload"
       >
         <input
@@ -135,8 +136,8 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
           aria-describedby="upload-help"
           aria-live="polite"
         />
-        <p className="text-sm text-slate-600">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
-        <p className="mt-2 text-xs text-slate-500">OCR will appear below; you can still edit everything.</p>
+        <p className="text-sm text-brand-slate">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
+        <p className="mt-2 text-xs text-brand-slate">OCR will appear below; you can still edit everything.</p>
         <div className="sr-only" aria-live="polite">Status: {statusLabel}</div>
       </div>
 
@@ -153,14 +154,14 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
             <div className="flex gap-2">
               {state === 'failed' && (
                 <button
-                  className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                  className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                   onClick={retry}
                 >
                   Retry
                 </button>
               )}
               <button
-                className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 onClick={remove}
               >
                 Remove
@@ -176,17 +177,17 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         </div>
       )}
 
-      <div className="mt-3 text-xs text-slate-600">Status: {statusLabel} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
+      <div className="mt-3 text-xs text-brand-slate">Status: {statusLabel} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
       {state === 'success' && (
         <div className="mt-4 grid gap-4 md:grid-cols-2" aria-live="polite">
           <div>
             {lastFile && lastFile.type.startsWith('image') && (
               <img src={URL.createObjectURL(lastFile)} alt="thumbnail" className="rounded border mb-2 max-h-48" />
             )}
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
+            <div className="rounded-2xl bg-brand-lilac text-brand-navy ring-1 ring-brand-blue/20 p-3 text-sm" role="status">
               Extracted {localText.length} characters from file
             </div>
-            <div className="mt-2 text-xs text-slate-600">{lastFile?.name}</div>
+            <div className="mt-2 text-xs text-brand-slate">{lastFile?.name}</div>
           </div>
           <div>
             {tokens.length ? (
@@ -217,14 +218,14 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
-                className="rounded-md border px-2 py-1 text-xs"
+                className="rounded-md border px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 onClick={() => onText(localText)}
               >
                 Accept all
               </button>
               <button
                 type="button"
-                className="rounded-md border px-2 py-1 text-xs"
+                className="rounded-md border px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 onClick={() => {
                   const normalised = localText.replace(/\s+/g,' ').replace(/\b(\d{1,2})(am|pm)\b/gi, (m)=> m.toUpperCase());
                   setLocalText(normalised);
@@ -238,18 +239,18 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         </div>
       )}
       {error && (
-        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="status" aria-live="polite">
+        <div className="mt-3 rounded-2xl bg-red-50 text-red-700 ring-1 ring-red-200 p-3 text-sm" role="status" aria-live="polite">
           <div className="flex items-center justify-between gap-4">
             <span>{error}</span>
             <div className="flex gap-2 shrink-0">
               <button
-                className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 onClick={retry}
               >
                 Retry
               </button>
               <button
-                className="rounded-md border px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 onClick={remove}
               >
                 Paste text manually

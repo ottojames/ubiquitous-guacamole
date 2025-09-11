@@ -95,18 +95,20 @@ export default function PublishPage() {
   const autoFocusRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="px-4 md:px-6 lg:px-8" data-testid="publish-layout">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
-        <div className="text-sm text-slate-600">
-          Mode:&nbsp;
-          <span className="inline-flex items-center gap-2">
-            <span className="rounded-md border px-2 py-1">Upload Blue Notice</span>
-            <span className="text-slate-400">/</span>
-            <span className="rounded-md border px-2 py-1">Build from Template</span>
-          </span>
+    <div className={UI.gradientBg} data-testid="publish-layout">
+      <div className="px-4 md:px-6 lg:px-8">
+        <h1 className={UI.h1 + ' mb-6'}>Publish a notice</h1>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
+          <div className="text-sm text-brand-mist">
+            Mode:&nbsp;
+            <span className="inline-flex items-center gap-2">
+              <span className={UI.ghostPill}>Upload Blue Notice</span>
+              <span className="text-brand-slate">/</span>
+              <span className={UI.ghostPill}>Build from Template</span>
+            </span>
+          </div>
         </div>
-      </div>
 
       {issues.length > 0 && <ErrorSummary errors={issues} />}
 
@@ -147,6 +149,7 @@ export default function PublishPage() {
           <KeyDatesCard applicationDate={premisesData?.applicationDate || ''} representationDeadline={representationDeadline} consultationDays={consultationDays} />
           <CostCard cost={cost} canSubmit={canSubmit} />
         </aside>
+        </div>
       </div>
     </div>
   );

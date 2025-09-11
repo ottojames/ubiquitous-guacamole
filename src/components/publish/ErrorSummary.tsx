@@ -1,5 +1,4 @@
 import React from 'react';
-import * as UI from '@/styles/ui';
 
 export type ErrorItem = { field: string; message: string };
 
@@ -7,7 +6,7 @@ export default function ErrorSummary({ errors }: { errors: ErrorItem[] }) {
   if (!errors.length) return null;
   return (
     <div
-      className={UI.card + ' mb-4 border-red-200 bg-red-50 p-4 text-red-800'}
+      className="mb-4 rounded-2xl bg-red-50 text-red-700 ring-1 ring-red-200 p-4"
       role="alert"
       aria-labelledby="error-summary-title"
     >
@@ -19,6 +18,7 @@ export default function ErrorSummary({ errors }: { errors: ErrorItem[] }) {
           <li key={e.field}>
             <a
               href={`#${e.field}`}
+              className="underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
               onClick={(ev) => {
                 ev.preventDefault();
                 const el = document.getElementById(e.field) as HTMLElement | null;

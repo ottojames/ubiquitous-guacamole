@@ -14,8 +14,7 @@ type Props = {
   autoFocusRef?: React.RefObject<HTMLInputElement | null>;
 };
 
-const inputClass =
-  'h-10 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600';
+const inputClass = UI.input;
 
 // extend AddressOption so we can safely read uprn
 type AddressWithUPRN = AddressOption & { uprn?: string };
@@ -115,7 +114,7 @@ export default function PremisesForm({
     if (addrMatch) setField('applicantAddress', addrMatch[1].trim());
     const dateMatch = t.match(/(\d{4}-\d{2}-\d{2})/);
     if (dateMatch) setField('applicationDate', dateMatch[1]);
-    const premMatch = t.match(/Premises Licence at\s+([^\.\n]+)/i);
+      const premMatch = t.match(/Premises Licence at\s+([^.\n]+)/i);
     if (premMatch) setField('premisesAddress', premMatch[1].trim());
   }
 
@@ -144,12 +143,12 @@ export default function PremisesForm({
         }}
       />
       {prefilled && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-700">
+        <div className="rounded-2xl bg-brand-lilac text-brand-navy ring-1 ring-brand-blue/20 p-2 text-sm">
           Fields prefilled from upload — please verify
         </div>
       )}
 
-      <section className="rounded-2xl border p-4 space-y-4">
+      <section className={UI.section}>
         <h2 className="text-lg font-medium">Applicant &amp; Council</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -199,7 +198,7 @@ export default function PremisesForm({
               <p className="mt-1 text-xs text-emerald-700">✅ Proof will be sent to {form.councilEmail}</p>
             )}
             {pack && (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-brand-slate">
                 Council contact:{' '}
                 {pack.representation.email ||
                   pack.representation.portal ||
@@ -243,7 +242,7 @@ export default function PremisesForm({
         </div>
       </section>
 
-      <section className="rounded-2xl border p-4 space-y-4">
+      <section className={UI.section}>
         <ActivitiesHoursGrid
           value={form.activitiesGrid || defaultGrid()}
           onChange={(rows) => {
