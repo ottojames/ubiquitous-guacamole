@@ -13,22 +13,18 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   const items: ComplianceResult = [];
   const push = (ok: boolean, message: string) => items.push({ ok, message });
 
-  push(!!draft.applicant, 'Applicant full name present');
-  push(!!draft.premisesName, 'Premises name present');
+  push(!!draft.applicantName, 'Applicant name present');
   push(!!draft.premisesAddress, 'Premises full postal address present');
-  push(['Grant', 'Variation', 'Review'].includes(draft.applicationType || ''), 'Application type valid');
-  push((draft.activities && draft.activities.length > 0) || false, 'Activities selected');
-  push(!!draft.hours && Object.keys(draft.hours).length > 0, 'Hours present & legible for each selected activity');
+  push(!!draft.councilName, 'Council name present');
+  push(!!draft.councilEmail, 'Council email present');
+  push(!!draft.councilAddress, 'Council address present');
   push(!!draft.applicationDate, 'Application date present');
-  if (draft.applicationDate) {
+  if (draft.repsDeadline) {
     const expected = calcRepsDeadline(draft.applicationDate);
     push(draft.repsDeadline === expected, `Representation deadline = application date + 28 days (${expected})`);
   } else {
-    push(false, 'Representation deadline = application date + 28 days');
+    push(false, 'This notice does not state the representation deadline — please enter manually.');
   }
-  push(!!draft.inspectionLocation, 'Inspection location present');
-  push(!!draft.repsMethod, 'Representation method present');
-  push(!!draft.statutoryWarningPresent, 'Statutory warning line present');
 
   return items;
 }
