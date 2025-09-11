@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import PublishPage from '@/pages/publish';
+import PublishPage from '@/pages/PublishPage';
 
 describe('Error summary and fix links', () => {
   it.skip('focuses fields from error summary and compliance fix', async () => {

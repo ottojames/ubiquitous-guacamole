@@ -1,6 +1,6 @@
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
-import PublishPage from "@/pages/publish";
+import PublishPage from "@/pages/PublishPage";
 import Success from "./pages/Success";
 import DetailsPage from "./pages/DetailsPage";
 
