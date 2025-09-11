@@ -23,3 +23,9 @@
 - [x] Notice form switching test – `src/components/__tests__/NoticeTypeSelect.test.tsx`
 - [x] Merge conflict guard – `src/components/__tests__/no-merge-markers.test.ts`
 - [x] Address UPRN chip – `src/components/AddressAutocomplete.tsx`, `src/components/__tests__/AddressAutocomplete.test.tsx`
+
+- [x] Sectioned form cards & inputs – `src/components/publish/{PremisesForm,GVOLForm,TrafficForm}.tsx`
+- [x] Error summary anchors & compliance fix links – `src/components/publish/ErrorSummary.tsx`, `src/components/publish/RightRail/ComplianceCard.tsx`
+- [x] Key dates tooltip & cost override – `src/components/publish/RightRail/KeyDatesCard.tsx`, `src/pages/publish/index.tsx`
+- [x] Activities grid overflow guard – `src/components/publish/ActivitiesHoursGrid.tsx`
+- [x] Layout & preview tests – `src/components/__tests__/{PublishLayout,PreviewTemplate,ActivitiesHoursGrid,ErrorSummary}.test.tsx`
