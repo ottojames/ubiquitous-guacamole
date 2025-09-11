@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AsyncCombobox from "./AsyncCombobox";
 
 // Broader type to satisfy page contract while keeping compat with combobox
@@ -32,6 +32,8 @@ export function mapAddress(r: any): AddressOption {
 }
 
 export default function AddressAutocomplete({ onSelect }: { onSelect: (a: AddressOption) => void }) {
+  const [selected, setSelected] = useState<AddressOption | null>(null);
+
   const fetchOptions = async (q: string) => {
     const res = await fetch(`/api/address/search?q=${encodeURIComponent(q)}`);
     if (!res.ok) return [];
@@ -41,15 +43,27 @@ export default function AddressAutocomplete({ onSelect }: { onSelect: (a: Addres
     return results.map(mapAddress) as AddressOption[];
   };
   return (
-    <AsyncCombobox<AddressOption>
-      label="Premises Address"
-      placeholder="Start typing an address…"
-      fetchOptions={fetchOptions}
-      onSelect={onSelect}
-      getOptionLabel={(o) => o.label || [o.line1, o.city ?? o.town, o.postcode].filter(Boolean).join(", ")}
-      getKey={(o) => o.id || o.label || `${o.line1}-${o.postcode}`}
-      required
-      inputTestId="address-input"
-    />
+    <div>
+      <AsyncCombobox<AddressOption>
+        label="Premises Address"
+        placeholder="Start typing an address…"
+        fetchOptions={fetchOptions}
+        onSelect={(opt) => {
+          setSelected(opt);
+          onSelect(opt);
+        }}
+        getOptionLabel={(o) =>
+          o.label || [o.line1, o.city ?? o.town, o.postcode].filter(Boolean).join(", ")
+        }
+        getKey={(o) => o.id || o.label || `${o.line1}-${o.postcode}`}
+        required
+        inputTestId="address-input"
+      />
+      {selected?.uprn && (
+        <span className="mt-1 inline-block rounded bg-green-100 px-2 py-0.5 text-xs text-green-800" data-testid="uprn-chip">
+          UPRN saved
+        </span>
+      )}
+    </div>
   );
 }
