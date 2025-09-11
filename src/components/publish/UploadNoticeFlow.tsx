@@ -32,6 +32,7 @@ export default function UploadNoticeFlow() {
   });
   const [confirmA, setConfirmA] = useState(false);
   const [confirmB, setConfirmB] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
@@ -43,6 +44,15 @@ export default function UploadNoticeFlow() {
     draft.councilAddress.trim() &&
     draft.applicationDate.trim();
   const canContinue = requiredOk && confirmA && confirmB;
+
+  const toErrorKey = (target: string) => (target === 'premises-address' ? 'premisesAddress' : target);
+  const handleFix = (target?: string) => {
+    if (!target) return;
+    const el = document.getElementById(target) as HTMLElement | null;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
+    setErrors((er) => ({ ...er, [toErrorKey(target)]: 'This field is required' }));
+  };
 
   return (
     <div>
@@ -82,16 +92,35 @@ export default function UploadNoticeFlow() {
                     required
                     className={UI.input}
                     value={draft.applicantName}
-                    onChange={(e) => setDraft({ ...draft, applicantName: e.target.value })}
+                    onChange={(e) => {
+                      setDraft({ ...draft, applicantName: e.target.value });
+                      if (errors.applicantName) setErrors((er) => ({ ...er, applicantName: '' }));
+                    }}
+                    onBlur={() => {
+                      if (!draft.applicantName.trim())
+                        setErrors((er) => ({ ...er, applicantName: 'This field is required' }));
+                    }}
                   />
+                  {errors.applicantName && <p className="mt-1 text-sm text-red-600">{errors.applicantName}</p>}
                 </div>
-                <div id="premises-address" className="mt-4">
+                <div
+                  id="premises-address"
+                  className="mt-4"
+                  onBlur={() => {
+                    if (!draft.premisesAddress.trim())
+                      setErrors((er) => ({ ...er, premisesAddress: 'This field is required' }));
+                  }}
+                >
                   <AddressAutocomplete
                     label="Premises address"
                     onSelect={(a: AddressOption) => {
                       const addr = a.label || '';
                       const pc = a.postcode || '';
                       setDraft((d) => ({ ...d, premisesAddress: addr, postcode: pc }));
+                      setErrors((er) => ({
+                        ...er,
+                        premisesAddress: '',
+                      }));
                       const res = lookupCouncilByPostcode(pc);
                       if (res) {
                         lookedUpEmail.current = res.councilEmail;
@@ -103,9 +132,16 @@ export default function UploadNoticeFlow() {
                           councilEmail: res.councilEmail,
                           councilAddress: res.councilAddress,
                         }));
+                        setErrors((er) => ({
+                          ...er,
+                          councilName: '',
+                          councilEmail: '',
+                          councilAddress: '',
+                        }));
                       }
                     }}
                   />
+                  {errors.premisesAddress && <p className="mt-1 text-sm text-red-600">{errors.premisesAddress}</p>}
                 </div>
                 <div className="mt-4">
                   <label htmlFor="councilName" className={UI.label}>
@@ -116,11 +152,21 @@ export default function UploadNoticeFlow() {
                     required
                     className={UI.input}
                     value={draft.councilName}
-                    onChange={(e) => setDraft({ ...draft, councilName: e.target.value })}
+                    onChange={(e) => {
+                      setDraft({ ...draft, councilName: e.target.value });
+                      if (errors.councilName) setErrors((er) => ({ ...er, councilName: '' }));
+                    }}
+                    onBlur={() => {
+                      if (!draft.councilName.trim())
+                        setErrors((er) => ({ ...er, councilName: 'This field is required' }));
+                    }}
                   />
                   {lookedUpName.current && draft.councilName !== lookedUpName.current && (
-                    <p className="mt-1 text-xs text-amber-700">Value differs from council directory</p>
+                    <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                      Value differs from council directory
+                    </span>
                   )}
+                  {errors.councilName && <p className="mt-1 text-sm text-red-600">{errors.councilName}</p>}
                 </div>
                 <div className="mt-4">
                   <label htmlFor="councilEmail" className={UI.label}>
@@ -131,11 +177,21 @@ export default function UploadNoticeFlow() {
                     required
                     className={UI.input}
                     value={draft.councilEmail}
-                    onChange={(e) => setDraft({ ...draft, councilEmail: e.target.value })}
+                    onChange={(e) => {
+                      setDraft({ ...draft, councilEmail: e.target.value });
+                      if (errors.councilEmail) setErrors((er) => ({ ...er, councilEmail: '' }));
+                    }}
+                    onBlur={() => {
+                      if (!draft.councilEmail.trim())
+                        setErrors((er) => ({ ...er, councilEmail: 'This field is required' }));
+                    }}
                   />
                   {lookedUpEmail.current && draft.councilEmail !== lookedUpEmail.current && (
-                    <p className="mt-1 text-xs text-amber-700">Value differs from council directory</p>
+                    <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                      Value differs from council directory
+                    </span>
                   )}
+                  {errors.councilEmail && <p className="mt-1 text-sm text-red-600">{errors.councilEmail}</p>}
                 </div>
                 <div className="mt-4">
                   <label htmlFor="councilAddress" className={UI.label}>
@@ -146,11 +202,21 @@ export default function UploadNoticeFlow() {
                     required
                     className={UI.input}
                     value={draft.councilAddress}
-                    onChange={(e) => setDraft({ ...draft, councilAddress: e.target.value })}
+                    onChange={(e) => {
+                      setDraft({ ...draft, councilAddress: e.target.value });
+                      if (errors.councilAddress) setErrors((er) => ({ ...er, councilAddress: '' }));
+                    }}
+                    onBlur={() => {
+                      if (!draft.councilAddress.trim())
+                        setErrors((er) => ({ ...er, councilAddress: 'This field is required' }));
+                    }}
                   />
                   {lookedUpAddress.current && draft.councilAddress !== lookedUpAddress.current && (
-                    <p className="mt-1 text-xs text-amber-700">Value differs from council directory</p>
+                    <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                      Value differs from council directory
+                    </span>
                   )}
+                  {errors.councilAddress && <p className="mt-1 text-sm text-red-600">{errors.councilAddress}</p>}
                 </div>
                 <div className="mt-4">
                   <label htmlFor="applicationDate" className={UI.label}>
@@ -165,8 +231,14 @@ export default function UploadNoticeFlow() {
                     onChange={(e) => {
                       const v = e.target.value;
                       setDraft({ ...draft, applicationDate: v, repsDeadline: v ? calcRepsDeadline(v) : '' });
+                      if (errors.applicationDate) setErrors((er) => ({ ...er, applicationDate: '' }));
+                    }}
+                    onBlur={() => {
+                      if (!draft.applicationDate.trim())
+                        setErrors((er) => ({ ...er, applicationDate: 'This field is required' }));
                     }}
                   />
+                  {errors.applicationDate && <p className="mt-1 text-sm text-red-600">{errors.applicationDate}</p>}
                 </div>
                 <div className="mt-4 flex items-center gap-2">
                   <input
@@ -227,7 +299,7 @@ export default function UploadNoticeFlow() {
         </main>
         <aside className="md:col-span-1 space-y-4">
           <PreviewCard text={text} />
-          <ComplianceCard items={runMandatoryChecks(draft)} />
+          <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
           <KeyDatesCard
             applicationDate={draft.applicationDate}
             representationDeadline={draft.repsDeadline || ''}
