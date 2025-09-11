@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as UI from '@/styles/ui';
 import UploadNoticeFlow from '@/components/publish/UploadNoticeFlow';
 import TemplateBuilder from './publish';
-import SiteHeader from '@/components/SiteHeader';
+import Header from '@/components/layout/Header';
 
 export default function PublishPage() {
   const [tab, setTab] = useState<'notice' | 'template'>('notice');
@@ -22,7 +22,7 @@ export default function PublishPage() {
 
   return (
     <div className={UI.gradientBg} data-testid="publish-layout">
-      <SiteHeader />
+      <Header />
       <main className={UI.container + ' py-6'}>
         <h1 className={UI.h1 + ' mb-6'}>Publish a notice</h1>
         <nav role="tablist" className="mb-4 flex gap-2">

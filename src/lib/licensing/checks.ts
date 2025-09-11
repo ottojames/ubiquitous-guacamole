@@ -1,6 +1,13 @@
 import { NoticeDraft } from '@/types/notice';
 
-export type ComplianceItem = { ok: boolean; message: string };
+export type ComplianceItem = {
+  id: string;
+  label: string;
+  ok: boolean;
+  target?: string;
+  severity?: 'error' | 'warning';
+  rationale?: string;
+};
 export type ComplianceResult = ComplianceItem[];
 
 export function calcRepsDeadline(date: string): string {
@@ -11,20 +18,44 @@ export function calcRepsDeadline(date: string): string {
 
 export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   const items: ComplianceResult = [];
-  const push = (ok: boolean, message: string) => items.push({ ok, message });
+  const push = (
+    id: string,
+    ok: boolean,
+    label: string,
+    target?: string,
+    severity?: 'error' | 'warning'
+  ) => items.push({ id, ok, label, target, severity });
 
-  push(!!draft.applicantName, 'Applicant name present');
-  push(!!draft.premisesAddress, 'Premises full postal address present');
-  push(!!draft.councilName, 'Council name present');
-  push(!!draft.councilEmail, 'Council email present');
-  push(!!draft.councilAddress, 'Council address present');
-  push(!!draft.applicationDate, 'Application date present');
+  push('applicantName', !!draft.applicantName, 'Applicant name present', 'applicantName');
+  push('premisesAddress', !!draft.premisesAddress, 'Premises full postal address present', 'premises-address');
+  push('premisesName', !!draft.premisesName, 'Premises name present');
+  push('applicationType', !!draft.applicationType, 'Application type present');
+  push('activities', !!(draft.activities && draft.activities.length), 'Activities applied for present');
+  push('hours', !!draft.hours, 'Hours of operation present');
+  push('councilName', !!draft.councilName, 'Council name present', 'councilName');
+  push('councilEmail', !!draft.councilEmail, 'Council email present', 'councilEmail');
+  push('councilAddress', !!draft.councilAddress, 'Council address present', 'councilAddress');
+  push('applicationDate', !!draft.applicationDate, 'Application date present', 'applicationDate');
   if (draft.repsDeadline) {
     const expected = calcRepsDeadline(draft.applicationDate);
-    push(draft.repsDeadline === expected, `Representation deadline = application date + 28 days (${expected})`);
+    push(
+      'repsDeadline',
+      draft.repsDeadline === expected,
+      `Representation deadline = application date + 28 days (${expected})`,
+      'applicationDate'
+    );
   } else {
-    push(false, 'This notice does not state the representation deadline — please enter manually.');
+    push(
+      'repsDeadline',
+      false,
+      'This notice does not state the representation deadline — please enter manually.',
+      'applicationDate',
+      'warning'
+    );
   }
+  push('inspectionLocation', !!draft.inspectionLocation, 'Inspection location present');
+  push('repsMethod', !!draft.repsMethod, 'Representation method present');
+  push('statutoryWarning', !!draft.statutoryWarningPresent, 'Statutory warning line present');
 
   return items;
 }

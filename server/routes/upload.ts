@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { createClient } from "@supabase/supabase-js";
-import { extname } from "node:path";
+import { createHash } from "node:crypto";
 import slugify from "slugify";
 import { extractTextFromBuffer } from "../utils/extractText";
 
@@ -28,6 +28,8 @@ const upload = (multer as any)({
 });
 
 const router = Router();
+const PAGE_LIMIT = Number(process.env.PAGE_LIMIT || 4);
+const seenHashes = new Map<string, string>();
 
 // Simple in-memory rate limiter: 20/min per IP
 const hits = new Map<string, { count: number; reset: number }>();
@@ -68,6 +70,7 @@ export async function handleUploadCore(
   const skipOcr = String(query.skipOcr) === "1";
   let ocr_text = "";
   let meta: any = {};
+  const sha256 = createHash("sha256").update(file.buffer).digest("hex");
 
   if (!skipOcr) {
     try {
@@ -95,6 +98,41 @@ export async function handleUploadCore(
     }
   }
 
+  const pageCount = meta.pages || meta.pageCount || 0;
+  const mimeMeta = {
+    engine: meta.engine || (hasSupabase ? "supabase" : "local"),
+    pageCount,
+    bytes: file.size,
+    mime: file.mimetype,
+    sha256,
+    stored: false,
+  } as any;
+
+  if (pageCount > PAGE_LIMIT) {
+    return {
+      ok: false,
+      error: {
+        code: "TOO_MANY_PAGES",
+        message: `File has ${pageCount} pages; limit is ${PAGE_LIMIT}.`,
+      },
+      meta: mimeMeta,
+    };
+  }
+
+  if (seenHashes.has(sha256)) {
+    return {
+      ok: false,
+      error: {
+        code: "DUPLICATE",
+        message: "Duplicate notice uploaded",
+        existing: seenHashes.get(sha256),
+      },
+      meta: mimeMeta,
+    };
+  }
+
+  seenHashes.set(sha256, path);
+
   if (!hasSupabase) {
     if (!ocr_text.trim()) {
       return {
@@ -102,14 +140,14 @@ export async function handleUploadCore(
         text: "",
         ocr_text: "",
         error: "OCR_EMPTY",
-        meta: { engine: meta.engine || "local", pages: meta.pages, bytes: file.size, stored: false },
+        meta: mimeMeta,
       };
     }
     return {
       ok: true,
       text: ocr_text,
       ocr_text,
-      meta: { engine: meta.engine || "local", pages: meta.pages, bytes: file.size, stored: false },
+      meta: mimeMeta,
     };
   }
 
@@ -159,7 +197,7 @@ export async function handleUploadCore(
     ocr_text,
     text: ocr_text,
     ...(ocr_text.trim() ? {} : { error: "OCR_EMPTY" }),
-    meta: { engine: meta.engine || "supabase", pages: meta.pages, bytes: file.size, stored: true },
+    meta: { ...mimeMeta, stored: true },
   };
 }
 
