@@ -3,8 +3,8 @@ import Stepper from './Stepper';
 
 type AppShellProps = {
   title: string;
-  steps: readonly string[];
-  currentStep: number;
+  steps?: readonly string[];
+  currentStep?: number;
   onStepChange?: (i: number) => void;
   rail: React.ReactNode;
   children: React.ReactNode;
@@ -28,7 +28,9 @@ export default function AppShell({ title, steps, currentStep, onStepChange, rail
           <div className="p-6 md:p-8 border-b border-slate-200">
             <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">{title}</h1>
             <div className="mt-4">
-              <Stepper steps={steps} current={currentStep} onChange={onStepChange} />
+              {steps && steps.length > 0 && (
+                <Stepper steps={steps} currentStep={currentStep} onStepChange={onStepChange} />
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 md:p-8">
@@ -49,4 +51,3 @@ export default function AppShell({ title, steps, currentStep, onStepChange, rail
     </div>
   );
 }
-

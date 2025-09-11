@@ -1,5 +1,5 @@
 // server/utils/extractText.ts
-import pdfParse from "pdf-parse";
+import { parsePdf } from "../lib/pdf";
 import * as mammoth from "mammoth";
 import { createWorker } from "tesseract.js";
 
@@ -53,7 +53,7 @@ export async function extractTextFromBuffer(
   }
 
   if (isType.pdf(mimetype, filename)) {
-    const result = await pdfParse(buffer);
+    const result = await parsePdf(buffer);
     return {
       text: (result.text || "").trim(),
       meta: {

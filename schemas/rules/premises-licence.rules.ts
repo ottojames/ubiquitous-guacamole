@@ -9,18 +9,21 @@ export function computeRepresentationDeadline(
   applicationDate: string,
   bankHolidays: string[] = []
 ): string {
-  const app = new Date(applicationDate);
-  const start = new Date(app.getFullYear(), app.getMonth(), app.getDate() + 1);
-  const deadline = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 28);
-  const holidaySet = new Set(bankHolidays);
+  const [y, m, d] = applicationDate.split('-').map(Number);
+  const date = new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  const isHoliday = new Set(bankHolidays);
+
+  // Statutory period: 28 clear days starting the day after application
+  // i.e., add 1 day to start, then add 28 days => +29 from application date
+  date.setUTCDate(date.getUTCDate() + 29);
   while (
-    deadline.getDay() === 0 ||
-    deadline.getDay() === 6 ||
-    holidaySet.has(deadline.toISOString().slice(0, 10))
+    date.getUTCDay() === 0 ||
+    date.getUTCDay() === 6 ||
+    isHoliday.has(date.toISOString().slice(0, 10))
   ) {
-    deadline.setDate(deadline.getDate() + 1);
+    date.setUTCDate(date.getUTCDate() + 1);
   }
-  return deadline.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10);
 }
 
 export function validatePremisesLicence(

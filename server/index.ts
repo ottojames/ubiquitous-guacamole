@@ -1,19 +1,24 @@
-import express from 'express';
-import cors from 'cors';
-import morgan from 'morgan';
-import uploadRouter from './routes/upload';
-import addressRouter from './routes/address';
+// server/index.ts
+import * as dotenv from "dotenv";
+dotenv.config();                      // load .env
+dotenv.config({ path: ".env.local" }); // overlay .env.local if present
+
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import uploadRouter from "./routes/upload";
+import addressRouter from "./routes/address";
 
 export const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
-app.use(morgan('dev'));
+app.use(express.json({ limit: "1mb" }));
+app.use(morgan("dev"));
 
-app.get('/api/health', (_req, res) => res.json({ ok: true }));
+app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
-app.use('/api/upload', uploadRouter);
-app.use('/api/address', addressRouter);
+app.use("/api/upload", uploadRouter);
+app.use("/api/address", addressRouter);
 
 const PORT = Number(process.env.PORT || 5174);
 
@@ -21,14 +26,24 @@ const PORT = Number(process.env.PORT || 5174);
  * Only enforce env + start the HTTP listener when not under test.
  * Vitest imports `app` for SuperTest; we shouldn’t throw on import.
  */
-if (process.env.NODE_ENV !== 'test') {
-  const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] as const;
+if (process.env.NODE_ENV !== "test") {
+  const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"] as const;
+  const isProd = process.env.NODE_ENV === "production";
+
   for (const key of required) {
     if (!process.env[key]) {
-      throw new Error(`Missing env ${key}`);
+      const msg = `Missing env ${key}`;
+      if (isProd) {
+        throw new Error(msg);
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(`⚠️  ${msg}. Running in dev without Supabase features.`);
+      }
     }
   }
-  process.env.SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || 'blue-notices';
+
+  // Default bucket if unset
+  process.env.SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "blue-notices";
 
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
