@@ -5,105 +5,134 @@ import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary'
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
 import * as UI from '@/styles/ui';
 
-interface FormData {
-  applicantName: string;
-  councilPack: string;
-  councilEmail: string;
-  premisesName: string;
-  address: AddressOption | null;
-  activities: GridRow[];
-}
-
-interface Props {
-  onSubmit: (data: any) => Promise<void> | void;
-  saving: boolean;
-  autoFocusRef: React.RefObject<HTMLInputElement>;
+type Props = {
+  value: any;
+  onChange: (next: any) => void;
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
-}
+  saving?: boolean;
+  autoFocusRef?: React.RefObject<HTMLInputElement | null>;
+};
 
-export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthorityChange }: Props) {
-  const [form, setForm] = useState<FormData>({
+const inputClass =
+  'h-10 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600';
+
+// extend AddressOption so we can safely read uprn
+type AddressWithUPRN = AddressOption & { uprn?: string };
+
+export default function PremisesForm({
+  value,
+  onChange,
+  saving = false,
+  autoFocusRef,
+  onAuthorityChange,
+}: Props) {
+  const [form, setForm] = useState<any>({
     applicantName: '',
     councilPack: '',
     councilEmail: '',
     premisesName: '',
-    address: null,
-    activities: defaultGrid(),
+    premisesAddress: '',
+    city: '',
+    postcode: '',
+    uprn: undefined as string | undefined,
+    activitiesGrid: defaultGrid(),
+    activities: [] as any[],
   });
-  const [errors, setErrors] = useState<ErrorItem[]>([]);
+  const [errors] = useState<ErrorItem[]>([]);
   const [pack, setPack] = useState<AuthorityPack | null>(null);
   const [override, setOverride] = useState(false);
 
   useEffect(() => {
-    autoFocusRef.current?.focus();
+    autoFocusRef?.current?.focus();
   }, [autoFocusRef]);
+
+  useEffect(() => {
+    if (value && typeof value === 'object') {
+      setForm((f: any) => ({
+        ...f,
+        ...value,
+        activitiesGrid: value.activitiesGrid || f.activitiesGrid,
+      }));
+    }
+  }, [value]);
 
   function selectPack(id: string) {
     const p = listAuthorityPacks().find((a) => a.id === id) || null;
     setPack(p);
-    setForm((f) => ({ ...f, councilPack: id, councilEmail: p?.representation.email || '' }));
+    setForm((f: any) => ({ ...f, councilPack: id, councilEmail: p?.representation.email || '' }));
     setOverride(false);
     onAuthorityChange?.(p);
+    onChange({
+      ...form,
+      councilPack: id,
+      councilName: p?.name || '',
+      councilEmail: p?.representation.email || '',
+      region: (p?.region as any) || form.region,
+    });
   }
 
-  function setField<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-    if (key === 'councilEmail' && pack) {
-      setOverride(value !== pack.representation.email);
-    }
+  function setField(key: string, v: any) {
+    setForm((f: any) => ({ ...f, [key]: v }));
+    if (key === 'councilEmail' && pack) setOverride(v !== pack.representation.email);
+    onChange({ ...form, [key]: v });
   }
 
-  function validate(): boolean {
-    const next: ErrorItem[] = [];
-    if (!form.applicantName) next.push({ field: 'applicantName', message: 'Applicant name is required' });
-    if (!form.councilPack) next.push({ field: 'council', message: 'Council is required' });
-    if (!form.councilEmail) next.push({ field: 'councilEmail', message: 'Council email is required' });
-    if (!form.premisesName) next.push({ field: 'premisesName', message: 'Premises name is required' });
-    if (!form.address) next.push({ field: 'premises-address', message: 'Premises address is required' });
-    setErrors(next);
-    return next.length === 0;
+  function onAddressSelect(a: AddressWithUPRN) {
+    const next = {
+      ...form,
+      premisesAddress: a.line1 || '',
+      city: a.city || a.town || '',
+      postcode: a.postcode || '',
+      uprn: a.uprn, // now safe because we extended type
+    };
+    setForm(next);
+    onChange(next);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
+  function flattenActivities(rows: GridRow[]) {
     const activities: any[] = [];
-    form.activities.forEach((row) => {
-      (Object.entries(row.hours) as [string, { start: string; end: string } | null][]).forEach(([day, h]) => {
-        if (h) activities.push({ type: row.activity, days: [day], start: h.start, end: h.end });
-      });
+    rows.forEach((row) => {
+      (Object.entries(row.hours) as [string, { start: string; end: string } | null][]).forEach(
+        ([day, h]) => {
+          if (h && h.start && h.end)
+            activities.push({ type: row.activity, days: [day], start: h.start, end: h.end });
+        },
+      );
     });
-    onSubmit({
-      applicantName: form.applicantName,
-      councilName: pack?.name || '',
-      councilEmail: form.councilEmail,
-      premisesName: form.premisesName,
-      premisesAddress: form.address ? [form.address.line1, form.address.city, form.address.postcode].filter(Boolean).join(', ') : '',
-      uprn: form.address?.uprn,
-      activities,
-    });
+    return activities;
   }
 
   const packs = listAuthorityPacks();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form className="space-y-6">
       <ErrorSummary errors={errors} />
 
-      <section className={UI.section}>
-        <div className={UI.h2}>Applicant & Council</div>
+      <section className="rounded-2xl border p-4 space-y-4">
+        <h2 className="text-lg font-medium">Applicant &amp; Council</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="applicantName" className={UI.label}>
               Applicant name
             </label>
-            <input id="applicantName" ref={autoFocusRef} value={form.applicantName} onChange={(e) => setField('applicantName', e.target.value)} className={UI.input} />
+            <input
+              id="applicantName"
+              ref={autoFocusRef as any}
+              value={form.applicantName || ''}
+              onChange={(e) => setField('applicantName', e.target.value)}
+              className={inputClass}
+            />
           </div>
           <div>
             <label htmlFor="council" className={UI.label}>
               Council
             </label>
-            <select id="council" value={form.councilPack} onChange={(e) => selectPack(e.target.value)} className={UI.input}>
+            <select
+              id="council"
+              value={form.councilPack || ''}
+              onChange={(e) => selectPack(e.target.value)}
+              className={inputClass}
+            >
               <option value="">Select council</option>
               {packs.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -118,14 +147,17 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthori
             </label>
             <input
               id="councilEmail"
-              value={form.councilEmail}
+              value={form.councilEmail || ''}
               onChange={(e) => setField('councilEmail', e.target.value)}
-              className={UI.input + ' w-full'}
+              className={inputClass + ' w-full'} // fixed: use inputClass not UI.input
             />
             {pack && (
               <p className="mt-1 text-xs text-slate-500">
-                Council contact: {pack.representation.email || pack.representation.portal || pack.representation.postal}
-                {override && <span className="text-amber-700 ml-1">Overrides applied</span>}
+                Council contact:{' '}
+                {pack.representation.email ||
+                  pack.representation.portal ||
+                  pack.representation.postal}
+                {override && <span className="ml-1 text-amber-700">Overrides applied</span>}
               </p>
             )}
           </div>
@@ -139,21 +171,30 @@ export default function PremisesForm({ onSubmit, saving, autoFocusRef, onAuthori
             <label htmlFor="premisesName" className={UI.label}>
               Premises name
             </label>
-            <input id="premisesName" value={form.premisesName} onChange={(e) => setField('premisesName', e.target.value)} className={UI.input + ' w-full'} />
+            <input
+              id="premisesName"
+              value={form.premisesName || ''}
+              onChange={(e) => setField('premisesName', e.target.value)}
+              className={inputClass + ' w-full'}
+            />
           </div>
           <div className="col-span-2" id="premises-address">
-            <AddressAutocomplete onSelect={(a) => setField('address', a)} />
+            <AddressAutocomplete onSelect={onAddressSelect} />
           </div>
         </div>
       </section>
 
-      <section className={UI.section}>
-        <ActivitiesHoursGrid value={form.activities} onChange={(rows) => setField('activities', rows)} />
+      <section className="rounded-2xl border p-4 space-y-4">
+        <ActivitiesHoursGrid
+          value={form.activitiesGrid || defaultGrid()}
+          onChange={(rows) => {
+            const activities = flattenActivities(rows);
+            const next = { ...form, activitiesGrid: rows, activities };
+            setForm(next);
+            onChange(next);
+          }}
+        />
       </section>
-
-      <button type="submit" disabled={saving} className={UI.pillBtn}>
-        {saving ? 'Saving…' : 'Submit'}
-      </button>
     </form>
   );
 }

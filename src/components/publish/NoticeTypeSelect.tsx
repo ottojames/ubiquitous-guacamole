@@ -16,18 +16,23 @@ const options: { value: NoticeType; label: string }[] = [
 
 export default function NoticeTypeSelect({ value, onChange }: Props) {
   return (
-    <select
-      id="notice-type"
-      value={value}
-      onChange={(e) => onChange(e.target.value as NoticeType)}
-      className={UI.input + ' w-full'}
-    >
-      <option value="">Select an option</option>
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <div className="space-y-2">
+      <label htmlFor="notice-type" className="block text-sm font-medium text-slate-700">
+        What type of notice do you require?
+      </label>
+      <select
+        id="notice-type"
+        value={value}
+        onChange={(e) => onChange(e.target.value as NoticeType)}
+        className={UI.input + ' w-full'}
+      >
+        <option value="">Select an option</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

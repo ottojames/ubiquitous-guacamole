@@ -3,24 +3,36 @@ import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary'
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
 import * as UI from '@/styles/ui';
 
-interface FormData {
+type GVOLFormData = {
   operator: string;
-  councilPack: string;
-  councilEmail: string;
-  applicantEmail: string;
+  councilPack?: string;
+  councilName?: string;
+  councilEmail?: string;
+  applicantEmail?: string;
   vehicles: number;
   trailers: number;
-}
+  region?: string;
+};
 
-interface Props {
-  onSubmit: (data: any) => Promise<void>;
-  saving: boolean;
-  autoFocusRef: React.RefObject<HTMLInputElement>;
+type Props = {
+  value: GVOLFormData;
+  onChange: (next: GVOLFormData) => void;
+  saving?: boolean;
+  autoFocusRef?: React.RefObject<HTMLInputElement | null>;
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
-}
+};
 
-export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityChange }: Props) {
-  const [form, setForm] = useState<FormData>({
+// fall back to a sensible input class if UI.input isn't present in this project
+const inputClass = (UI as any).input ?? 'h-11 rounded-lg border border-slate-300 bg-white px-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-600';
+
+export default function GVOLForm({
+  value,
+  onChange,
+  saving = false,
+  autoFocusRef,
+  onAuthorityChange,
+}: Props) {
+  const [form, setForm] = useState<GVOLFormData>({
     operator: '',
     councilPack: '',
     councilEmail: '',
@@ -28,70 +40,86 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
     vehicles: 0,
     trailers: 0,
   });
-  const [errors, setErrors] = useState<ErrorItem[]>([]);
+  const [errors] = useState<ErrorItem[]>([]);
   const [pack, setPack] = useState<AuthorityPack | null>(null);
   const [override, setOverride] = useState(false);
 
+  // autofocus first input if provided
   useEffect(() => {
-    autoFocusRef.current?.focus();
+    autoFocusRef?.current?.focus?.();
   }, [autoFocusRef]);
+
+  // keep local state in sync with parent-controlled value
+  useEffect(() => {
+    if (value && typeof value === 'object') {
+      setForm((f) => ({ ...f, ...value }));
+    }
+  }, [value]);
 
   function selectPack(id: string) {
     const p = listAuthorityPacks().find((a) => a.id === id) || null;
     setPack(p);
-    setForm((f) => ({ ...f, councilPack: id, councilEmail: p?.representation.email || '' }));
     setOverride(false);
+
+    setForm((prev) => {
+      const next: GVOLFormData = {
+        ...prev,
+        councilPack: id,
+        councilName: p?.name || '',
+        councilEmail: p?.representation.email || '',
+        region: (p?.region as any) || prev.region,
+      };
+      onChange(next);
+      return next;
+    });
+
     onAuthorityChange?.(p);
   }
 
-  function setField<K extends keyof FormData>(key: K, value: FormData[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-    if (key === 'councilEmail' && pack) setOverride(value !== pack.representation.email);
-  }
-
-  function validate(): boolean {
-    const next: ErrorItem[] = [];
-    if (!form.operator) next.push({ field: 'operator', message: 'Operator is required' });
-    if (!form.councilPack) next.push({ field: 'council', message: 'Council is required' });
-    if (!form.councilEmail) next.push({ field: 'councilEmail', message: 'Council email is required' });
-    if (!form.applicantEmail) next.push({ field: 'applicantEmail', message: 'Applicant email is required' });
-    setErrors(next);
-    return next.length === 0;
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
-    await onSubmit({
-      operator: form.operator,
-      councilName: pack?.name || '',
-      councilEmail: form.councilEmail,
-      applicantEmail: form.applicantEmail,
-      vehicles: form.vehicles,
-      trailers: form.trailers,
+  function setField<K extends keyof GVOLFormData>(key: K, v: GVOLFormData[K]) {
+    setForm((prev) => {
+      const next = { ...prev, [key]: v };
+      onChange(next);
+      return next;
     });
+    if (key === 'councilEmail' && pack) {
+      setOverride((v as string) !== (pack.representation.email || ''));
+    }
   }
 
   const packs = listAuthorityPacks();
 
   return (
-    <form onSubmit={submit} className="space-y-6" aria-describedby="gvol-desc">
+    <form className="space-y-6" aria-describedby="gvol-desc">
       <ErrorSummary errors={errors} />
 
       <section className={UI.section}>
-        <div className={UI.h2}>Applicant & Council</div>
+        <div className={UI.h2}>Applicant &amp; Council</div>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label htmlFor="applicantEmail" className={UI.label}>
+            <label htmlFor="applicantEmail" className="block text-sm font-medium text-slate-700">
               Applicant email
             </label>
-            <input id="applicantEmail" ref={autoFocusRef} type="email" value={form.applicantEmail} onChange={(e) => setField('applicantEmail', e.target.value)} className={UI.input + ' w-full'} />
+            <input
+              id="applicantEmail"
+              ref={autoFocusRef as any}
+              type="email"
+              value={form.applicantEmail || ''}
+              onChange={(e) => setField('applicantEmail', e.target.value)}
+              className={inputClass + ' w-full'}
+            />
           </div>
+
           <div>
-            <label htmlFor="council" className={UI.label}>
+            <label htmlFor="council" className="block text-sm font-medium text-slate-700">
               Council
             </label>
-            <select id="council" value={form.councilPack} onChange={(e) => selectPack(e.target.value)} className={UI.input}>
+            <select
+              id="council"
+              value={form.councilPack || ''}
+              onChange={(e) => selectPack(e.target.value)}
+              className={inputClass}
+            >
               <option value="">Select council</option>
               {packs.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -100,21 +128,25 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
               ))}
             </select>
           </div>
+
           <div>
-            <label htmlFor="councilEmail" className={UI.label}>
+            <label htmlFor="councilEmail" className="block text-sm font-medium text-slate-700">
               Council email
             </label>
             <input
               id="councilEmail"
               type="email"
-              value={form.councilEmail}
+              value={form.councilEmail || ''}
               onChange={(e) => setField('councilEmail', e.target.value)}
-              className={UI.input}
+              className={inputClass}
             />
             {pack && (
               <p className="mt-1 text-xs text-slate-500">
-                Council contact: {pack.representation.email || pack.representation.portal || pack.representation.postal}
-                {override && <span className="text-amber-700 ml-1">Overrides applied</span>}
+                Council contact:{' '}
+                {pack.representation.email ||
+                  pack.representation.portal ||
+                  pack.representation.postal}
+                {override && <span className="ml-1 text-amber-700">Overrides applied</span>}
               </p>
             )}
           </div>
@@ -125,29 +157,50 @@ export default function GVOLForm({ onSubmit, saving, autoFocusRef, onAuthorityCh
         <div className={UI.h2}>Application basics</div>
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label htmlFor="operator" className={UI.label}>
+            <label htmlFor="operator" className="block text-sm font-medium text-slate-700">
               Operator
             </label>
-            <input id="operator" value={form.operator} onChange={(e) => setField('operator', e.target.value)} className={UI.input + ' w-full'} />
+            <input
+              id="operator"
+              value={form.operator || ''}
+              onChange={(e) => setField('operator', e.target.value)}
+              className={inputClass + ' w-full'}
+            />
           </div>
+
           <div>
-            <label htmlFor="vehicles" className={UI.label}>
+            <label htmlFor="vehicles" className="block text-sm font-medium text-slate-700">
               Vehicles
             </label>
-            <input id="vehicles" type="number" value={form.vehicles} onChange={(e) => setField('vehicles', Number(e.target.value))} className={UI.input} />
+            <input
+              id="vehicles"
+              type="number"
+              value={form.vehicles ?? 0}
+              onChange={(e) => setField('vehicles', Number(e.target.value))}
+              className={inputClass}
+            />
           </div>
+
           <div>
-            <label htmlFor="trailers" className={UI.label}>
+            <label htmlFor="trailers" className="block text-sm font-medium text-slate-700">
               Trailers
             </label>
-            <input id="trailers" type="number" value={form.trailers} onChange={(e) => setField('trailers', Number(e.target.value))} className={UI.input} />
+            <input
+              id="trailers"
+              type="number"
+              value={form.trailers ?? 0}
+              onChange={(e) => setField('trailers', Number(e.target.value))}
+              className={inputClass}
+            />
           </div>
         </div>
       </section>
 
-      <button type="submit" disabled={saving} className={UI.pillBtn}>
-        {saving ? 'Saving…' : 'Submit'}
-      </button>
+      <div className="pt-2">
+        <button type="submit" disabled={saving} className={UI.pillBtn}>
+          {saving ? 'Saving…' : 'Submit'}
+        </button>
+      </div>
     </form>
   );
 }
