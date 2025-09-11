@@ -13,6 +13,7 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
   const [localText, setLocalText] = useState('');
   const [lastFile, setLastFile] = useState<File | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const PAGE_LIMIT = Number((import.meta as any).env?.VITE_PAGE_LIMIT || 4);
 
   const pretty = (bytes: number) => bytes < 1024
     ? `${bytes} B`
@@ -33,6 +34,11 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
   const doUpload = async (file: File) => {
     const t0 = performance.now();
     setError('');
+    if (file.size > 25 * 1024 * 1024) {
+      setError('File is over 25MB.');
+      setState('error');
+      return;
+    }
     try {
       setState('uploading');
       const isTest = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
@@ -52,8 +58,15 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
       fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       setState('ocr');
-      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
+      if (!res.ok || data?.ok === false) {
+        const msg = data?.error?.message || data?.error || 'Upload failed.';
+        setError(msg);
+        onMeta?.(data?.meta || {});
+        setState('error');
+        setElapsed(performance.now() - t0);
+        return;
+      }
       const text = data?.text || '';
       setLocalText(text);
       onText(text);
@@ -61,7 +74,12 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
       if (data?.error === 'OCR_EMPTY') {
         setError("We couldn't read this file. Build from details instead.");
       }
-      setState('ready');
+      if (data?.meta?.pageCount && data.meta.pageCount > PAGE_LIMIT) {
+        setError(`File has ${data.meta.pageCount} pages; limit is ${PAGE_LIMIT}.`);
+        setState('error');
+      } else {
+        setState('ready');
+      }
       setElapsed(performance.now() - t0);
     } catch (e) {
       setState('error');

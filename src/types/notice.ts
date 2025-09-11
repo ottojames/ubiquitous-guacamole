@@ -40,7 +40,13 @@ export type NoticeDraft = {
   inspectionLocation?: string;
   repsMethod?: string;
   statutoryWarningPresent?: boolean;
-  originalFileMeta?: any;
+  originalFileMeta?: {
+    mime: string;
+    pageCount: number;
+    bytes: number;
+    sha256: string;
+    [k: string]: unknown;
+  };
   finalText?: string;
   proofHash?: string;
 };

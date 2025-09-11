@@ -12,7 +12,7 @@ describe('runMandatoryChecks', () => {
   it('flags missing fields', () => {
     const draft: NoticeDraft = {} as any;
     const res = runMandatoryChecks(draft);
-    const applicant = res.find((r) => r.message.includes('Applicant name'));
+    const applicant = res.find((r) => r.label.includes('Applicant name'));
     expect(applicant?.ok).toBe(false);
   });
 });

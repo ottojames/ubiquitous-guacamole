@@ -10,6 +10,7 @@ import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 import * as UI from '@/styles/ui';
 import type { NoticeDraft } from '@/types/notice';
+import { sha256Hex } from '@/lib/hash';
 
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -32,6 +33,8 @@ export default function UploadNoticeFlow() {
   const [confirmA, setConfirmA] = useState(false);
   const [confirmB, setConfirmB] = useState(false);
   const lookedUpEmail = React.useRef('');
+  const lookedUpName = React.useRef('');
+  const lookedUpAddress = React.useRef('');
   const requiredOk =
     draft.applicantName.trim() &&
     draft.premisesAddress.trim() &&
@@ -59,11 +62,24 @@ export default function UploadNoticeFlow() {
             <div className="space-y-6">
               <section className={UI.section}>
                 <div>
+                  <label htmlFor="noticeText" className={UI.label}>Notice text</label>
+                  <textarea
+                    id="noticeText"
+                    className={UI.input + ' h-40'}
+                    value={text}
+                    onChange={(e) => {
+                      setText(e.target.value);
+                      setDraft((d) => ({ ...d, finalText: e.target.value }));
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
                   <label htmlFor="applicantName" className={UI.label}>
                     Applicant name<span className="text-rose-600">*</span>
                   </label>
                   <input
                     id="applicantName"
+                    required
                     className={UI.input}
                     value={draft.applicantName}
                     onChange={(e) => setDraft({ ...draft, applicantName: e.target.value })}
@@ -79,6 +95,8 @@ export default function UploadNoticeFlow() {
                       const res = lookupCouncilByPostcode(pc);
                       if (res) {
                         lookedUpEmail.current = res.councilEmail;
+                        lookedUpName.current = res.councilName;
+                        lookedUpAddress.current = res.councilAddress;
                         setDraft((d) => ({
                           ...d,
                           councilName: res.councilName,
@@ -95,10 +113,14 @@ export default function UploadNoticeFlow() {
                   </label>
                   <input
                     id="councilName"
+                    required
                     className={UI.input}
                     value={draft.councilName}
                     onChange={(e) => setDraft({ ...draft, councilName: e.target.value })}
                   />
+                  {lookedUpName.current && draft.councilName !== lookedUpName.current && (
+                    <p className="mt-1 text-xs text-amber-700">Value differs from council directory</p>
+                  )}
                 </div>
                 <div className="mt-4">
                   <label htmlFor="councilEmail" className={UI.label}>
@@ -106,12 +128,13 @@ export default function UploadNoticeFlow() {
                   </label>
                   <input
                     id="councilEmail"
+                    required
                     className={UI.input}
                     value={draft.councilEmail}
                     onChange={(e) => setDraft({ ...draft, councilEmail: e.target.value })}
                   />
                   {lookedUpEmail.current && draft.councilEmail !== lookedUpEmail.current && (
-                    <p className="mt-1 text-xs text-amber-700">Email differs from council directory</p>
+                    <p className="mt-1 text-xs text-amber-700">Value differs from council directory</p>
                   )}
                 </div>
                 <div className="mt-4">
@@ -120,10 +143,14 @@ export default function UploadNoticeFlow() {
                   </label>
                   <input
                     id="councilAddress"
+                    required
                     className={UI.input}
                     value={draft.councilAddress}
                     onChange={(e) => setDraft({ ...draft, councilAddress: e.target.value })}
                   />
+                  {lookedUpAddress.current && draft.councilAddress !== lookedUpAddress.current && (
+                    <p className="mt-1 text-xs text-amber-700">Value differs from council directory</p>
+                  )}
                 </div>
                 <div className="mt-4">
                   <label htmlFor="applicationDate" className={UI.label}>
@@ -131,6 +158,7 @@ export default function UploadNoticeFlow() {
                   </label>
                   <input
                     id="applicationDate"
+                    required
                     type="date"
                     className={UI.input}
                     value={draft.applicationDate}
@@ -148,7 +176,7 @@ export default function UploadNoticeFlow() {
                     onChange={(e) => setConfirmA(e.target.checked)}
                   />
                   <label htmlFor="confirm-a" className="text-sm">
-                    I confirm the notice text is accurate
+                    I confirm the above text is a true and accurate copy of the notice published/displayed.
                   </label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -159,7 +187,7 @@ export default function UploadNoticeFlow() {
                     onChange={(e) => setConfirmB(e.target.checked)}
                   />
                   <label htmlFor="confirm-b" className="text-sm">
-                    I confirm I have authority to publish
+                    I understand that supplying false information is an offence.
                   </label>
                 </div>
                 <div className="mt-4 flex gap-2">
@@ -172,7 +200,11 @@ export default function UploadNoticeFlow() {
                   <button
                     className="rounded-md border px-4 py-2"
                     disabled={!canContinue}
-                    onClick={() => setStep(3)}
+                    onClick={async () => {
+                      const hash = await sha256Hex((draft.originalFileMeta?.sha256 || '') + (draft.finalText || ''));
+                      setDraft((d) => ({ ...d, proofHash: hash }));
+                      setStep(3);
+                    }}
                   >
                     Continue to Pay
                   </button>

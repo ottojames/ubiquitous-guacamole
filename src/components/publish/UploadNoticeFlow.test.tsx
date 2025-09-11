@@ -28,8 +28,8 @@ describe('UploadNoticeFlow gating', () => {
     await waitFor(() => screen.getByText('1 High St'));
     await userEvent.click(screen.getByText('1 High St'));
     await userEvent.type(screen.getByLabelText(/Date of submission/i), '2024-01-01');
-    await userEvent.click(screen.getByLabelText(/notice text is accurate/i));
-    await userEvent.click(screen.getByLabelText(/authority to publish/i));
+    await userEvent.click(screen.getByLabelText(/true and accurate copy/i));
+    await userEvent.click(screen.getByLabelText(/false information is an offence/i));
 
     await waitFor(() => expect(payBtn).toBeEnabled());
   });

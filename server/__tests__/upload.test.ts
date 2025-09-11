@@ -33,4 +33,18 @@ describe('upload handler (unit)', () => {
     expect(result.text).toBe('');
     expect(result.error).toBe('OCR_EMPTY');
   });
+
+  it('detects duplicate uploads via sha256', async () => {
+    const file = {
+      originalname: 'dup.pdf',
+      buffer: Buffer.from('same'),
+      mimetype: 'application/pdf',
+      size: 4,
+    } as any;
+    const first = await handleUploadCore(file, {}, {}, {} as any);
+    expect(first.ok).toBe(true);
+    const second = await handleUploadCore(file, {}, {}, {} as any);
+    expect(second.ok).toBe(false);
+    expect((second as any).error.code).toBe('DUPLICATE');
+  });
 });
