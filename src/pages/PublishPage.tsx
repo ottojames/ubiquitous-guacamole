@@ -32,6 +32,7 @@ export default function PublishPage() {
             aria-controls="notice-panel"
             tabIndex={tab === 'notice' ? 0 : -1}
             className={tab === 'notice' ? UI.pillBtn : UI.ghostPill}
+            data-testid="tab-trigger-notice"
             onClick={() => setTab('notice')}
           >
             Upload from Notice
@@ -42,16 +43,25 @@ export default function PublishPage() {
             aria-controls="template-panel"
             tabIndex={tab === 'template' ? 0 : -1}
             className={tab === 'template' ? UI.pillBtn : UI.ghostPill}
+            data-testid="tab-trigger-template"
             onClick={() => setTab('template')}
           >
             Upload via Template
           </button>
         </nav>
         <div id="notice-panel" role="tabpanel" hidden={tab !== 'notice'}>
-          {tab === 'notice' && <UploadNoticeFlow />}
+          {tab === 'notice' && (
+            <div data-testid="tab-notice-root">
+              <UploadNoticeFlow />
+            </div>
+          )}
         </div>
         <div id="template-panel" role="tabpanel" hidden={tab !== 'template'}>
-          {tab === 'template' && <TemplateBuilder />}
+          {tab === 'template' && (
+            <div data-testid="tab-template-root">
+              <TemplateBuilder />
+            </div>
+          )}
         </div>
       </main>
     </div>

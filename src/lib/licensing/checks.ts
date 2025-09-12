@@ -44,7 +44,7 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
     push(
       'repsDeadline',
       false,
-      '⚠️ This notice does not state the representation deadline — please enter manually.',
+      'This notice does not state the representation deadline — please enter manually.',
       'applicationDate',
       'warning'
     );

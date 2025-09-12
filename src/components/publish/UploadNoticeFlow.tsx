@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ProgressBar from './ProgressBar';
 import FileDropOCR from '@/components/upload/FileDropOCR';
 import PreviewCard from '@/components/publish/RightRail/PreviewCard';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
 import KeyDatesCard from '@/components/publish/RightRail/KeyDatesCard';
 import CostCard from '@/components/publish/RightRail/CostCard';
-import AddressAutocomplete, { type AddressOption } from '@/components/AddressAutocomplete';
 import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 import * as UI from '@/styles/ui';
 import type { NoticeDraft } from '@/types/notice';
 import { sha256Hex } from '@/lib/hash';
+import ApplicantCouncilSection from './sections/ApplicantCouncilSection';
+import ApplicationBasicsSection from './sections/ApplicationBasicsSection';
 
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -33,21 +34,73 @@ export default function UploadNoticeFlow() {
   const [confirmA, setConfirmA] = useState(false);
   const [confirmB, setConfirmB] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const lookedUpEmail = React.useRef('');
-  const lookedUpName = React.useRef('');
-  const lookedUpAddress = React.useRef('');
+  const refs = {
+    applicant: React.useRef<HTMLInputElement>(null),
+    premisesAddress: React.useRef<HTMLInputElement>(null),
+    councilName: React.useRef<HTMLInputElement>(null),
+    councilEmail: React.useRef<HTMLInputElement>(null),
+    councilAddress: React.useRef<HTMLInputElement>(null),
+    applicationDate: React.useRef<HTMLInputElement>(null),
+  } as const;
   const requiredOk =
     draft.applicantName.trim() &&
-    draft.premisesAddress.trim() &&
+    draft.postcode.trim() &&
     draft.councilName.trim() &&
     draft.councilEmail.trim() &&
     draft.councilAddress.trim() &&
     draft.applicationDate.trim();
   const canContinue = requiredOk && confirmA && confirmB;
 
+  // Auto-lookup council when postcode changes (defensive)
+  useEffect(() => {
+    const pc = draft.postcode?.trim();
+    if (!pc) return;
+    const res = lookupCouncilByPostcode(pc);
+    if (!res) return;
+    setDraft((d) => ({
+      ...d,
+      councilName: res.councilName || d.councilName,
+      councilEmail: res.councilEmail || d.councilEmail,
+      councilAddress: res.councilAddress || d.councilAddress,
+    }));
+  }, [draft.postcode]);
+
+  // Keep reps deadline in sync with application date (28 days)
+  useEffect(() => {
+    if (!draft.applicationDate) return;
+    const expected = calcRepsDeadline(draft.applicationDate);
+    if (draft.repsDeadline !== expected) {
+      setDraft((d) => ({ ...d, repsDeadline: expected }));
+    }
+  }, [draft.applicationDate]);
+
   const toErrorKey = (target: string) => (target === 'premises-address' ? 'premisesAddress' : target);
   const handleFix = (target?: string) => {
     if (!target) return;
+    // When on Step 1, prefer focusing inline Required details inputs via refs
+    if (step === 1) {
+      const map: Record<string, React.RefObject<HTMLInputElement> | undefined> = {
+        applicant: refs.applicant,
+        applicantName: refs.applicant,
+        addr: refs.premisesAddress,
+        'premises-address': refs.premisesAddress,
+        councilName: refs.councilName,
+        councilEmail: refs.councilEmail,
+        councilAddr: refs.councilAddress,
+        councilAddress: refs.councilAddress,
+        appDate: refs.applicationDate,
+        applicationDate: refs.applicationDate,
+        repsMissing: refs.applicationDate,
+      };
+      const r = map[target];
+      if (r?.current) {
+        r.current.focus();
+        r.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setErrors((er) => ({ ...er, [toErrorKey(target)]: 'This field is required' }));
+        return;
+      }
+    }
+    // Fallback: focus element by id
     const el = document.getElementById(target) as HTMLElement | null;
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
@@ -55,18 +108,73 @@ export default function UploadNoticeFlow() {
   };
 
   return (
-    <div>
+    <div data-testid="notice-flow-root">
       <ProgressBar step={step} />
       <div className="grid md:grid-cols-3 gap-8">
         <main className="md:col-span-2 space-y-6">
           {step === 1 && (
-            <FileDropOCR
-              onText={(t) => {
-                setText(t);
-                setDraft((d) => ({ ...d, finalText: t }));
-              }}
-              onMeta={(m) => setDraft((d) => ({ ...d, originalFileMeta: m }))}
-            />
+            <>
+              <FileDropOCR
+                onText={(t) => {
+                  setText(t);
+                  setDraft((d) => ({ ...d, finalText: t }));
+                }}
+                onMeta={(m) => setDraft((d) => ({ ...d, originalFileMeta: m }))}
+              />
+              <section className={UI.section} data-testid="required-inline">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-brand-navy">Required details (Licensing Act 2003)</h3>
+                  <span
+                    className="inline-block rounded bg-brand-lilac text-brand-navy ring-1 ring-brand-blue/20 px-2 py-0.5 text-xs"
+                    data-testid="required-inline-counter"
+                  >
+                    {(() => {
+                      const c = [
+                        !!draft.applicantName?.trim(),
+                        !!draft.postcode?.trim(),
+                        !!draft.councilName?.trim(),
+                        !!draft.councilEmail?.trim(),
+                        !!draft.councilAddress?.trim(),
+                        !!draft.applicationDate?.trim(),
+                      ].filter(Boolean).length;
+                      return `Required: ${c}/6`;
+                    })()}
+                  </span>
+                </div>
+                <ApplicantCouncilSection
+                  draft={draft}
+                  onChange={(p) => setDraft((d) => ({ ...d, ...p }))}
+                  refs={refs}
+                />
+                <ApplicationBasicsSection
+                  draft={draft}
+                  onChange={(p) => setDraft((d) => ({ ...d, ...p }))}
+                  refs={refs}
+                />
+                <div className="mt-4 flex items-center gap-2">
+                  <input
+                    id="confirm-a"
+                    type="checkbox"
+                    checked={confirmA}
+                    onChange={(e) => setConfirmA(e.target.checked)}
+                  />
+                  <label htmlFor="confirm-a" className="text-sm">
+                    I confirm the above text is a true and accurate copy of the notice published/displayed.
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="confirm-b"
+                    type="checkbox"
+                    checked={confirmB}
+                    onChange={(e) => setConfirmB(e.target.checked)}
+                  />
+                  <label htmlFor="confirm-b" className="text-sm">
+                    I understand that supplying false information is an offence.
+                  </label>
+                </div>
+              </section>
+            </>
           )}
           {step === 2 && (
             <div className="space-y-6">
@@ -83,163 +191,16 @@ export default function UploadNoticeFlow() {
                     }}
                   />
                 </div>
-                <div className="mt-4">
-                  <label htmlFor="applicantName" className={UI.label}>
-                    Applicant name<span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    id="applicantName"
-                    required
-                    className={UI.input}
-                    value={draft.applicantName}
-                    onChange={(e) => {
-                      setDraft({ ...draft, applicantName: e.target.value });
-                      if (errors.applicantName) setErrors((er) => ({ ...er, applicantName: '' }));
-                    }}
-                    onBlur={() => {
-                      if (!draft.applicantName.trim())
-                        setErrors((er) => ({ ...er, applicantName: 'This field is required' }));
-                    }}
-                  />
-                  {errors.applicantName && <p className="mt-1 text-sm text-red-600">{errors.applicantName}</p>}
-                </div>
-                <div
-                  id="premises-address"
-                  className="mt-4"
-                  onBlur={() => {
-                    if (!draft.premisesAddress.trim())
-                      setErrors((er) => ({ ...er, premisesAddress: 'This field is required' }));
-                  }}
-                >
-                  <AddressAutocomplete
-                    label="Premises address"
-                    onSelect={(a: AddressOption) => {
-                      const addr = a.label || '';
-                      const pc = a.postcode || '';
-                      setDraft((d) => ({ ...d, premisesAddress: addr, postcode: pc }));
-                      setErrors((er) => ({
-                        ...er,
-                        premisesAddress: '',
-                      }));
-                      const res = lookupCouncilByPostcode(pc);
-                      if (res) {
-                        lookedUpEmail.current = res.councilEmail;
-                        lookedUpName.current = res.councilName;
-                        lookedUpAddress.current = res.councilAddress;
-                        setDraft((d) => ({
-                          ...d,
-                          councilName: res.councilName,
-                          councilEmail: res.councilEmail,
-                          councilAddress: res.councilAddress,
-                        }));
-                        setErrors((er) => ({
-                          ...er,
-                          councilName: '',
-                          councilEmail: '',
-                          councilAddress: '',
-                        }));
-                      }
-                    }}
-                  />
-                  {errors.premisesAddress && <p className="mt-1 text-sm text-red-600">{errors.premisesAddress}</p>}
-                </div>
-                <div className="mt-4">
-                  <label htmlFor="councilName" className={UI.label}>
-                    Council name<span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    id="councilName"
-                    required
-                    className={UI.input}
-                    value={draft.councilName}
-                    onChange={(e) => {
-                      setDraft({ ...draft, councilName: e.target.value });
-                      if (errors.councilName) setErrors((er) => ({ ...er, councilName: '' }));
-                    }}
-                    onBlur={() => {
-                      if (!draft.councilName.trim())
-                        setErrors((er) => ({ ...er, councilName: 'This field is required' }));
-                    }}
-                  />
-                  {lookedUpName.current && draft.councilName !== lookedUpName.current && (
-                    <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                      Value differs from council directory
-                    </span>
-                  )}
-                  {errors.councilName && <p className="mt-1 text-sm text-red-600">{errors.councilName}</p>}
-                </div>
-                <div className="mt-4">
-                  <label htmlFor="councilEmail" className={UI.label}>
-                    Council email<span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    id="councilEmail"
-                    required
-                    className={UI.input}
-                    value={draft.councilEmail}
-                    onChange={(e) => {
-                      setDraft({ ...draft, councilEmail: e.target.value });
-                      if (errors.councilEmail) setErrors((er) => ({ ...er, councilEmail: '' }));
-                    }}
-                    onBlur={() => {
-                      if (!draft.councilEmail.trim())
-                        setErrors((er) => ({ ...er, councilEmail: 'This field is required' }));
-                    }}
-                  />
-                  {lookedUpEmail.current && draft.councilEmail !== lookedUpEmail.current && (
-                    <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                      Value differs from council directory
-                    </span>
-                  )}
-                  {errors.councilEmail && <p className="mt-1 text-sm text-red-600">{errors.councilEmail}</p>}
-                </div>
-                <div className="mt-4">
-                  <label htmlFor="councilAddress" className={UI.label}>
-                    Council address<span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    id="councilAddress"
-                    required
-                    className={UI.input}
-                    value={draft.councilAddress}
-                    onChange={(e) => {
-                      setDraft({ ...draft, councilAddress: e.target.value });
-                      if (errors.councilAddress) setErrors((er) => ({ ...er, councilAddress: '' }));
-                    }}
-                    onBlur={() => {
-                      if (!draft.councilAddress.trim())
-                        setErrors((er) => ({ ...er, councilAddress: 'This field is required' }));
-                    }}
-                  />
-                  {lookedUpAddress.current && draft.councilAddress !== lookedUpAddress.current && (
-                    <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                      Value differs from council directory
-                    </span>
-                  )}
-                  {errors.councilAddress && <p className="mt-1 text-sm text-red-600">{errors.councilAddress}</p>}
-                </div>
-                <div className="mt-4">
-                  <label htmlFor="applicationDate" className={UI.label}>
-                    Date of submission<span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    id="applicationDate"
-                    required
-                    type="date"
-                    className={UI.input}
-                    value={draft.applicationDate}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setDraft({ ...draft, applicationDate: v, repsDeadline: v ? calcRepsDeadline(v) : '' });
-                      if (errors.applicationDate) setErrors((er) => ({ ...er, applicationDate: '' }));
-                    }}
-                    onBlur={() => {
-                      if (!draft.applicationDate.trim())
-                        setErrors((er) => ({ ...er, applicationDate: 'This field is required' }));
-                    }}
-                  />
-                  {errors.applicationDate && <p className="mt-1 text-sm text-red-600">{errors.applicationDate}</p>}
-                </div>
+                <ApplicantCouncilSection
+                  draft={draft}
+                  onChange={(p) => setDraft((d) => ({ ...d, ...p }))}
+                  refs={refs}
+                />
+                <ApplicationBasicsSection
+                  draft={draft}
+                  onChange={(p) => setDraft((d) => ({ ...d, ...p }))}
+                  refs={refs}
+                />
                 <div className="mt-4 flex items-center gap-2">
                   <input
                     id="confirm-a"
@@ -272,6 +233,7 @@ export default function UploadNoticeFlow() {
                   <button
                     className="rounded-md border px-4 py-2"
                     disabled={!canContinue}
+                    data-testid="btn-continue-pay"
                     onClick={async () => {
                       const hash = await sha256Hex((draft.originalFileMeta?.sha256 || '') + (draft.finalText || ''));
                       setDraft((d) => ({ ...d, proofHash: hash }));
@@ -286,14 +248,28 @@ export default function UploadNoticeFlow() {
           )}
           {step === 3 && <div>Pay step.</div>}
           {step === 1 && (
-            <div>
-              <button
-                className="rounded-md border px-4 py-2"
-                disabled={!text}
-                onClick={() => setStep(2)}
-              >
-                Continue
-              </button>
+            <div className="mt-4">
+              <div className="text-sm text-brand-navy mb-2">
+                To continue, upload your notice or complete the required details.
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="rounded-md border px-4 py-2"
+                  data-testid="btn-continue-step1"
+                  disabled={!text && !(requiredOk && confirmA && confirmB)}
+                  onClick={() => setStep(2)}
+                >
+                  Continue
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border px-4 py-2"
+                  data-testid="link-skip-ocr"
+                  onClick={() => setStep(2)}
+                >
+                  Skip OCR for now
+                </button>
+              </div>
             </div>
           )}
         </main>

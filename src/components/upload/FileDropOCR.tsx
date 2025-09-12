@@ -116,7 +116,7 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
         <p id="ocr-upload-help" className="mb-4 text-sm text-slate-700">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
       </div>
 
-      <label className={`border-2 border-dashed rounded-xl p-8 block text-center cursor-pointer transition-colors bg-white`}>
+      <label className={`border-2 border-dashed rounded-xl p-8 block text-center cursor-pointer transition-colors bg-white`} data-testid="notice-upload-pill">
         <input
           ref={inputRef}
           type="file"

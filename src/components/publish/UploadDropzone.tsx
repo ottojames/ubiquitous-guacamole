@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { AnimatePresence, motion } from 'framer-motion';
-import * as UI from '@/styles/ui';
 
 export type UploadDropzoneProps = {
   onText: (text: string) => void;
@@ -9,12 +7,11 @@ export type UploadDropzoneProps = {
 };
 
 export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) {
-  const [state, setState] = useState<'idle'|'uploading'|'ocrRunning'|'success'|'failed'>('idle');
+  const [state, setState] = useState<'idle'|'uploading'|'ocr'|'ready'|'error'>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState('');
   const [localText, setLocalText] = useState('');
   const [lastFile, setLastFile] = useState<File | null>(null);
-  const [tokens, setTokens] = useState<{ text: string; confidence: number }[]>([]);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const pretty = (bytes: number) => bytes < 1024
     ? `${bytes} B`
@@ -34,12 +31,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       const isTest = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
         || (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.MODE === 'test');
       if (isTest) {
-        setState('ocrRunning');
+        setState('ocr');
         await new Promise((r) => setTimeout(r, 10));
         setLocalText('hello');
         onText('hello');
         onMeta?.({ engine: 'test' });
-        setState('success');
+        setState('ready');
         setElapsed(performance.now() - t0);
         return;
       }
@@ -47,23 +44,22 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      setState('ocrRunning');
+      setState('ocr');
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json(); // { text, meta, error? }
       const text = data?.text || '';
       setLocalText(text);
       onText(text);
       onMeta?.(data?.meta || {});
-      if (data?.meta?.tokens) setTokens(data.meta.tokens);
       if (data?.error === 'OCR_EMPTY') {
         setError("We couldn't read this file. Build from details instead.");
       }
-      setState('success');
+      setState('ready');
       setElapsed(performance.now() - t0);
     } catch (e) {
-      setState('failed');
+      setState('error');
       setElapsed(performance.now() - t0);
-      setError("We couldn't process this file — retry or paste text manually");
+      setError('Upload failed. You can still edit everything manually.');
     }
   };
 
@@ -84,12 +80,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     onDropRejected: () => setError('Unsupported file or file over 25MB.'),
   });
 
-  const statusLabel = state === 'success'
-    ? 'Done'
-    : state === 'failed'
+  const statusLabel = state === 'ready'
+    ? 'Ready'
+    : state === 'error'
     ? 'Failed'
-    : state === 'ocrRunning'
-    ? 'Running OCR…'
+    : state === 'ocr'
+    ? 'OCR running…'
     : state === 'uploading'
     ? 'Uploading…'
     : 'Idle';
@@ -105,21 +101,12 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
     setLastFile(null);
     setState('idle');
     setError('');
-    setLocalText('');
-    setTokens([]);
-    onText('');
     const input = rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null;
     if (input) input.value = '';
   };
 
-  useEffect(() => {
-    if (state === 'success') {
-      document.getElementById('notice-preview')?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [state]);
-
   return (
-    <div className={UI.card + ' p-6 md:p-8'}>
+    <div className="rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
       <div className="mb-2">
         <h2 className="mb-2 text-base font-semibold">Upload & OCR</h2>
         <p id="upload-help" className="mb-4 text-sm text-muted-foreground">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
@@ -127,7 +114,7 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
       <div
         {...getRootProps()}
         ref={rootRef}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
         aria-label="Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload"
       >
         <input
@@ -136,127 +123,25 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
           aria-describedby="upload-help"
           aria-live="polite"
         />
-        <p className="text-sm text-brand-slate">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
-        <p className="mt-2 text-xs text-brand-slate">OCR will appear below; you can still edit everything.</p>
-        <div className="sr-only" aria-live="polite">Status: {statusLabel}</div>
+        <p className="text-sm text-slate-600">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
+        <p className="mt-2 text-xs text-slate-500">OCR will appear below; you can still edit everything.</p>
+        <div className="sr-only" aria-live="polite">Status: {state}</div>
       </div>
 
-      <AnimatePresence>
-        {(acceptedFiles[0] || lastFile) && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm shadow-sm"
-          >
-            <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
-            <div className="flex gap-2">
-              {state === 'failed' && (
-                <button
-                  className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-                  onClick={retry}
-                >
-                  Retry
-                </button>
-              )}
-              <button
-                className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-                onClick={remove}
-              >
-                Remove
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {(state === 'uploading' || state === 'ocrRunning') && (
-        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full w-full bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] animate-shimmer" />
-        </div>
-      )}
-
-      <div className="mt-3 text-xs text-brand-slate">Status: {statusLabel} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
-      {state === 'success' && (
-        <div className="mt-4 grid gap-4 md:grid-cols-2" aria-live="polite">
-          <div>
-            {lastFile && lastFile.type.startsWith('image') && (
-              <img src={URL.createObjectURL(lastFile)} alt="thumbnail" className="rounded border mb-2 max-h-48" />
-            )}
-            <div className="rounded-2xl bg-brand-lilac text-brand-navy ring-1 ring-brand-blue/20 p-3 text-sm" role="status">
-              Extracted {localText.length} characters from file
-            </div>
-            <div className="mt-2 text-xs text-brand-slate">{lastFile?.name}</div>
-          </div>
-          <div>
-            {tokens.length ? (
-              <div
-                className="w-full rounded-lg border-slate-300 text-sm h-48 overflow-auto p-2 border"
-                contentEditable
-                suppressContentEditableWarning
-                onInput={(e) => {
-                  const text = (e.target as HTMLElement).innerText;
-                  setLocalText(text);
-                  onText(text);
-                }}
-              >
-                {tokens.map((t, i) => (
-                  <span key={i} className={t.confidence < 0.8 ? 'bg-yellow-200' : ''}>{t.text}</span>
-                ))}
-              </div>
-            ) : (
-              <textarea
-                className="w-full rounded-lg border-slate-300 text-sm h-48"
-                value={localText}
-                onChange={(e) => {
-                  setLocalText(e.target.value);
-                  onText(e.target.value);
-                }}
-              />
-            )}
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                className="rounded-md border px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-                onClick={() => onText(localText)}
-              >
-                Accept all
-              </button>
-              <button
-                type="button"
-                className="rounded-md border px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-                onClick={() => {
-                  const normalised = localText.replace(/\s+/g,' ').replace(/\b(\d{1,2})(am|pm)\b/gi, (m)=> m.toUpperCase());
-                  setLocalText(normalised);
-                  onText(normalised);
-                }}
-              >
-                Normalise caps/times/spacing
-              </button>
-            </div>
+      {(acceptedFiles[0] || lastFile) && (
+        <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
+          <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
+          <div className="flex gap-2">
+            {state === 'error' && <button className="rounded-md border px-2 py-1" onClick={retry}>Retry</button>}
+            <button className="rounded-md border px-2 py-1" onClick={remove}>Remove</button>
           </div>
         </div>
       )}
+
+      <div className="mt-3 text-xs text-slate-600">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
       {error && (
-        <div className="mt-3 rounded-2xl bg-red-50 text-red-700 ring-1 ring-red-200 p-3 text-sm" role="status" aria-live="polite">
-          <div className="flex items-center justify-between gap-4">
-            <span>{error}</span>
-            <div className="flex gap-2 shrink-0">
-              <button
-                className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-                onClick={retry}
-              >
-                Retry
-              </button>
-              <button
-                className="rounded-md border px-2 py-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
-                onClick={remove}
-              >
-                Paste text manually
-              </button>
-            </div>
-          </div>
+        <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2" role="status" aria-live="polite">
+          {error}
         </div>
       )}
       {/* Hidden but present editor for tests and manual adjustments elsewhere can bind into it */}
