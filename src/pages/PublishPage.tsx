@@ -24,7 +24,7 @@ export default function PublishPage() {
     <div className={UI.gradientBg} data-testid="publish-layout">
       <Header />
       <main className={UI.container + ' py-6'}>
-        <h1 className={UI.h1 + ' mb-6'}>Publish a notice</h1>
+        <h1 className={UI.h1 + ' mb-6 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]'}>Publish a notice</h1>
         <nav role="tablist" className="mb-4 flex gap-2">
           <button
             role="tab"
