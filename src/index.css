@@ -10,9 +10,9 @@
     --headerH: 72px; /* sticky header outer height */
     /* Hero band metrics */
     --heroH: 860px;          /* more room for H1 + tool + filters */
-    --fadeH: 300px;
-    /* start the fade so it overlaps the band ~16px (avoids seam) */
-    --fadeStart: calc(var(--heroH) - var(--fadeH) - 16px);
+    --fadeH: 280px;
+    /* tuned to overlap the band slightly and avoid seams */
+    --fadeStart: 540px;
   }
 
   /* One composited background for the page wrapper (Stripe-style) */

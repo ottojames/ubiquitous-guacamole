@@ -163,15 +163,15 @@ export default function PremisesForm({
               className={inputClass}
             />
           </div>
-          <div className="col-span-2" id="applicant-address">
+          <div className="col-span-2" id="applicantAddressLine1">
             <AddressAutocomplete label="Applicant address" onSelect={onApplicantAddressSelect} />
           </div>
           <div>
-            <label htmlFor="council" className={UI.label}>
+            <label htmlFor="councilName" className={UI.label}>
               Council
             </label>
             <select
-              id="council"
+              id="councilName"
               value={form.councilPack || ''}
               onChange={(e) => selectPack(e.target.value)}
               className={inputClass}
@@ -224,7 +224,7 @@ export default function PremisesForm({
               className={inputClass + ' w-full'}
             />
           </div>
-          <div className="col-span-2" id="premises-address">
+          <div className="col-span-2" id="premisesAddressLine1">
             <AddressAutocomplete label="Premises address" onSelect={onAddressSelect} />
           </div>
           <div>

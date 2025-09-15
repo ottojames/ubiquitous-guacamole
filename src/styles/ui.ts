@@ -14,8 +14,7 @@ export const heroH1 =
 export const heroSub =
   "text-white/85 drop-shadow-[0_1px_1px_rgba(0,0,0,0.22)] text-[16px] md:text-[18px] lg:text-[20px] leading-[28px] max-w-[60ch]";
 
-export const card =
-  "bg-white border border-[rgba(25,38,80,.06)] rounded-2xl shadow-[0_6px_18px_rgba(2,6,23,.06)] focus-within:ring-2 focus-within:ring-blue-500/30";
+export const card = "bg-white border border-[rgba(25,38,80,0.06)] rounded-2xl shadow-[0_8px_24px_rgba(25,38,80,0.06)]";
 export const cardHover =
   "transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform will-change-[box-shadow] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(25,38,80,.10)] hover:ring-1 hover:ring-slate-200/60";
 export const cardHeader = "text-sm font-semibold text-blue-900";
@@ -34,7 +33,7 @@ export const btnSecondary =
   "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-[#192650] font-medium border border-[rgba(25,38,80,0.10)] hover:border-[rgba(25,38,80,0.20)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white";
 
 // Stepper (Publish)
-export const stepperTrack = "relative h-1 w-full rounded-full bg-blue-600/15";
+export const stepperTrack = "relative h-1 rounded-full bg-blue-600/15";
 export const stepperFill = "h-1 rounded-full bg-[#2563EB]";
 export const stepDot = "w-8 h-8 rounded-full grid place-items-center border border-slate-200 bg-white";
 export const stepDotActive =

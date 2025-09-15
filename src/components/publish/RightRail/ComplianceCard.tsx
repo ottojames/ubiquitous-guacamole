@@ -56,25 +56,25 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
             {orderedGroups.map((group) => (
               <div key={group.key}>
                 <h4 className="text-[11px] tracking-wide uppercase text-slate-500 mb-2">{group.label}</h4>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-3">
+                <div className="space-y-1">
                   {grouped[group.key]?.map((item) => (
-                    <React.Fragment key={item.id}>
+                    <div key={item.id} className="flex items-center py-1.5">
                       <span
-                        className={`pl-1.5 text-[13px] leading-5 ${item.ok ? 'text-emerald-700' : 'text-slate-700'}`}
+                        className={`flex-1 text-sm leading-5 ${item.ok ? 'text-emerald-700' : 'text-slate-800'}`}
                       >
                         {item.label}
                       </span>
                       {item.ok ? (
                         <span
                           aria-hidden
-                          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] justify-self-end"
+                          className="inline-flex h-6 w-[64px] items-center justify-end text-emerald-600"
                         >
                           ✔
                         </span>
                       ) : (
                         <button
                           type="button"
-                          className="inline-flex h-9 items-center justify-center rounded-lg border border-blue-200/70 bg-white px-4 text-xs font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white justify-self-end"
+                          className="inline-flex h-9 w-[64px] items-center justify-end text-xs text-blue-700 underline underline-offset-2 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
                           onClick={() => handleFix(item.target)}
                           data-field={item.id}
                           aria-controls={item.target}
@@ -82,7 +82,7 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
                           Fix this
                         </button>
                       )}
-                    </React.Fragment>
+                    </div>
                   ))}
                 </div>
               </div>

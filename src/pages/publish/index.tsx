@@ -56,13 +56,13 @@ export default function PublishPage() {
         id: 'premises',
         label: 'Premises address (incl. postcode)',
         ok: !!(d?.premisesAddress && postcodeRe.test(d?.postcode || '')),
-        target: 'premises-address',
+        target: 'premisesAddressLine1',
       },
       {
         id: 'council',
         label: 'Council selected + email present',
         ok: !!(d?.councilName && /[^@\s]+@[^@\s]+\.[^@\s]+/.test(d?.councilEmail || '')),
-        target: 'council',
+        target: 'councilEmail',
       },
       {
         id: 'dates',
@@ -123,6 +123,13 @@ export default function PublishPage() {
   }, [noticeType, debounced]);
 
   const autoFocusRef = useRef<HTMLInputElement>(null);
+  const handleNoticeTypeChange = (next: NoticeType) => {
+    setNoticeType(next);
+    setTimeout(() => {
+      autoFocusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      autoFocusRef.current?.focus?.();
+    }, 0);
+  };
   const heroSteps: Array<{ label: string; status: 'current' | 'upcoming' }> = [
     { label: 'Confirm notice type', status: 'current' },
     { label: 'Fill notice details', status: 'upcoming' },
@@ -142,28 +149,27 @@ export default function PublishPage() {
               <div className={`${UI.stepperTrack}`} />
             </div>
             <ol
-              className="relative z-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-white/90"
+              className="relative z-10 flex w-full flex-wrap items-start justify-between gap-6 text-white/90"
               aria-label="Publish steps"
             >
               {heroSteps.map((step, idx) => {
                 const isCurrent = step.status === 'current';
                 return (
-                  <li key={step.label} className="flex items-center gap-x-3 md:gap-x-4">
-                    <span
+                  <li
+                    key={step.label}
+                    className="flex min-w-[120px] flex-1 flex-col items-center gap-2 text-center"
+                  >
+                    <button
+                      type="button"
                       className={`${UI.stepDot} ${isCurrent ? UI.stepDotActive : ''} transition-all duration-200`}
                       aria-current={isCurrent ? 'step' : undefined}
-                      data-active={isCurrent ? 'true' : undefined}
+                      aria-label={`Step ${idx + 1}: ${step.label}`}
                     >
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full transition-colors duration-200 ${
-                          isCurrent ? 'bg-blue-600' : 'bg-slate-400/70'
-                        }`}
-                      />
-                    </span>
-                    <span className={`text-sm ${isCurrent ? 'font-semibold text-white' : 'font-medium text-white/80'}`}>
-                      <span className="sr-only">Step {idx + 1}: </span>
+                      {idx + 1}
+                    </button>
+                    <p className={`text-xs ${isCurrent ? 'font-medium text-white' : 'text-white/80'}`}>
                       {step.label}
-                    </span>
+                    </p>
                   </li>
                 );
               })}
@@ -180,20 +186,22 @@ export default function PublishPage() {
         )}
 
         <main className="md:col-span-8 space-y-6">
-          <section className={`${UI.section} space-y-4`}>
-            <header className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-semibold text-blue-900">Confirm notice type</h2>
-                <p className="mt-1 text-sm text-slate-600">You can change this later.</p>
-              </div>
-              <button type="button" className={`${UI.btnPrimary} h-10 py-0 shrink-0`}>
-                Continue
-              </button>
-            </header>
+          <section className={UI.section}>
+            <div className="space-y-2">
+              <header className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-blue-900">Confirm notice type</h2>
+                  <p className="mt-1 text-sm text-slate-600">You can change this later.</p>
+                </div>
+                <button type="button" className={`${UI.btnPrimary} h-10 shrink-0 py-0`}>
+                  Continue
+                </button>
+              </header>
 
-            <div>
-              <NoticeTypeSelect value={noticeType} onChange={setNoticeType} helperTextId={noticeTypeHelpId} />
-              <p id={noticeTypeHelpId} className="mt-1 text-xs text-slate-600">We'll tailor the form to this type.</p>
+              <div>
+                <NoticeTypeSelect value={noticeType} onChange={handleNoticeTypeChange} helperTextId={noticeTypeHelpId} />
+                <p id={noticeTypeHelpId} className="mt-1 text-xs text-slate-600">We'll tailor the form to this type.</p>
+              </div>
             </div>
           </section>
           {noticeType === 'premises' && (
