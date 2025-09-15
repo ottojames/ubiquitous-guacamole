@@ -140,7 +140,7 @@ export default function PublishPage() {
   return (
     <div className={`${UI.pageWrapLg} relative`} data-testid="publish-layout">
       {/* Hero header */}
-      <div className={`${UI.container} pt-16 md:pt-20 pb-8`}>
+      <div className={`${UI.container} pt-16 md:pt-20 pb-4`}>
         <h1 className={`${UI.heroH1} mb-2`}>Publish a notice</h1>
         <p className={`${UI.heroSub} mt-1`}>Guided, compliant, and instant proof</p>
         <div className="mt-6">
@@ -200,7 +200,12 @@ export default function PublishPage() {
 
               <div>
                 <NoticeTypeSelect value={noticeType} onChange={handleNoticeTypeChange} helperTextId={noticeTypeHelpId} />
-                <p id={noticeTypeHelpId} className="mt-1 text-xs text-slate-600">We'll tailor the form to this type.</p>
+                <p
+                  id={noticeTypeHelpId}
+                  className="mt-2 text-[13px] leading-5 text-slate-600"
+                >
+                  We'll tailor the form to this type.
+                </p>
               </div>
             </div>
           </section>

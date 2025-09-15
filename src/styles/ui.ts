@@ -33,7 +33,7 @@ export const btnSecondary =
   "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-[#192650] font-medium border border-[rgba(25,38,80,0.10)] hover:border-[rgba(25,38,80,0.20)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white";
 
 // Stepper (Publish)
-export const stepperTrack = "relative h-1 rounded-full bg-blue-600/15";
+export const stepperTrack = "h-1 rounded-full bg-blue-600/20";
 export const stepperFill = "h-1 rounded-full bg-[#2563EB]";
 export const stepDot = "w-8 h-8 rounded-full grid place-items-center border border-slate-200 bg-white";
 export const stepDotActive =
