@@ -36,8 +36,10 @@ export const btnSecondary =
 // Stepper (Publish)
 export const stepperTrack = "h-1 rounded-full bg-[rgba(25,38,80,0.12)]";
 export const stepperFill = "h-1 rounded-full bg-[#2563EB]";
-export const stepDotBase = "w-8 h-8 rounded-full grid place-items-center border border-[rgba(25,38,80,0.15)] bg-white";
-export const stepDotActive = "ring-2 ring-[#2563EB] ring-offset-2 ring-offset-white border-transparent";
+export const stepDotBase =
+  "w-8 h-8 rounded-full grid place-items-center bg-white/10 ring-1 ring-white/40";
+export const stepDotActive =
+  "bg-white ring-2 ring-[#2563EB] ring-offset-2 ring-offset-transparent";
 
 // Keep legacy exports for compatibility in existing components
 export const gradientBg = "min-h-screen bg-[linear-gradient(112deg,_#192650_0%,_#3866af_50%,_#ffffff_100%)]";
