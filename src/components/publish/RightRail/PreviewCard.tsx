@@ -6,31 +6,33 @@ export default function PreviewCard({ text }: { text: string }) {
   const hasPreview = (text ?? '').trim().length > 0;
   return (
     <div aria-label="Notice preview" className={`${UI.card} ${UI.cardHover} relative min-h-[360px] p-4 md:p-5 space-y-4`}>
-      <div>
-        <h3 className="font-medium text-brand-navy">Preview</h3>
-        <p className="mt-1 text-xs text-slate-600">Generated as you type</p>
-      </div>
-      <button
-        type="button"
-        className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-blue-600"
-        aria-label="Expand preview"
-        title="Expand preview"
-        onClick={() => setOpen(true)}
-      >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="h-4 w-4"
+      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/80">
+        <div>
+          <h3 className="text-[13px] font-medium text-slate-700">Preview</h3>
+          <p className="mt-1 text-xs text-slate-600">Generated as you type</p>
+        </div>
+        <button
+          type="button"
+          className="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          aria-label="Expand preview"
+          title="Expand preview"
+          onClick={() => setOpen(true)}
         >
-          <path d="M7.5 4H4a1 1 0 0 0-1 1v3.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M12.5 16H16a1 1 0 0 0 1-1v-3.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="m11 4 5 5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="m4 11 5 5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="h-4 w-4"
+          >
+            <path d="M7.5 4H4a1 1 0 0 0-1 1v3.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12.5 16H16a1 1 0 0 0 1-1v-3.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="m11 4 5 5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="m4 11 5 5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
       <div
         id="notice-preview"
         className="min-h-[300px] rounded-xl border border-slate-900/5 bg-white/80 p-4"

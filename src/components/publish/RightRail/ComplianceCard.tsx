@@ -33,10 +33,10 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
   }, {});
 
   const orderedGroups = [
-    { key: 'Applicant', label: 'APPLICANT' },
-    { key: 'Council', label: 'COUNCIL' },
-    { key: 'Dates', label: 'DATES' },
-    { key: 'Other', label: 'OTHER CHECKS' },
+    { key: 'Applicant', label: 'Applicant' },
+    { key: 'Council', label: 'Council' },
+    { key: 'Dates', label: 'Dates' },
+    { key: 'Other', label: 'Other checks' },
   ].filter((group) => grouped[group.key]?.length);
 
   return (
@@ -55,7 +55,7 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
           <div className="space-y-4">
             {orderedGroups.map((group) => (
               <div key={group.key}>
-                <h4 className="text-[11px] tracking-wide uppercase text-slate-500 mb-2">{group.label}</h4>
+                <h4 className="mb-2 text-[13px] font-medium text-slate-800 tracking-normal">{group.label}</h4>
                 <div className="space-y-1">
                   {grouped[group.key]?.map((item) => (
                     <div key={item.id} className="flex items-center py-1.5">
@@ -67,14 +67,14 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
                       {item.ok ? (
                         <span
                           aria-hidden
-                          className="inline-flex h-6 w-[64px] items-center justify-end text-emerald-600"
+                          className="inline-flex h-6 w-[64px] shrink-0 items-center justify-center text-emerald-600"
                         >
                           ✔
                         </span>
                       ) : (
                         <button
                           type="button"
-                          className="inline-flex h-9 w-[64px] items-center justify-end text-xs text-blue-700 underline underline-offset-2 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
+                          className="w-[64px] shrink-0 inline-flex h-9 items-center justify-center text-xs text-blue-700 underline underline-offset-2 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
                           onClick={() => handleFix(item.target)}
                           data-field={item.id}
                           aria-controls={item.target}
