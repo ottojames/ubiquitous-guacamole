@@ -38,10 +38,11 @@ export default function PreviewCard({ text }: { text: string }) {
         {hasPreview ? (
           <pre className="whitespace-pre-wrap text-[13px] leading-5 text-slate-800">{text}</pre>
         ) : (
-          <div className="space-y-2">
-            <div className="h-4 rounded bg-[linear-gradient(90deg,rgba(2,6,23,.06),rgba(2,6,23,.12),rgba(2,6,23,.06))] bg-[length:200%_100%] animate-shimmer" />
-            <div className="h-4 w-5/6 rounded bg-[linear-gradient(90deg,rgba(2,6,23,.06),rgba(2,6,23,.12),rgba(2,6,23,.06))] bg-[length:200%_100%] animate-shimmer" />
-            <div className="h-4 w-3/5 rounded bg-[linear-gradient(90deg,rgba(2,6,23,.06),rgba(2,6,23,.12),rgba(2,6,23,.06))] bg-[length:200%_100%] animate-shimmer" />
+          <div className="space-y-2 animate-pulse">
+            <div className="h-3 rounded bg-slate-200/70" />
+            <div className="h-3 w-11/12 rounded bg-slate-200/70" />
+            <div className="h-3 w-9/12 rounded bg-slate-200/70" />
+            <div className="h-3 w-7/12 rounded bg-slate-200/70" />
           </div>
         )}
       </div>
