@@ -46,12 +46,42 @@ export default function PublishPage() {
     const d = premisesData;
     const postcodeRe = /[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}/i;
     return [
-      { id: 'applicant', label: 'Applicant name + postal address (incl. postcode)', ok: !!(d?.applicantName && postcodeRe.test(d?.applicantPostcode || '')) },
-      { id: 'premises', label: 'Premises address (incl. postcode)', ok: !!(d?.premisesAddress && postcodeRe.test(d?.postcode || '')) },
-      { id: 'council', label: 'Council selected + email present', ok: !!(d?.councilName && /[^@\s]+@[^@\s]+\.[^@\s]+/.test(d?.councilEmail || '')) },
-      { id: 'dates', label: 'Application date set + deadline computed correctly', ok: !!(d?.applicationDate && representationDeadline) },
-      { id: 'activities', label: 'If any activity is enabled, weekly hours valid', ok: (d?.activities?.length || 0) > 0 && !issues.some((i) => /Activity.*invalid|licensable activity/i.test(i.message)) },
-      { id: 'boilerplate', label: 'Statutory boilerplate present in preview', ok: /It is an offence to knowingly or recklessly make a false statement/i.test(preview) },
+      {
+        id: 'applicant',
+        label: 'Applicant name + postal address (incl. postcode)',
+        ok: !!(d?.applicantName && postcodeRe.test(d?.applicantPostcode || '')),
+        target: 'applicantName',
+      },
+      {
+        id: 'premises',
+        label: 'Premises address (incl. postcode)',
+        ok: !!(d?.premisesAddress && postcodeRe.test(d?.postcode || '')),
+        target: 'premises-address',
+      },
+      {
+        id: 'council',
+        label: 'Council selected + email present',
+        ok: !!(d?.councilName && /[^@\s]+@[^@\s]+\.[^@\s]+/.test(d?.councilEmail || '')),
+        target: 'council',
+      },
+      {
+        id: 'dates',
+        label: 'Application date set + deadline computed correctly',
+        ok: !!(d?.applicationDate && representationDeadline),
+        target: 'applicationDate',
+      },
+      {
+        id: 'activities',
+        label: 'If any activity is enabled, weekly hours valid',
+        ok: (d?.activities?.length || 0) > 0 && !issues.some((i) => /Activity.*invalid|licensable activity/i.test(i.message)),
+        target: 'activities-grid',
+      },
+      {
+        id: 'boilerplate',
+        label: 'Statutory boilerplate present in preview',
+        ok: /It is an offence to knowingly or recklessly make a false statement/i.test(preview),
+        target: 'notice-preview',
+      },
     ];
   }, [premisesData, representationDeadline, issues, preview]);
   const canSubmit = checklist.every((c) => c.ok);
@@ -98,37 +128,51 @@ export default function PublishPage() {
     { label: 'Fill notice details', status: 'upcoming' },
     { label: 'Review & publish', status: 'upcoming' },
   ];
+  const noticeTypeHelpId = 'notice-type-help';
 
   return (
     <div className={`${UI.pageWrapLg} relative`} data-testid="publish-layout">
       {/* Hero header */}
-      <div className={`${UI.container} pt-16 md:pt-20 pb-10`}>
+      <div className={`${UI.container} pt-16 md:pt-20 pb-8`}>
         <h1 className={`${UI.heroH1} mb-2`}>Publish a notice</h1>
         <p className={`${UI.heroSub} mt-1`}>Guided, compliant, and instant proof</p>
-        <ol
-          className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-white/90"
-          aria-label="Publish steps"
-        >
-          {heroSteps.map((step, idx) => (
-            <li
-              key={step.label}
-              className="flex items-center gap-x-3 md:gap-x-4"
-              aria-current={step.status === 'current' ? 'step' : undefined}
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2" aria-hidden>
+              <div className={`${UI.stepperTrack}`} />
+            </div>
+            <ol
+              className="relative z-10 flex flex-wrap items-center gap-x-6 gap-y-4 text-white/90"
+              aria-label="Publish steps"
             >
-              <span
-                aria-hidden
-                className={`${UI.stepDotBase} ${step.status === 'current' ? UI.stepDotActive : ''}`}
-              />
-              <span className={`text-sm text-white/90 ${step.status === 'current' ? 'font-semibold' : 'font-medium'}`}>
-                <span className="sr-only">Step {idx + 1}: </span>
-                {step.label}
-              </span>
-            </li>
-          ))}
-        </ol>
+              {heroSteps.map((step, idx) => {
+                const isCurrent = step.status === 'current';
+                return (
+                  <li key={step.label} className="flex items-center gap-x-3 md:gap-x-4">
+                    <span
+                      className={`${UI.stepDot} ${isCurrent ? UI.stepDotActive : ''} transition-all duration-200`}
+                      aria-current={isCurrent ? 'step' : undefined}
+                      data-active={isCurrent ? 'true' : undefined}
+                    >
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full transition-colors duration-200 ${
+                          isCurrent ? 'bg-blue-600' : 'bg-slate-400/70'
+                        }`}
+                      />
+                    </span>
+                    <span className={`text-sm ${isCurrent ? 'font-semibold text-white' : 'font-medium text-white/80'}`}>
+                      <span className="sr-only">Step {idx + 1}: </span>
+                      {step.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
       </div>
       {/* Main content on light canvas */}
-      <div className={`${UI.container} ${UI.sectionY} grid md:grid-cols-12 gap-8 items-start`}>
+      <div className={`${UI.container} ${UI.sectionY} pt-12 md:pt-16 lg:pt-20 grid md:grid-cols-12 gap-8 items-start`}>
         {issues.length > 0 && (
           <div className="md:col-span-12">
             <ErrorSummary errors={issues} />
@@ -147,7 +191,10 @@ export default function PublishPage() {
               </button>
             </header>
 
-            <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
+            <div>
+              <NoticeTypeSelect value={noticeType} onChange={setNoticeType} helperTextId={noticeTypeHelpId} />
+              <p id={noticeTypeHelpId} className="mt-1 text-xs text-slate-600">We'll tailor the form to this type.</p>
+            </div>
           </section>
           {noticeType === 'premises' && (
             <PremisesForm
@@ -178,10 +225,14 @@ export default function PublishPage() {
           )}
         </main>
 
-        <aside className="md:col-span-4 md:sticky md:top-[calc(var(--headerH)+24px)] space-y-6">
+        <aside className="md:col-span-4 md:sticky md:top-24 space-y-4">
           <PreviewCard text={preview} />
           <ComplianceCard items={checklist} />
-          <KeyDatesCard applicationDate={premisesData?.applicationDate || ''} representationDeadline={representationDeadline} consultationDays={consultationDays} />
+          <KeyDatesCard
+            applicationDate={premisesData?.applicationDate || ''}
+            representationDeadline={representationDeadline}
+            consultationDays={consultationDays}
+          />
           <CostCard cost={cost} canSubmit={canSubmit} />
         </aside>
       </div>

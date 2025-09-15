@@ -30,38 +30,32 @@ export default function PublishPage() {
         <h1 className={`${UI.heroH1} mb-2`}>Publish a notice</h1>
         <p className={`${UI.heroSub} mt-1`}>Guided, compliant, and instant proof</p>
         <nav role="tablist" className="mt-4 flex gap-2">
-          {(() => {
-            const activeTab = (t: 'notice' | 'template') =>
-              t === tab
-                ? "rounded-xl bg-white text-blue-900 font-semibold ring-1 ring-white/60 shadow-sm"
-                : "rounded-xl bg-white/80 text-blue-800 hover:bg-white ring-1 ring-white/50";
+          {(
+            [
+              { key: 'notice', label: 'Upload from Notice' },
+              { key: 'template', label: 'Upload via Template' },
+            ] as const
+          ).map((option) => {
+            const isActive = tab === option.key;
             return (
-              <>
-          <button
-            role="tab"
-            aria-selected={tab === 'notice'}
-            aria-controls="notice-panel"
-            tabIndex={tab === 'notice' ? 0 : -1}
-            className={`${activeTab('notice')} px-4 h-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-transparent`}
-            data-testid="tab-trigger-notice"
-            onClick={() => setTab('notice')}
-          >
-            Upload from Notice
-          </button>
-          <button
-            role="tab"
-            aria-selected={tab === 'template'}
-            aria-controls="template-panel"
-            tabIndex={tab === 'template' ? 0 : -1}
-            className={`${activeTab('template')} px-4 h-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-transparent`}
-            data-testid="tab-trigger-template"
-            onClick={() => setTab('template')}
-          >
-            Upload via Template
-          </button>
-              </>
+              <button
+                key={option.key}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`${option.key}-panel`}
+                tabIndex={isActive ? 0 : -1}
+                className={`${UI.btnSecondary} h-10 px-4 text-sm transition-colors duration-200 focus:ring-offset-0 focus:ring-offset-transparent ${
+                  isActive
+                    ? 'bg-white text-blue-900 font-semibold shadow-sm border-white/70'
+                    : 'bg-white/80 text-blue-900/80 border-white/60 hover:bg-white/90'
+                }`}
+                data-testid={`tab-trigger-${option.key}`}
+                onClick={() => setTab(option.key)}
+              >
+                {option.label}
+              </button>
             );
-          })()}
+          })}
         </nav>
       </div>
       {/* Main content on light canvas */}

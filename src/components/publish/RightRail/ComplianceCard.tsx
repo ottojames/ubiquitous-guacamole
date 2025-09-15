@@ -7,7 +7,14 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
   const allGood = unresolved.length === 0;
 
   const handleFix = (target?: string) => {
-    if (onFix) onFix(target);
+    if (onFix) {
+      onFix(target);
+      return;
+    }
+    if (!target) return;
+    const el = document.getElementById(target);
+    el?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
   };
 
   const groupForLabel = (label: string) => {
@@ -26,10 +33,10 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
   }, {});
 
   const orderedGroups = [
-    { key: 'Applicant', label: 'Applicant' },
-    { key: 'Council', label: 'Council' },
-    { key: 'Dates', label: 'Dates' },
-    { key: 'Other', label: 'Other checks' },
+    { key: 'Applicant', label: 'APPLICANT' },
+    { key: 'Council', label: 'COUNCIL' },
+    { key: 'Dates', label: 'DATES' },
+    { key: 'Other', label: 'OTHER CHECKS' },
   ].filter((group) => grouped[group.key]?.length);
 
   return (
@@ -45,35 +52,32 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
             All checks passed — ready to publish
           </div>
         ) : (
-          <div className="space-y-3">
-            {orderedGroups.map((group, idx) => (
-              <div key={group.key} className={idx === 0 ? '' : 'pt-1'}>
-                <h4
-                  className={`text-[11px] font-semibold uppercase tracking-wide text-slate-600 ${idx === 0 ? 'mt-0' : 'mt-2'} mb-1`}
-                >
-                  {group.label}
-                </h4>
-                <div className="grid grid-cols-[1fr_auto] items-start gap-x-3 gap-y-2">
+          <div className="space-y-4">
+            {orderedGroups.map((group) => (
+              <div key={group.key}>
+                <h4 className="text-[11px] tracking-wide uppercase text-slate-500 mb-2">{group.label}</h4>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-3">
                   {grouped[group.key]?.map((item) => (
                     <React.Fragment key={item.id}>
                       <span
-                        className={`text-[13px] leading-5 ${item.ok ? 'text-green-700' : 'text-slate-700'}`}
+                        className={`pl-1.5 text-[13px] leading-5 ${item.ok ? 'text-emerald-700' : 'text-slate-700'}`}
                       >
                         {item.label}
                       </span>
                       {item.ok ? (
                         <span
                           aria-hidden
-                          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-white text-[10px]"
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] justify-self-end"
                         >
                           ✔
                         </span>
                       ) : (
                         <button
                           type="button"
-                          className="inline-flex h-8 items-center justify-center rounded-md border border-blue-200/70 bg-white px-3 text-xs font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
+                          className="inline-flex h-9 items-center justify-center rounded-lg border border-blue-200/70 bg-white px-4 text-xs font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white justify-self-end"
                           onClick={() => handleFix(item.target)}
                           data-field={item.id}
+                          aria-controls={item.target}
                         >
                           Fix this
                         </button>

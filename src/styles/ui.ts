@@ -34,12 +34,12 @@ export const btnSecondary =
   "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-[#192650] font-medium border border-[rgba(25,38,80,0.10)] hover:border-[rgba(25,38,80,0.20)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white";
 
 // Stepper (Publish)
-export const stepperTrack = "h-1 rounded-full bg-[rgba(25,38,80,0.12)]";
+export const stepperTrack = "relative h-1 w-full rounded-full bg-blue-600/15";
 export const stepperFill = "h-1 rounded-full bg-[#2563EB]";
-export const stepDotBase =
-  "w-8 h-8 rounded-full grid place-items-center bg-white/10 ring-1 ring-white/40";
+export const stepDot = "w-8 h-8 rounded-full grid place-items-center border border-slate-200 bg-white";
 export const stepDotActive =
-  "bg-white ring-2 ring-[#2563EB] ring-offset-2 ring-offset-transparent";
+  "w-9 h-9 ring-2 ring-blue-600 ring-offset-2 ring-offset-white text-blue-700 border-transparent";
+export const stepDotBase = stepDot;
 
 // Keep legacy exports for compatibility in existing components
 export const gradientBg = "min-h-screen bg-[linear-gradient(112deg,_#192650_0%,_#3866af_50%,_#ffffff_100%)]";
