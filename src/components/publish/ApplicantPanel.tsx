@@ -127,9 +127,9 @@ export default function ApplicantPanel({ applicantName, applicantEmail, councilN
             <p id="applicant-email-help" className="text-xs text-slate-500 mt-1">We send your confirmation here.</p>
           </div>
           <div data-error={!councilOk}>
-            <label htmlFor="council" className="block text-sm font-medium">Council<span className="text-rose-600">*</span></label>
+            <label htmlFor="councilName" className="block text-sm font-medium">Council<span className="text-rose-600">*</span></label>
             <select
-              id="council"
+              id="councilName"
               className="w-full rounded-lg border-slate-300 focus-visible:ring-2 focus-visible:ring-blue-500/30"
               value={selected?.id || ''}
               onChange={(e) => pickCouncil(e.target.value)}

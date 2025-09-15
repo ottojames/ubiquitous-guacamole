@@ -110,11 +110,11 @@ export default function GVOLForm({
           </div>
 
           <div>
-            <label htmlFor="council" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="councilName" className="block text-sm font-medium text-slate-700">
               Council
             </label>
             <select
-              id="council"
+              id="councilName"
               value={form.councilPack || ''}
               onChange={(e) => selectPack(e.target.value)}
               className={inputClass}
