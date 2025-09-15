@@ -41,14 +41,14 @@ export default function Checklist(props: Props) {
     }
     if (!target) return;
     const el = document.getElementById(target) as HTMLElement | null;
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
   };
 
   const allGood = items.every((i) => i.ok);
 
   return (
-    <div className={UI.card + ' p-5'} role="region" aria-label="Compliance checklist">
+    <div className={`${UI.card} ${UI.cardHover} p-5`} role="region" aria-label="Compliance checklist">
       <h3 className="mb-3 text-sm font-semibold tracking-tight text-brand-navy">Compliance checklist</h3>
       <ul className="space-y-2 text-sm">
         <AnimatePresence initial={false}>
@@ -85,7 +85,7 @@ export default function Checklist(props: Props) {
                 </div>
                 {!item.ok && (
                   <button
-                    className="ml-4 rounded-md border px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
+                    className={`${UI.btnSecondary} ml-4 py-1 px-2 text-xs`}
                     onClick={() => handleFix(item.target)}
                   >
                     Fix this
@@ -101,4 +101,3 @@ export default function Checklist(props: Props) {
     </div>
   );
 }
-

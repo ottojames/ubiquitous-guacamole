@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
+import * as UI from '@/styles/ui';
 import {
   FileText, MapPin, CheckCircle2, ClipboardCopy, CopyCheck,
   MessageCircle, Printer, ArrowRight, Menu, X,
@@ -123,10 +124,19 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeHash, setActiveHash] = useState<string>(typeof window !== "undefined" ? window.location.hash || "" : "");
 
+  // Hysteresis-free compact header using IntersectionObserver on sentinel
   useEffect(() => {
-    const onScroll = () => setCompactNav(window.scrollY > 12);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    const sentinel = document.getElementById("header-sentinel");
+    if (!sentinel) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        setCompactNav(!e.isIntersecting);
+      },
+      { rootMargin: "0px 0px 0px 0px", threshold: 1 }
+    );
+    io.observe(sentinel);
+    return () => io.disconnect();
   }, []);
   useEffect(() => {
     const fn = () => setActiveHash(window.location.hash || "");
@@ -245,12 +255,15 @@ export default function Home() {
   const closedCount = notices.filter(n => n.status === "Closed").length;
 
   return (
-    <div className="bg-[#f7f7f7] text-[#222d35] min-h-screen flex flex-col relative font-sans">
+    <div className={`${UI.pageWrap} relative flex flex-col font-sans`}>
       <style>{fontImport}</style>
 
       {/* -------- HEADER: sticky, compact-on-scroll, one primary CTA -------- */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
-        <div className={`max-w-6xl mx-auto px-4 sm:px-6 transition-[height] ${compactNav ? "h-14" : "h-[72px]"}`}>
+      <header
+        className={`sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 ${compactNav ? "bg-white/90 shadow-[0_1px_0_0_rgba(2,6,23,0.06)]" : "bg-white/75 border-b border-transparent"}`}
+        style={{ height: "var(--headerH)" }}
+      >
+        <div className={`${UI.container} h-full`}>
           <div className="h-full flex items-center justify-between">
             {/* Left: logo + desktop nav */}
             <div className="flex items-center gap-6">
@@ -278,16 +291,11 @@ export default function Home() {
 
             {/* Right: ghost + primary */}
             <div className="hidden md:flex items-center gap-3">
-              <a
-                href="#signin"
-                className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
-                Sign in
-              </a>
+              <a href="#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
-                className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`${UI.btnPrimary} h-11 py-0 text-sm`}
               >
                 Publish a notice
               </a>
@@ -298,7 +306,7 @@ export default function Home() {
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
-                className="h-10 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`${UI.btnPrimary} h-10 py-0 text-sm`}
                 aria-label="Publish a notice"
               >
                 <FileText className="w-4 h-4 mr-1" aria-hidden="true" /> Publish
@@ -347,16 +355,11 @@ export default function Home() {
                 ))}
               </nav>
               <div className="mt-auto flex items-center gap-3">
-                <a
-                  href="#signin"
-                  className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  Sign in
-                </a>
+                <a href="#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
                 <a
                   href="/publish"
                   onClick={() => { setMobileOpen(false); track("publish_started", { audience: "public" }); }}
-                  className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className={`${UI.btnPrimary} h-11 py-0 text-sm`}
                 >
                   Publish a notice
                 </a>
@@ -365,45 +368,33 @@ export default function Home() {
           </div>
         )}
       </header>
+      {/* Sentinel right after header */}
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
 
-      {/* -------- HERO WRAPPER (gradient kept) -------- */}
-      <div
-        className="relative w-full"
-        style={{
-          background: "linear-gradient(112deg, #192650 0%, #3866af 50%, #ffffff 100%)",
-          clipPath: "polygon(0 0, 100% 0, 100% 88%, 0 100%)",
-        }}
-      >
+      {/* -------- HERO WRAPPER -------- */}
+      <div className="relative w-full">
         {/* HERO — tool-first, solid panel under input */}
-        <section className="w-full flex flex-col items-center justify-center relative overflow-hidden" style={{ background: "none" }}>
-          {/* overlays */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ zIndex: 1, background: "radial-gradient(ellipse at 65% 40%, rgba(255,255,255,0.24) 0%, transparent 80%)", mixBlendMode: "lighten" }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{ zIndex: 1, pointerEvents: "none", background: "linear-gradient(120deg, rgba(53,136,255,0.70) 0%, rgba(120, 126, 255, 0.60) 50%, rgba(204,148,255,0.6) 100%)", mixBlendMode: "lighten" }}
-          />
+        <section className="w-full flex flex-col items-center justify-center relative overflow-hidden">
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 w-full">
-            {/* H1 (56) — two lines max, tighter tracking */}
-            <h1 className="font-extrabold text-white drop-shadow leading-[1.12] tracking-tight" style={{ fontSize: "56px", letterSpacing: "-0.02em" }}>
-              Search, publish, and verify statutory notices — instantly, with an audit trail
-            </h1>
-            <p className="mt-2 text-white/90 text-lg max-w-2xl">
-              Give residents a voice. Keep licensing transparent and accountable.
-            </p>
+          <div className={`relative z-10 ${UI.container} w-full`}>
+            <div className="pt-16 md:pt-20 pb-12">
+              <h1 className={UI.heroH1}>
+                Search, publish, and verify statutory notices — instantly, with an audit trail
+              </h1>
+              <p className={`${UI.heroSub} mt-4`}>
+                Give residents a voice. Keep licensing transparent and accountable.
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setShowExplainer(true)}
-              className="mt-2 text-sm text-white underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded"
+              className="mt-2 text-sm text-white/85 hover:text-white underline focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-transparent rounded"
             >
               What is a statutory notice?
             </button>
 
             {/* Solid panel for the tool */}
-            <div className="relative rounded-2xl bg-white/95 ring-1 ring-slate-200 shadow-[0_8px_24px_rgba(2,6,23,.06)] p-3 md:p-4">
+            <div className={`relative ${UI.card} ${UI.cardHover} p-3 md:p-4`}>
               <form onSubmit={handleSearch} role="search" aria-label="Search notices by postcode or ward" className="flex items-center gap-2" noValidate>
                 <label htmlFor="postcode" className="sr-only">Search by postcode or ward</label>
 
@@ -418,7 +409,7 @@ export default function Home() {
                     value={postcode}
                     onChange={(e) => setPostcode(e.target.value)}
                     onKeyDown={onKeyDown}
-                    className="w-full h-14 rounded-xl px-4 bg-white text-gray-900 placeholder:text-slate-400 shadow-sm ring-1 ring-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className={`h-14 w-full bg-white text-[#0f172a] border border-[rgba(25,38,80,0.12)] rounded-lg px-3 text-[15px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
                     aria-describedby="search-examples"
                     aria-autocomplete="list"
                     aria-expanded={suggestions.length > 0}
@@ -430,7 +421,7 @@ export default function Home() {
                       id="area-suggestions"
                       ref={listboxRef}
                       role="listbox"
-                      className="absolute z-20 mt-2 w-full rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_rgba(2,6,23,.06)] overflow-hidden"
+                      className={`absolute z-20 mt-2 w-full overflow-hidden ${UI.card}`}
                     >
                       {suggestions.map((s, idx) => (
                         <li
@@ -456,7 +447,7 @@ export default function Home() {
                   type="button"
                   onClick={handleGeo}
                   disabled={geoLoading}
-                  className="h-14 px-4 rounded-xl bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className={`${UI.btnSecondary} h-14 py-0 disabled:opacity-60 focus:ring-blue-600 focus:ring-offset-transparent`}
                 >
                   {geoLoading ? "Locating…" : "Use my location"}
                 </button>
@@ -464,7 +455,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={searching}
-                  className="h-14 px-5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className={`${UI.btnPrimary} h-14 py-0 text-sm disabled:opacity-60 focus:ring-blue-600 focus:ring-offset-transparent`}
                   aria-label="Search now"
                 >
                   {searching ? <Spinner /> : "Search now"}
@@ -475,34 +466,32 @@ export default function Home() {
               {geoError && <p className="mt-1 text-xs text-rose-600 px-1">{geoError}</p>}
             </div>
 
-            <FilterBar filters={filters} setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))} />
+            <div className="mt-2.5">
+              <FilterBar filters={filters} setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))} />
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => { setFilters((prev) => ({ ...prev, status: "Open" })); handleSearch(); }}
-                className="px-3 py-2 text-sm rounded-lg bg-white/80 ring-1 ring-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`${UI.btnSecondary} h-9 py-0 text-sm focus:ring-blue-600 focus:ring-offset-transparent`}
               >
                 Open consultations near me
               </button>
               <button
                 type="button"
                 onClick={() => setMapView((v) => !v)}
-                className="px-3 py-2 text-sm rounded-lg bg-white/80 ring-1 ring-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`${UI.btnSecondary} h-9 py-0 text-sm focus:ring-blue-600 focus:ring-offset-transparent`}
               >
                 {mapView ? "List view" : "Map view"}
               </button>
             </div>
 
-            {/* chips under input */}
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              {activityStats.map((s, i) => (
-                <span key={i} className="inline-flex items-center gap-2 h-7 px-2.5 rounded-full text-xs bg-white/90 text-slate-800 ring-1 ring-slate-200">
-                  {s.icon}
-                  <span className="tabular-nums font-semibold">{s.value}</span>
-                  <span className="opacity-80">{s.label}</span>
-                </span>
-              ))}
-            </div>
+            {/* supporting stats under input */}
+            <p className="mt-5 text-sm text-white/70">
+              <span className="tabular-nums">1,842+</span> notices ·
+              <span className="tabular-nums"> 12,455+</span> comments ·
+              <span className="tabular-nums"> 92+</span> councils
+            </p>
 
             <div className="mt-4 flex items-center gap-4 text-white/90 text-sm font-medium">
               <span>No sign-up needed</span>
@@ -514,36 +503,51 @@ export default function Home() {
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
-                className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className={`${UI.btnSecondary} h-9 px-4 py-0 text-xs focus:ring-blue-600 focus:ring-offset-transparent`}
               >
                 Publish a notice
               </a>
             </div>
           </div>
+          {/* Hero band now fades via CSS background layer */}
         </section>
       </div>
 
+      <div className="mx-auto my-8 md:my-10 h-px w-full max-w-[1200px] bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+
       {/* -------- TESTIMONIALS & LOGOS -------- */}
-      <section className="w-full bg-white py-10 flex flex-col items-center border-b border-blue-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row gap-8 items-center justify-between">
-          <div className="flex-1">
-            <span className="text-blue-700 italic font-medium text-xl md:text-2xl">{testimonials[testiIdx].text}</span>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs text-blue-800 font-semibold">{testimonials[testiIdx].name}</span>
-              <span className="text-gray-400 text-xs">| {testimonials[testiIdx].council}</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-6 [&_img]:h-7 [&_img]:w-auto grayscale hover:grayscale-0 transition">
-            {councilLogos.map((l) => (
-              <img key={l.alt} src={l.src} alt={l.alt} width={l.width} height={l.height} loading="lazy" className="opacity-70 hover:opacity-100" />
-            ))}
-          </div>
-        </div>
-      </section>
+      <section className="w-full flex flex-col items-center">
+  <div className={`${UI.container} ${UI.sectionY} flex flex-col md:flex-row gap-8 items-center justify-between`}>
+    <div className="flex-1">
+      <span className="relative block max-w-[58ch] text-blue-700 italic font-medium text-xl md:text-2xl">
+        <span aria-hidden className="absolute -left-5 -top-2 text-blue-200/40 text-3xl leading-none select-none">“</span>
+        {testimonials[testiIdx].text}
+      </span>
+      <div className="flex items-center gap-2 mt-2 text-xs text-blue-800/90">
+        — {testimonials[testiIdx].name} <span className="text-gray-400">| {testimonials[testiIdx].council}</span>
+      </div>
+    </div>
+    <div className="flex flex-wrap items-center justify-center gap-5 md:gap-6 [&_img]:h-7 [&_img]:w-auto grayscale hover:grayscale-0 transition">
+      {councilLogos.map((l) => (
+        <img
+          key={l.alt}
+          src={l.src}
+          alt={l.alt}
+          width={l.width}
+          height={l.height}
+          loading="lazy"
+          className="opacity-60 hover:opacity-100 transition-opacity"
+        />
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* -------- RESULTS / NOTICE CARDS -------- */}
-      <section id="notices" className="w-full bg-[#f9fafa] py-12 px-4 sm:px-6">
-        <h2 className="text-[32px] font-extrabold text-blue-900 text-center mb-6 leading-tight">
+      <section id="notices" className="w-full pt-12 md:pt-14 pb-16 md:pb-20 scroll-mt-[84px]">
+        <div className={UI.container}>
+        <h2 className={`${UI.h2} text-center mb-6 max-w-[60ch] mx-auto`}>
           Instantly <span className="text-blue-600">search, publish, and verify</span> legal notices
         </h2>
 
@@ -551,15 +555,15 @@ export default function Home() {
         <p className="sr-only" aria-live="polite">{resultsCount} results</p>
 
         {mapView ? (
-          <div className="mx-auto max-w-6xl h-64 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-700">
+          <div className="mx-auto h-64 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-700">
             Map view: {openCount} open / {closedCount} closed
           </div>
         ) : (
-          <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mx-auto mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           {notices.map((n) => {
             const dl = daysLeft(n.deadline);
             return (
-              <article key={n.id} className="bg-white rounded-2xl p-6 shadow-[0_8px_24px_rgba(2,6,23,.06)] ring-1 ring-blue-50 flex flex-col min-h-[280px]" aria-label={`Notice: ${n.type}, ${n.address}`}>
+              <article key={n.id} className={`${UI.card} ${UI.cardHover} p-6 flex flex-col min-h-[280px]`} aria-label={`Notice: ${n.type}, ${n.address}`}>
                 {/* metadata */}
                 <div className="flex items-center gap-2 text-[13px] text-slate-700 mb-2">
                   <span className={`inline-flex items-center h-6 px-2 rounded-full text-xs ${n.type === 'Planning' ? 'bg-purple-100 text-purple-800' : n.type === 'Traffic Order' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`} aria-label={`Category: ${n.type}`}>{n.type}</span>
@@ -578,7 +582,7 @@ export default function Home() {
                 {/* actions */}
                 <div className="mt-auto pt-2 flex items-center justify-between border-t border-blue-50">
                   <button
-                    className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded"
+                    className="inline-flex items-center gap-2 text-blue-600 text-sm font-medium underline underline-offset-2 transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
                     onClick={() => { const open = expandedCard === n.id ? null : n.id; setExpandedCard(open); track("notice_open", { id: n.id, source: "card", audience: "public" }); }}
                     aria-expanded={expandedCard === n.id}
                   >
@@ -590,7 +594,7 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => track("pdf_open", { id: n.id, size_kb: n.pdfSizeKb, audience: "public" })}
-                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded"
+                    className="inline-flex items-center gap-2 text-blue-600 text-sm font-medium underline underline-offset-2 transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
                   >
                     Download proof (PDF)
                   </a>
@@ -612,13 +616,13 @@ export default function Home() {
                     <div className="flex gap-2 flex-wrap mt-2">
                       <button
                         onClick={() => copyProofId(n.proofId)}
-                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
                         aria-label="Copy proof ID"
                       >
                         {copySuccess === n.proofId ? <CopyCheck /> : <ClipboardCopy />} Proof ID
                       </button>
                       <button
-                        className="text-xs text-blue-600 underline hover:text-blue-700 inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-600 rounded"
+                        className="text-xs text-blue-600 underline hover:text-blue-700 inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
                         onClick={() => window.print()}
                       >
                         <Printer className="mr-1 w-4 h-4" aria-hidden="true" /> Print/download
@@ -631,36 +635,33 @@ export default function Home() {
           })}
           </div>
         )}
+        </div>
       </section>
 
       {/* -------- PUBLISH (three steps) -------- */}
-      <section id="publish" className="relative py-20 bg-gray-50 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-200 rounded-full blur-2xl opacity-40 pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-56 h-56 bg-indigo-200 rounded-full blur-2xl opacity-40 pointer-events-none" />
-
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section id="publish" className={`relative pt-12 md:pt-16 pb-16 md:pb-24 scroll-mt-[84px]`}>
+  {/* optional tiny accent if you want one:
+  <div className="pointer-events-none absolute -top-16 left-1/4 w-72 h-72 rounded-full blur-3xl opacity-25 bg-blue-200/60" /> */}
+  <div className={UI.container}>
           <header className="text-center">
             <h2 className="text-[32px] font-extrabold text-blue-900">Publish in three steps</h2>
             <p className="mt-2 text-[16px] text-blue-700">Thorough and compliant</p>
           </header>
 
-          {/* connector line through icon centres */}
-          <div className="relative mt-8 hidden md:block">
-            <div className="mx-auto max-w-6xl h-px bg-slate-200/60" />
-          </div>
+          
 
-          <ol className="mt-8 grid gap-6 md:grid-cols-3">
+          <ol className="mt-5 md:mt-7 grid gap-6 md:grid-cols-3">
             {[
               { n: 1, title: "Fill the form", desc: "Guided and validated", Icon: FileText },
               { n: 2, title: "Choose area", desc: "Postcode, ward or UK-wide", Icon: MapPin },
               { n: 3, title: "Download audit certificate", desc: "Instant proof", Icon: CheckCircle2 },
             ].map(({ n, title, desc, Icon }, i) => (
               <li key={i} className="relative pt-10">
-                <span aria-hidden="true" className="absolute top-[6px] left-0 right-0 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                <span aria-hidden="true" className="absolute top-[5px] left-0 right-0 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100/60">
                   <Icon className="h-6 w-6" aria-hidden="true" />
                 </span>
 
-                <div className="relative min-h-[172px] rounded-2xl bg-white p-6 ring-1 ring-blue-100 shadow-[0_8px_24px_rgba(2,6,23,.06)]">
+                <div className="relative min-h-[172px] rounded-2xl bg-white p-6 ring-1 ring-blue-100/60 shadow-[0_8px_24px_rgba(2,6,23,.06)]">
                   <span className="sr-only">{`Step ${n} of 3`}</span>
                   <span className="absolute -top-2 left-4 inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold ring-1 ring-blue-100">
                     {n}
@@ -675,10 +676,10 @@ export default function Home() {
 
           <p className="mt-4 text-sm text-slate-700 text-center">Checks for required fields, timings, and statutory wording.</p>
 
-          <div className="mt-10 flex justify-center">
+          <div className="mt-16 md:mt-20 flex justify-center">
             <a
               href="/publish"
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className={`${UI.btnPrimary} h-11 py-0 text-sm inline-flex items-center gap-2`}
               onClick={() => track("publish_started", { audience: "public" })}
             >
               Publish a notice
@@ -689,10 +690,10 @@ export default function Home() {
       </section>
 
       {/* -------- COUNCILS SECTION -------- */}
-      <section id="for-councils" className="bg-[#f7f9fb] py-16">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-900">How it works for councils</h2>
-          <p className="mt-4 text-sm text-blue-800/80">Trusted by 40+ UK councils</p>
+      <section id="for-councils" className={`${UI.sectionY} scroll-mt-[84px]`}>
+        <div className={`${UI.container} text-center`}>
+          <h2 className={`${UI.h2}`}>How it works for councils</h2>
+          <p className={`${UI.small} mt-4 text-blue-800/80`}>Trusted by 40+ UK councils</p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 opacity-80">
             {councilLogos.map((l) => (
@@ -727,7 +728,7 @@ export default function Home() {
                 Icon: Archive,
               },
             ].map(({ Icon, title, blurb, link }) => (
-              <div key={title} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 text-left">
+              <div key={title} className={`${UI.card} ${UI.cardHover} p-6 text-left`}>
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-700">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </div>
@@ -735,7 +736,7 @@ export default function Home() {
                 <p className="mt-2 text-blue-900/80">{blurb}</p>
                 {link && (
                   <a
-                    className="mt-4 inline-flex items-center text-blue-700 hover:text-blue-800 font-medium"
+                    className="mt-4 inline-flex items-center text-blue-700 hover:text-blue-800 font-medium underline underline-offset-2"
                     href={link.href}
                   >
                     {link.label}
@@ -772,7 +773,7 @@ export default function Home() {
       </section>
 
       {/* -------- FOOTER -------- */}
-      <footer className="max-w-6xl mx-auto py-7 px-4 sm:px-6 flex flex-wrap gap-6 text-sm text-gray-500 justify-center border-t border-blue-100 mt-10 mb-6">
+      <footer className={`${UI.container} py-7 flex flex-wrap gap-6 text-sm text-gray-500 justify-center border-t border-blue-100 mt-10 mb-6`}>
         <a href="/about" className="hover:underline hover:text-blue-700 transition">About Civic Notices</a>
         <a href="/docs" className="hover:underline hover:text-blue-700 transition">Docs / Help</a>
         <a href="/privacy" className="hover:underline hover:text-blue-700 transition">Privacy</a>
@@ -791,7 +792,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setShowExplainer(false)}
-              className="mt-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className={`${UI.btnPrimary} h-10 py-0 text-sm mt-2`}
             >
               Close
             </button>

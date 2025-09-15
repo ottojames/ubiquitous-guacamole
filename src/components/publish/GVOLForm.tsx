@@ -196,7 +196,7 @@ export default function GVOLForm({
       </section>
 
       <div className="pt-2">
-        <button type="submit" disabled={saving} className={UI.pillBtn}>
+        <button type="submit" disabled={saving} className={UI.btnPrimary}>
           {saving ? 'Saving…' : 'Submit'}
         </button>
       </div>

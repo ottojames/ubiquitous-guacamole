@@ -8,14 +8,14 @@ interface Props {
 
 export default function FilterBar({ filters, setFilters }: Props) {
   return (
-    <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
       <div>
         <label htmlFor="filter-type" className="text-sm font-medium text-slate-700">Type</label>
         <select
           id="filter-type"
           value={filters.type}
           onChange={(e) => setFilters({ type: e.target.value })}
-          className="mt-1 block w-full rounded-lg border-slate-300 text-sm"
+          className={`mt-1 h-11 block w-full text-sm rounded-lg border border-[rgba(25,38,80,0.12)] bg-white text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
         >
           <option value="">All</option>
           <option value="Premises Licence">Premises</option>
@@ -30,7 +30,7 @@ export default function FilterBar({ filters, setFilters }: Props) {
           id="filter-status"
           value={filters.status}
           onChange={(e) => setFilters({ status: e.target.value })}
-          className="mt-1 block w-full rounded-lg border-slate-300 text-sm"
+          className={`mt-1 h-11 block w-full text-sm rounded-lg border border-[rgba(25,38,80,0.12)] bg-white text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
         >
           <option value="">All</option>
           <option value="Open">Open</option>
@@ -44,7 +44,7 @@ export default function FilterBar({ filters, setFilters }: Props) {
           type="date"
           value={filters.start}
           onChange={(e) => setFilters({ start: e.target.value })}
-          className="mt-1 block w-full rounded-lg border-slate-300 text-sm"
+          className={`mt-1 h-11 block w-full text-sm rounded-lg border border-[rgba(25,38,80,0.12)] bg-white text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
         />
       </div>
       <div>
@@ -54,7 +54,7 @@ export default function FilterBar({ filters, setFilters }: Props) {
           type="date"
           value={filters.end}
           onChange={(e) => setFilters({ end: e.target.value })}
-          className="mt-1 block w-full rounded-lg border-slate-300 text-sm"
+          className={`mt-1 h-11 block w-full text-sm rounded-lg border border-[rgba(25,38,80,0.12)] bg-white text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
         />
       </div>
       <div>
@@ -65,7 +65,7 @@ export default function FilterBar({ filters, setFilters }: Props) {
           value={filters.authority}
           onChange={(e) => setFilters({ authority: e.target.value })}
           placeholder="Council"
-          className="mt-1 block w-full rounded-lg border-slate-300 text-sm"
+          className={`mt-1 h-11 block w-full text-sm rounded-lg border border-[rgba(25,38,80,0.12)] bg-white text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
         />
       </div>
     </div>

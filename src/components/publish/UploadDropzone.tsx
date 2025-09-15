@@ -132,8 +132,8 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
           <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
           <div className="flex gap-2">
-            {state === 'error' && <button className="rounded-md border px-2 py-1" onClick={retry}>Retry</button>}
-            <button className="rounded-md border px-2 py-1" onClick={remove}>Remove</button>
+            {state === 'error' && <button className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white" onClick={retry}>Retry</button>}
+            <button className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white" onClick={remove}>Remove</button>
           </div>
         </div>
       )}

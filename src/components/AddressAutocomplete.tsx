@@ -10,10 +10,27 @@ export type AddressOption = {
   town?: string;
   postcode?: string;
   lines?: string[];
+  uprn?: string;
   // internal fields used by AsyncCombobox rendering
   id?: string;
   label?: string;
 };
+
+// Small helper kept for tests and reuse
+export function mapAddress(r: any): AddressOption {
+  return {
+    id: String(r.id ?? r.label ?? r.postcode ?? Math.random()),
+    label: r.label ?? [r.line1, r.city, r.postcode].filter(Boolean).join(", "),
+    line1: r.line1 ?? r.lines?.[0],
+    line2: r.line2 ?? r.lines?.[1],
+    line3: r.line3 ?? r.lines?.[2],
+    city: r.city ?? r.town,
+    town: r.town,
+    postcode: r.postcode,
+    lines: r.lines,
+    uprn: r.uprn,
+  } as AddressOption;
+}
 
 export default function AddressAutocomplete({ onSelect, label = "Premises Address", inputTestId = "address-input" }: { onSelect: (a: AddressOption) => void; label?: string; inputTestId?: string }) {
   const fetchOptions = async (q: string) => {
@@ -22,17 +39,7 @@ export default function AddressAutocomplete({ onSelect, label = "Premises Addres
     const json = await res.json();
     const results = (json.results || []) as any[];
     // Map backend records into AddressOption shape with label for display
-    return results.map((r) => ({
-      id: String(r.id ?? r.label ?? r.postcode ?? Math.random()),
-      label: r.label ?? [r.line1, r.city, r.postcode].filter(Boolean).join(", "),
-      line1: r.line1 ?? r.lines?.[0],
-      line2: r.line2 ?? r.lines?.[1],
-      line3: r.line3 ?? r.lines?.[2],
-      city: r.city ?? r.town,
-      town: r.town,
-      postcode: r.postcode,
-      lines: r.lines,
-    })) as AddressOption[];
+    return results.map(mapAddress) as AddressOption[];
   };
   return (
     <AsyncCombobox<AddressOption>

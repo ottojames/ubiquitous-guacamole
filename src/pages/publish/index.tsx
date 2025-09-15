@@ -95,61 +95,88 @@ export default function PublishPage() {
   const autoFocusRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className={UI.gradientBg} data-testid="publish-layout">
-      <div className="px-4 md:px-6 lg:px-8">
-        <h1 className={UI.h1 + ' mb-6'}>Publish a notice</h1>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
-          <div className="text-sm text-brand-mist">
-            Mode:&nbsp;
-            <span className="inline-flex items-center gap-2">
-              <span className={UI.ghostPill}>Upload Blue Notice</span>
-              <span className="text-brand-slate">/</span>
-              <span className={UI.ghostPill}>Build from Template</span>
-            </span>
+    <div className={`${UI.pageWrapLg} relative`} data-testid="publish-layout">
+      {/* Hero header */}
+      <div className={`${UI.container} pt-16 md:pt-20 pb-6`}>
+        <h1 className={`${UI.heroH1} mb-2`}>Publish a notice</h1>
+        <p className={`${UI.heroSub} mt-1`}>Guided, compliant, and instant proof</p>
+        {/* Mode tabs on gradient */}
+        <nav role="tablist" className="mt-4 flex gap-2">
+          <button
+            className={`rounded-xl bg-white text-blue-900 font-semibold ring-1 ring-white/60 shadow-sm px-4 h-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-transparent`}
+            data-active={true}
+            aria-label="Upload from Notice"
+          >
+            Upload from Notice
+          </button>
+          <button
+            className={`rounded-xl bg-white/80 text-blue-800 hover:bg-white ring-1 ring-white/50 px-4 h-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-transparent`}
+            data-active={false}
+            aria-label="Upload via Template"
+          >
+            Upload via Template
+          </button>
+        </nav>
+      </div>
+      {/* Main content on light canvas */}
+      <div className={`${UI.container} ${UI.sectionY} grid md:grid-cols-12 gap-8 items-start`}>
+        {issues.length > 0 && (
+          <div className="md:col-span-12">
+            <ErrorSummary errors={issues} />
           </div>
-        </div>
+        )}
 
-      {issues.length > 0 && <ErrorSummary errors={issues} />}
+        <main className="md:col-span-8 space-y-6">
+            {/* First form surface: Notice type selection as a real card */}
+            <section className={`${UI.card} ${UI.cardHover} p-6`}>
+              <header className="mb-3">
+                <h2 className={UI.cardHeader}>Confirm notice type</h2>
+                <p className="text-sm text-slate-600 mt-1">Start by confirming your notice type. You can change this later.</p>
+              </header>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <main className="md:col-span-2 space-y-6">
-          {noticeType === 'premises' && (
-            <PremisesForm
-              value={premisesData}
-              onChange={setPremisesData}
-              onAuthorityChange={handleAuthorityChange}
-              saving={false}
-              autoFocusRef={autoFocusRef}
-            />
-          )}
-          {noticeType === 'gvol' && (
-            <GVOLForm
-              value={gvolData}
-              onChange={setGvolData}
-              onAuthorityChange={handleAuthorityChange}
-              saving={false}
-              autoFocusRef={autoFocusRef}
-            />
-          )}
-          {noticeType === 'traffic' && (
-            <TrafficForm
-              value={trafficData}
-              onChange={setTrafficData}
-              onAuthorityChange={handleAuthorityChange}
-              saving={false}
-              autoFocusRef={autoFocusRef}
-            />
-          )}
+              <div className="space-y-3">
+                <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
+              </div>
+
+              <footer className="mt-4 flex justify-end">
+                <button className={`${UI.btnPrimary} h-10 py-0`}>Continue</button>
+              </footer>
+            </section>
+            {noticeType === 'premises' && (
+              <PremisesForm
+                value={premisesData}
+                onChange={setPremisesData}
+                onAuthorityChange={handleAuthorityChange}
+                saving={false}
+                autoFocusRef={autoFocusRef}
+              />
+            )}
+            {noticeType === 'gvol' && (
+              <GVOLForm
+                value={gvolData}
+                onChange={setGvolData}
+                onAuthorityChange={handleAuthorityChange}
+                saving={false}
+                autoFocusRef={autoFocusRef}
+              />
+            )}
+            {noticeType === 'traffic' && (
+              <TrafficForm
+                value={trafficData}
+                onChange={setTrafficData}
+                onAuthorityChange={handleAuthorityChange}
+                saving={false}
+                autoFocusRef={autoFocusRef}
+              />
+            )}
         </main>
 
-        <aside className="md:col-span-1 sticky top-6 space-y-4">
+        <aside className="md:col-span-4 md:sticky md:top-[var(--headerH)] space-y-4">
           <PreviewCard text={preview} />
           <ComplianceCard items={checklist} />
           <KeyDatesCard applicationDate={premisesData?.applicationDate || ''} representationDeadline={representationDeadline} consultationDays={consultationDays} />
           <CostCard cost={cost} canSubmit={canSubmit} />
         </aside>
-        </div>
       </div>
     </div>
   );

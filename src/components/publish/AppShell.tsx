@@ -1,5 +1,6 @@
 import React from 'react';
 import Stepper from './Stepper';
+import * as UI from '@/styles/ui';
 
 type AppShellProps = {
   title: string;
@@ -13,9 +14,9 @@ type AppShellProps = {
 
 export default function AppShell({ title, steps, currentStep, onStepChange, rail, children, footer }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#192650] via-[#3866af] to-white">
+    <div className={`${UI.pageWrap} relative`}>
       <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/70 border-b border-slate-200">
-        <div className="mx-auto max-w-screen-lg px-6 md:px-8 py-3">
+        <div className={`${UI.container} py-3`}>
           <div className="flex items-center justify-between">
             <div className="text-slate-900 font-semibold">Public Notice Portal</div>
             <nav className="text-sm text-slate-600">Help</nav>
@@ -23,10 +24,10 @@ export default function AppShell({ title, steps, currentStep, onStepChange, rail
         </div>
       </header>
 
-      <div className="mx-auto max-w-screen-lg px-6 md:px-8 py-8">
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-slate-200">
+      <div className={`${UI.container} ${UI.sectionY}`}>
+        <div className={`${UI.card} ${UI.cardHover}`}>
           <div className="p-6 md:p-8 border-b border-slate-200">
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">{title}</h1>
+            <h1 className={`${UI.h2}`}>{title}</h1>
             <div className="mt-4">
               {steps && steps.length > 0 && (
                 <Stepper steps={steps} currentStep={currentStep} onStepChange={onStepChange} />

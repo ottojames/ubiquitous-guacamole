@@ -8,18 +8,19 @@ import CostCard from '@/components/publish/RightRail/CostCard';
 import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 import * as UI from '@/styles/ui';
-import type { NoticeDraft } from '@/types/notice';
+import type { NoticeDraft, NoticeType } from '@/types/notice';
 import { sha256Hex } from '@/lib/hash';
 import ApplicantCouncilSection from './sections/ApplicantCouncilSection';
 import ApplicationBasicsSection from './sections/ApplicationBasicsSection';
+import NoticeTypeStep from './sections/NoticeTypeStep';
 
 export default function UploadNoticeFlow() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [text, setText] = useState('');
   const [draft, setDraft] = useState<NoticeDraft>({
     id: '',
     createdAt: '',
-    noticeType: 'Premises Licence',
+    noticeType: undefined,
     applicantName: '',
     applicantEmail: '',
     premisesAddress: '',
@@ -51,6 +52,19 @@ export default function UploadNoticeFlow() {
     draft.applicationDate.trim();
   const canContinue = requiredOk && confirmA && confirmB;
 
+  const handleBack = () => setStep((prev) => Math.max(1, (prev as number) - 1) as 1 | 2 | 3 | 4);
+  const handleNext = () => setStep((prev) => Math.min(4, (prev as number) + 1) as 1 | 2 | 3 | 4);
+
+  // On mount: read ?type= and set draft.noticeType if valid
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('type');
+    const allowed: NoticeType[] = ['premises','gvol','tro','planning','gambling','probate','other'];
+    if (t && (allowed as string[]).includes(t)) {
+      setDraft((d) => ({ ...d, noticeType: t as NoticeType }));
+    }
+  }, []);
+
   // Auto-lookup council when postcode changes (defensive)
   useEffect(() => {
     const pc = draft.postcode?.trim();
@@ -77,8 +91,8 @@ export default function UploadNoticeFlow() {
   const toErrorKey = (target: string) => (target === 'premises-address' ? 'premisesAddress' : target);
   const handleFix = (target?: string) => {
     if (!target) return;
-    // When on Step 1, prefer focusing inline Required details inputs via refs
-    if (step === 1) {
+    // When on Step 2, prefer focusing inline Required details inputs via refs
+    if (step === 2) {
       const map: Record<string, React.RefObject<HTMLInputElement> | undefined> = {
         applicant: refs.applicant,
         applicantName: refs.applicant,
@@ -109,10 +123,37 @@ export default function UploadNoticeFlow() {
 
   return (
     <div data-testid="notice-flow-root">
-      <ProgressBar step={step} />
       <div className="grid md:grid-cols-3 gap-8">
         <main className="md:col-span-2 space-y-6">
+          <ProgressBar
+            step={step}
+            totalSteps={4}
+            labels={['Confirm Notice Type','Upload your Notice','Confirm your Notice','Pay']}
+          />
           {step === 1 && (
+            <>
+              <NoticeTypeStep
+                value={draft.noticeType}
+                onChange={(t) => {
+                  setDraft((d) => ({ ...d, noticeType: t }));
+                  const params = new URLSearchParams(window.location.search);
+                  params.set('type', t);
+                  window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+                }}
+              />
+              <div className="mt-4">
+                <button
+                  className={UI.btnPrimary}
+                  data-testid="btn-continue-step1"
+                  onClick={() => setStep(2)}
+                  disabled={!draft.noticeType}
+                >
+                  Continue
+                </button>
+              </div>
+            </>
+          )}
+          {step === 2 && (
             <>
               <FileDropOCR
                 onText={(t) => {
@@ -176,7 +217,7 @@ export default function UploadNoticeFlow() {
               </section>
             </>
           )}
-          {step === 2 && (
+          {step === 3 && (
             <div className="space-y-6">
               <section className={UI.section}>
                 <div>
@@ -223,21 +264,22 @@ export default function UploadNoticeFlow() {
                     I understand that supplying false information is an offence.
                   </label>
                 </div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex items-center justify-between">
                   <button
-                    className="rounded-md border px-4 py-2"
-                    onClick={() => setStep(1)}
+                    className={UI.btnSecondary}
+                    onClick={handleBack}
+                    data-testid="btn-back"
                   >
                     Back
                   </button>
                   <button
-                    className="rounded-md border px-4 py-2"
+                    className={UI.btnPrimary}
                     disabled={!canContinue}
-                    data-testid="btn-continue-pay"
+                    data-testid="btn-continue"
                     onClick={async () => {
                       const hash = await sha256Hex((draft.originalFileMeta?.sha256 || '') + (draft.finalText || ''));
                       setDraft((d) => ({ ...d, proofHash: hash }));
-                      setStep(3);
+                      setStep(4);
                     }}
                   >
                     Continue to Pay
@@ -246,34 +288,51 @@ export default function UploadNoticeFlow() {
               </section>
             </div>
           )}
-          {step === 3 && <div>Pay step.</div>}
-          {step === 1 && (
+          {step === 4 && (
+            <div>
+              Pay step.
+              <div className="mt-4 flex items-center justify-between">
+                <button className={UI.btnSecondary} onClick={handleBack} data-testid="btn-back">Back</button>
+                <span />
+              </div>
+            </div>
+          )}
+          {step === 2 && (
             <div className="mt-4">
               <div className="text-sm text-brand-navy mb-2">
                 To continue, upload your notice or complete the required details.
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center justify-between">
                 <button
-                  className="rounded-md border px-4 py-2"
-                  data-testid="btn-continue-step1"
-                  disabled={!text && !(requiredOk && confirmA && confirmB)}
-                  onClick={() => setStep(2)}
+                  className={UI.btnSecondary}
+                  onClick={handleBack}
+                  data-testid="btn-back"
                 >
-                  Continue
+                  Back
                 </button>
-                <button
-                  type="button"
-                  className="rounded-md border px-4 py-2"
-                  data-testid="link-skip-ocr"
-                  onClick={() => setStep(2)}
-                >
-                  Skip OCR for now
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    className={UI.btnPrimary}
+                    disabled={!text && !(requiredOk && confirmA && confirmB)}
+                    onClick={() => setStep(3)}
+                    data-testid="btn-continue"
+                  >
+                    Continue
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white"
+                    data-testid="link-skip-ocr"
+                    onClick={() => setStep(3)}
+                  >
+                    Skip OCR for now
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </main>
-        <aside className="md:col-span-1 space-y-4">
+        <aside className="md:col-span-1 md:sticky md:top-[var(--headerH)] space-y-4">
           <PreviewCard text={text} />
           <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
           <KeyDatesCard
@@ -281,7 +340,7 @@ export default function UploadNoticeFlow() {
             representationDeadline={draft.repsDeadline || ''}
             consultationDays={28}
           />
-          <CostCard cost={0} canSubmit={canContinue && step === 2} />
+          <CostCard cost={0} canSubmit={canContinue && step === 3} />
         </aside>
       </div>
     </div>

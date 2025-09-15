@@ -110,7 +110,7 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
   };
 
   return (
-    <div className={UI.card + ' p-6 md:p-8'}>
+    <div className={`${UI.card} ${UI.cardHover} p-6 md:p-8`}>
       <div className="mb-2">
         <h2 className="mb-2 text-base font-semibold text-slate-800">Upload & OCR</h2>
         <p id="ocr-upload-help" className="mb-4 text-sm text-slate-700">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
@@ -135,8 +135,8 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
         <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm text-slate-800">
           <span className="truncate">{lastFile.name} · {pretty(lastFile.size)} · {statusLabel}</span>
           <div className="flex gap-2">
-            {state === 'error' && <button className="rounded-md border px-2 py-1" onClick={retry}>Retry</button>}
-            <button className="rounded-md border px-2 py-1" onClick={remove}>Remove</button>
+            {state === 'error' && <button className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white" onClick={retry}>Retry</button>}
+            <button className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white" onClick={remove}>Remove</button>
           </div>
         </div>
       )}

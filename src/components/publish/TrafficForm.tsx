@@ -175,6 +175,12 @@ export default function TrafficForm({
           </div>
         </div>
       </section>
+
+      <div className="pt-2">
+        <button type="submit" disabled={saving} className={UI.btnPrimary}>
+          {saving ? 'Saving…' : 'Submit'}
+        </button>
+      </div>
     </form>
   );
 }

@@ -1,9 +1,11 @@
 export type NoticeType =
-  | "Premises Licence"
-  | "TEN"
-  | "Gambling"
-  | "Goods Vehicle Operator"
-  | "Traffic Order";
+  | 'premises'   // Licensing Act 2003
+  | 'gvol'       // Goods Vehicle Operator
+  | 'tro'        // Traffic Order
+  | 'planning'
+  | 'gambling'
+  | 'probate'
+  | 'other';
 
 export type UploadedFile = {
   id: string;
@@ -16,7 +18,8 @@ export type UploadedFile = {
 export type NoticeDraft = {
   id: string;
   createdAt: string;
-  noticeType: NoticeType;
+  // optional in type; we gate in UI
+  noticeType?: NoticeType;
   applicantName: string;
   applicantEmail: string;
   applicantPhone?: string;

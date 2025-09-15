@@ -24,7 +24,7 @@ export default function NoticeTypeSelect({ value, onChange }: Props) {
         id="notice-type"
         value={value}
         onChange={(e) => onChange(e.target.value as NoticeType)}
-        className={UI.input + ' w-full'}
+        className={`${UI.input} w-full bg-white text-[#0f172a] focus:ring-offset-transparent`}
       >
         <option value="">Select an option</option>
         {options.map((o) => (

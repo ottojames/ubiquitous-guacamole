@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import * as UI from '@/styles/ui';
 import { FileText, Menu, X } from 'lucide-react';
 
 // Simple analytics stub to mirror Home page behaviour
@@ -7,23 +8,35 @@ function track(event: string, payload: Record<string, unknown> = {}) {
 }
 
 export default function SiteHeader() {
-  const [compactNav, setCompactNav] = useState(false);
+  const [compact, setCompact] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Hysteresis-free compact mode using IntersectionObserver on a sentinel
   useEffect(() => {
-    const onScroll = () => setCompactNav(window.scrollY > 12);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+    const sentinel = document.getElementById('header-sentinel');
+    if (!sentinel) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        setCompact(!e.isIntersecting);
+      },
+      { rootMargin: '0px 0px 0px 0px', threshold: 1 }
+    );
+    io.observe(sentinel);
+    return () => io.disconnect();
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
-      <div className={`max-w-6xl mx-auto px-4 sm:px-6 transition-[height] ${compactNav ? 'h-14' : 'h-[72px]'}`}>
+    <header
+      className={`sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 ${compact ? 'bg-white/90 shadow-[0_1px_0_0_rgba(2,6,23,0.06)]' : 'bg-white/75 border-b border-transparent'}`}
+      style={{ height: 'var(--headerH)' }}
+    >
+      <div className={`${UI.container ?? 'max-w-6xl mx-auto px-4 sm:px-6'} h-full`}>
         <div className="h-full flex items-center justify-between">
           {/* Left: logo + desktop nav */}
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center text-slate-900 font-extrabold tracking-tight" style={{ letterSpacing: '-0.5px' }}>
-              <span className={`transition-all ${compactNav ? 'text-lg' : 'text-xl'}`}>CivicNotices</span>
+              <span className={`transition-all ${compact ? 'text-lg' : 'text-xl'}`}>CivicNotices</span>
             </a>
             <nav className="hidden md:flex items-center gap-6">
               {[
@@ -45,17 +58,8 @@ export default function SiteHeader() {
 
           {/* Right: ghost + primary */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="/#signin"
-              className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
-              Sign in
-            </a>
-            <a
-              href="/publish"
-              onClick={() => track('publish_started', { audience: 'public' })}
-              className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
-            >
+            <a href="/#signin" className={`text-sm ${UI.btnSecondary} h-9 py-0`}>Sign in</a>
+            <a href="/publish" onClick={() => track('publish_started', { audience: 'public' })} className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
               Publish a notice
             </a>
           </div>
@@ -65,7 +69,7 @@ export default function SiteHeader() {
             <a
               href="/publish"
               onClick={() => track('publish_started', { audience: 'public' })}
-              className="h-10 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className={`${UI.btnPrimary} h-10 py-0 text-sm`}
               aria-label="Publish a notice"
             >
               <FileText className="w-4 h-4 mr-1" aria-hidden="true" /> Publish
@@ -114,17 +118,8 @@ export default function SiteHeader() {
               ))}
             </nav>
             <div className="mt-auto flex items-center gap-3">
-              <a
-                href="/#signin"
-                className="h-9 px-3 rounded-lg ring-1 ring-slate-300 hover:ring-slate-400 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
-                Sign in
-              </a>
-              <a
-                href="/publish"
-                onClick={() => { setMobileOpen(false); track('publish_started', { audience: 'public' }); }}
-                className="h-11 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
+              <a href="/#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+              <a href="/publish" onClick={() => { setMobileOpen(false); track('publish_started', { audience: 'public' }); }} className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
                 Publish a notice
               </a>
             </div>
@@ -134,4 +129,3 @@ export default function SiteHeader() {
     </header>
   );
 }
-
