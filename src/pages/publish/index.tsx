@@ -93,30 +93,39 @@ export default function PublishPage() {
   }, [noticeType, debounced]);
 
   const autoFocusRef = useRef<HTMLInputElement>(null);
+  const heroSteps: Array<{ label: string; status: 'current' | 'upcoming' }> = [
+    { label: 'Confirm notice type', status: 'current' },
+    { label: 'Fill notice details', status: 'upcoming' },
+    { label: 'Review & publish', status: 'upcoming' },
+  ];
 
   return (
     <div className={`${UI.pageWrapLg} relative`} data-testid="publish-layout">
       {/* Hero header */}
-      <div className={`${UI.container} pt-16 md:pt-20 pb-6`}>
+      <div className={`${UI.container} pt-16 md:pt-20 pb-10`}>
         <h1 className={`${UI.heroH1} mb-2`}>Publish a notice</h1>
         <p className={`${UI.heroSub} mt-1`}>Guided, compliant, and instant proof</p>
-        {/* Mode tabs on gradient */}
-        <nav role="tablist" className="mt-4 flex gap-2">
-          <button
-            className={`rounded-xl bg-white text-blue-900 font-semibold ring-1 ring-white/60 shadow-sm px-4 h-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-transparent`}
-            data-active={true}
-            aria-label="Upload from Notice"
-          >
-            Upload from Notice
-          </button>
-          <button
-            className={`rounded-xl bg-white/80 text-blue-800 hover:bg-white ring-1 ring-white/50 px-4 h-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-transparent`}
-            data-active={false}
-            aria-label="Upload via Template"
-          >
-            Upload via Template
-          </button>
-        </nav>
+        <ol
+          className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-white/90"
+          aria-label="Publish steps"
+        >
+          {heroSteps.map((step, idx) => (
+            <li
+              key={step.label}
+              className="flex items-center gap-x-3 md:gap-x-4"
+              aria-current={step.status === 'current' ? 'step' : undefined}
+            >
+              <span
+                aria-hidden
+                className={`${UI.stepDotBase} ${step.status === 'current' ? UI.stepDotActive : ''}`}
+              />
+              <span className={`text-sm text-white/90 ${step.status === 'current' ? 'font-semibold' : 'font-medium'}`}>
+                <span className="sr-only">Step {idx + 1}: </span>
+                {step.label}
+              </span>
+            </li>
+          ))}
+        </ol>
       </div>
       {/* Main content on light canvas */}
       <div className={`${UI.container} ${UI.sectionY} grid md:grid-cols-12 gap-8 items-start`}>
@@ -127,51 +136,49 @@ export default function PublishPage() {
         )}
 
         <main className="md:col-span-8 space-y-6">
-            {/* First form surface: Notice type selection as a real card */}
-            <section className={`${UI.card} ${UI.cardHover} p-6`}>
-              <header className="mb-3">
-                <h2 className={UI.cardHeader}>Confirm notice type</h2>
-                <p className="text-sm text-slate-600 mt-1">Start by confirming your notice type. You can change this later.</p>
-              </header>
-
-              <div className="space-y-3">
-                <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
+          <section className={`${UI.section} space-y-4`}>
+            <header className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-semibold text-blue-900">Confirm notice type</h2>
+                <p className="mt-1 text-sm text-slate-600">You can change this later.</p>
               </div>
+              <button type="button" className={`${UI.btnPrimary} h-10 py-0 shrink-0`}>
+                Continue
+              </button>
+            </header>
 
-              <footer className="mt-4 flex justify-end">
-                <button className={`${UI.btnPrimary} h-10 py-0`}>Continue</button>
-              </footer>
-            </section>
-            {noticeType === 'premises' && (
-              <PremisesForm
-                value={premisesData}
-                onChange={setPremisesData}
-                onAuthorityChange={handleAuthorityChange}
-                saving={false}
-                autoFocusRef={autoFocusRef}
-              />
-            )}
-            {noticeType === 'gvol' && (
-              <GVOLForm
-                value={gvolData}
-                onChange={setGvolData}
-                onAuthorityChange={handleAuthorityChange}
-                saving={false}
-                autoFocusRef={autoFocusRef}
-              />
-            )}
-            {noticeType === 'traffic' && (
-              <TrafficForm
-                value={trafficData}
-                onChange={setTrafficData}
-                onAuthorityChange={handleAuthorityChange}
-                saving={false}
-                autoFocusRef={autoFocusRef}
-              />
-            )}
+            <NoticeTypeSelect value={noticeType} onChange={setNoticeType} />
+          </section>
+          {noticeType === 'premises' && (
+            <PremisesForm
+              value={premisesData}
+              onChange={setPremisesData}
+              onAuthorityChange={handleAuthorityChange}
+              saving={false}
+              autoFocusRef={autoFocusRef}
+            />
+          )}
+          {noticeType === 'gvol' && (
+            <GVOLForm
+              value={gvolData}
+              onChange={setGvolData}
+              onAuthorityChange={handleAuthorityChange}
+              saving={false}
+              autoFocusRef={autoFocusRef}
+            />
+          )}
+          {noticeType === 'traffic' && (
+            <TrafficForm
+              value={trafficData}
+              onChange={setTrafficData}
+              onAuthorityChange={handleAuthorityChange}
+              saving={false}
+              autoFocusRef={autoFocusRef}
+            />
+          )}
         </main>
 
-        <aside className="md:col-span-4 md:sticky md:top-[var(--headerH)] space-y-4">
+        <aside className="md:col-span-4 md:sticky md:top-[calc(var(--headerH)+24px)] space-y-6">
           <PreviewCard text={preview} />
           <ComplianceCard items={checklist} />
           <KeyDatesCard applicationDate={premisesData?.applicationDate || ''} representationDeadline={representationDeadline} consultationDays={consultationDays} />

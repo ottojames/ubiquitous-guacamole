@@ -17,7 +17,7 @@ export default function ProgressBar({ step, totalSteps = 3, labels }: Props) {
           const state = idx < step ? 'completed' : idx === step ? 'current' : 'upcoming';
           const active = state === 'current';
           return (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex items-center gap-x-3 md:gap-x-4">
               <div className={`${UI.stepDotBase} ${active ? UI.stepDotActive : ''}`} aria-current={active} aria-label={`Step ${idx}`} />
               <span
                 className={`text-sm ${active ? 'text-white/90 font-medium' : 'text-white/90'}`}

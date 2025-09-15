@@ -3,21 +3,47 @@ import * as UI from '@/styles/ui';
 
 export default function PreviewCard({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
+  const hasPreview = (text ?? '').trim().length > 0;
   return (
-    <div aria-label="Notice preview" className={`${UI.card} ${UI.cardHover} p-4 md:p-5 min-h-[360px] space-y-3`}>
-      <div className="flex items-center justify-between">
+    <div aria-label="Notice preview" className={`${UI.card} ${UI.cardHover} relative min-h-[360px] p-4 md:p-5 space-y-4`}>
+      <div>
         <h3 className="font-medium text-brand-navy">Preview</h3>
-        <button
-          type="button"
-          className="text-sm underline transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white"
-          onClick={() => setOpen(true)}
-        >
-          Expand
-        </button>
+        <p className="mt-1 text-xs text-slate-600">Generated as you type</p>
       </div>
-      <p className="text-xs text-slate-600">Generated as you type</p>
-      <div className={UI.prose + ' whitespace-pre-wrap min-h-[300px]'} id="notice-preview">
-        {text}
+      <button
+        type="button"
+        className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-blue-600"
+        aria-label="Expand preview"
+        title="Expand preview"
+        onClick={() => setOpen(true)}
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="h-4 w-4"
+        >
+          <path d="M7.5 4H4a1 1 0 0 0-1 1v3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12.5 16H16a1 1 0 0 0 1-1v-3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="m11 4 5 5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="m4 11 5 5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div
+        id="notice-preview"
+        className="min-h-[300px] rounded-xl border border-slate-900/5 bg-white/80 p-4"
+      >
+        {hasPreview ? (
+          <pre className="whitespace-pre-wrap text-[13px] leading-5 text-slate-800">{text}</pre>
+        ) : (
+          <div className="space-y-2">
+            <div className="h-4 rounded bg-[linear-gradient(90deg,rgba(2,6,23,.06),rgba(2,6,23,.12),rgba(2,6,23,.06))] bg-[length:200%_100%] animate-shimmer" />
+            <div className="h-4 w-5/6 rounded bg-[linear-gradient(90deg,rgba(2,6,23,.06),rgba(2,6,23,.12),rgba(2,6,23,.06))] bg-[length:200%_100%] animate-shimmer" />
+            <div className="h-4 w-3/5 rounded bg-[linear-gradient(90deg,rgba(2,6,23,.06),rgba(2,6,23,.12),rgba(2,6,23,.06))] bg-[length:200%_100%] animate-shimmer" />
+          </div>
+        )}
       </div>
       {open && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
