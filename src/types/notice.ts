@@ -23,6 +23,9 @@ export type NoticeDraft = {
   applicantName: string;
   applicantEmail: string;
   applicantPhone?: string;
+  /* CN:STEP2-START */
+  urn?: string;
+  /* CN:STEP2-END */
   premisesName?: string;
   premisesAddress: string;
   postcode: string;
