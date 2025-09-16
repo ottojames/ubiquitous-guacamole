@@ -86,6 +86,11 @@ function useTooltipControls() {
     return () => document.removeEventListener('focusin', handleFocusIn);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.focus();
+  }, [open]);
+
   return { open, setOpen, panelRef, buttonRef };
 }
 
@@ -102,13 +107,22 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
     const licensingValue = isLicensingNoticeType(value) ? value : '';
     const isValid = licensingValue !== '';
 
-    const descriptor = useMemo(() => {
-      if (!licensingValue) return undefined;
-      return OPTIONS.find((option) => option.value === licensingValue)?.descriptor;
+    const helperText = useMemo(() => {
+      if (!licensingValue) return 'Pick the exact category to proceed.';
+      if (licensingValue === 'premises') {
+        return 'Alcohol/regulated entertainment & late-night refreshment.';
+      }
+      if (licensingValue === 'variation') {
+        return 'Change to existing licence (hours, conditions, layout, etc.).';
+      }
+      if (licensingValue === 'review') {
+        return 'Application to review an existing licence.';
+      }
+      return 'Pick the exact category to proceed.';
     }, [licensingValue]);
 
     const hasError = touched && !isValid;
-    const describedBy = [descriptor ? helperId : undefined, hasError ? errorId : undefined]
+    const describedBy = [helperId, hasError ? errorId : undefined]
       .filter(Boolean)
       .join(' ');
 
@@ -142,7 +156,7 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
     return (
       <>
         {/* CN:STEP1-START */}
-        <section className={UI.card + ' p-5 md:p-6'} data-testid="notice-type-step">
+        <section className={`${UI.card} p-5 md:p-6 scroll-mt-24`} data-testid="notice-type-step">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold">Confirm Notice Type</h2>
             {!suppressInlineHelp && (
@@ -151,6 +165,7 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
                   type="button"
                   ref={buttonRef}
                   aria-label="Read more about notice types"
+                  aria-haspopup="dialog"
                   aria-expanded={open}
                   aria-controls={tooltipId}
                   onClick={() => setOpen((prev) => !prev)}
@@ -165,11 +180,11 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
                     id={tooltipId}
                     role="tooltip"
                     ref={panelRef}
-                    tabIndex={-1}
+                    tabIndex={0}
                     className="absolute right-0 z-20 mt-2 w-72 max-w-xs rounded-xl border border-brand-blue/20 bg-white p-4 text-sm text-brand-navy shadow-[0_10px_28px_rgba(25,38,80,0.14)]"
                   >
                     <p>
-                      Choose the exact Licensing Act 2003 category. This controls the required wording and deadlines later.
+                      Pick the exact Licensing Act 2003 category. It controls required wording and deadlines later.
                     </p>
                     <a
                       href="/docs/licensing-act-2003/premises-notices"
@@ -193,7 +208,7 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
               value={licensingValue}
               onChange={handleSelectChange}
               aria-invalid={hasError}
-              aria-describedby={describedBy || undefined}
+              aria-describedby={describedBy}
               data-testid="select-notice-type"
             >
               <option value="" disabled>
@@ -205,11 +220,11 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
                 </option>
               ))}
             </select>
-            {descriptor && (
-              <p id={helperId} className="text-sm text-brand-gray">
-                {descriptor}
-              </p>
-            )}
+            <p id={helperId} className="text-sm text-brand-gray">
+              {/* CN:STEP1-START */}
+              {helperText}
+              {/* CN:STEP1-END */}
+            </p>
             {hasError && (
               <p id={errorId} className="text-sm text-red-600">
                 Select a notice type to continue.
