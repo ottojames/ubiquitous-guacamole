@@ -35,16 +35,22 @@ function formatDeadline(value?: string | Date | null): string {
   return formatted || dash;
 }
 
+/* CN:OFFICER-FINAL-START */
 const repsLines = (state: PublishState, auth: Authority | null) => {
   const online = auth?.repsUrl?.trim() || '';
   const email = (auth?.repsEmail || state.councilEmail || '').trim();
   const postal = (auth?.postalAddress || state.councilAddress || '').trim();
-  return [
+  const lines = [
     `Online: ${online || dash}`,
     `Email: ${email || dash}`,
     `Postal: ${postal || dash}`,
   ];
+  if (!online && !email && !postal) {
+    lines.push('⚠ Missing: online form / email / postal address');
+  }
+  return lines;
 };
+/* CN:OFFICER-FINAL-END */
 
 type BuildOptions = {
   includeSummaries?: boolean;

@@ -144,7 +144,13 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
         </div>
       )}
 
-      <div className="mt-3 text-xs text-slate-700">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
+      {/* CN:OFFICER-FINAL-START */}
+      <div className="mt-3 flex items-center gap-2 text-xs text-neutral-500">
+        {state === 'ready' && <span aria-hidden className="text-emerald-600">✔</span>}
+        <span>Upload status: {statusLabel}</span>
+        {elapsed ? <span>({Math.round(elapsed)} ms)</span> : null}
+      </div>
+      {/* CN:OFFICER-FINAL-END */}
       {error && (
         <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2" role="status" aria-live="polite">
           {error}

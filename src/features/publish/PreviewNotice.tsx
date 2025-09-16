@@ -63,7 +63,10 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
   );
 
   const previewText = source === 'structured' ? structuredPreview : ocrText;
-  const previewIsEmpty = previewText.trim().length === 0;
+  /* CN:OFFICER-FINAL-START */
+  const hasContent = previewText.trim().length > 0;
+  const previewIsEmpty = !hasContent;
+  /* CN:OFFICER-FINAL-END */
 
   const lines = React.useMemo(() => previewText.split(/\r?\n/), [previewText]);
   const headingOne = lines[0]?.trim();
@@ -74,16 +77,16 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
   }, [lines]);
 
   const copy = React.useCallback(async () => {
-    if (previewIsEmpty) return;
+    if (!hasContent) return;
     try {
       await navigator.clipboard?.writeText(previewText);
     } catch {
       /* noop */
     }
-  }, [previewIsEmpty, previewText]);
+  }, [hasContent, previewText]);
 
   const download = React.useCallback(() => {
-    if (previewIsEmpty) return;
+    if (!hasContent) return;
     const blob = new Blob([previewText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -91,7 +94,7 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
     a.download = 'notice.txt';
     a.click();
     URL.revokeObjectURL(url);
-  }, [previewIsEmpty, previewText]);
+  }, [hasContent, previewText]);
 
   const handleReplace = React.useCallback(() => {
     if (!structuredReplacement.trim()) return;
@@ -217,9 +220,9 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
         <button
           type="button"
           onClick={copy}
-          disabled={previewIsEmpty}
+          disabled={!hasContent}
           className={`rounded-md border px-2 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-            previewIsEmpty ? 'cursor-not-allowed text-slate-400' : 'text-[#192650] hover:bg-white/60'
+            hasContent ? 'text-[#192650] hover:bg-white/60' : 'cursor-not-allowed text-slate-400'
           }`}
         >
           Copy text
@@ -227,9 +230,9 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
         <button
           type="button"
           onClick={download}
-          disabled={previewIsEmpty}
+          disabled={!hasContent}
           className={`rounded-md border px-2 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-            previewIsEmpty ? 'cursor-not-allowed text-slate-400' : 'text-[#192650] hover:bg-white/60'
+            hasContent ? 'text-[#192650] hover:bg-white/60' : 'cursor-not-allowed text-slate-400'
           }`}
         >
           Download .txt

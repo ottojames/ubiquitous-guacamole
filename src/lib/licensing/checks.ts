@@ -92,7 +92,9 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
     push(
       'repsDeadline',
       false,
-      'This notice does not state the representation deadline — please enter manually.',
+      /* CN:OFFICER-FINAL-START */
+      'Set the submission date to auto-calculate the representation deadline.',
+      /* CN:OFFICER-FINAL-END */
       'applicationDate',
       'warning'
     );

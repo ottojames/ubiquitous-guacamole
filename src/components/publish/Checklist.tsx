@@ -1,6 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import * as UI from '@/styles/ui';
+/* CN:OFFICER-FINAL-START */
+function focusAndFlash(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const focusable =
+    (el.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null) || (el as HTMLElement | null);
+  focusable?.focus?.();
+  el.classList.add('outline', 'outline-2', 'outline-blue-300');
+  setTimeout(() => {
+    el.classList.remove('outline', 'outline-2', 'outline-blue-300');
+  }, 700);
+}
+/* CN:OFFICER-FINAL-END */
 
 export type ChecklistItem = {
   id: string;
@@ -40,9 +54,9 @@ export default function Checklist(props: Props) {
       return;
     }
     if (!target) return;
-    const el = document.getElementById(target) as HTMLElement | null;
-    el?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
+    /* CN:OFFICER-FINAL-START */
+    focusAndFlash(target);
+    /* CN:OFFICER-FINAL-END */
   };
 
   const allGood = items.every((i) => i.ok);
