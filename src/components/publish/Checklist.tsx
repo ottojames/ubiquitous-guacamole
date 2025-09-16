@@ -2,18 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import * as UI from '@/styles/ui';
 /* CN:OFFICER-FINAL-START */
+/* CN:SIGNOFF-START */
 function focusAndFlash(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  const focusable =
-    (el.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null) || (el as HTMLElement | null);
-  focusable?.focus?.();
+  (el as HTMLInputElement | HTMLTextAreaElement | null)?.focus?.();
   el.classList.add('outline', 'outline-2', 'outline-blue-300');
-  setTimeout(() => {
-    el.classList.remove('outline', 'outline-2', 'outline-blue-300');
-  }, 700);
+  setTimeout(() => el.classList.remove('outline', 'outline-2', 'outline-blue-300'), 700);
 }
+/* CN:SIGNOFF-END */
 /* CN:OFFICER-FINAL-END */
 
 export type ChecklistItem = {

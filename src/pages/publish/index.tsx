@@ -17,14 +17,16 @@ import { validateTrafficOrder } from '../../../schemas/rules/traffic-order.rules
 import * as UI from '@/styles/ui';
 
 /* CN:FIX-START */
+/* CN:SIGNOFF-START */
 function focusAndFlash(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   (el as HTMLInputElement | HTMLTextAreaElement | null)?.focus?.();
-  el.classList.add('outline','outline-2','outline-blue-300');
-  setTimeout(() => el.classList.remove('outline','outline-2','outline-blue-300'), 700);
+  el.classList.add('outline', 'outline-2', 'outline-blue-300');
+  setTimeout(() => el.classList.remove('outline', 'outline-2', 'outline-blue-300'), 700);
 }
+/* CN:SIGNOFF-END */
 /* CN:FIX-END */
 
 function useDebounce<T>(val: T, ms = 250) {

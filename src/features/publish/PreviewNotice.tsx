@@ -169,65 +169,58 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
 
   return (
     <div aria-label="Notice preview" className={`${UI.card} ${UI.cardHover} relative min-h-[360px] space-y-4 p-4 md:p-5`}>
-      <div className="flex flex-col gap-3 border-b border-slate-200/80 pb-3 md:flex-row md:items-start md:justify-between md:gap-4">
+      {/* CN:SIGNOFF-START */}
+      <div className="flex flex-col gap-3 border-b border-slate-200/80 pb-3 md:flex-row md:items-center md:justify-between md:gap-4">
         <div>
           <h3 className="text-[13px] font-medium text-slate-700">Preview</h3>
           <p className="mt-1 text-xs text-slate-600">Generated as you type</p>
         </div>
-        <div className="flex flex-col items-stretch gap-2 md:items-end">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-slate-600">Source:</span>
-            <div
-              role="tablist"
-              aria-label="Preview source"
-              className="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-white text-xs font-medium text-[#192650]"
+        {/* CN:SIGNOFF-START */}
+        <div className="flex flex-wrap items-center gap-3 md:justify-end">
+          <span className="text-xs text-neutral-600">Source:</span>
+          <div
+            role="tablist"
+            aria-label="Preview source"
+            className="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-white"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={previewSource === 'ocr'}
+              disabled={!hasOcr}
+              onClick={() => hasOcr && setPreviewSource('ocr')}
+              className={`px-2.5 py-1 text-xs font-medium transition ${
+                previewSource === 'ocr' && hasOcr ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
+              } ${!hasOcr ? 'cursor-not-allowed opacity-40' : ''}`}
             >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={previewSource === 'ocr'}
-                disabled={!hasOcr}
-                onClick={() => hasOcr && setPreviewSource('ocr')}
-                className={`px-3 py-1 transition ${
-                  previewSource === 'ocr' && hasOcr ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
-                } ${!hasOcr ? 'cursor-not-allowed opacity-40' : ''}`}
-              >
-                OCR text
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={previewSource === 'structured'}
-                onClick={() => setPreviewSource('structured')}
-                className={`px-3 py-1 transition ${
-                  previewSource === 'structured' ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
-                }`}
-              >
-                Structured fields
-              </button>
-            </div>
-            {hasOcr && (
-              <button
-                type="button"
-                onClick={handleReplace}
-                disabled={!structuredReplacement.trim()}
-                className="text-xs text-blue-700 underline underline-offset-2 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
-              >
-                Replace OCR with structured text
-              </button>
-            )}
+              OCR text
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={previewSource === 'structured'}
+              onClick={() => setPreviewSource('structured')}
+              className={`px-2.5 py-1 text-xs font-medium transition ${
+                previewSource === 'structured' ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
+              }`}
+            >
+              Structured fields
+            </button>
           </div>
-          {toastMessage && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="self-end rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-medium text-white shadow-sm"
+          {hasOcr && (
+            <button
+              type="button"
+              onClick={handleReplace}
+              disabled={!structuredReplacement.trim()}
+              className="text-xs text-[#192650] underline underline-offset-2 hover:text-[#0f1b39] focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
             >
-              {toastMessage}
-            </div>
+              Replace OCR with structured text
+            </button>
           )}
         </div>
+        {/* CN:SIGNOFF-END */}
       </div>
+      {/* CN:SIGNOFF-END */}
       {showBanner && (
         <div
           role="status"
@@ -283,6 +276,17 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
           Download .txt
         </button>
       </div>
+      {/* CN:SIGNOFF-START */}
+      {toastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 right-4 rounded-md bg-black/80 px-3 py-2 text-xs text-white shadow-lg"
+        >
+          {toastMessage}
+        </div>
+      )}
+      {/* CN:SIGNOFF-END */}
     </div>
   );
 }

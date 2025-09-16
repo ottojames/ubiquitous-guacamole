@@ -40,16 +40,16 @@ type NoticeFieldRefs = {
 /* CN:STEP2-END */
 
 /* CN:STEP2-LAYOUT-START */
+/* CN:SIGNOFF-START */
 function focusAndFlash(id: string) {
-  const el = document.getElementById(id) as HTMLElement | null;
+  const el = document.getElementById(id);
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).focus?.();
+  (el as HTMLInputElement | HTMLTextAreaElement | null)?.focus?.();
   el.classList.add('outline', 'outline-2', 'outline-blue-300');
-  setTimeout(() => {
-    el.classList.remove('outline', 'outline-2', 'outline-blue-300');
-  }, 700);
+  setTimeout(() => el.classList.remove('outline', 'outline-2', 'outline-blue-300'), 700);
 }
+/* CN:SIGNOFF-END */
 /* CN:STEP2-LAYOUT-END */
 
 export default function UploadNoticeFlow() {
@@ -626,15 +626,16 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   /* CN:OFFICER-FINAL-START */
   const submissionTooltipId = React.useId();
   const [showSubmissionTooltip, setShowSubmissionTooltip] = React.useState(false);
-  const [postcodeNormalizedAt, setPostcodeNormalizedAt] = React.useState<number>(0);
+  /* CN:SIGNOFF-START */
+  const [postcodeNormalised, setPostcodeNormalised] = React.useState(false);
   React.useEffect(() => {
-    if (!postcodeNormalizedAt) return;
+    if (!postcodeNormalised) return;
     /* CN:GUARDRAIL-FINAL-START */
-    const timer = setTimeout(() => setPostcodeNormalizedAt(0), 1500);
+    const timer = setTimeout(() => setPostcodeNormalised(false), 1000);
     /* CN:GUARDRAIL-FINAL-END */
     return () => clearTimeout(timer);
-  }, [postcodeNormalizedAt]);
-  const showPostcodeNormalised = postcodeNormalizedAt > 0;
+  }, [postcodeNormalised]);
+  /* CN:SIGNOFF-END */
   const formattedOcrDeadline = ocrDeadline ? formatDisplayDate(ocrDeadline) : '';
   const formattedCalculatedDeadline = representationDeadlineDate ? formatDisplayDate(representationDeadlineDate) : '';
   /* CN:OFFICER-FINAL-END */
@@ -844,6 +845,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               value={draft.postcode}
               onChange={(e) => onChange({ postcode: e.target.value }, { ensureUrn: true })}
               /* CN:OFFICER-FINAL-START */
+              /* CN:SIGNOFF-START */
               onBlur={(event) => {
                 const normalized = normalizeUKPostcode(event.currentTarget.value);
                 if (normalized !== event.currentTarget.value) {
@@ -851,12 +853,13 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
                 }
                 onChange({ postcode: normalized }, { ensureUrn: true });
                 if (normalized && normalized !== draft.postcode) {
-                  setPostcodeNormalizedAt(Date.now());
+                  setPostcodeNormalised(true);
                 }
                 if (!normalized) {
-                  setPostcodeNormalizedAt(0);
+                  setPostcodeNormalised(false);
                 }
               }}
+              /* CN:SIGNOFF-END */
               /* CN:OFFICER-FINAL-END */
               aria-describedby={postcodeHelpId}
             />
@@ -864,9 +867,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               Matches the final notice address.
             </p>
             {/* CN:OFFICER-FINAL-START */}
-            {showPostcodeNormalised && (
-              <p className="mt-1 text-xs text-neutral-500">Normalised</p>
-            )}
+            {/* CN:SIGNOFF-START */}
+            {postcodeNormalised && <p className="mt-1 text-xs text-neutral-500">Normalised</p>}
+            {/* CN:SIGNOFF-END */}
             {/* CN:OFFICER-FINAL-END */}
           </div>
           <div className="col-span-12 md:col-span-6">

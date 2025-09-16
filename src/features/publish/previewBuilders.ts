@@ -29,28 +29,27 @@ const ensureSentence = (value?: string | null) => {
   return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 };
 
-function formatDeadline(value?: string | Date | null): string {
-  if (!value) return dash;
-  const formatted = formatDisplayDate(value);
-  return formatted || dash;
-}
-
-/* CN:OFFICER-FINAL-START */
-const repsLines = (state: PublishState, auth: Authority | null) => {
-  const online = auth?.repsUrl?.trim() || '';
-  const email = (auth?.repsEmail || state.councilEmail || '').trim();
-  const postal = (auth?.postalAddress || state.councilAddress || '').trim();
-  const lines = [
+/* CN:SIGNOFF-START */
+const buildRepresentationsSection = (state: PublishState, authority: Authority | null): string[] => {
+  const online = authority?.repsUrl?.trim() || '';
+  const email = (authority?.repsEmail || state.councilEmail || '').trim();
+  const postal = (authority?.postalAddress || state.councilAddress || '').trim();
+  const section = [
+    'How to make representations:',
     `Online: ${online || dash}`,
-    `Email: ${email || dash}`,
+    `Email:  ${email || dash}`,
     `Postal: ${postal || dash}`,
   ];
   if (!online && !email && !postal) {
-    lines.push('⚠ Missing: online form / email / postal address');
+    section.push('Missing: online form / email / postal address');
   }
-  return lines;
+  const deadlineValue = state.representationDeadline ?? state.repsDeadline ?? null;
+  if (deadlineValue) {
+    section.push(`Representations must be received no later than ${formatDisplayDate(deadlineValue)}.`);
+  }
+  return section;
 };
-/* CN:OFFICER-FINAL-END */
+/* CN:SIGNOFF-END */
 
 type BuildOptions = {
   includeSummaries?: boolean;
@@ -76,7 +75,6 @@ export function buildPremisesNotice(
   const council = trimOrDash(state.councilName);
   const applicant = trimOrDash(state.applicantName);
   const address = trimOrDash(state.premisesAddress);
-  const deadline = formatDeadline(state.representationDeadline);
   const summary = ensureSentence(state.applicationSummary);
   const includeSummaries = options.includeSummaries === true;
 
@@ -92,18 +90,14 @@ export function buildPremisesNotice(
     lines.push('', `Summary of licensable activities/hours: ${summary}`);
   }
 
-  const deadlineLine = deadline === dash
-    ? 'Representations must be received no later than —'
-    : `Representations must be received no later than ${deadline}.`;
-
+  /* CN:SIGNOFF-START */
   lines.push(
     '',
-    'How to make representations:',
-    ...repsLines(state, auth),
+    ...buildRepresentationsSection(state, auth),
     '',
-    deadlineLine,
     offenceLine
   );
+  /* CN:SIGNOFF-END */
 
   return lines.join('\n');
 }
@@ -116,7 +110,6 @@ export function buildVariationNotice(
   const council = trimOrDash(state.councilName);
   const applicant = trimOrDash(state.applicantName);
   const address = trimOrDash(state.premisesAddress);
-  const deadline = formatDeadline(state.representationDeadline);
   const includeSummaries = options.includeSummaries === true;
   const appSummary = ensureSentence(state.applicationSummary);
   const variationSummary = ensureSentence(state.variationSummary);
@@ -139,18 +132,14 @@ export function buildVariationNotice(
     }
   }
 
-  const deadlineLine = deadline === dash
-    ? 'Representations must be received no later than —'
-    : `Representations must be received no later than ${deadline}.`;
-
+  /* CN:SIGNOFF-START */
   lines.push(
     '',
-    'How to make representations:',
-    ...repsLines(state, auth),
+    ...buildRepresentationsSection(state, auth),
     '',
-    deadlineLine,
     offenceLine
   );
+  /* CN:SIGNOFF-END */
 
   return lines.join('\n');
 }
@@ -163,7 +152,6 @@ export function buildReviewNotice(
   const council = trimOrDash(state.councilName);
   const applicant = trimOrDash(state.applicantName);
   const address = trimOrDash(state.premisesAddress);
-  const deadline = formatDeadline(state.representationDeadline);
   const includeSummaries = options.includeSummaries === true;
   const grounds = ensureSentence(state.reviewGrounds);
 
@@ -179,18 +167,14 @@ export function buildReviewNotice(
     lines.push('', `Grounds for the review: ${grounds}`);
   }
 
-  const deadlineLine = deadline === dash
-    ? 'Representations must be received no later than —'
-    : `Representations must be received no later than ${deadline}.`;
-
+  /* CN:SIGNOFF-START */
   lines.push(
     '',
-    'How to make representations:',
-    ...repsLines(state, auth),
+    ...buildRepresentationsSection(state, auth),
     '',
-    deadlineLine,
     offenceLine
   );
+  /* CN:SIGNOFF-END */
 
   return lines.join('\n');
 }
