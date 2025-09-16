@@ -1,4 +1,7 @@
 import { NoticeDraft } from '@/types/notice';
+/* CN:STEP2-START */
+import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
+/* CN:STEP2-END */
 
 export type ComplianceItem = {
   id: string;
@@ -10,11 +13,13 @@ export type ComplianceItem = {
 };
 export type ComplianceResult = ComplianceItem[];
 
+/* CN:STEP2-START */
 export function calcRepsDeadline(date: string): string {
-  const d = new Date(date);
-  d.setDate(d.getDate() + 28);
-  return d.toISOString().slice(0, 10);
+  if (!date) return '';
+  const deadline = calculateRepresentationDeadline(date);
+  return Number.isNaN(deadline.getTime()) ? '' : deadline.toISOString();
 }
+/* CN:STEP2-END */
 
 export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   const items: ComplianceResult = [];
@@ -33,13 +38,20 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   push('councilAddress', !!draft.councilAddress?.trim(), 'Council address present', 'councilAddress');
   push('applicationDate', !!draft.applicationDate?.trim(), 'Application date present', 'applicationDate');
   if (draft.repsDeadline) {
+    /* CN:STEP2-START */
     const expected = calcRepsDeadline(draft.applicationDate);
+    const normalize = (value: string) => {
+      if (!value) return '';
+      const d = new Date(value.includes('T') ? value : `${value}T00:00:00`);
+      return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+    };
     push(
       'repsDeadline',
-      draft.repsDeadline === expected,
+      normalize(draft.repsDeadline) === normalize(expected),
       'Representation deadline = submission date + 28 days',
       'applicationDate'
     );
+    /* CN:STEP2-END */
   } else {
     push(
       'repsDeadline',

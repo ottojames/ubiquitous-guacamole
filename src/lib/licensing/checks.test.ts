@@ -4,7 +4,9 @@ import { NoticeDraft } from '@/types/notice';
 
 describe('calcRepsDeadline', () => {
   it('adds 28 days', () => {
-    expect(calcRepsDeadline('2024-01-01')).toBe('2024-01-29');
+    /* CN:STEP2-START */
+    expect(calcRepsDeadline('2024-01-01')).toBe('2024-01-29T23:59:59.999Z');
+    /* CN:STEP2-END */
   });
 });
 
@@ -30,7 +32,9 @@ describe('runMandatoryChecks', () => {
       blueNoticeUploads: [],
       status: 'Draft',
       applicationDate: '2024-01-01',
-      repsDeadline: '2024-01-29',
+      /* CN:STEP2-START */
+      repsDeadline: '2024-01-29T23:59:59.999Z',
+      /* CN:STEP2-END */
     };
     const res = runMandatoryChecks(draft);
     const item = res.find((r) => r.id === 'repsDeadline');

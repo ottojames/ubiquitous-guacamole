@@ -1,5 +1,6 @@
 import React from 'react';
 import * as UI from '@/styles/ui';
+import { calculateRepresentationDeadline, formatLicensingDate } from '@/lib/dates/licensing';
 
 export default function KeyDatesCard({
   applicationDate,
@@ -9,9 +10,20 @@ export default function KeyDatesCard({
   representationDeadline: string;
   consultationDays: number;
 }) {
+  /* CN:STEP2-START */
+  const hasSubmission = !!applicationDate;
+  const submissionDisplay = hasSubmission ? formatLicensingDate(applicationDate) : '';
+  const derivedDeadline = React.useMemo(() => {
+    if (representationDeadline) return representationDeadline;
+    if (!applicationDate) return '';
+    const computed = calculateRepresentationDeadline(applicationDate);
+    return Number.isNaN(computed.getTime()) ? '' : computed.toISOString();
+  }, [applicationDate, representationDeadline]);
+  const deadlineDisplay = derivedDeadline ? formatLicensingDate(derivedDeadline) : '—';
+
   return (
     <div className={`${UI.card} ${UI.cardHover} p-4 md:p-5`} aria-label="Key dates">
-      <div className="flex items-start justify-between mb-2">
+      <div className="flex items-start justify-between mb-3">
         <h3 className="text-sm font-semibold text-blue-900">Key dates</h3>
         <button
           type="button"
@@ -33,8 +45,26 @@ export default function KeyDatesCard({
           </svg>
         </button>
       </div>
-      <div className="text-sm text-[#192650]">Application date: {applicationDate || '—'}</div>
-      <div className="text-sm mt-1 text-[#192650]">Representation deadline (per Licensing Act 2003): {representationDeadline}</div>
+      {hasSubmission ? (
+        <dl className="space-y-3 text-sm text-[#192650]">
+          <div className="flex items-start justify-between gap-4">
+            <dt className="font-medium">Application date</dt>
+            <dd>{submissionDisplay}</dd>
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <dt className="font-medium">Representation deadline</dt>
+            <dd className="text-right">
+              <div>{deadlineDisplay}</div>
+              <span className="block text-xs text-slate-500">Licensing Act 2003</span>
+            </dd>
+          </div>
+        </dl>
+      ) : (
+        <p className="text-sm text-slate-600">
+          Dates will be calculated after you set your submission date in Step 2.
+        </p>
+      )}
     </div>
   );
+  /* CN:STEP2-END */
 }
