@@ -128,6 +128,9 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
         />
         <div className="text-sm text-slate-800">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</div>
         <div className="mt-2 text-xs text-slate-700">OCR will appear below; you can still edit everything.</div>
+        {/* CN:LICENSING-FINAL-START */}
+        <div className="mt-2 text-xs text-slate-500">You can edit your notice text in the next step if needed.</div>
+        {/* CN:LICENSING-FINAL-END */}
         <div className="sr-only" aria-live="polite">Status: {state}</div>
       </label>
 

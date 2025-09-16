@@ -1,10 +1,12 @@
 /* CN:STEP2-COMPLIANCE-START */
+// {/* CN:LICENSING-FINAL-START */}
 import { formatDisplayDate } from '@/lib/format';
 import type { Authority } from '@/lib/authorities';
 import type { NoticeDraft, NoticeType } from '@/types/notice';
 
 export type PublishState = Partial<NoticeDraft> & {
   representationDeadline?: string | Date | null;
+  ocrText?: string | null;
 };
 
 /* CN:TEMPLATES-PREVIEW-START */
@@ -20,28 +22,33 @@ const trimOrDash = (value?: string | null) => {
   return trimmed ? trimmed : dash;
 };
 
+const ensureSentence = (value?: string | null) => {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+};
+
 function formatDeadline(value?: string | Date | null): string {
   if (!value) return dash;
   const formatted = formatDisplayDate(value);
   return formatted || dash;
 }
 
-function repsLines(auth: Authority | null, council: string) {
-  const lines: string[] = [];
-  if (auth?.repsUrl) {
-    lines.push(`Online: ${auth.repsUrl}`);
-  }
-  if (auth?.repsEmail) {
-    lines.push(`Email: ${auth.repsEmail}`);
-  }
-  if (auth?.postalAddress) {
-    lines.push(`Postal: ${auth.postalAddress}`);
-  }
-  if (!lines.length) {
-    lines.push(`Contact ${council}`);
-  }
-  return lines;
-}
+const repsLines = (state: PublishState, auth: Authority | null) => {
+  const online = auth?.repsUrl?.trim() || '';
+  const email = (auth?.repsEmail || state.councilEmail || '').trim();
+  const postal = (auth?.postalAddress || state.councilAddress || '').trim();
+  return [
+    `Online: ${online || dash}`,
+    `Email: ${email || dash}`,
+    `Postal: ${postal || dash}`,
+  ];
+};
+
+type BuildOptions = {
+  includeSummaries?: boolean;
+};
 
 export function headingForNotice(type: NoticeType | undefined): [string, string] {
   switch (type) {
@@ -55,71 +62,133 @@ export function headingForNotice(type: NoticeType | undefined): [string, string]
   }
 }
 
-export function buildPremisesNotice(state: PublishState, auth: Authority | null): string {
+export function buildPremisesNotice(
+  state: PublishState,
+  auth: Authority | null,
+  options: BuildOptions = {}
+): string {
   const council = trimOrDash(state.councilName);
   const applicant = trimOrDash(state.applicantName);
   const address = trimOrDash(state.premisesAddress);
-  const summary = trimOrDash(state.applicationSummary);
   const deadline = formatDeadline(state.representationDeadline);
-  const summaryLine = summary !== dash ? `Proposed licensable activities/hours: ${summary}.` : '';
+  const summary = ensureSentence(state.applicationSummary);
+  const includeSummaries = options.includeSummaries === true;
 
-  return [
+  const lines: string[] = [
     ...headingForNotice('premises'),
-    `Notice is hereby given that ${applicant} has applied to ${council} for a Premises Licence in respect of:`,
-    `${address}.`,
-    summaryLine,
-    'Any person wishing to make representations regarding this application should write to:',
-    ...repsLines(auth, council),
-    `Representations must be received by ${deadline}.`,
-    offenceLine,
-  ]
-    .filter(Boolean)
-    .join('\n');
+    '',
+    `Notice is hereby given that ${applicant} has applied to ${council} for a Premises Licence for the premises below.`,
+    '',
+    `Premises address: ${address}`,
+  ];
+
+  if (includeSummaries && summary) {
+    lines.push('', `Summary of licensable activities/hours: ${summary}`);
+  }
+
+  const deadlineLine = deadline === dash
+    ? 'Representations must be received no later than —'
+    : `Representations must be received no later than ${deadline}.`;
+
+  lines.push(
+    '',
+    'How to make representations:',
+    ...repsLines(state, auth),
+    '',
+    deadlineLine,
+    offenceLine
+  );
+
+  return lines.join('\n');
 }
 
-export function buildVariationNotice(state: PublishState, auth: Authority | null): string {
+export function buildVariationNotice(
+  state: PublishState,
+  auth: Authority | null,
+  options: BuildOptions = {}
+): string {
   const council = trimOrDash(state.councilName);
   const applicant = trimOrDash(state.applicantName);
   const address = trimOrDash(state.premisesAddress);
-  const summary = trimOrDash(state.variationSummary || state.applicationSummary);
   const deadline = formatDeadline(state.representationDeadline);
-  const summaryLine = summary !== dash ? `Nature of the proposed variation: ${summary}.` : '';
+  const includeSummaries = options.includeSummaries === true;
+  const appSummary = ensureSentence(state.applicationSummary);
+  const variationSummary = ensureSentence(state.variationSummary);
 
-  return [
+  const lines: string[] = [
     ...headingForNotice('variation'),
-    `Notice is hereby given that ${applicant} has applied to ${council} to vary the Premises Licence at:`,
-    `${address}.`,
-    summaryLine,
-    'Any person wishing to make representations regarding this application should write to:',
-    ...repsLines(auth, council),
-    `Representations must be received by ${deadline}.`,
-    offenceLine,
-  ]
-    .filter(Boolean)
-    .join('\n');
+    '',
+    `Notice is hereby given that ${applicant} has applied to ${council} to vary a Premises Licence at the premises below.`,
+    '',
+    `Premises address: ${address}`,
+  ];
+
+  if (includeSummaries) {
+    const paragraphs = [
+      appSummary ? `Summary of licensable activities/hours: ${appSummary}` : '',
+      variationSummary ? `Nature of the proposed variation: ${variationSummary}` : '',
+    ].filter(Boolean);
+    if (paragraphs.length) {
+      lines.push('', ...paragraphs);
+    }
+  }
+
+  const deadlineLine = deadline === dash
+    ? 'Representations must be received no later than —'
+    : `Representations must be received no later than ${deadline}.`;
+
+  lines.push(
+    '',
+    'How to make representations:',
+    ...repsLines(state, auth),
+    '',
+    deadlineLine,
+    offenceLine
+  );
+
+  return lines.join('\n');
 }
 
-export function buildReviewNotice(state: PublishState, auth: Authority | null): string {
+export function buildReviewNotice(
+  state: PublishState,
+  auth: Authority | null,
+  options: BuildOptions = {}
+): string {
   const council = trimOrDash(state.councilName);
   const applicant = trimOrDash(state.applicantName);
   const address = trimOrDash(state.premisesAddress);
-  const grounds = trimOrDash(state.reviewGrounds);
   const deadline = formatDeadline(state.representationDeadline);
-  const groundsLine = grounds !== dash ? `Grounds for the review: ${grounds}.` : '';
+  const includeSummaries = options.includeSummaries === true;
+  const grounds = ensureSentence(state.reviewGrounds);
 
-  return [
+  const lines: string[] = [
     ...headingForNotice('review'),
-    `Notice is hereby given that an application has been made by ${applicant} to ${council} for a review of the Premises Licence at:`,
-    `${address}.`,
-    groundsLine,
-    'Any person wishing to make representations regarding this application should write to:',
-    ...repsLines(auth, council),
-    `Representations must be received by ${deadline}.`,
-    offenceLine,
-  ]
-    .filter(Boolean)
-    .join('\n');
+    '',
+    `Notice is hereby given that ${applicant} has applied to ${council} for a review of the Premises Licence at the premises below.`,
+    '',
+    `Premises address: ${address}`,
+  ];
+
+  if (includeSummaries && grounds) {
+    lines.push('', `Grounds for the review: ${grounds}`);
+  }
+
+  const deadlineLine = deadline === dash
+    ? 'Representations must be received no later than —'
+    : `Representations must be received no later than ${deadline}.`;
+
+  lines.push(
+    '',
+    'How to make representations:',
+    ...repsLines(state, auth),
+    '',
+    deadlineLine,
+    offenceLine
+  );
+
+  return lines.join('\n');
 }
+// {/* CN:LICENSING-FINAL-END */}
 /* CN:LICENSING-TEMPLATES-END */
 /* CN:TEMPLATES-PREVIEW-END */
 /* CN:STEP2-COMPLIANCE-END */

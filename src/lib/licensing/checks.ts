@@ -59,9 +59,17 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   /* CN:STEP2-COMPLIANCE-START */
   // Aggregate representation contact presence (email OR URL OR postal)
   {
+    // {/* CN:LICENSING-FINAL-START */}
     const auth = getAuthorityByName(draft.councilName);
-    const hasAny = !!(draft.councilEmail?.trim() || draft.councilAddress?.trim() || auth?.repsUrl);
-    push('repsContact', hasAny, 'At least one representation contact (email, URL or postal) present', 'repsContact');
+    const hasAny = !!(
+      draft.councilEmail?.trim() ||
+      draft.councilAddress?.trim() ||
+      auth?.repsUrl ||
+      auth?.repsEmail ||
+      auth?.postalAddress
+    );
+    push('repsContact', hasAny, 'At least one representation contact present (email, URL or postal)', 'repsContact');
+    // {/* CN:LICENSING-FINAL-END */}
   }
   /* CN:STEP2-COMPLIANCE-END */
   push('applicationDate', !!draft.applicationDate?.trim(), 'Application date present', 'applicationDate');

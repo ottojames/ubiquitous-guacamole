@@ -23,15 +23,10 @@ export default function KeyDatesCard({
 }) {
   /* CN:STEP2-START */
   const hasSubmission = !!applicationDate;
-  /* CN:FIX-START */
-  /* CN:STEP2-COMPLIANCE-UPGRADE-START */
-  /* CN:TEMPLATES-PREVIEW-START */
-  /* CN:LICENSING-TEMPLATES-START */
-  const submissionDisplay = hasSubmission ? formatDisplayDate(`${applicationDate}T00:00:00`) : '—';
-  /* CN:LICENSING-TEMPLATES-END */
-  /* CN:TEMPLATES-PREVIEW-END */
-  /* CN:STEP2-COMPLIANCE-UPGRADE-END */
-  /* CN:FIX-END */
+  // {/* CN:LICENSING-FINAL-START */}
+  const submissionIso = hasSubmission ? `${applicationDate}T00:00:00` : '';
+  const submissionDisplay = hasSubmission ? formatDisplayDate(submissionIso) : '—';
+  // {/* CN:LICENSING-FINAL-END */}
   const derivedDeadline = React.useMemo(() => {
     if (representationDeadline) return representationDeadline;
     if (!applicationDate) return '';
@@ -75,12 +70,20 @@ export default function KeyDatesCard({
       <dl className="space-y-3 text-sm text-[#192650]">
         <div className="flex items-start justify-between gap-4">
           <dt className="font-medium">Application date</dt>
-          <dd className="font-semibold">{submissionDisplay}</dd>
+          <dd className="font-semibold">
+            {/* CN:LICENSING-FINAL-START */}
+            {hasSubmission ? <time dateTime={submissionIso}>{submissionDisplay}</time> : submissionDisplay}
+            {/* CN:LICENSING-FINAL-END */}
+          </dd>
         </div>
         <div className="flex items-start justify-between gap-4">
           <dt className="font-medium">Representation deadline</dt>
           <dd className="text-right font-semibold">
-            <div>{deadlineDisplay}</div>
+            {/* CN:LICENSING-FINAL-START */}
+            <div>
+              {derivedDeadline ? <time dateTime={derivedDeadline}>{deadlineDisplay}</time> : deadlineDisplay}
+            </div>
+            {/* CN:LICENSING-FINAL-END */}
             <span className="block text-xs font-normal text-slate-500">Licensing Act 2003</span>
           </dd>
         </div>
