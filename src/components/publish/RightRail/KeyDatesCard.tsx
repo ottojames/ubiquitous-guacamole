@@ -24,8 +24,9 @@ export default function KeyDatesCard({
   /* CN:STEP2-START */
   const hasSubmission = !!applicationDate;
   // {/* CN:LICENSING-FINAL-START */}
+  /* CN:OFFICER-FINAL-START */
   const submissionIso = hasSubmission ? `${applicationDate}T00:00:00` : '';
-  const submissionDisplay = hasSubmission ? formatDisplayDate(submissionIso) : '—';
+  const submissionDisplay = hasSubmission ? formatDisplayDate(submissionIso) : '';
   // {/* CN:LICENSING-FINAL-END */}
   const derivedDeadline = React.useMemo(() => {
     if (representationDeadline) return representationDeadline;
@@ -37,7 +38,10 @@ export default function KeyDatesCard({
   /* CN:STEP2-COMPLIANCE-UPGRADE-START */
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
-  const deadlineDisplay = derivedDeadline ? formatDisplayDate(derivedDeadline) : '—';
+  const deadlineDisplay = derivedDeadline ? formatDisplayDate(derivedDeadline) : '';
+  const submissionPlaceholder = 'Set in Step 2';
+  const deadlinePlaceholder = 'Set in Step 2';
+  /* CN:OFFICER-FINAL-END */
   /* CN:LICENSING-TEMPLATES-END */
   /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-COMPLIANCE-UPGRADE-END */
@@ -72,7 +76,13 @@ export default function KeyDatesCard({
           <dt className="font-medium">Application date</dt>
           <dd className="font-semibold">
             {/* CN:LICENSING-FINAL-START */}
-            {hasSubmission ? <time dateTime={submissionIso}>{submissionDisplay}</time> : submissionDisplay}
+            {hasSubmission ? (
+              <time dateTime={submissionIso} className="font-semibold">
+                {submissionDisplay}
+              </time>
+            ) : (
+              <span className="text-xs font-normal text-slate-500">{submissionPlaceholder}</span>
+            )}
             {/* CN:LICENSING-FINAL-END */}
           </dd>
         </div>
@@ -81,7 +91,13 @@ export default function KeyDatesCard({
           <dd className="text-right font-semibold">
             {/* CN:LICENSING-FINAL-START */}
             <div>
-              {derivedDeadline ? <time dateTime={derivedDeadline}>{deadlineDisplay}</time> : deadlineDisplay}
+              {derivedDeadline ? (
+                <time dateTime={derivedDeadline} className="font-semibold">
+                  {deadlineDisplay}
+                </time>
+              ) : (
+                <span className="text-xs font-normal text-slate-500">{deadlinePlaceholder}</span>
+              )}
             </div>
             {/* CN:LICENSING-FINAL-END */}
             <span className="block text-xs font-normal text-slate-500">Licensing Act 2003</span>

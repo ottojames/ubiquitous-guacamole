@@ -1,4 +1,5 @@
 /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+/* CN:OFFICER-FINAL-START */
 // Legacy export kept for back-compat; prefer formatDisplayDateTime
 export function formatDisplayDate(d: Date | string | null): string {
   if (!d) return '';
@@ -29,4 +30,5 @@ export function formatDisplayDateTime(d?: Date | string | null): string {
     hour12: false,
   });
 }
+/* CN:OFFICER-FINAL-END */
 /* CN:STEP2-COMPLIANCE-UPGRADE-END */
