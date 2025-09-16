@@ -327,14 +327,41 @@ export default function UploadNoticeFlow() {
           )}
         </main>
         <aside className="md:col-span-1 md:sticky md:top-[var(--headerH)] space-y-4">
-          <PreviewCard text={text} />
-          <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
-          <KeyDatesCard
-            applicationDate={draft.applicationDate}
-            representationDeadline={draft.repsDeadline || ''}
-            consultationDays={28}
-          />
-          <CostCard cost={0} canSubmit={canContinue && step === 3} />
+          {/* CN:STEP1-START */}
+          {step === 1 ? (
+            <>
+              <div className={`${UI.card} p-4 md:p-5`}>
+                <h3 className={UI.cardHeader}>Preview</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Preview appears after you upload or complete details in Step 2.
+                </p>
+              </div>
+              <div className={`${UI.card} p-4 md:p-5`}>
+                <h3 className={UI.cardHeader}>Compliance checklist</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  We’ll run compliance checks once details are entered.
+                </p>
+              </div>
+              <div className={`${UI.card} p-4 md:p-5`}>
+                <h3 className={UI.cardHeader}>Key dates</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Dates will be calculated after you set your submission date in Step 2.
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <PreviewCard text={text} />
+              <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
+              <KeyDatesCard
+                applicationDate={draft.applicationDate}
+                representationDeadline={draft.repsDeadline || ''}
+                consultationDays={28}
+              />
+              <CostCard cost={0} canSubmit={canContinue && step === 3} />
+            </>
+          )}
+          {/* CN:STEP1-END */}
         </aside>
       </div>
     </div>
