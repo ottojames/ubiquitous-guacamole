@@ -1,11 +1,17 @@
+/* CN:TEMPLATES-PREVIEW-START */
+/* CN:LICENSING-TEMPLATES-START */
 export type NoticeType =
   | 'premises'   // Licensing Act 2003
+  | 'variation'  // Licensing Act 2003 variation
+  | 'review'     // Licensing Act 2003 review
   | 'gvol'       // Goods Vehicle Operator
   | 'tro'        // Traffic Order
   | 'planning'
   | 'gambling'
   | 'probate'
   | 'other';
+/* CN:LICENSING-TEMPLATES-END */
+/* CN:TEMPLATES-PREVIEW-END */
 
 export type UploadedFile = {
   id: string;
@@ -26,6 +32,13 @@ export type NoticeDraft = {
   /* CN:STEP2-START */
   urn?: string;
   /* CN:STEP2-END */
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  applicationSummary?: string;
+  variationSummary?: string;
+  reviewGrounds?: string;
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
   premisesName?: string;
   premisesAddress: string;
   postcode: string;

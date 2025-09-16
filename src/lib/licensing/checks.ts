@@ -39,6 +39,23 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   push('councilName', !!draft.councilName?.trim(), 'Council name present', 'councilName');
   push('councilEmail', !!draft.councilEmail?.trim(), 'Council email present', 'councilEmail');
   push('councilAddress', !!draft.councilAddress?.trim(), 'Council address present', 'councilAddress');
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  const hasNoticeText = !!draft.finalText?.trim();
+  if (draft.noticeType === 'premises' || draft.noticeType === 'variation') {
+    const appSummaryOk = hasNoticeText || !!draft.applicationSummary?.trim();
+    push('applicationSummary', appSummaryOk, 'Application summary present (or OCR provided)', 'applicationSummary');
+  }
+  if (draft.noticeType === 'variation') {
+    const variationOk = hasNoticeText || !!draft.variationSummary?.trim();
+    push('variationSummary', variationOk, 'Nature of variation present (or OCR provided)', 'variationSummary');
+  }
+  if (draft.noticeType === 'review') {
+    const reviewOk = hasNoticeText || !!draft.reviewGrounds?.trim();
+    push('reviewGrounds', reviewOk, 'Grounds for review present (or OCR provided)', 'reviewGrounds');
+  }
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-COMPLIANCE-START */
   // Aggregate representation contact presence (email OR URL OR postal)
   {

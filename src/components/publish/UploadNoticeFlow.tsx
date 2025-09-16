@@ -13,7 +13,7 @@ import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
 /* CN:STEP2-COMPLIANCE-START */
 import { formatDisplayDate } from '@/lib/format';
 import { getAuthorityByName, emailDomainMatchesAuthority } from '@/lib/authorities';
-import { buildPremisesNotice } from '@/features/publish/previewBuilders';
+import { buildPremisesNotice, buildVariationNotice, buildReviewNotice } from '@/features/publish/previewBuilders';
 /* CN:STEP2-COMPLIANCE-END */
 /* CN:STEP2-END */
 import * as UI from '@/styles/ui';
@@ -67,6 +67,14 @@ export default function UploadNoticeFlow() {
     blueNoticeUploads: [],
     status: 'Draft',
     applicationDate: '',
+    /* CN:TEMPLATES-PREVIEW-START */
+    /* CN:LICENSING-TEMPLATES-START */
+    applicationSummary: '',
+    variationSummary: '',
+    reviewGrounds: '',
+    finalText: '',
+    /* CN:LICENSING-TEMPLATES-END */
+    /* CN:TEMPLATES-PREVIEW-END */
   });
   const [confirmA, setConfirmA] = useState(false);
   const [confirmB, setConfirmB] = useState(false);
@@ -82,22 +90,51 @@ export default function UploadNoticeFlow() {
     /* CN:STEP2-END */
   };
   /* CN:STEP2-START */
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  const hasNoticeText = text.trim().length > 0;
+  const needsApplicationSummary =
+    !hasNoticeText && (draft.noticeType === 'premises' || draft.noticeType === 'variation');
+  const needsVariationSummary = !hasNoticeText && draft.noticeType === 'variation';
+  const needsReviewGrounds = !hasNoticeText && draft.noticeType === 'review';
+
+  const summariesOk =
+    (!needsApplicationSummary || !!draft.applicationSummary?.trim()) &&
+    (!needsVariationSummary || !!draft.variationSummary?.trim()) &&
+    (!needsReviewGrounds || !!draft.reviewGrounds?.trim());
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
+
   const requiredOk =
     draft.applicantName.trim() &&
     draft.premisesAddress.trim() &&
     draft.postcode.trim() &&
     draft.councilName.trim() &&
     draft.councilEmail.trim() &&
-    draft.applicationDate.trim();
+    draft.applicationDate.trim() &&
+    /* CN:TEMPLATES-PREVIEW-START */
+    /* CN:LICENSING-TEMPLATES-START */
+    summariesOk;
+    /* CN:LICENSING-TEMPLATES-END */
+    /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-LAYOUT-START */
-  const validCount = [
+  const requiredFields = [
     draft.applicantName,
     draft.premisesAddress,
     draft.postcode,
     draft.councilName,
     draft.councilEmail,
     draft.applicationDate,
-  ].filter((value) => !!value?.trim()).length;
+  ];
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  if (needsApplicationSummary) requiredFields.push(draft.applicationSummary);
+  if (needsVariationSummary) requiredFields.push(draft.variationSummary);
+  if (needsReviewGrounds) requiredFields.push(draft.reviewGrounds);
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
+  const validCount = requiredFields.filter((value) => !!value?.toString().trim()).length;
+  const requiredTotal = requiredFields.length;
   /* CN:STEP2-LAYOUT-END */
   /* CN:STEP2-END */
   const canContinue = requiredOk && confirmA && confirmB;
@@ -195,6 +232,13 @@ export default function UploadNoticeFlow() {
       /* CN:STEP2-COMPLIANCE-END */
       councilAddr: 'councilAddress',
       councilAddress: 'councilAddress',
+      /* CN:TEMPLATES-PREVIEW-START */
+      /* CN:LICENSING-TEMPLATES-START */
+      applicationSummary: 'applicationSummary',
+      variationSummary: 'variationSummary',
+      reviewGrounds: 'reviewGrounds',
+      /* CN:LICENSING-TEMPLATES-END */
+      /* CN:TEMPLATES-PREVIEW-END */
       appDate: 'submissionDate',
       applicationDate: 'submissionDate',
       submissionDate: 'submissionDate',
@@ -251,7 +295,11 @@ export default function UploadNoticeFlow() {
                     className="rounded-full bg-neutral-100 px-2.5 py-1 pt-0.5 text-xs text-neutral-600"
                     data-testid="required-inline-counter"
                   >
-                    {`Required: ${validCount}/6`}
+                    {/* CN:TEMPLATES-PREVIEW-START */}
+                    {/* CN:LICENSING-TEMPLATES-START */}
+                    {`Required: ${validCount}/${requiredTotal}`}
+                    {/* CN:LICENSING-TEMPLATES-END */}
+                    {/* CN:TEMPLATES-PREVIEW-END */}
                   </span>
                 </div>
                 {/* CN:STEP2-LAYOUT-END */}
@@ -389,9 +437,28 @@ export default function UploadNoticeFlow() {
               {(() => {
                 const auth = getAuthorityByName(draft.councilName);
                 const representationIso = draft.repsDeadline || (draft.applicationDate ? calculateRepresentationDeadline(draft.applicationDate).toISOString() : '');
-                const built = buildPremisesNotice({ ...draft, representationDeadline: representationIso }, auth);
+                const builderState = { ...draft, representationDeadline: representationIso };
+                /* CN:TEMPLATES-PREVIEW-START */
+                /* CN:LICENSING-TEMPLATES-START */
+                const built =
+                  draft.noticeType === 'variation'
+                    ? buildVariationNotice(builderState, auth)
+                    : draft.noticeType === 'review'
+                      ? buildReviewNotice(builderState, auth)
+                      : buildPremisesNotice(builderState, auth);
+                /* CN:LICENSING-TEMPLATES-END */
+                /* CN:TEMPLATES-PREVIEW-END */
                 const useText = (text ?? '').trim().length > 0 ? text : built;
-                const showBanner = useText.includes('—');
+                /* CN:TEMPLATES-PREVIEW-START */
+                /* CN:LICENSING-TEMPLATES-START */
+                const summaryMissing =
+                  !hasNoticeText &&
+                  ((needsApplicationSummary && !draft.applicationSummary?.trim()) ||
+                    (needsVariationSummary && !draft.variationSummary?.trim()) ||
+                    (needsReviewGrounds && !draft.reviewGrounds?.trim()));
+                const showBanner = useText.includes('—') || summaryMissing;
+                /* CN:LICENSING-TEMPLATES-END */
+                /* CN:TEMPLATES-PREVIEW-END */
                 return (
                   <PreviewCard
                     text={useText}
@@ -448,10 +515,58 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const councilAddressHelpId = React.useId();
   const submissionHelpId = React.useId();
   const deadlineHelpId = React.useId();
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  const applicationSummaryHelpId = React.useId();
+  const applicationSummaryErrorId = React.useId();
+  const variationSummaryHelpId = React.useId();
+  const variationSummaryErrorId = React.useId();
+  const reviewGroundsHelpId = React.useId();
+  const reviewGroundsErrorId = React.useId();
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-LAYOUT-END */
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
+
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  const authority = React.useMemo(() => getAuthorityByName(draft.councilName), [draft.councilName]);
+  const hasGeneratedNoticeText = !!draft.finalText?.trim();
+  const needsAppSummary =
+    !hasGeneratedNoticeText && (draft.noticeType === 'premises' || draft.noticeType === 'variation');
+  const needsVariationSummary = !hasGeneratedNoticeText && draft.noticeType === 'variation';
+  const needsReviewGrounds = !hasGeneratedNoticeText && draft.noticeType === 'review';
+
+  const applicationSummaryError = needsAppSummary && !draft.applicationSummary?.trim();
+  const variationSummaryError = needsVariationSummary && !draft.variationSummary?.trim();
+  const reviewGroundsError = needsReviewGrounds && !draft.reviewGrounds?.trim();
+
+  const applicationSummaryDescribedBy = [
+    applicationSummaryHelpId,
+    applicationSummaryError ? applicationSummaryErrorId : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const variationSummaryDescribedBy = [
+    variationSummaryHelpId,
+    variationSummaryError ? variationSummaryErrorId : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const reviewGroundsDescribedBy = [reviewGroundsHelpId, reviewGroundsError ? reviewGroundsErrorId : undefined]
+    .filter(Boolean)
+    .join(' ');
+
+  const showDomainWarning = !!draft.councilEmail && !emailDomainMatchesAuthority(draft.councilEmail, authority);
+  const canonicalAuthorityEmail = authority?.canonicalEmail || authority?.repsEmail || '';
+  const authorityRepsEmail = authority?.repsEmail || '';
+  const authorityRepsUrl = authority?.repsUrl || '';
+  const authorityPostalAddress = authority?.postalAddress || '';
+  const representationContactsIncomplete = !(authorityRepsEmail || authorityRepsUrl || authorityPostalAddress);
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
 
   /* CN:STEP2-LAYOUT-START */
   React.useEffect(() => {
@@ -465,6 +580,14 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     el.setAttribute('aria-describedby', searchHelpId);
   }, [searchHelpId]);
   /* CN:STEP2-LAYOUT-END */
+
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  React.useEffect(() => {
+    setIgnoreDomainWarning((prev) => (prev ? false : prev));
+  }, [draft.councilEmail, draft.councilName]);
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
 
   const representationIso = React.useMemo(() => {
     if (draft.repsDeadline) return draft.repsDeadline;
@@ -638,6 +761,47 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
                 Value differs from council directory
               </span>
             )}
+            {/* CN:TEMPLATES-PREVIEW-START */}
+            {/* CN:LICENSING-TEMPLATES-START */}
+            {!ignoreDomainWarning && showDomainWarning && (
+              <div
+                role="status"
+                className="mt-2 space-y-2 rounded border border-amber-200 bg-amber-50 p-2 text-[12px] text-amber-800"
+              >
+                <div>
+                  Email domain doesn’t match {authority?.displayName || 'the selected authority'}.
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {canonicalAuthorityEmail && (
+                    <button
+                      type="button"
+                      className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                      onClick={() => {
+                        onChange({ councilEmail: canonicalAuthorityEmail }, { ensureUrn: true });
+                      }}
+                    >
+                      Use authority email
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                    onClick={() => focusAndFlash('councilEmail')}
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                    onClick={() => setIgnoreDomainWarning(true)}
+                  >
+                    Use anyway
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* CN:LICENSING-TEMPLATES-END */}
+            {/* CN:TEMPLATES-PREVIEW-END */}
           </div>
           <div className="col-span-12">
             <label htmlFor="councilAddress" className={UI.label}>
@@ -661,6 +825,101 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               </span>
             )}
           </div>
+          {/* CN:TEMPLATES-PREVIEW-START */}
+          {/* CN:LICENSING-TEMPLATES-START */}
+          {(draft.noticeType === 'premises' || draft.noticeType === 'variation' || draft.noticeType === 'review') && (
+            <>
+              <div className="col-span-12 border-t border-slate-200/80 pt-6">
+                <h3 className="text-sm font-semibold text-brand-navy">Application summary</h3>
+              </div>
+              {(draft.noticeType === 'premises' || draft.noticeType === 'variation') && (
+                <div className="col-span-12">
+                  <label htmlFor="applicationSummary" className={UI.label}>
+                    Application summary
+                    {needsAppSummary ? (
+                      <span className="text-rose-600">*</span>
+                    ) : (
+                      <span className="text-xs font-normal text-slate-500"> (optional when notice text uploaded)</span>
+                    )}
+                  </label>
+                  <textarea
+                    id="applicationSummary"
+                    className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
+                    value={draft.applicationSummary || ''}
+                    onChange={(e) => onChange({ applicationSummary: e.target.value })}
+                    aria-invalid={applicationSummaryError ? 'true' : undefined}
+                    aria-describedby={applicationSummaryDescribedBy || undefined}
+                  />
+                  <p id={applicationSummaryHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+                    Describe licensable activities and hours (e.g., Sale of alcohol 10:00–23:00).
+                  </p>
+                  {applicationSummaryError && (
+                    <p id={applicationSummaryErrorId} className="mt-1 text-xs text-rose-600" role="alert">
+                      Provide an application summary or upload the notice text.
+                    </p>
+                  )}
+                </div>
+              )}
+              {draft.noticeType === 'variation' && (
+                <div className="col-span-12">
+                  <label htmlFor="variationSummary" className={UI.label}>
+                    Nature of the proposed variation
+                    {needsVariationSummary ? (
+                      <span className="text-rose-600">*</span>
+                    ) : (
+                      <span className="text-xs font-normal text-slate-500"> (optional when notice text uploaded)</span>
+                    )}
+                  </label>
+                  <textarea
+                    id="variationSummary"
+                    className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
+                    value={draft.variationSummary || ''}
+                    onChange={(e) => onChange({ variationSummary: e.target.value })}
+                    aria-invalid={variationSummaryError ? 'true' : undefined}
+                    aria-describedby={variationSummaryDescribedBy || undefined}
+                  />
+                  <p id={variationSummaryHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+                    Summarise the proposed changes (e.g., Extend alcohol sales to 01:00).
+                  </p>
+                  {variationSummaryError && (
+                    <p id={variationSummaryErrorId} className="mt-1 text-xs text-rose-600" role="alert">
+                      Provide the nature of the proposed variation or upload the notice text.
+                    </p>
+                  )}
+                </div>
+              )}
+              {draft.noticeType === 'review' && (
+                <div className="col-span-12">
+                  <label htmlFor="reviewGrounds" className={UI.label}>
+                    Grounds for review
+                    {needsReviewGrounds ? (
+                      <span className="text-rose-600">*</span>
+                    ) : (
+                      <span className="text-xs font-normal text-slate-500"> (optional when notice text uploaded)</span>
+                    )}
+                  </label>
+                  <textarea
+                    id="reviewGrounds"
+                    className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
+                    value={draft.reviewGrounds || ''}
+                    onChange={(e) => onChange({ reviewGrounds: e.target.value })}
+                    aria-invalid={reviewGroundsError ? 'true' : undefined}
+                    aria-describedby={reviewGroundsDescribedBy || undefined}
+                  />
+                  <p id={reviewGroundsHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+                    Explain the grounds for the review (e.g., Prevention of crime and disorder).
+                  </p>
+                  {reviewGroundsError && (
+                    <p id={reviewGroundsErrorId} className="mt-1 text-xs text-rose-600" role="alert">
+                      Provide the grounds for review or upload the notice text.
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+          {/* CN:LICENSING-TEMPLATES-END */}
+          {/* CN:TEMPLATES-PREVIEW-END */}
           <div className="col-span-12 border-t border-slate-200/80 pt-6">
             <h3 className="text-sm font-semibold text-brand-navy">Dates &amp; declarations</h3>
           </div>
@@ -705,63 +964,29 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
           <div className="col-span-12">
             <div className="rounded-xl border border-slate-200/80 bg-neutral-50 p-3 md:p-4">
               <h4 className="mb-2 text-sm font-medium text-[#192650]">How to make representations</h4>
-              {(() => {
-                const auth = getAuthorityByName(draft.councilName);
-                const email = auth?.repsEmail || '';
-                const url = auth?.repsUrl || '';
-                const postal = auth?.postalAddress || '';
-                const incomplete = !(email || url || postal);
-
-                // Domain mismatch (non-blocking)
-                const showDomainWarn = !!draft.councilEmail && !emailDomainMatchesAuthority(draft.councilEmail, auth);
-
-                return (
-                  <div className="space-y-1 text-sm text-[#192650]">
-                    <div>
-                      <span className="font-medium">Email:</span> {email || '—'}
-                    </div>
-                    <div>
-                      <span className="font-medium">Online form:</span>{' '}
-                      {url ? (
-                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
-                          {url}
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-medium">Postal address:</span> {postal || '—'}
-                    </div>
-                    {incomplete && (
-                      <div className="mt-2 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                        Representation contact details for this council are incomplete. Please verify before continuing.
-                      </div>
-                    )}
-                    {!ignoreDomainWarning && showDomainWarn && (
-                      <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2 text-[12px] text-amber-800">
-                        The email domain doesn’t match {auth?.displayName}. Continue or update the council email.
-                        <div className="mt-2 flex gap-2">
-                          <button
-                            type="button"
-                            className={`${UI.btnSecondary} py-1 px-2 text-xs`}
-                            onClick={() => focusAndFlash('councilEmail')}
-                          >
-                            Change
-                          </button>
-                          <button
-                            type="button"
-                            className={`${UI.btnSecondary} py-1 px-2 text-xs`}
-                            onClick={() => setIgnoreDomainWarning(true)}
-                          >
-                            Use anyway
-                          </button>
-                        </div>
-                      </div>
-                    )}
+              <div className="space-y-1 text-sm text-[#192650]">
+                <div>
+                  <span className="font-medium">Email:</span> {authorityRepsEmail || '—'}
+                </div>
+                <div>
+                  <span className="font-medium">Online form:</span>{' '}
+                  {authorityRepsUrl ? (
+                    <a href={authorityRepsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
+                      {authorityRepsUrl}
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </div>
+                <div>
+                  <span className="font-medium">Postal address:</span> {authorityPostalAddress || '—'}
+                </div>
+                {representationContactsIncomplete && (
+                  <div className="mt-2 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                    Representation contact details for this council are incomplete. Please verify before continuing.
                   </div>
-                );
-              })()}
+                )}
+              </div>
             </div>
           </div>
           {/* CN:STEP2-COMPLIANCE-END */}

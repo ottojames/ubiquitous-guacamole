@@ -4,7 +4,11 @@ import * as UI from '@/styles/ui';
 /* CN:FIX-START */
 /* CN:STEP2-COMPLIANCE-UPGRADE-START */
 import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
-import { formatDisplayDateTime } from '@/lib/format';
+/* CN:TEMPLATES-PREVIEW-START */
+/* CN:LICENSING-TEMPLATES-START */
+import { formatDisplayDate } from '@/lib/format';
+/* CN:LICENSING-TEMPLATES-END */
+/* CN:TEMPLATES-PREVIEW-END */
 /* CN:STEP2-COMPLIANCE-UPGRADE-END */
 /* CN:FIX-END */
 /* CN:STEP2-COMPLIANCE-END */
@@ -21,7 +25,11 @@ export default function KeyDatesCard({
   const hasSubmission = !!applicationDate;
   /* CN:FIX-START */
   /* CN:STEP2-COMPLIANCE-UPGRADE-START */
-  const submissionDisplay = hasSubmission ? formatDisplayDateTime(applicationDate) : '—';
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  const submissionDisplay = hasSubmission ? formatDisplayDate(`${applicationDate}T00:00:00`) : '—';
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-COMPLIANCE-UPGRADE-END */
   /* CN:FIX-END */
   const derivedDeadline = React.useMemo(() => {
@@ -32,7 +40,11 @@ export default function KeyDatesCard({
   }, [applicationDate, representationDeadline]);
   /* CN:FIX-START */
   /* CN:STEP2-COMPLIANCE-UPGRADE-START */
-  const deadlineDisplay = derivedDeadline ? `${formatDisplayDateTime(derivedDeadline)} (24h)` : '—';
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  const deadlineDisplay = derivedDeadline ? formatDisplayDate(derivedDeadline) : '—';
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-COMPLIANCE-UPGRADE-END */
   /* CN:FIX-END */
 
