@@ -29,6 +29,19 @@ type NoticeFieldRefs = {
 };
 /* CN:STEP2-END */
 
+/* CN:STEP2-LAYOUT-START */
+function focusAndFlash(id: string) {
+  const el = document.getElementById(id) as HTMLElement | null;
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).focus?.();
+  el.classList.add('outline', 'outline-2', 'outline-blue-300');
+  setTimeout(() => {
+    el.classList.remove('outline', 'outline-2', 'outline-blue-300');
+  }, 700);
+}
+/* CN:STEP2-LAYOUT-END */
+
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [text, setText] = useState('');
@@ -71,6 +84,16 @@ export default function UploadNoticeFlow() {
     draft.councilName.trim() &&
     draft.councilEmail.trim() &&
     draft.applicationDate.trim();
+  /* CN:STEP2-LAYOUT-START */
+  const validCount = [
+    draft.applicantName,
+    draft.premisesAddress,
+    draft.postcode,
+    draft.councilName,
+    draft.councilEmail,
+    draft.applicationDate,
+  ].filter((value) => !!value?.trim()).length;
+  /* CN:STEP2-LAYOUT-END */
   /* CN:STEP2-END */
   const canContinue = requiredOk && confirmA && confirmB;
 
@@ -154,33 +177,23 @@ export default function UploadNoticeFlow() {
   const toErrorKey = (target: string) => (target === 'premises-address' ? 'premisesAddress' : target);
   const handleFix = (target?: string) => {
     if (!target) return;
-    // When on Step 2, prefer focusing inline Required details inputs via refs
-    if (step === 2) {
-      const map: Record<string, React.RefObject<HTMLInputElement | HTMLTextAreaElement> | undefined> = {
-        applicant: refs.applicant,
-        applicantName: refs.applicant,
-        addr: refs.premisesAddress,
-        'premises-address': refs.premisesAddress,
-        councilName: refs.councilName,
-        councilEmail: refs.councilEmail,
-        councilAddr: refs.councilAddress,
-        councilAddress: refs.councilAddress,
-        appDate: refs.applicationDate,
-        applicationDate: refs.applicationDate,
-        repsMissing: refs.applicationDate,
-      };
-      const r = map[target];
-      if (r?.current) {
-        r.current.focus();
-        r.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setErrors((er) => ({ ...er, [toErrorKey(target)]: 'This field is required' }));
-        return;
-      }
-    }
-    // Fallback: focus element by id
-    const el = document.getElementById(target) as HTMLElement | null;
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
+    /* CN:STEP2-LAYOUT-START */
+    const map: Record<string, string> = {
+      applicant: 'applicantName',
+      applicantName: 'applicantName',
+      addr: 'premisesAddressManual',
+      'premises-address': 'premisesAddressManual',
+      councilName: 'councilName',
+      councilEmail: 'councilEmail',
+      councilAddr: 'councilAddress',
+      councilAddress: 'councilAddress',
+      appDate: 'applicationDate',
+      applicationDate: 'applicationDate',
+      repsMissing: 'applicationDate',
+    };
+    const fieldId = map[target] || target;
+    focusAndFlash(fieldId);
+    /* CN:STEP2-LAYOUT-END */
     setErrors((er) => ({ ...er, [toErrorKey(target)]: 'This field is required' }));
   };
 
@@ -209,37 +222,31 @@ export default function UploadNoticeFlow() {
           {/* CN:STEP1-END */}
           {step === 2 && (
             <>
-              <FileDropOCR
-                onText={(t) => {
-                  setText(t);
-                  setDraft((d) => ({ ...d, finalText: t }));
-                }}
-                onMeta={(m) => setDraft((d) => ({ ...d, originalFileMeta: m }))}
-              />
-              <section className={UI.section} data-testid="required-inline">
-                {/* CN:STEP2-START */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              {/* CN:STEP2-LAYOUT-START */}
+              <div className="[&>div]:p-6 [&>div]:md:p-6">
+                <FileDropOCR
+                  onText={(t) => {
+                    setText(t);
+                    setDraft((d) => ({ ...d, finalText: t }));
+                  }}
+                  onMeta={(m) => setDraft((d) => ({ ...d, originalFileMeta: m }))}
+                />
+              </div>
+              <section className={`${UI.section} space-y-6 p-6`} data-testid="required-inline">
+                <div className="flex items-baseline justify-between">
                   <div>
-                    <h3 className="font-medium text-brand-navy">Licensing Act 2003 details</h3>
-                    <p className="mt-1 text-xs text-slate-600">Complete each section to continue.</p>
+                    <h3 className="text-base font-semibold text-brand-navy">Licensing Act 2003 details</h3>
+                    <p className="mt-1 text-xs text-neutral-600">Complete each section to continue.</p>
                   </div>
                   <span
-                    className="inline-block rounded bg-brand-lilac text-brand-navy ring-1 ring-brand-blue/20 px-2 py-0.5 text-xs"
+                    className="rounded-full bg-neutral-100 px-2.5 py-1 pt-0.5 text-xs text-neutral-600"
                     data-testid="required-inline-counter"
                   >
-                    {(() => {
-                      const checks = [
-                        !!draft.applicantName?.trim(),
-                        !!draft.premisesAddress?.trim(),
-                        !!draft.postcode?.trim(),
-                        !!draft.councilName?.trim(),
-                        !!draft.councilEmail?.trim(),
-                        !!draft.applicationDate?.trim(),
-                      ].filter(Boolean).length;
-                      return `Required: ${checks}/6`;
-                    })()}
+                    {`Required: ${validCount}/6`}
                   </span>
                 </div>
+                {/* CN:STEP2-LAYOUT-END */}
+                {/* CN:STEP2-START */}
                 <NoticeDetailsSections
                   draft={draft}
                   onChange={updateDraft}
@@ -317,37 +324,34 @@ export default function UploadNoticeFlow() {
               <div className="text-sm text-brand-navy mb-2">
                 To continue, upload your notice or complete the required details.
               </div>
-              <div className="flex items-center justify-between">
-                <button
-                  className={UI.btnSecondary}
-                  onClick={handleBack}
-                  data-testid="btn-back"
-                >
+              {/* CN:STEP2-LAYOUT-START */}
+              <div className="mt-4 flex items-center justify-end gap-3">
+                <button className={`${UI.btnSecondary} h-11 px-5 text-sm`} onClick={handleBack} data-testid="btn-back">
                   Back
                 </button>
-                <div className="flex gap-2">
-                  <button
-                    className={UI.btnPrimary}
-                    disabled={!text && !(requiredOk && confirmA && confirmB)}
-                    onClick={() => setStep(3)}
-                    data-testid="btn-continue"
-                  >
-                    Continue
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white"
-                    data-testid="link-skip-ocr"
-                    onClick={() => setStep(3)}
-                  >
-                    {/* CN:STEP2-START */}Enter details manually{/* CN:STEP2-END */}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className={`${UI.btnSecondary} h-11 px-5 text-sm`}
+                  data-testid="link-skip-ocr"
+                  onClick={() => setStep(3)}
+                >
+                  {/* CN:STEP2-START */}Enter details manually{/* CN:STEP2-END */}
+                </button>
+                <button
+                  className={`${UI.btnPrimary} h-11 px-5 text-sm`}
+                  disabled={!text && !(requiredOk && confirmA && confirmB)}
+                  onClick={() => setStep(3)}
+                  data-testid="btn-continue"
+                >
+                  Continue
+                </button>
               </div>
+              {/* CN:STEP2-LAYOUT-END */}
             </div>
           )}
         </main>
-        <aside className="md:col-span-1 md:sticky md:top-[var(--headerH)] space-y-4">
+        {/* CN:STEP2-LAYOUT-START */}
+        <aside className="md:col-span-1 md:sticky md:top-[var(--headerH)] space-y-4 md:space-y-5">
           {/* CN:STEP1-START */}
           {step === 1 ? (
             <>
@@ -384,6 +388,7 @@ export default function UploadNoticeFlow() {
           )}
           {/* CN:STEP1-END */}
         </aside>
+        {/* CN:STEP2-LAYOUT-END */}
       </div>
     </div>
   );
@@ -402,12 +407,32 @@ type NoticeDetailsSectionsProps = {
 
 function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const { draft, onChange, refs, confirmA, confirmB, onConfirmAChange, onConfirmBChange } = props;
-  const manualAddressHelpId = React.useId();
+  /* CN:STEP2-LAYOUT-START */
+  const applicantHelpId = React.useId();
   const referenceHelpId = React.useId();
+  const manualAddressHelpId = React.useId();
+  const searchHelpId = React.useId();
+  const postcodeHelpId = React.useId();
+  const councilNameHelpId = React.useId();
+  const councilEmailHelpId = React.useId();
+  const councilAddressHelpId = React.useId();
+  const submissionHelpId = React.useId();
   const deadlineHelpId = React.useId();
+  /* CN:STEP2-LAYOUT-END */
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
+
+  /* CN:STEP2-LAYOUT-START */
+  React.useEffect(() => {
+    const el = document.querySelector<HTMLInputElement>('[data-testid="input-premises-address"]');
+    if (!el) return;
+    if (!el.id) {
+      el.id = 'premisesAddressSearch';
+    }
+    el.setAttribute('aria-describedby', searchHelpId);
+  }, [searchHelpId]);
+  /* CN:STEP2-LAYOUT-END */
 
   const representationIso = React.useMemo(() => {
     if (draft.repsDeadline) return draft.repsDeadline;
@@ -449,97 +474,115 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-sm font-semibold text-brand-navy">Applicant details</h3>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
+    <div>
+      {/* CN:STEP2-LAYOUT-START */}
+      <fieldset>
+        <legend className="sr-only">Licensing Act 2003 details</legend>
+        <div className="grid grid-cols-12 gap-4 md:gap-5">
+          <div className="col-span-12">
+            <h3 className="text-sm font-semibold text-brand-navy">Applicant details</h3>
+          </div>
+          <div className="col-span-12 md:col-span-8">
             <label htmlFor="applicantName" className={UI.label}>
               Applicant name<span className="text-rose-600">*</span>
             </label>
             <input
               id="applicantName"
               ref={refs.applicant}
-              className={UI.input}
+              className={`${UI.input} h-11 text-sm`}
               data-testid="input-applicant-name"
               value={draft.applicantName}
               onChange={(e) => onChange({ applicantName: e.target.value }, { ensureUrn: true })}
+              aria-describedby={applicantHelpId}
             />
+            <p id={applicantHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              The person or organisation applying for the licence.
+            </p>
           </div>
-          <div>
+          <div className="col-span-12 md:col-span-4">
             <label htmlFor="urn" className={UI.label}>
               URN / Reference <span className="text-xs font-normal text-slate-500">(optional)</span>
             </label>
             <input
               id="urn"
-              className={UI.input}
+              className={`${UI.input} h-11 text-sm`}
               value={draft.urn || ''}
               onChange={(e) => onChange({ urn: e.target.value })}
               aria-describedby={referenceHelpId}
             />
-            <p id={referenceHelpId} className="mt-1 text-xs text-slate-600">
+            <p id={referenceHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
               Auto-generated when you start editing; update if your authority provided a specific reference.
             </p>
           </div>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-200/80 pt-6">
-        <h3 className="text-sm font-semibold text-brand-navy">Premises &amp; Council details</h3>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div id="premises-address" className="md:col-span-2">
+          <div className="col-span-12 border-t border-slate-200/80 pt-6">
+            <h3 className="text-sm font-semibold text-brand-navy">Premises &amp; Council details</h3>
+          </div>
+          <div
+            className="col-span-12 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-slate-800 [&_input]:h-11 [&_input]:text-sm"
+          >
             <AddressAutocomplete
               label="Premises address (search)"
               onSelect={handleAddressSelect}
               inputTestId="input-premises-address"
             />
+            <p id={searchHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              Start typing to look up the premises and pre-fill council details.
+            </p>
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-12 md:col-span-8">
             <label htmlFor="premisesAddressManual" className={UI.label}>
               Premises address<span className="text-rose-600">*</span>
             </label>
             <textarea
               id="premisesAddressManual"
               ref={refs.premisesAddress as React.RefObject<HTMLTextAreaElement>}
-              className={`${UI.input} min-h-[96px]`}
+              className={`${UI.input} min-h-[96px] text-sm`}
               value={draft.premisesAddress}
               onChange={(e) => onChange({ premisesAddress: e.target.value }, { ensureUrn: true })}
               aria-describedby={manualAddressHelpId}
             />
-            <p id={manualAddressHelpId} className="mt-1 text-xs text-slate-600">
+            <p id={manualAddressHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
               Search above, then adjust the address exactly as it should appear on the notice.
             </p>
           </div>
-          <div>
+          <div className="col-span-12 md:col-span-4">
             <label htmlFor="postcode" className={UI.label}>
               Postcode<span className="text-rose-600">*</span>
             </label>
             <input
               id="postcode"
-              className={UI.input}
+              className={`${UI.input} h-11 text-sm`}
               value={draft.postcode}
               onChange={(e) => onChange({ postcode: e.target.value }, { ensureUrn: true })}
+              aria-describedby={postcodeHelpId}
             />
+            <p id={postcodeHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              Matches the final notice address.
+            </p>
           </div>
-          <div>
+          <div className="col-span-12 md:col-span-6">
             <label htmlFor="councilName" className={UI.label}>
               Council name<span className="text-rose-600">*</span>
             </label>
             <input
               id="councilName"
               ref={refs.councilName}
-              className={UI.input}
+              className={`${UI.input} h-11 text-sm`}
               data-testid="input-council-name"
               value={draft.councilName}
               onChange={(e) => onChange({ councilName: e.target.value }, { ensureUrn: true })}
+              aria-describedby={councilNameHelpId}
             />
+            <p id={councilNameHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              Licensing authority responsible for this notice.
+            </p>
             {lookedUpName.current && draft.councilName && draft.councilName !== lookedUpName.current && (
               <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                 Value differs from council directory
               </span>
             )}
           </div>
-          <div>
+          <div className="col-span-12 md:col-span-6">
             <label htmlFor="councilEmail" className={UI.label}>
               Council email<span className="text-rose-600">*</span>
             </label>
@@ -547,42 +590,47 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               id="councilEmail"
               type="email"
               ref={refs.councilEmail}
-              className={UI.input}
+              className={`${UI.input} h-11 text-sm`}
               data-testid="input-council-email"
               value={draft.councilEmail}
               onChange={(e) => onChange({ councilEmail: e.target.value }, { ensureUrn: true })}
+              aria-describedby={councilEmailHelpId}
             />
+            <p id={councilEmailHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              Official inbox for licensing representations.
+            </p>
             {lookedUpEmail.current && draft.councilEmail && draft.councilEmail !== lookedUpEmail.current && (
               <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                 Value differs from council directory
               </span>
             )}
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-12">
             <label htmlFor="councilAddress" className={UI.label}>
               Council address <span className="text-xs font-normal text-slate-500">(optional)</span>
             </label>
             <textarea
               id="councilAddress"
               ref={refs.councilAddress as React.RefObject<HTMLTextAreaElement>}
-              className={`${UI.input} min-h-[96px]`}
+              className={`${UI.input} min-h-[96px] text-sm`}
               data-testid="input-council-address"
               value={draft.councilAddress}
               onChange={(e) => onChange({ councilAddress: e.target.value }, { ensureUrn: true })}
+              aria-describedby={councilAddressHelpId}
             />
+            <p id={councilAddressHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              Provide if the council requests a postal address for representations.
+            </p>
             {lookedUpAddress.current && draft.councilAddress && draft.councilAddress !== lookedUpAddress.current && (
               <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                 Value differs from council directory
               </span>
             )}
           </div>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-200/80 pt-6">
-        <h3 className="text-sm font-semibold text-brand-navy">Dates &amp; declarations</h3>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
+          <div className="col-span-12 border-t border-slate-200/80 pt-6">
+            <h3 className="text-sm font-semibold text-brand-navy">Dates &amp; declarations</h3>
+          </div>
+          <div className="col-span-12 md:col-span-6">
             <label htmlFor="applicationDate" className={UI.label}>
               Date of submission<span className="text-rose-600">*</span>
             </label>
@@ -590,19 +638,23 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               id="applicationDate"
               type="date"
               ref={refs.applicationDate}
-              className={UI.input}
+              className={`${UI.input} h-11 text-sm`}
               data-testid="input-application-date"
               value={draft.applicationDate}
               onChange={(e) => handleSubmissionDate(e.target.value)}
+              aria-describedby={submissionHelpId}
             />
+            <p id={submissionHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              When you submitted the application to the licensing authority.
+            </p>
           </div>
-          <div>
+          <div className="col-span-12 md:col-span-6">
             <label htmlFor="representationDeadline" className={UI.label}>
               Representation deadline
             </label>
             <input
               id="representationDeadline"
-              className={`${UI.input} bg-slate-50 text-slate-700`}
+              className="h-11 w-full rounded-xl border border-[rgba(25,38,80,0.12)] bg-neutral-50 px-3 text-sm text-neutral-700"
               value={representationDisplay}
               readOnly
               aria-readonly="true"
@@ -610,38 +662,39 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               data-testid="input-representation-deadline"
               aria-live="polite"
             />
-            <p id={deadlineHelpId} className="mt-1 text-xs text-slate-600">
-              Auto-calculated as 28 calendar days after the submission date.
+            <p id={deadlineHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
+              Auto-calculated <strong>28 calendar days</strong> after submission.
             </p>
           </div>
-        </div>
-        <div className="mt-4 space-y-3">
-          <div className="flex items-start gap-3">
-            <input
-              id="confirm-a"
-              type="checkbox"
-              className="mt-1 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
-              checked={confirmA}
-              onChange={(e) => onConfirmAChange(e.target.checked)}
-            />
-            <label htmlFor="confirm-a" className="text-sm leading-5 text-slate-800">
-              I confirm the above text is a true and accurate copy of the notice published/displayed.
-            </label>
+          <div className="col-span-12 space-y-3">
+            <div className="flex items-start gap-3">
+              <input
+                id="confirm-a"
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
+                checked={confirmA}
+                onChange={(e) => onConfirmAChange(e.target.checked)}
+              />
+              <label htmlFor="confirm-a" className="text-sm leading-5 text-slate-800">
+                I confirm the above text is a true and accurate copy of the notice published/displayed.
+              </label>
+            </div>
+            <div className="flex items-start gap-3">
+              <input
+                id="confirm-b"
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
+                checked={confirmB}
+                onChange={(e) => onConfirmBChange(e.target.checked)}
+              />
+              <label htmlFor="confirm-b" className="text-sm leading-5 text-slate-800">
+                I understand that supplying false information is an offence.
+              </label>
+            </div>
           </div>
-          <div className="flex items-start gap-3">
-            <input
-              id="confirm-b"
-              type="checkbox"
-              className="mt-1 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
-              checked={confirmB}
-              onChange={(e) => onConfirmBChange(e.target.checked)}
-            />
-            <label htmlFor="confirm-b" className="text-sm leading-5 text-slate-800">
-              I understand that supplying false information is an offence.
-            </label>
-          </div>
         </div>
-      </div>
+      </fieldset>
+      {/* CN:STEP2-LAYOUT-END */}
     </div>
   );
 }
