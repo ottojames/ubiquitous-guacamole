@@ -16,6 +16,17 @@ import { validateGVOL } from '../../../schemas/rules/gvol.rules';
 import { validateTrafficOrder } from '../../../schemas/rules/traffic-order.rules';
 import * as UI from '@/styles/ui';
 
+/* CN:FIX-START */
+function focusAndFlash(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  (el as HTMLInputElement | HTMLTextAreaElement | null)?.focus?.();
+  el.classList.add('outline','outline-2','outline-blue-300');
+  setTimeout(() => el.classList.remove('outline','outline-2','outline-blue-300'), 700);
+}
+/* CN:FIX-END */
+
 function useDebounce<T>(val: T, ms = 250) {
   const [v, setV] = useState(val);
   useEffect(() => { const id = setTimeout(() => setV(val), ms); return () => clearTimeout(id); }, [val, ms]);
@@ -70,6 +81,17 @@ export default function PublishPage() {
         ok: !!(d?.applicationDate && representationDeadline),
         target: 'applicationDate',
       },
+      /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+      /* CN:FIX-START */
+      {
+        id: 'applicationSummary',
+        label: 'Application summary present (if OCR missing)',
+        ok: d?.ocrTextPresent ? true : ((d?.applicationSummary ?? '').trim().length > 0),
+        fix: () => focusAndFlash('applicationSummary'),
+        target: 'applicationSummary',
+      },
+      /* CN:FIX-END */
+      /* CN:STEP2-COMPLIANCE-UPGRADE-END */
       {
         id: 'activities',
         label: 'If any activity is enabled, weekly hours valid',
@@ -210,13 +232,18 @@ export default function PublishPage() {
             </div>
           </section>
           {noticeType === 'premises' && (
-            <PremisesForm
-              value={premisesData}
-              onChange={setPremisesData}
-              onAuthorityChange={handleAuthorityChange}
-              saving={false}
-              autoFocusRef={autoFocusRef}
-            />
+            <>
+              {/* CN:STEP2-COMPLIANCE-UPGRADE-START */}
+              <PremisesForm
+                value={premisesData}
+                onChange={setPremisesData}
+                onAuthorityChange={handleAuthorityChange}
+                saving={false}
+                autoFocusRef={autoFocusRef}
+                representationDeadline={representationDeadline}
+              />
+              {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
+            </>
           )}
           {noticeType === 'gvol' && (
             <GVOLForm
@@ -239,14 +266,18 @@ export default function PublishPage() {
         </main>
 
         <aside className="md:col-span-4 md:sticky md:top-24 space-y-4">
-          <PreviewCard text={preview} />
-          <ComplianceCard items={checklist} />
+          {/* CN:STEP2-COMPLIANCE-UPGRADE-START */}
+          <PreviewCard text={preview} statusMessage={issues.length ? 'Some fields are missing or invalid. Complete the form to render the full notice.' : undefined} />
+          {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
+          <ComplianceCard items={checklist} onFix={(id) => id && focusAndFlash(id)} />
           <KeyDatesCard
             applicationDate={premisesData?.applicationDate || ''}
             representationDeadline={representationDeadline}
             consultationDays={consultationDays}
           />
-          <CostCard cost={cost} canSubmit={canSubmit} />
+          {/* CN:STEP2-COMPLIANCE-UPGRADE-START */}
+          <CostCard cost={cost} canSubmit={canSubmit} label="Proceed to confirmation" />
+          {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
         </aside>
       </div>
     </div>
@@ -272,6 +303,9 @@ function mapPremisesToPayload(d: any) {
     },
     activities: Array.isArray(d?.activities) ? d.activities : [],
     applicationDate: d?.applicationDate || new Date().toISOString().slice(0, 10),
+    /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+    applicationSummary: d?.applicationSummary || '',
+    /* CN:STEP2-COMPLIANCE-UPGRADE-END */
     council: d?.councilName || '',
     region: d?.region || 'england_wales',
     representation: { method: 'email', value: d?.councilEmail || '' },

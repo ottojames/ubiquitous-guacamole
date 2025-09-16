@@ -1,5 +1,8 @@
 import { PremisesLicence } from '../schemas/noticeTypes/premises-licence.schema';
 import { computeRepresentationDeadline } from '../schemas/rules/premises-licence.rules';
+/* CN:STEP2-COMPLIANCE-UPGRADE-START */
+import { formatDisplayDateTime } from '@/lib/format';
+/* CN:STEP2-COMPLIANCE-UPGRADE-END */
 
 export interface CouncilStyle {
   headingCase?: 'upper' | 'title';
@@ -31,14 +34,25 @@ export function renderPremisesLicence(
   lines.push(
     `An application has been made by ${data.applicant} of ${formatAddress(data.applicantAddress)} to ${data.council} for a Premises Licence at ${formatAddress(data.address)}.`
   );
-  lines.push('The application proposes the following licensable activities and hours:');
-  data.activities.forEach((a) => {
-    const days = a.days.join(', ');
-    lines.push(`- ${a.type.replace(/_/g, ' ')}: ${days} ${a.start}–${a.end}`);
-  });
+  /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+  const summary = (data as any)?.applicationSummary?.toString?.().trim?.() as string | undefined;
+  if (summary) {
+    lines.push(summary);
+  } else {
+    lines.push('The application proposes the following licensable activities and hours:');
+    data.activities.forEach((a) => {
+      const days = a.days.join(', ');
+      lines.push(`- ${a.type.replace(/_/g, ' ')}: ${days} ${a.start}–${a.end}`);
+    });
+  }
+  /* CN:STEP2-COMPLIANCE-UPGRADE-END */
+  /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+  const deadlineDate = new Date(`${deadline}T23:59:00`);
+  const deadlineDisplay = `${formatDisplayDateTime(deadlineDate)} (24h)`;
   lines.push(
-    `Any person may make representations on this application to arrive no later than ${deadline}. Representations may be made via ${data.representation.method}: ${data.representation.value}.`
+    `Any person may make representations on this application to arrive no later than ${deadlineDisplay}. Representations may be made via ${data.representation.method}: ${data.representation.value}.`
   );
+  /* CN:STEP2-COMPLIANCE-UPGRADE-END */
   lines.push(
     'It is an offence to knowingly or recklessly make a false statement in connection with an application. Those who do are liable on summary conviction to an unlimited fine.'
   );

@@ -1,6 +1,9 @@
 import { NoticeDraft } from '@/types/notice';
 /* CN:STEP2-START */
 import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
+/* CN:STEP2-COMPLIANCE-START */
+import { getAuthorityByName } from '@/lib/authorities';
+/* CN:STEP2-COMPLIANCE-END */
 /* CN:STEP2-END */
 
 export type ComplianceItem = {
@@ -36,6 +39,14 @@ export function runMandatoryChecks(draft: NoticeDraft): ComplianceResult {
   push('councilName', !!draft.councilName?.trim(), 'Council name present', 'councilName');
   push('councilEmail', !!draft.councilEmail?.trim(), 'Council email present', 'councilEmail');
   push('councilAddress', !!draft.councilAddress?.trim(), 'Council address present', 'councilAddress');
+  /* CN:STEP2-COMPLIANCE-START */
+  // Aggregate representation contact presence (email OR URL OR postal)
+  {
+    const auth = getAuthorityByName(draft.councilName);
+    const hasAny = !!(draft.councilEmail?.trim() || draft.councilAddress?.trim() || auth?.repsUrl);
+    push('repsContact', hasAny, 'At least one representation contact (email, URL or postal) present', 'repsContact');
+  }
+  /* CN:STEP2-COMPLIANCE-END */
   push('applicationDate', !!draft.applicationDate?.trim(), 'Application date present', 'applicationDate');
   if (draft.repsDeadline) {
     /* CN:STEP2-START */

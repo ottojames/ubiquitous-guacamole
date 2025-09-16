@@ -12,9 +12,18 @@ export default function ComplianceCard({ items, onFix }: { items: ChecklistItem[
       return;
     }
     if (!target) return;
+    /* CN:FIX-START */
+    /* CN:STEP2-COMPLIANCE-UPGRADE-START */
     const el = document.getElementById(target);
     el?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-    (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null)?.focus?.();
+    const focusable = (el?.querySelector('input,select,textarea,button,[tabindex]') as HTMLElement | null) || (el as HTMLElement | null);
+    focusable?.focus?.();
+    if (el) {
+      el.classList.add('outline','outline-2','outline-blue-300');
+      setTimeout(() => el.classList.remove('outline','outline-2','outline-blue-300'), 700);
+    }
+    /* CN:STEP2-COMPLIANCE-UPGRADE-END */
+    /* CN:FIX-END */
   };
 
   const groupForLabel = (label: string) => {

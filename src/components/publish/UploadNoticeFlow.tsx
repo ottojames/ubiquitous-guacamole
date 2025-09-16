@@ -9,7 +9,12 @@ import AddressAutocomplete, { type AddressOption } from '@/components/AddressAut
 import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 /* CN:STEP2-START */
-import { calculateRepresentationDeadline, formatLicensingDate } from '@/lib/dates/licensing';
+import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
+/* CN:STEP2-COMPLIANCE-START */
+import { formatDisplayDate } from '@/lib/format';
+import { getAuthorityByName, emailDomainMatchesAuthority } from '@/lib/authorities';
+import { buildPremisesNotice } from '@/features/publish/previewBuilders';
+/* CN:STEP2-COMPLIANCE-END */
 /* CN:STEP2-END */
 import * as UI from '@/styles/ui';
 import type { NoticeDraft, NoticeType } from '@/types/notice';
@@ -181,15 +186,19 @@ export default function UploadNoticeFlow() {
     const map: Record<string, string> = {
       applicant: 'applicantName',
       applicantName: 'applicantName',
-      addr: 'premisesAddressManual',
-      'premises-address': 'premisesAddressManual',
+      addr: 'premisesAddress',
+      'premises-address': 'premisesAddress',
       councilName: 'councilName',
       councilEmail: 'councilEmail',
+      /* CN:STEP2-COMPLIANCE-START */
+      repsContact: 'councilEmail',
+      /* CN:STEP2-COMPLIANCE-END */
       councilAddr: 'councilAddress',
       councilAddress: 'councilAddress',
-      appDate: 'applicationDate',
-      applicationDate: 'applicationDate',
-      repsMissing: 'applicationDate',
+      appDate: 'submissionDate',
+      applicationDate: 'submissionDate',
+      submissionDate: 'submissionDate',
+      repsMissing: 'submissionDate',
     };
     const fieldId = map[target] || target;
     focusAndFlash(fieldId);
@@ -376,14 +385,32 @@ export default function UploadNoticeFlow() {
             </>
           ) : (
             <>
-              <PreviewCard text={text} />
+              {/* CN:STEP2-COMPLIANCE-START */}
+              {(() => {
+                const auth = getAuthorityByName(draft.councilName);
+                const representationIso = draft.repsDeadline || (draft.applicationDate ? calculateRepresentationDeadline(draft.applicationDate).toISOString() : '');
+                const built = buildPremisesNotice({ ...draft, representationDeadline: representationIso }, auth);
+                const useText = (text ?? '').trim().length > 0 ? text : built;
+                const showBanner = useText.includes('—');
+                return (
+                  <PreviewCard
+                    text={useText}
+                    statusMessage={showBanner ? 'Some fields are missing — the notice text will update as you complete the form.' : undefined}
+                  />
+                );
+              })()}
+              {/* CN:STEP2-COMPLIANCE-END */}
               <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
               <KeyDatesCard
                 applicationDate={draft.applicationDate}
                 representationDeadline={draft.repsDeadline || ''}
                 consultationDays={28}
               />
-              <CostCard cost={0} canSubmit={canContinue && step === 3} />
+              {/* CN:STEP2-COMPLIANCE-START */}
+              {step !== 2 && (
+                <CostCard cost={0} canSubmit={canContinue && step === 3} label={step === 3 ? 'Submit' : undefined} />
+              )}
+              {/* CN:STEP2-COMPLIANCE-END */}
             </>
           )}
           {/* CN:STEP1-END */}
@@ -407,6 +434,9 @@ type NoticeDetailsSectionsProps = {
 
 function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const { draft, onChange, refs, confirmA, confirmB, onConfirmAChange, onConfirmBChange } = props;
+  /* CN:STEP2-COMPLIANCE-START */
+  const [ignoreDomainWarning, setIgnoreDomainWarning] = React.useState(false);
+  /* CN:STEP2-COMPLIANCE-END */
   /* CN:STEP2-LAYOUT-START */
   const applicantHelpId = React.useId();
   const referenceHelpId = React.useId();
@@ -428,7 +458,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     const el = document.querySelector<HTMLInputElement>('[data-testid="input-premises-address"]');
     if (!el) return;
     if (!el.id) {
-      el.id = 'premisesAddressSearch';
+      /* CN:STEP2-LAYOUT-START */
+      el.id = 'premisesSearch';
+      /* CN:STEP2-LAYOUT-END */
     }
     el.setAttribute('aria-describedby', searchHelpId);
   }, [searchHelpId]);
@@ -441,7 +473,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     return Number.isNaN(computed.getTime()) ? '' : computed.toISOString();
   }, [draft.applicationDate, draft.repsDeadline]);
 
-  const representationDisplay = representationIso ? formatLicensingDate(representationIso) : '—';
+  /* CN:STEP2-COMPLIANCE-START */
+  const representationDisplay = representationIso ? formatDisplayDate(representationIso) : '—';
+  /* CN:STEP2-COMPLIANCE-END */
 
   const handleAddressSelect = (option: AddressOption) => {
     const composed = option.label || [option.line1, option.city ?? option.town, option.postcode].filter(Boolean).join(', ');
@@ -489,7 +523,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <input
               id="applicantName"
               ref={refs.applicant}
-              className={`${UI.input} h-11 text-sm`}
+              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               data-testid="input-applicant-name"
               value={draft.applicantName}
               onChange={(e) => onChange({ applicantName: e.target.value }, { ensureUrn: true })}
@@ -505,7 +539,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             </label>
             <input
               id="urn"
-              className={`${UI.input} h-11 text-sm`}
+              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               value={draft.urn || ''}
               onChange={(e) => onChange({ urn: e.target.value })}
               aria-describedby={referenceHelpId}
@@ -518,7 +552,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <h3 className="text-sm font-semibold text-brand-navy">Premises &amp; Council details</h3>
           </div>
           <div
-            className="col-span-12 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-slate-800 [&_input]:h-11 [&_input]:text-sm"
+            className="col-span-12 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-slate-800 [&_input]:h-11 [&_input]:text-sm [&_input]:rounded-xl [&_input]:w-full"
           >
             <AddressAutocomplete
               label="Premises address (search)"
@@ -530,13 +564,13 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             </p>
           </div>
           <div className="col-span-12 md:col-span-8">
-            <label htmlFor="premisesAddressManual" className={UI.label}>
+            <label htmlFor="premisesAddress" className={UI.label}>
               Premises address<span className="text-rose-600">*</span>
             </label>
             <textarea
-              id="premisesAddressManual"
+              id="premisesAddress"
               ref={refs.premisesAddress as React.RefObject<HTMLTextAreaElement>}
-              className={`${UI.input} min-h-[96px] text-sm`}
+              className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
               value={draft.premisesAddress}
               onChange={(e) => onChange({ premisesAddress: e.target.value }, { ensureUrn: true })}
               aria-describedby={manualAddressHelpId}
@@ -551,7 +585,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             </label>
             <input
               id="postcode"
-              className={`${UI.input} h-11 text-sm`}
+              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               value={draft.postcode}
               onChange={(e) => onChange({ postcode: e.target.value }, { ensureUrn: true })}
               aria-describedby={postcodeHelpId}
@@ -567,7 +601,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <input
               id="councilName"
               ref={refs.councilName}
-              className={`${UI.input} h-11 text-sm`}
+              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               data-testid="input-council-name"
               value={draft.councilName}
               onChange={(e) => onChange({ councilName: e.target.value }, { ensureUrn: true })}
@@ -590,7 +624,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               id="councilEmail"
               type="email"
               ref={refs.councilEmail}
-              className={`${UI.input} h-11 text-sm`}
+              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               data-testid="input-council-email"
               value={draft.councilEmail}
               onChange={(e) => onChange({ councilEmail: e.target.value }, { ensureUrn: true })}
@@ -612,7 +646,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <textarea
               id="councilAddress"
               ref={refs.councilAddress as React.RefObject<HTMLTextAreaElement>}
-              className={`${UI.input} min-h-[96px] text-sm`}
+              className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
               data-testid="input-council-address"
               value={draft.councilAddress}
               onChange={(e) => onChange({ councilAddress: e.target.value }, { ensureUrn: true })}
@@ -631,14 +665,14 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <h3 className="text-sm font-semibold text-brand-navy">Dates &amp; declarations</h3>
           </div>
           <div className="col-span-12 md:col-span-6">
-            <label htmlFor="applicationDate" className={UI.label}>
+            <label htmlFor="submissionDate" className={UI.label}>
               Date of submission<span className="text-rose-600">*</span>
             </label>
             <input
-              id="applicationDate"
+              id="submissionDate"
               type="date"
               ref={refs.applicationDate}
-              className={`${UI.input} h-11 text-sm`}
+              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               data-testid="input-application-date"
               value={draft.applicationDate}
               onChange={(e) => handleSubmissionDate(e.target.value)}
@@ -666,6 +700,71 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               Auto-calculated <strong>28 calendar days</strong> after submission.
             </p>
           </div>
+          {/* CN:STEP2-COMPLIANCE-START */}
+          {/* How to make representations (read-only) */}
+          <div className="col-span-12">
+            <div className="rounded-xl border border-slate-200/80 bg-neutral-50 p-3 md:p-4">
+              <h4 className="mb-2 text-sm font-medium text-[#192650]">How to make representations</h4>
+              {(() => {
+                const auth = getAuthorityByName(draft.councilName);
+                const email = auth?.repsEmail || '';
+                const url = auth?.repsUrl || '';
+                const postal = auth?.postalAddress || '';
+                const incomplete = !(email || url || postal);
+
+                // Domain mismatch (non-blocking)
+                const showDomainWarn = !!draft.councilEmail && !emailDomainMatchesAuthority(draft.councilEmail, auth);
+
+                return (
+                  <div className="space-y-1 text-sm text-[#192650]">
+                    <div>
+                      <span className="font-medium">Email:</span> {email || '—'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Online form:</span>{' '}
+                      {url ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
+                          {url}
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </div>
+                    <div>
+                      <span className="font-medium">Postal address:</span> {postal || '—'}
+                    </div>
+                    {incomplete && (
+                      <div className="mt-2 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                        Representation contact details for this council are incomplete. Please verify before continuing.
+                      </div>
+                    )}
+                    {!ignoreDomainWarning && showDomainWarn && (
+                      <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2 text-[12px] text-amber-800">
+                        The email domain doesn’t match {auth?.displayName}. Continue or update the council email.
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            type="button"
+                            className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                            onClick={() => focusAndFlash('councilEmail')}
+                          >
+                            Change
+                          </button>
+                          <button
+                            type="button"
+                            className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                            onClick={() => setIgnoreDomainWarning(true)}
+                          >
+                            Use anyway
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+          {/* CN:STEP2-COMPLIANCE-END */}
           <div className="col-span-12 space-y-3">
             <div className="flex items-start gap-3">
               <input

@@ -4,6 +4,12 @@ import UploadDropzone from '@/components/publish/UploadDropzone';
 import ActivitiesHoursGrid, { defaultGrid, type GridRow } from '@/components/publish/ActivitiesHoursGrid';
 import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary';
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
+/* CN:FIX-START */
+/* CN:STEP2-COMPLIANCE-UPGRADE-START */
+import { getAuthorityByName, emailDomainMatchesAuthority } from '@/lib/authorities';
+import { formatDisplayDateTime } from '@/lib/format';
+/* CN:STEP2-COMPLIANCE-UPGRADE-END */
+/* CN:FIX-END */
 import * as UI from '@/styles/ui';
 
 type Props = {
@@ -12,6 +18,11 @@ type Props = {
   onAuthorityChange?: (pack: AuthorityPack | null) => void;
   saving?: boolean;
   autoFocusRef?: React.RefObject<HTMLInputElement | null>;
+  /* CN:FIX-START */
+  /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+  representationDeadline?: string;
+  /* CN:STEP2-COMPLIANCE-UPGRADE-END */
+  /* CN:FIX-END */
 };
 
 const inputClass = UI.input;
@@ -25,6 +36,9 @@ export default function PremisesForm({
   saving = false,
   autoFocusRef,
   onAuthorityChange,
+  /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+  representationDeadline,
+  /* CN:STEP2-COMPLIANCE-UPGRADE-END */
 }: Props) {
   const [form, setForm] = useState<any>({
     applicantName: '',
@@ -42,6 +56,10 @@ export default function PremisesForm({
     applicationDate: '',
     activitiesGrid: defaultGrid(),
     activities: [] as any[],
+    /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+    applicationSummary: '',
+    ocrTextPresent: false,
+    /* CN:STEP2-COMPLIANCE-UPGRADE-END */
   });
   const [prefilled, setPrefilled] = useState(false);
   const [errors] = useState<ErrorItem[]>([]);
@@ -116,6 +134,12 @@ export default function PremisesForm({
     if (dateMatch) setField('applicationDate', dateMatch[1]);
       const premMatch = t.match(/Premises Licence at\s+([^.\n]+)/i);
     if (premMatch) setField('premisesAddress', premMatch[1].trim());
+    /* CN:STEP2-COMPLIANCE-UPGRADE-START */
+    // track whether OCR text is present for conditional validation
+    const present = !!t && t.trim().length > 0;
+    setForm((f: any) => ({ ...f, ocrTextPresent: present }));
+    onChange({ ...form, ocrTextPresent: present });
+    /* CN:STEP2-COMPLIANCE-UPGRADE-END */
   }
 
   function flattenActivities(rows: GridRow[]) {
@@ -206,6 +230,52 @@ export default function PremisesForm({
                 {override && <span className="ml-1 text-amber-700">Overrides applied</span>}
               </p>
             )}
+            {/* CN:STEP2-COMPLIANCE-UPGRADE-START */}
+            {(() => {
+              const auth = getAuthorityByName((pack?.name as string) || (value?.councilName as string));
+              const showWarn = !!form.councilEmail && !emailDomainMatchesAuthority(form.councilEmail, auth);
+              const authorityEmail = auth?.repsEmail || pack?.representation.email || '';
+              const focusAndFlash = (id: string) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                (el as HTMLInputElement | HTMLTextAreaElement)?.focus?.();
+                el.classList.add('outline','outline-2','outline-blue-300');
+                setTimeout(() => el.classList.remove('outline','outline-2','outline-blue-300'), 700);
+              };
+              if (!showWarn) return null;
+              return (
+                <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2 text-[12px] text-amber-900">
+                  The email domain doesn’t match the selected authority. Update the council email or proceed.
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {authorityEmail && (
+                      <button
+                        type="button"
+                        className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                        onClick={() => { setField('councilEmail', authorityEmail); focusAndFlash('councilEmail'); }}
+                      >
+                        Use authority email
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={`${UI.btnSecondary} py-1 px-2 text-xs`}
+                      onClick={() => focusAndFlash('councilEmail')}
+                    >
+                      Change
+                    </button>
+                    <a
+                      href="#"
+                      className="inline-flex items-center rounded-xl border border-[rgba(25,38,80,0.10)] px-2 py-1 text-xs text-[#192650] hover:border-[rgba(25,38,80,0.20)]"
+                      title="Edit council details"
+                    >
+                      Edit council details
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
+            {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
           </div>
         </div>
       </section>
@@ -239,8 +309,50 @@ export default function PremisesForm({
               className={inputClass}
             />
           </div>
+          {/* CN:STEP2-COMPLIANCE-UPGRADE-START */}
+          <div>
+            <label htmlFor="representationDeadline" className={UI.label}>
+              Representation deadline
+            </label>
+            <input
+              id="representationDeadline"
+              className="h-11 w-full rounded-lg border border-[rgba(25,38,80,0.12)] bg-neutral-50 px-3 text-[15px] text-neutral-700"
+              value={representationDeadline ? `${formatDisplayDateTime(representationDeadline)} (24h)` : '—'}
+              readOnly
+              aria-readonly="true"
+              aria-describedby="representationDeadline-help"
+            />
+            <p id="representationDeadline-help" className="mt-1 min-h-5 text-xs text-neutral-500">
+              Auto-calculated 28 calendar days after submission.
+            </p>
+          </div>
+          {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
         </div>
       </section>
+
+      {/* CN:STEP2-COMPLIANCE-UPGRADE-START */}
+      <section className={UI.section}>
+        <div className={UI.h3}>Application summary</div>
+        <div>
+          <label htmlFor="applicationSummary" className={UI.label}>
+            Licensable activities and hours
+          </label>
+          <textarea
+            id="applicationSummary"
+            name="applicationSummary"
+            rows={3}
+            maxLength={1500}
+            className={`${UI.input} w-full min-h-[96px]`}
+            value={form.applicationSummary || ''}
+            onChange={(e) => setField('applicationSummary', e.target.value)}
+            aria-describedby="applicationSummary-help"
+          />
+          <p id="applicationSummary-help" className="mt-1 min-h-5 text-xs text-neutral-500">
+            Licensable activities and hours (e.g., Sale of alcohol on/off 10:00–23:00 daily; recorded music 10:00–23:00).
+          </p>
+        </div>
+      </section>
+      {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
 
       <section className={UI.section}>
         <ActivitiesHoursGrid
