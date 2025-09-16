@@ -9,6 +9,11 @@ export type Authority = {
   repsUrl?: string;
   postalAddress?: string;
   domains: string[];
+  /* CN:TEMPLATES-PREVIEW-START */
+  /* CN:LICENSING-TEMPLATES-START */
+  canonicalEmail?: string;
+  /* CN:LICENSING-TEMPLATES-END */
+  /* CN:TEMPLATES-PREVIEW-END */
 };
 
 function inferDomains(pack: AuthorityPack): string[] {
@@ -36,6 +41,11 @@ export function getAuthorityByName(name?: string | null): Authority | null {
     repsUrl: pack.representation.portal,
     postalAddress: pack.representation.postal,
     domains: inferDomains(pack),
+    /* CN:TEMPLATES-PREVIEW-START */
+    /* CN:LICENSING-TEMPLATES-START */
+    canonicalEmail: pack.representation.email,
+    /* CN:LICENSING-TEMPLATES-END */
+    /* CN:TEMPLATES-PREVIEW-END */
   };
 }
 
@@ -64,6 +74,11 @@ export function getAuthorityById(id?: string | null): Authority | null {
     repsUrl: pack.representation.portal,
     postalAddress: pack.representation.postal,
     domains: inferDomains(pack),
+    /* CN:TEMPLATES-PREVIEW-START */
+    /* CN:LICENSING-TEMPLATES-START */
+    canonicalEmail: pack.representation.email,
+    /* CN:LICENSING-TEMPLATES-END */
+    /* CN:TEMPLATES-PREVIEW-END */
   };
 }
 
