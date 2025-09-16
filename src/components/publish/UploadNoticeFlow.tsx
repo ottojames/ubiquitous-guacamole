@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ProgressBar from './ProgressBar';
 import FileDropOCR from '@/components/upload/FileDropOCR';
-import PreviewCard from '@/components/publish/RightRail/PreviewCard';
+// {/* CN:LICENSING-FINAL-START */}
+import PreviewNotice from '@/features/publish/PreviewNotice';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
 import KeyDatesCard from '@/components/publish/RightRail/KeyDatesCard';
 import CostCard from '@/components/publish/RightRail/CostCard';
@@ -13,7 +14,7 @@ import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
 /* CN:STEP2-COMPLIANCE-START */
 import { formatDisplayDate } from '@/lib/format';
 import { getAuthorityByName, emailDomainMatchesAuthority } from '@/lib/authorities';
-import { buildPremisesNotice, buildVariationNotice, buildReviewNotice } from '@/features/publish/previewBuilders';
+// {/* CN:LICENSING-FINAL-END */}
 /* CN:STEP2-COMPLIANCE-END */
 /* CN:STEP2-END */
 import * as UI from '@/styles/ui';
@@ -49,7 +50,9 @@ function focusAndFlash(id: string) {
 
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [text, setText] = useState('');
+  // {/* CN:LICENSING-FINAL-START */}
+  const [ocrText, setOcrText] = useState('');
+  // {/* CN:LICENSING-FINAL-END */}
   const [draft, setDraft] = useState<NoticeDraft>({
     id: '',
     createdAt: '',
@@ -92,11 +95,13 @@ export default function UploadNoticeFlow() {
   /* CN:STEP2-START */
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
-  const hasNoticeText = text.trim().length > 0;
+  // {/* CN:LICENSING-FINAL-START */}
+  const hasOcrText = ocrText.trim().length > 0;
   const needsApplicationSummary =
-    !hasNoticeText && (draft.noticeType === 'premises' || draft.noticeType === 'variation');
-  const needsVariationSummary = !hasNoticeText && draft.noticeType === 'variation';
-  const needsReviewGrounds = !hasNoticeText && draft.noticeType === 'review';
+    !hasOcrText && (draft.noticeType === 'premises' || draft.noticeType === 'variation');
+  const needsVariationSummary = !hasOcrText && draft.noticeType === 'variation';
+  const needsReviewGrounds = !hasOcrText && draft.noticeType === 'review';
+  // {/* CN:LICENSING-FINAL-END */}
 
   const summariesOk =
     (!needsApplicationSummary || !!draft.applicationSummary?.trim()) &&
@@ -279,8 +284,10 @@ export default function UploadNoticeFlow() {
               <div className="[&>div]:p-6 [&>div]:md:p-6">
                 <FileDropOCR
                   onText={(t) => {
-                    setText(t);
+                    // {/* CN:LICENSING-FINAL-START */}
+                    setOcrText(t);
                     setDraft((d) => ({ ...d, finalText: t }));
+                    // {/* CN:LICENSING-FINAL-END */}
                   }}
                   onMeta={(m) => setDraft((d) => ({ ...d, originalFileMeta: m }))}
                 />
@@ -312,6 +319,9 @@ export default function UploadNoticeFlow() {
                   confirmB={confirmB}
                   onConfirmAChange={setConfirmA}
                   onConfirmBChange={setConfirmB}
+                  // {/* CN:LICENSING-FINAL-START */}
+                  hasOcrText={hasOcrText}
+                  // {/* CN:LICENSING-FINAL-END */}
                 />
                 {/* CN:STEP2-END */}
               </section>
@@ -325,11 +335,14 @@ export default function UploadNoticeFlow() {
                   <textarea
                     id="noticeText"
                     className={UI.input + ' h-40'}
-                    value={text}
+                    // {/* CN:LICENSING-FINAL-START */}
+                    value={draft.finalText || ''}
                     onChange={(e) => {
-                      setText(e.target.value);
-                      setDraft((d) => ({ ...d, finalText: e.target.value }));
+                      const value = e.target.value;
+                      setDraft((d) => ({ ...d, finalText: value }));
+                      setOcrText(value);
                     }}
+                    // {/* CN:LICENSING-FINAL-END */}
                   />
                 </div>
                 {/* CN:STEP2-START */}
@@ -341,6 +354,9 @@ export default function UploadNoticeFlow() {
                   confirmB={confirmB}
                   onConfirmAChange={setConfirmA}
                   onConfirmBChange={setConfirmB}
+                  // {/* CN:LICENSING-FINAL-START */}
+                  hasOcrText={hasOcrText}
+                  // {/* CN:LICENSING-FINAL-END */}
                 />
                 {/* CN:STEP2-END */}
                 <div className="mt-4 flex items-center justify-between">
@@ -396,7 +412,9 @@ export default function UploadNoticeFlow() {
                 </button>
                 <button
                   className={`${UI.btnPrimary} h-11 px-5 text-sm`}
-                  disabled={!text && !(requiredOk && confirmA && confirmB)}
+                  // {/* CN:LICENSING-FINAL-START */}
+                  disabled={!hasOcrText && !(requiredOk && confirmA && confirmB)}
+                  // {/* CN:LICENSING-FINAL-END */}
                   onClick={() => setStep(3)}
                   data-testid="btn-continue"
                 >
@@ -435,36 +453,23 @@ export default function UploadNoticeFlow() {
             <>
               {/* CN:STEP2-COMPLIANCE-START */}
               {(() => {
+                // {/* CN:LICENSING-FINAL-START */}
                 const auth = getAuthorityByName(draft.councilName);
-                const representationIso = draft.repsDeadline || (draft.applicationDate ? calculateRepresentationDeadline(draft.applicationDate).toISOString() : '');
-                const builderState = { ...draft, representationDeadline: representationIso };
-                /* CN:TEMPLATES-PREVIEW-START */
-                /* CN:LICENSING-TEMPLATES-START */
-                const built =
-                  draft.noticeType === 'variation'
-                    ? buildVariationNotice(builderState, auth)
-                    : draft.noticeType === 'review'
-                      ? buildReviewNotice(builderState, auth)
-                      : buildPremisesNotice(builderState, auth);
-                /* CN:LICENSING-TEMPLATES-END */
-                /* CN:TEMPLATES-PREVIEW-END */
-                const useText = (text ?? '').trim().length > 0 ? text : built;
-                /* CN:TEMPLATES-PREVIEW-START */
-                /* CN:LICENSING-TEMPLATES-START */
-                const summaryMissing =
-                  !hasNoticeText &&
-                  ((needsApplicationSummary && !draft.applicationSummary?.trim()) ||
-                    (needsVariationSummary && !draft.variationSummary?.trim()) ||
-                    (needsReviewGrounds && !draft.reviewGrounds?.trim()));
-                const showBanner = useText.includes('—') || summaryMissing;
-                /* CN:LICENSING-TEMPLATES-END */
-                /* CN:TEMPLATES-PREVIEW-END */
+                const representationIso =
+                  draft.repsDeadline || (draft.applicationDate ? calculateRepresentationDeadline(draft.applicationDate).toISOString() : '');
+                const builderState = { ...draft, representationDeadline: representationIso, ocrText };
                 return (
-                  <PreviewCard
-                    text={useText}
-                    statusMessage={showBanner ? 'Some fields are missing — the notice text will update as you complete the form.' : undefined}
+                  <PreviewNotice
+                    draft={builderState}
+                    authority={auth}
+                    ocrText={ocrText}
+                    onReplaceOcr={(next) => {
+                      setOcrText(next);
+                      setDraft((d) => ({ ...d, finalText: next }));
+                    }}
                   />
                 );
+                // {/* CN:LICENSING-FINAL-END */}
               })()}
               {/* CN:STEP2-COMPLIANCE-END */}
               <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
@@ -497,10 +502,13 @@ type NoticeDetailsSectionsProps = {
   confirmB: boolean;
   onConfirmAChange: (next: boolean) => void;
   onConfirmBChange: (next: boolean) => void;
+  // {/* CN:LICENSING-FINAL-START */}
+  hasOcrText: boolean;
+  // {/* CN:LICENSING-FINAL-END */}
 };
 
 function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
-  const { draft, onChange, refs, confirmA, confirmB, onConfirmAChange, onConfirmBChange } = props;
+  const { draft, onChange, refs, confirmA, confirmB, onConfirmAChange, onConfirmBChange, hasOcrText } = props;
   /* CN:STEP2-COMPLIANCE-START */
   const [ignoreDomainWarning, setIgnoreDomainWarning] = React.useState(false);
   /* CN:STEP2-COMPLIANCE-END */
@@ -533,11 +541,11 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
   const authority = React.useMemo(() => getAuthorityByName(draft.councilName), [draft.councilName]);
-  const hasGeneratedNoticeText = !!draft.finalText?.trim();
-  const needsAppSummary =
-    !hasGeneratedNoticeText && (draft.noticeType === 'premises' || draft.noticeType === 'variation');
-  const needsVariationSummary = !hasGeneratedNoticeText && draft.noticeType === 'variation';
-  const needsReviewGrounds = !hasGeneratedNoticeText && draft.noticeType === 'review';
+  // {/* CN:LICENSING-FINAL-START */}
+  const needsAppSummary = !hasOcrText && (draft.noticeType === 'premises' || draft.noticeType === 'variation');
+  const needsVariationSummary = !hasOcrText && draft.noticeType === 'variation';
+  const needsReviewGrounds = !hasOcrText && draft.noticeType === 'review';
+  // {/* CN:LICENSING-FINAL-END */}
 
   const applicationSummaryError = needsAppSummary && !draft.applicationSummary?.trim();
   const variationSummaryError = needsVariationSummary && !draft.variationSummary?.trim();
@@ -561,10 +569,12 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
 
   const showDomainWarning = !!draft.councilEmail && !emailDomainMatchesAuthority(draft.councilEmail, authority);
   const canonicalAuthorityEmail = authority?.canonicalEmail || authority?.repsEmail || '';
-  const authorityRepsEmail = authority?.repsEmail || '';
+  // {/* CN:LICENSING-FINAL-START */}
+  const authorityRepsEmail = authority?.repsEmail || draft.councilEmail || '';
   const authorityRepsUrl = authority?.repsUrl || '';
-  const authorityPostalAddress = authority?.postalAddress || '';
+  const authorityPostalAddress = authority?.postalAddress || draft.councilAddress || '';
   const representationContactsIncomplete = !(authorityRepsEmail || authorityRepsUrl || authorityPostalAddress);
+  // {/* CN:LICENSING-FINAL-END */}
   /* CN:LICENSING-TEMPLATES-END */
   /* CN:TEMPLATES-PREVIEW-END */
 
