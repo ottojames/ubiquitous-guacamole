@@ -12,7 +12,9 @@ import type { NoticeDraft, NoticeType } from '@/types/notice';
 import { sha256Hex } from '@/lib/hash';
 import ApplicantCouncilSection from './sections/ApplicantCouncilSection';
 import ApplicationBasicsSection from './sections/ApplicationBasicsSection';
-import NoticeTypeStep from './sections/NoticeTypeStep';
+// CN:STEP1-START
+import NoticeTypeStep, { isLicensingNoticeType } from './sections/NoticeTypeStep';
+// CN:STEP1-END
 
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -32,6 +34,10 @@ export default function UploadNoticeFlow() {
     status: 'Draft',
     applicationDate: '',
   });
+  // CN:STEP1-START
+  const noticeTypeRef = React.useRef<HTMLSelectElement>(null);
+  const [noticeTypeError, setNoticeTypeError] = useState('');
+  // CN:STEP1-END
   const [confirmA, setConfirmA] = useState(false);
   const [confirmB, setConfirmB] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,16 +60,29 @@ export default function UploadNoticeFlow() {
 
   const handleBack = () => setStep((prev) => Math.max(1, (prev as number) - 1) as 1 | 2 | 3 | 4);
   const handleNext = () => setStep((prev) => Math.min(4, (prev as number) + 1) as 1 | 2 | 3 | 4);
+  // CN:STEP1-START
+  const handleContinueFromStep1 = () => {
+    if (!isLicensingNoticeType(draft.noticeType)) {
+      setNoticeTypeError('Select a notice type to continue.');
+      noticeTypeRef.current?.focus();
+      return;
+    }
+    setNoticeTypeError('');
+    setStep(2);
+  };
+  const canContinueFromStep1 = isLicensingNoticeType(draft.noticeType);
+  // CN:STEP1-END
 
+  // CN:STEP1-START
   // On mount: read ?type= and set draft.noticeType if valid
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const t = params.get('type');
-    const allowed: NoticeType[] = ['premises','gvol','tro','planning','gambling','probate','other'];
-    if (t && (allowed as string[]).includes(t)) {
+    const t = params.get('type') ?? undefined;
+    if (isLicensingNoticeType(t)) {
       setDraft((d) => ({ ...d, noticeType: t as NoticeType }));
     }
   }, []);
+  // CN:STEP1-END
 
   // Auto-lookup council when postcode changes (defensive)
   useEffect(() => {
@@ -130,10 +149,14 @@ export default function UploadNoticeFlow() {
             totalSteps={4}
             labels={['Confirm Notice Type','Upload your Notice','Confirm your Notice','Pay']}
           />
+          // CN:STEP1-START
           {step === 1 && (
             <>
               <NoticeTypeStep
+                ref={noticeTypeRef}
                 value={draft.noticeType}
+                error={noticeTypeError}
+                onResetError={() => setNoticeTypeError('')}
                 onChange={(t) => {
                   setDraft((d) => ({ ...d, noticeType: t }));
                   const params = new URLSearchParams(window.location.search);
@@ -143,16 +166,18 @@ export default function UploadNoticeFlow() {
               />
               <div className="mt-4">
                 <button
-                  className={UI.btnPrimary}
+                  type="button"
+                  className={`${UI.btnPrimary} ${!canContinueFromStep1 ? 'cursor-not-allowed opacity-60' : ''}`}
                   data-testid="btn-continue-step1"
-                  onClick={() => setStep(2)}
-                  disabled={!draft.noticeType}
+                  onClick={handleContinueFromStep1}
+                  aria-disabled={!canContinueFromStep1}
                 >
                   Continue
                 </button>
               </div>
             </>
           )}
+          // CN:STEP1-END
           {step === 2 && (
             <>
               <FileDropOCR
