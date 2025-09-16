@@ -1,6 +1,7 @@
 /* CN:STEP2-COMPLIANCE-UPGRADE-START */
 /* CN:OFFICER-FINAL-START */
 // Legacy export kept for back-compat; prefer formatDisplayDateTime
+/* CN:GUARDRAIL-FINAL-START */
 export function formatDisplayDate(d: Date | string | null): string {
   if (!d) return '';
   const dt = typeof d === 'string' ? new Date(d) : d;
@@ -15,6 +16,7 @@ export function formatDisplayDate(d: Date | string | null): string {
     hour12: false,
   });
 }
+/* CN:GUARDRAIL-FINAL-END */
 
 export function formatDisplayDateTime(d?: Date | string | null): string {
   if (!d) return '—';

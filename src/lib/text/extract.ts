@@ -82,10 +82,11 @@ export function extractDeadlineFromOcr(ocr: string): Date | null {
   return null;
 }
 
+/* CN:GUARDRAIL-FINAL-START */
 export function normalizeUKPostcode(input: string): string {
   if (!input) return input;
-  const compact = input.replace(/\s+/g, '').toUpperCase();
-  if (compact.length <= 3) return compact;
-  return `${compact.slice(0, -3)} ${compact.slice(-3)}`;
+  const s = input.replace(/\s+/g, '').toUpperCase();
+  return s.length > 3 ? `${s.slice(0, -3)} ${s.slice(-3)}` : s;
 }
+/* CN:GUARDRAIL-FINAL-END */
 /* CN:OFFICER-FINAL-END */

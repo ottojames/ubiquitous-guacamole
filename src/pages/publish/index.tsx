@@ -77,7 +77,9 @@ export default function PublishPage() {
       },
       {
         id: 'dates',
-        label: 'Application date set + deadline computed correctly',
+        /* CN:GUARDRAIL-FINAL-START */
+        label: 'Set the submission date to auto-calculate the representation deadline.',
+        /* CN:GUARDRAIL-FINAL-END */
         ok: !!(d?.applicationDate && representationDeadline),
         target: 'applicationDate',
       },
