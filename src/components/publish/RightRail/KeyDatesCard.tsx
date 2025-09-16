@@ -77,8 +77,10 @@ export default function KeyDatesCard({
           <dd className="font-semibold">
             {/* CN:LICENSING-FINAL-START */}
             {hasSubmission ? (
-              <time dateTime={submissionIso} className="font-semibold">
-                {submissionDisplay}
+              <time dateTime={submissionIso}>
+                {/* CN:GUARDRAIL-FINAL-START */}
+                <strong className="font-semibold">{submissionDisplay}</strong>
+                {/* CN:GUARDRAIL-FINAL-END */}
               </time>
             ) : (
               <span className="text-xs font-normal text-slate-500">{submissionPlaceholder}</span>
@@ -92,8 +94,10 @@ export default function KeyDatesCard({
             {/* CN:LICENSING-FINAL-START */}
             <div>
               {derivedDeadline ? (
-                <time dateTime={derivedDeadline} className="font-semibold">
-                  {deadlineDisplay}
+                <time dateTime={derivedDeadline}>
+                  {/* CN:GUARDRAIL-FINAL-START */}
+                  <strong className="font-semibold">{deadlineDisplay}</strong>
+                  {/* CN:GUARDRAIL-FINAL-END */}
                 </time>
               ) : (
                 <span className="text-xs font-normal text-slate-500">{deadlinePlaceholder}</span>

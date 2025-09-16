@@ -8,6 +8,9 @@ import {
   buildVariationNotice,
   buildReviewNotice,
 } from './previewBuilders';
+/* CN:GUARDRAIL-FINAL-START */
+import { toast, useToastController } from '@/lib/ui/toast';
+/* CN:GUARDRAIL-FINAL-END */
 
 export type PreviewNoticeProps = {
   draft: PublishState;
@@ -16,10 +19,9 @@ export type PreviewNoticeProps = {
   onReplaceOcr: (next: string) => void;
 };
 
-const SOURCE_OPTIONS: Array<{ value: 'ocr' | 'structured'; label: string }> = [
-  { value: 'ocr', label: 'OCR text' },
-  { value: 'structured', label: 'Structured fields' },
-];
+/* CN:GUARDRAIL-FINAL-START */
+// Source toggle options configured inline to support final guardrail behavior.
+/* CN:GUARDRAIL-FINAL-END */
 
 const buildStructuredNotice = (
   draft: PublishState,
@@ -40,15 +42,21 @@ const buildStructuredNotice = (
 export default function PreviewNotice(props: PreviewNoticeProps) {
   const { draft, authority, ocrText, onReplaceOcr } = props;
   const hasOcr = ocrText.trim().length > 0;
-  const [source, setSource] = React.useState<'ocr' | 'structured'>(hasOcr ? 'ocr' : 'structured');
+  /* CN:GUARDRAIL-FINAL-START */
+  const [previewSource, setPreviewSource] = React.useState<'ocr' | 'structured'>(hasOcr ? 'ocr' : 'structured');
+  /* CN:GUARDRAIL-FINAL-END */
   const prevHasOcr = React.useRef(hasOcr);
 
   React.useEffect(() => {
     if (hasOcr && !prevHasOcr.current) {
-      setSource('ocr');
+      /* CN:GUARDRAIL-FINAL-START */
+      setPreviewSource('ocr');
+      /* CN:GUARDRAIL-FINAL-END */
     }
     if (!hasOcr) {
-      setSource('structured');
+      /* CN:GUARDRAIL-FINAL-START */
+      setPreviewSource('structured');
+      /* CN:GUARDRAIL-FINAL-END */
     }
     prevHasOcr.current = hasOcr;
   }, [hasOcr]);
@@ -62,11 +70,17 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
     [draft, authority]
   );
 
-  const previewText = source === 'structured' ? structuredPreview : ocrText;
+  /* CN:GUARDRAIL-FINAL-START */
+  const structuredText = structuredPreview;
+  const previewText = previewSource === 'ocr' && hasOcr ? ocrText : structuredText;
+  /* CN:GUARDRAIL-FINAL-END */
   /* CN:OFFICER-FINAL-START */
   const hasContent = previewText.trim().length > 0;
   const previewIsEmpty = !hasContent;
   /* CN:OFFICER-FINAL-END */
+  /* CN:GUARDRAIL-FINAL-START */
+  const toastMessage = useToastController();
+  /* CN:GUARDRAIL-FINAL-END */
 
   const lines = React.useMemo(() => previewText.split(/\r?\n/), [previewText]);
   const headingOne = lines[0]?.trim();
@@ -80,6 +94,9 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
     if (!hasContent) return;
     try {
       await navigator.clipboard?.writeText(previewText);
+      /* CN:GUARDRAIL-FINAL-START */
+      toast('Copied');
+      /* CN:GUARDRAIL-FINAL-END */
     } catch {
       /* noop */
     }
@@ -87,7 +104,9 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
 
   const download = React.useCallback(() => {
     if (!hasContent) return;
-    const blob = new Blob([previewText], { type: 'text/plain' });
+    /* CN:GUARDRAIL-FINAL-START */
+    const blob = new Blob([previewText], { type: 'text/plain;charset=utf-8' });
+    /* CN:GUARDRAIL-FINAL-END */
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -98,10 +117,14 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
 
   const handleReplace = React.useCallback(() => {
     if (!structuredReplacement.trim()) return;
-    const confirmed = window.confirm('Replace OCR text with structured text? This will overwrite the scanned notice text.');
+    /* CN:GUARDRAIL-FINAL-START */
+    const confirmed = window.confirm('Replace OCR with structured text? This will overwrite the OCR text.');
+    /* CN:GUARDRAIL-FINAL-END */
     if (!confirmed) return;
     onReplaceOcr(structuredReplacement);
-    setSource('ocr');
+    /* CN:GUARDRAIL-FINAL-START */
+    setPreviewSource('ocr');
+    /* CN:GUARDRAIL-FINAL-END */
   }, [structuredReplacement, onReplaceOcr]);
 
   const trimmed = (value?: string | null) => value?.trim() || '';
@@ -152,35 +175,57 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
           <p className="mt-1 text-xs text-slate-600">Generated as you type</p>
         </div>
         <div className="flex flex-col items-stretch gap-2 md:items-end">
-          <div role="radiogroup" aria-label="Preview source" className="inline-flex rounded-full border border-slate-300 bg-white p-0.5 text-xs font-medium text-[#192650]">
-            {SOURCE_OPTIONS.map((opt) => {
-              const active = source === opt.value;
-              const disabled = opt.value === 'ocr' && !hasOcr;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  disabled={disabled}
-                  onClick={() => setSource(opt.value)}
-                  className={`rounded-full px-3 py-1 transition ${
-                    active ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
-                  } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-slate-600">Source:</span>
+            <div
+              role="tablist"
+              aria-label="Preview source"
+              className="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-white text-xs font-medium text-[#192650]"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={previewSource === 'ocr'}
+                disabled={!hasOcr}
+                onClick={() => hasOcr && setPreviewSource('ocr')}
+                className={`px-3 py-1 transition ${
+                  previewSource === 'ocr' && hasOcr ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
+                } ${!hasOcr ? 'cursor-not-allowed opacity-40' : ''}`}
+              >
+                OCR text
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={previewSource === 'structured'}
+                onClick={() => setPreviewSource('structured')}
+                className={`px-3 py-1 transition ${
+                  previewSource === 'structured' ? 'bg-[#192650] text-white shadow-sm' : 'text-[#192650]'
+                }`}
+              >
+                Structured fields
+              </button>
+            </div>
+            {hasOcr && (
+              <button
+                type="button"
+                onClick={handleReplace}
+                disabled={!structuredReplacement.trim()}
+                className="text-xs text-blue-700 underline underline-offset-2 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
+              >
+                Replace OCR with structured text
+              </button>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={handleReplace}
-            disabled={!structuredReplacement.trim()}
-            className={`${UI.btnSecondary} h-9 px-3 text-xs`}
-          >
-            Replace OCR with structured text
-          </button>
+          {toastMessage && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="self-end rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-medium text-white shadow-sm"
+            >
+              {toastMessage}
+            </div>
+          )}
         </div>
       </div>
       {showBanner && (

@@ -629,7 +629,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const [postcodeNormalizedAt, setPostcodeNormalizedAt] = React.useState<number>(0);
   React.useEffect(() => {
     if (!postcodeNormalizedAt) return;
-    const timer = setTimeout(() => setPostcodeNormalizedAt(0), 2000);
+    /* CN:GUARDRAIL-FINAL-START */
+    const timer = setTimeout(() => setPostcodeNormalizedAt(0), 1500);
+    /* CN:GUARDRAIL-FINAL-END */
     return () => clearTimeout(timer);
   }, [postcodeNormalizedAt]);
   const showPostcodeNormalised = postcodeNormalizedAt > 0;

@@ -138,7 +138,19 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
         </div>
       )}
 
-      <div className="mt-3 text-xs text-slate-600">Status: {state} {elapsed ? `(${Math.round(elapsed)} ms)` : ''}</div>
+      {/* CN:GUARDRAIL-FINAL-START */}
+      {state === 'ready' ? (
+        <p className="mt-3 flex items-center gap-1 text-xs text-neutral-500">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+          Ready
+        </p>
+      ) : (
+        <div className="mt-3 text-xs text-slate-600">
+          Status: {statusLabel}
+          {elapsed && state !== 'idle' ? ` (${Math.round(elapsed)} ms)` : ''}
+        </div>
+      )}
+      {/* CN:GUARDRAIL-FINAL-END */}
       {error && (
         <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2" role="status" aria-live="polite">
           {error}
