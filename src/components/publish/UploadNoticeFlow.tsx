@@ -661,7 +661,6 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const applicantHelpId = React.useId();
   const referenceHelpId = React.useId();
   const manualAddressHelpId = React.useId();
-  const searchHelpId = React.useId();
   const postcodeHelpId = React.useId();
   const councilNameHelpId = React.useId();
   const councilEmailHelpId = React.useId();
@@ -942,13 +941,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               name="premisesSearch"
               required
               inputTestId="input-premises-address"
-              describedBy={searchHelpId}
               onChange={handlePremisesAddressCommit}
               onPick={handlePremisesPick}
             />
-            <p id={searchHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
-              Start typing to look up the premises and pre-fill council details.
-            </p>
           </div>
           <div className="col-span-12 md:col-span-8">
             <label htmlFor="premisesAddress" className={UI.label}>
