@@ -12,30 +12,49 @@ describe('mapAddress', () => {
 
 describe('AddressAutocomplete', () => {
   it('fetches results for partial query', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: [] }) } as any);
-    // @ts-ignore
-    global.fetch = fetchMock;
+    const originalFetch = global.fetch;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ items: [] }) } as any);
+    global.fetch = fetchMock as unknown as typeof global.fetch;
+
     render(<AddressAutocomplete onSelect={() => {}} />);
     const input = screen.getByTestId('address-input');
     await userEvent.type(input, '9 lower park');
-    await new Promise((r) => setTimeout(r, 350));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/address/search?q=9%20lower%20park'));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/addresses?q=9%20lower%20park');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ signal: expect.any(Object) });
+
+    global.fetch = originalFetch;
   });
 
   it('stores UPRN when selecting a postcode result', async () => {
-    const results = [{ id: '1', label: '1 High St', uprn: '999', postcode: 'AB1 2CD' }];
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results }) } as any);
-    // @ts-ignore
-    global.fetch = fetchMock;
+    const originalFetch = global.fetch;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ items: [{ id: '1', label: '1 High St' }] }),
+      } as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ address: { id: '1', lines: ['1 High St'], postcode: 'AB1 2CD', uprn: '999' } }),
+      } as any);
+    global.fetch = fetchMock as unknown as typeof global.fetch;
     const onSelect = vi.fn();
+
     render(<AddressAutocomplete onSelect={onSelect} />);
     const input = screen.getByTestId('address-input');
     await userEvent.type(input, 'AB1 2CD');
-    await new Promise((r) => setTimeout(r, 350));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    await waitFor(() => screen.getByText('1 High St'));
+    await screen.findByText('1 High St');
+
     await userEvent.click(screen.getByText('1 High St'));
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ uprn: '999' }));
+
+    await waitFor(() => expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ uprn: '999' })));
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/address/resolve?id=1');
     expect(screen.getByTestId('uprn-chip')).toBeInTheDocument();
+
+    global.fetch = originalFetch;
   });
 });

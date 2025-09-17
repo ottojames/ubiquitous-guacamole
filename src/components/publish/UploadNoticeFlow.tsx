@@ -6,7 +6,7 @@ import PreviewNotice from '@/features/publish/PreviewNotice';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
 import KeyDatesCard from '@/components/publish/RightRail/KeyDatesCard';
 import CostCard from '@/components/publish/RightRail/CostCard';
-import AddressAutocomplete, { type AddressOption } from '@/components/AddressAutocomplete';
+import AddressSearch from '@/components/address/AddressSearch';
 import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 /* CN:STEP2-START */
@@ -40,17 +40,42 @@ type NoticeFieldRefs = {
 /* CN:STEP2-END */
 
 /* CN:STEP2-LAYOUT-START */
-/* CN:SIGNOFF-START */
 function focusAndFlash(id: string) {
-  const el = document.getElementById(id);
+  const el = document.getElementById(id) as HTMLElement | null;
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  (el as HTMLInputElement | HTMLTextAreaElement | null)?.focus?.();
+  (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).focus?.();
   el.classList.add('outline', 'outline-2', 'outline-blue-300');
-  setTimeout(() => el.classList.remove('outline', 'outline-2', 'outline-blue-300'), 700);
+  setTimeout(() => {
+    el.classList.remove('outline', 'outline-2', 'outline-blue-300');
+  }, 700);
 }
-/* CN:SIGNOFF-END */
 /* CN:STEP2-LAYOUT-END */
+
+function toMultilineAddress(parts: Array<string | undefined | null>): string {
+  return parts
+    .map((part) => (part ?? '').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+async function resolveAddressById(id: string) {
+  const response = await fetch(`/api/address/resolve?id=${encodeURIComponent(id)}`);
+  if (!response.ok) throw new Error(`resolve failed: ${response.status}`);
+  const payload = await response.json();
+  if (!payload?.ok || !payload?.result) {
+    throw new Error(payload?.error || 'bad resolve payload');
+  }
+  return payload.result as {
+    id: string;
+    label: string;
+    line1: string;
+    line2: string;
+    line3: string;
+    city: string;
+    postcode: string;
+  };
+}
 
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -86,17 +111,33 @@ export default function UploadNoticeFlow() {
   const [confirmA, setConfirmA] = useState(false);
   const [confirmB, setConfirmB] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const refs: NoticeFieldRefs = {
-    applicant: React.useRef<HTMLInputElement>(null),
-    /* CN:STEP2-START */
-    premisesAddress: React.useRef<HTMLInputElement | HTMLTextAreaElement>(null),
-    councilName: React.useRef<HTMLInputElement>(null),
-    councilEmail: React.useRef<HTMLInputElement>(null),
-    councilAddress: React.useRef<HTMLInputElement | HTMLTextAreaElement>(null),
-    applicationDate: React.useRef<HTMLInputElement>(null),
-    /* CN:STEP2-END */
-  };
+  const applicantRef = React.useRef<HTMLInputElement>(null);
   /* CN:STEP2-START */
+  const premisesAddressRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const councilNameRef = React.useRef<HTMLInputElement>(null);
+  const councilEmailRef = React.useRef<HTMLInputElement>(null);
+  const councilAddressRef = React.useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const applicationDateRef = React.useRef<HTMLInputElement>(null);
+  const focusPremisesTextarea = React.useCallback(() => {
+    const el = premisesAddressRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    try {
+      el.setSelectionRange(end, end);
+    } catch {
+      /* noop for unsupported UAs */
+    }
+  }, []);
+  const refs: NoticeFieldRefs = {
+    applicant: applicantRef,
+    premisesAddress: premisesAddressRef,
+    councilName: councilNameRef,
+    councilEmail: councilEmailRef,
+    councilAddress: councilAddressRef,
+    applicationDate: applicationDateRef,
+  };
+  /* CN:STEP2-END */
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
   // {/* CN:LICENSING-FINAL-START */}
@@ -388,6 +429,7 @@ export default function UploadNoticeFlow() {
                   onKeepOcrDeadline={handleKeepOcrDeadline}
                   onViewOcrDeadline={handleViewOcrDeadline}
                   representationDeadlineDate={representationDeadlineDate}
+                  focusPremisesTextarea={focusPremisesTextarea}
                   /* CN:OFFICER-FINAL-END */
                 />
                 {/* CN:STEP2-END */}
@@ -431,6 +473,7 @@ export default function UploadNoticeFlow() {
                   onKeepOcrDeadline={handleKeepOcrDeadline}
                   onViewOcrDeadline={handleViewOcrDeadline}
                   representationDeadlineDate={representationDeadlineDate}
+                  focusPremisesTextarea={focusPremisesTextarea}
                   /* CN:OFFICER-FINAL-END */
                 />
                 {/* CN:STEP2-END */}
@@ -573,6 +616,7 @@ type NoticeDetailsSectionsProps = {
   draft: NoticeDraft;
   onChange: (patch: Partial<NoticeDraft>, options?: { ensureUrn?: boolean }) => void;
   refs: NoticeFieldRefs;
+  focusPremisesTextarea: () => void;
   confirmA: boolean;
   confirmB: boolean;
   onConfirmAChange: (next: boolean) => void;
@@ -595,6 +639,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     draft,
     onChange,
     refs,
+    focusPremisesTextarea,
     confirmA,
     confirmB,
     onConfirmAChange,
@@ -626,16 +671,15 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   /* CN:OFFICER-FINAL-START */
   const submissionTooltipId = React.useId();
   const [showSubmissionTooltip, setShowSubmissionTooltip] = React.useState(false);
-  /* CN:SIGNOFF-START */
-  const [postcodeNormalised, setPostcodeNormalised] = React.useState(false);
+  const [postcodeNormalizedAt, setPostcodeNormalizedAt] = React.useState<number>(0);
   React.useEffect(() => {
-    if (!postcodeNormalised) return;
+    if (!postcodeNormalizedAt) return;
     /* CN:GUARDRAIL-FINAL-START */
-    const timer = setTimeout(() => setPostcodeNormalised(false), 1000);
+    const timer = setTimeout(() => setPostcodeNormalizedAt(0), 1500);
     /* CN:GUARDRAIL-FINAL-END */
     return () => clearTimeout(timer);
-  }, [postcodeNormalised]);
-  /* CN:SIGNOFF-END */
+  }, [postcodeNormalizedAt]);
+  const showPostcodeNormalised = postcodeNormalizedAt > 0;
   const formattedOcrDeadline = ocrDeadline ? formatDisplayDate(ocrDeadline) : '';
   const formattedCalculatedDeadline = representationDeadlineDate ? formatDisplayDate(representationDeadlineDate) : '';
   /* CN:OFFICER-FINAL-END */
@@ -653,6 +697,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
+  const premisesAddressRef = refs.premisesAddress as React.RefObject<HTMLTextAreaElement>;
 
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
@@ -695,16 +740,6 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   /* CN:TEMPLATES-PREVIEW-END */
 
   /* CN:STEP2-LAYOUT-START */
-  React.useEffect(() => {
-    const el = document.querySelector<HTMLInputElement>('[data-testid="input-premises-address"]');
-    if (!el) return;
-    if (!el.id) {
-      /* CN:STEP2-LAYOUT-START */
-      el.id = 'premisesSearch';
-      /* CN:STEP2-LAYOUT-END */
-    }
-    el.setAttribute('aria-describedby', searchHelpId);
-  }, [searchHelpId]);
   /* CN:STEP2-LAYOUT-END */
 
   /* CN:TEMPLATES-PREVIEW-START */
@@ -733,25 +768,115 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   /* CN:STEP2-COMPLIANCE-END */
   /* CN:OFFICER-FINAL-END */
 
-  const handleAddressSelect = (option: AddressOption) => {
-    const composed = option.label || [option.line1, option.city ?? option.town, option.postcode].filter(Boolean).join(', ');
-    const postcode = option.postcode || '';
-    onChange({ premisesAddress: composed, postcode }, { ensureUrn: true });
-    if (!postcode) return;
-    const res = lookupCouncilByPostcode(postcode);
-    if (!res) return;
-    lookedUpEmail.current = res.councilEmail || '';
-    lookedUpName.current = res.councilName || '';
-    lookedUpAddress.current = res.councilAddress || '';
-    onChange(
-      {
-        councilName: res.councilName || draft.councilName,
-        councilEmail: res.councilEmail || draft.councilEmail,
-        councilAddress: res.councilAddress || draft.councilAddress,
-      },
-      { ensureUrn: true }
-    );
-  };
+  const extractPostcodeFromAddress = React.useCallback((input: string): string | null => {
+    if (!input) return null;
+    const matches = input.toUpperCase().match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})/g);
+    if (!matches || matches.length === 0) return null;
+    return normalizeUKPostcode(matches[matches.length - 1]);
+  }, []);
+
+  const toMultiline = (label: string) =>
+    label
+      .split(',')
+      .map((segment) => segment.trim())
+      .filter(Boolean)
+      .join('\n');
+
+  const handlePremisesAddressCommit = React.useCallback(
+    (rawAddress: string, opts?: { updatePremises?: boolean }) => {
+      const trimmed = rawAddress.trim();
+      if (opts?.updatePremises ?? true) {
+        const multiline = toMultiline(trimmed);
+        onChange({ premisesAddress: multiline || trimmed }, { ensureUrn: true });
+      }
+      if (!trimmed) {
+        lookedUpEmail.current = '';
+        lookedUpName.current = '';
+        lookedUpAddress.current = '';
+        return;
+      }
+
+      const postcode = extractPostcodeFromAddress(trimmed);
+      if (!postcode) return;
+
+      onChange({ postcode }, { ensureUrn: true });
+      const res = lookupCouncilByPostcode(postcode);
+      if (!res) return;
+
+      lookedUpEmail.current = res.councilEmail || '';
+      lookedUpName.current = res.councilName || '';
+      lookedUpAddress.current = res.councilAddress || '';
+      onChange(
+        {
+          councilName: res.councilName || draft.councilName,
+          councilEmail: res.councilEmail || draft.councilEmail,
+          councilAddress: res.councilAddress || draft.councilAddress,
+        },
+        { ensureUrn: true }
+      );
+    },
+    [onChange, extractPostcodeFromAddress, draft.councilAddress, draft.councilEmail, draft.councilName, toMultiline]
+  );
+
+  const handlePremisesPick = React.useCallback(
+    async (item: { id: string; label: string }) => {
+      try {
+        const resolved = await resolveAddressById(item.id);
+
+        const normalizedPostcode = (resolved.postcode || '').trim();
+        const multiline =
+          toMultilineAddress([resolved.line1, resolved.line2, resolved.line3, resolved.city]) ||
+          resolved.label ||
+          item.label;
+
+        onChange(
+          {
+            premisesAddress: multiline,
+            postcode: normalizedPostcode,
+          },
+          { ensureUrn: true }
+        );
+
+        if (normalizedPostcode) {
+          const council = lookupCouncilByPostcode(normalizedPostcode);
+          if (council) {
+            lookedUpEmail.current = council.councilEmail || '';
+            lookedUpName.current = council.councilName || '';
+            lookedUpAddress.current = council.councilAddress || '';
+            onChange(
+              {
+                councilName: council.councilName || draft.councilName,
+                councilEmail: council.councilEmail || draft.councilEmail,
+                councilAddress: council.councilAddress || draft.councilAddress,
+              },
+              { ensureUrn: true }
+            );
+          } else {
+            lookedUpEmail.current = '';
+            lookedUpName.current = '';
+            lookedUpAddress.current = '';
+          }
+        } else {
+          lookedUpEmail.current = '';
+          lookedUpName.current = '';
+          lookedUpAddress.current = '';
+        }
+
+        focusPremisesTextarea();
+      } catch (error) {
+        console.error('handlePremisesPick failed', error);
+        onChange(
+          { premisesAddress: item.label, postcode: '' },
+          { ensureUrn: true }
+        );
+        lookedUpEmail.current = '';
+        lookedUpName.current = '';
+        lookedUpAddress.current = '';
+        focusPremisesTextarea();
+      }
+    },
+    [onChange, focusPremisesTextarea, draft.councilAddress, draft.councilEmail, draft.councilName]
+  );
 
   const handleSubmissionDate = (value: string) => {
     if (!value) {
@@ -810,10 +935,16 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
           <div
             className="col-span-12 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-slate-800 [&_input]:h-11 [&_input]:text-sm [&_input]:rounded-xl [&_input]:w-full"
           >
-            <AddressAutocomplete
-              label="Premises address (search)"
-              onSelect={handleAddressSelect}
+            <label htmlFor="premisesSearch" className={UI.label}>
+              Premises address (search)<span className="text-rose-600">*</span>
+            </label>
+            <AddressSearch
+              name="premisesSearch"
+              required
               inputTestId="input-premises-address"
+              describedBy={searchHelpId}
+              onChange={handlePremisesAddressCommit}
+              onPick={handlePremisesPick}
             />
             <p id={searchHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
               Start typing to look up the premises and pre-fill council details.
@@ -825,9 +956,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             </label>
             <textarea
               id="premisesAddress"
-              ref={refs.premisesAddress as React.RefObject<HTMLTextAreaElement>}
+              ref={premisesAddressRef}
               className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
-              value={draft.premisesAddress}
+              value={draft.premisesAddress ?? ''}
               onChange={(e) => onChange({ premisesAddress: e.target.value }, { ensureUrn: true })}
               aria-describedby={manualAddressHelpId}
             />
@@ -845,7 +976,6 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               value={draft.postcode}
               onChange={(e) => onChange({ postcode: e.target.value }, { ensureUrn: true })}
               /* CN:OFFICER-FINAL-START */
-              /* CN:SIGNOFF-START */
               onBlur={(event) => {
                 const normalized = normalizeUKPostcode(event.currentTarget.value);
                 if (normalized !== event.currentTarget.value) {
@@ -853,13 +983,12 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
                 }
                 onChange({ postcode: normalized }, { ensureUrn: true });
                 if (normalized && normalized !== draft.postcode) {
-                  setPostcodeNormalised(true);
+                  setPostcodeNormalizedAt(Date.now());
                 }
                 if (!normalized) {
-                  setPostcodeNormalised(false);
+                  setPostcodeNormalizedAt(0);
                 }
               }}
-              /* CN:SIGNOFF-END */
               /* CN:OFFICER-FINAL-END */
               aria-describedby={postcodeHelpId}
             />
@@ -867,9 +996,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               Matches the final notice address.
             </p>
             {/* CN:OFFICER-FINAL-START */}
-            {/* CN:SIGNOFF-START */}
-            {postcodeNormalised && <p className="mt-1 text-xs text-neutral-500">Normalised</p>}
-            {/* CN:SIGNOFF-END */}
+            {showPostcodeNormalised && (
+              <p className="mt-1 text-xs text-neutral-500">Normalised</p>
+            )}
             {/* CN:OFFICER-FINAL-END */}
           </div>
           <div className="col-span-12 md:col-span-6">
