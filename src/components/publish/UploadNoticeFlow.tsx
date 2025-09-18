@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ProgressBar from './ProgressBar';
 import FileDropOCR from '@/components/upload/FileDropOCR';
+import CouncilSelect, { type Council } from '@/components/CouncilSelect';
 // {/* CN:LICENSING-FINAL-START */}
 import PreviewNotice from '@/features/publish/PreviewNotice';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
@@ -24,6 +25,7 @@ import { buildPremisesNotice, buildVariationNotice, buildReviewNotice } from '@/
 import * as UI from '@/styles/ui';
 import type { NoticeDraft, NoticeType } from '@/types/notice';
 import { sha256Hex } from '@/lib/hash';
+import ConfirmNotice from '@/components/publish/ConfirmNotice';
 /* CN:STEP1-START */
 import NoticeTypeStep, { isLicensingNoticeType } from './sections/NoticeTypeStep';
 /* CN:STEP1-END */
@@ -96,6 +98,7 @@ export default function UploadNoticeFlow() {
     councilName: '',
     councilEmail: '',
     councilAddress: '',
+    isCouncilEmailLocked: false,
     blueNoticeUploads: [],
     status: 'Draft',
     applicationDate: '',
@@ -108,9 +111,8 @@ export default function UploadNoticeFlow() {
     /* CN:LICENSING-TEMPLATES-END */
     /* CN:TEMPLATES-PREVIEW-END */
   });
-  const [confirmA, setConfirmA] = useState(false);
-  const [confirmB, setConfirmB] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasConfirmedNotice, setHasConfirmedNotice] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
   const applicantRef = React.useRef<HTMLInputElement>(null);
   /* CN:STEP2-START */
   const premisesAddressRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -181,6 +183,26 @@ export default function UploadNoticeFlow() {
     }
     return buildPremisesNotice(builderState, previewAuthority, { includeSummaries: true });
   }, [draft, previewAuthority, representationDeadlineDate]);
+
+  const confirmNoticeText = React.useMemo(() => {
+    const trimmedFinal = (draft.finalText || '').trim();
+    if (trimmedFinal) return trimmedFinal;
+    return structuredReplacement.trim();
+  }, [draft.finalText, structuredReplacement]);
+
+  const previousConfirmNoticeText = React.useRef(confirmNoticeText);
+
+  useEffect(() => {
+    if (step !== 3) {
+      setHasConfirmedNotice(false);
+      previousConfirmNoticeText.current = confirmNoticeText;
+      return;
+    }
+    if (previousConfirmNoticeText.current !== confirmNoticeText) {
+      setHasConfirmedNotice(false);
+      previousConfirmNoticeText.current = confirmNoticeText;
+    }
+  }, [step, confirmNoticeText]);
   const handleUseCalculatedDeadline = React.useCallback(() => {
     const replacement = structuredReplacement.trim();
     if (replacement) {
@@ -216,6 +238,7 @@ export default function UploadNoticeFlow() {
     draft.postcode.trim() &&
     draft.councilName.trim() &&
     draft.councilEmail.trim() &&
+    draft.councilAddress.trim() &&
     draft.applicationDate.trim() &&
     /* CN:TEMPLATES-PREVIEW-START */
     /* CN:LICENSING-TEMPLATES-START */
@@ -229,6 +252,7 @@ export default function UploadNoticeFlow() {
     draft.postcode,
     draft.councilName,
     draft.councilEmail,
+    draft.councilAddress,
     draft.applicationDate,
   ];
   /* CN:TEMPLATES-PREVIEW-START */
@@ -242,10 +266,17 @@ export default function UploadNoticeFlow() {
   const requiredTotal = requiredFields.length;
   /* CN:STEP2-LAYOUT-END */
   /* CN:STEP2-END */
-  const canContinue = requiredOk && confirmA && confirmB;
+  const detailsComplete = requiredOk;
+  const readyForPayment = detailsComplete && hasConfirmedNotice;
+  const canProceedFromStep2 = hasOcrText || detailsComplete;
+
+  useEffect(() => {
+    if (detailsComplete) {
+      setShowValidationErrors(false);
+    }
+  }, [detailsComplete]);
 
   const handleBack = () => setStep((prev) => Math.max(1, (prev as number) - 1) as 1 | 2 | 3 | 4);
-  const handleNext = () => setStep((prev) => Math.min(4, (prev as number) + 1) as 1 | 2 | 3 | 4);
 
   /* CN:STEP2-START */
   const makeReference = React.useCallback(() => {
@@ -300,8 +331,12 @@ export default function UploadNoticeFlow() {
     setDraft((d) => ({
       ...d,
       councilName: res.councilName || d.councilName,
-      councilEmail: res.councilEmail || d.councilEmail,
-      councilAddress: res.councilAddress || d.councilAddress,
+      councilEmail:
+        typeof res.councilEmail === 'string' ? res.councilEmail : d.councilEmail,
+      councilAddress:
+        typeof res.councilAddress === 'string' ? res.councilAddress : d.councilAddress,
+      isCouncilEmailLocked:
+        typeof res.councilEmail === 'string' ? !!res.councilEmail : d.isCouncilEmailLocked,
     }));
   }, [draft.postcode]);
 
@@ -321,7 +356,6 @@ export default function UploadNoticeFlow() {
     /* CN:STEP2-END */
   }, [draft.applicationDate, draft.repsDeadline]);
 
-  const toErrorKey = (target: string) => (target === 'premises-address' ? 'premisesAddress' : target);
   const handleFix = (target?: string) => {
     if (!target) return;
     /* CN:STEP2-LAYOUT-START */
@@ -352,7 +386,6 @@ export default function UploadNoticeFlow() {
     const fieldId = map[target] || target;
     focusAndFlash(fieldId);
     /* CN:STEP2-LAYOUT-END */
-    setErrors((er) => ({ ...er, [toErrorKey(target)]: 'This field is required' }));
   };
 
   return (
@@ -415,10 +448,7 @@ export default function UploadNoticeFlow() {
                   draft={draft}
                   onChange={updateDraft}
                   refs={refs}
-                  confirmA={confirmA}
-                  confirmB={confirmB}
-                  onConfirmAChange={setConfirmA}
-                  onConfirmBChange={setConfirmB}
+                  showValidationErrors={showValidationErrors}
                   // {/* CN:LICENSING-FINAL-START */}
                   hasOcrText={hasOcrText}
                   // {/* CN:LICENSING-FINAL-END */}
@@ -438,67 +468,28 @@ export default function UploadNoticeFlow() {
           )}
           {step === 3 && (
             <div className="space-y-6">
-              <section className={UI.section}>
-                <div>
-                  <label htmlFor="noticeText" className={UI.label}>Notice text</label>
-                  <textarea
-                    id="noticeText"
-                    className={UI.input + ' h-40'}
-                    // {/* CN:LICENSING-FINAL-START */}
-                    value={draft.finalText || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setDraft((d) => ({ ...d, finalText: value }));
-                      setOcrText(value);
-                    }}
-                    // {/* CN:LICENSING-FINAL-END */}
-                  />
-                </div>
-                {/* CN:STEP2-START */}
-                <NoticeDetailsSections
-                  draft={draft}
-                  onChange={updateDraft}
-                  refs={refs}
-                  confirmA={confirmA}
-                  confirmB={confirmB}
-                  onConfirmAChange={setConfirmA}
-                  onConfirmBChange={setConfirmB}
-                  // {/* CN:LICENSING-FINAL-START */}
-                  hasOcrText={hasOcrText}
-                  // {/* CN:LICENSING-FINAL-END */}
-                  /* CN:OFFICER-FINAL-START */
-                  ocrDeadline={ocrDeadline}
-                  showDeadlineWarning={showDeadlineWarning}
-                  onUseCalculatedDeadline={handleUseCalculatedDeadline}
-                  onKeepOcrDeadline={handleKeepOcrDeadline}
-                  onViewOcrDeadline={handleViewOcrDeadline}
-                  representationDeadlineDate={representationDeadlineDate}
-                  focusPremisesTextarea={focusPremisesTextarea}
-                  /* CN:OFFICER-FINAL-END */
-                />
-                {/* CN:STEP2-END */}
-                <div className="mt-4 flex items-center justify-between">
-                  <button
-                    className={UI.btnSecondary}
-                    onClick={handleBack}
-                    data-testid="btn-back"
-                  >
-                    Back
-                  </button>
-                  <button
-                    className={UI.btnPrimary}
-                    disabled={!canContinue}
-                    data-testid="btn-continue"
-                    onClick={async () => {
-                      const hash = await sha256Hex((draft.originalFileMeta?.sha256 || '') + (draft.finalText || ''));
-                      setDraft((d) => ({ ...d, proofHash: hash }));
-                      setStep(4);
-                    }}
-                  >
-                    Continue to Pay
-                  </button>
-                </div>
-              </section>
+              <ConfirmNotice
+                noticeText={confirmNoticeText}
+                confirmed={hasConfirmedNotice}
+                onConfirmedChange={setHasConfirmedNotice}
+                ready={detailsComplete}
+                onConfirmAndContinue={async () => {
+                  if (!detailsComplete) {
+                    setShowValidationErrors(true);
+                    return;
+                  }
+                  const textForHash = draft.finalText || confirmNoticeText || '';
+                  const hash = await sha256Hex((draft.originalFileMeta?.sha256 || '') + textForHash);
+                  setDraft((d) => ({ ...d, proofHash: hash }));
+                  setStep(4);
+                }}
+              />
+              <div className="flex items-center justify-between">
+                <button className={UI.btnSecondary} onClick={handleBack} data-testid="btn-back">
+                  Back
+                </button>
+                <span />
+              </div>
             </div>
           )}
           {step === 4 && (
@@ -522,18 +513,37 @@ export default function UploadNoticeFlow() {
                 </button>
                 <button
                   type="button"
-                  className={`${UI.btnSecondary} h-11 px-5 text-sm`}
+                  className={`${UI.btnSecondary} h-11 px-5 text-sm ${
+                    !canProceedFromStep2 ? 'cursor-not-allowed opacity-50' : ''
+                  }`}
                   data-testid="link-skip-ocr"
-                  onClick={() => setStep(3)}
+                  aria-disabled={!canProceedFromStep2}
+                  onClick={() => {
+                    if (!canProceedFromStep2) {
+                      setShowValidationErrors(true);
+                      return;
+                    }
+                    setShowValidationErrors(false);
+                    setHasConfirmedNotice(false);
+                    setStep(3);
+                  }}
                 >
                   {/* CN:STEP2-START */}Enter details manually{/* CN:STEP2-END */}
                 </button>
                 <button
-                  className={`${UI.btnPrimary} h-11 px-5 text-sm`}
-                  // {/* CN:LICENSING-FINAL-START */}
-                  disabled={!hasOcrText && !(requiredOk && confirmA && confirmB)}
-                  // {/* CN:LICENSING-FINAL-END */}
-                  onClick={() => setStep(3)}
+                  className={`${UI.btnPrimary} h-11 px-5 text-sm ${
+                    !canProceedFromStep2 ? 'cursor-not-allowed opacity-50' : ''
+                  }`}
+                  aria-disabled={!canProceedFromStep2}
+                  onClick={() => {
+                    if (!canProceedFromStep2) {
+                      setShowValidationErrors(true);
+                      return;
+                    }
+                    setShowValidationErrors(false);
+                    setHasConfirmedNotice(false);
+                    setStep(3);
+                  }}
                   data-testid="btn-continue"
                 >
                   Continue
@@ -598,7 +608,11 @@ export default function UploadNoticeFlow() {
               />
               {/* CN:STEP2-COMPLIANCE-START */}
               {step !== 2 && (
-                <CostCard cost={0} canSubmit={canContinue && step === 3} label={step === 3 ? 'Submit' : undefined} />
+                <CostCard
+                  cost={0}
+                  canSubmit={step === 3 && readyForPayment}
+                  label={step === 3 ? 'Continue to payment' : undefined}
+                />
               )}
               {/* CN:STEP2-COMPLIANCE-END */}
             </>
@@ -617,10 +631,7 @@ type NoticeDetailsSectionsProps = {
   onChange: (patch: Partial<NoticeDraft>, options?: { ensureUrn?: boolean }) => void;
   refs: NoticeFieldRefs;
   focusPremisesTextarea: () => void;
-  confirmA: boolean;
-  confirmB: boolean;
-  onConfirmAChange: (next: boolean) => void;
-  onConfirmBChange: (next: boolean) => void;
+  showValidationErrors: boolean;
   // {/* CN:LICENSING-FINAL-START */}
   hasOcrText: boolean;
   // {/* CN:LICENSING-FINAL-END */}
@@ -640,10 +651,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     onChange,
     refs,
     focusPremisesTextarea,
-    confirmA,
-    confirmB,
-    onConfirmAChange,
-    onConfirmBChange,
+    showValidationErrors,
     hasOcrText,
     /* CN:OFFICER-FINAL-START */
     ocrDeadline,
@@ -662,9 +670,10 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const referenceHelpId = React.useId();
   const manualAddressHelpId = React.useId();
   const postcodeHelpId = React.useId();
-  const councilNameHelpId = React.useId();
   const councilEmailHelpId = React.useId();
+  const councilEmailErrorId = React.useId();
   const councilAddressHelpId = React.useId();
+  const councilAddressErrorId = React.useId();
   const submissionHelpId = React.useId();
   const deadlineHelpId = React.useId();
   /* CN:OFFICER-FINAL-START */
@@ -696,6 +705,33 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
+  const [councilNameTouched, setCouncilNameTouched] = React.useState(false);
+  const [councilEmailTouched, setCouncilEmailTouched] = React.useState(false);
+  const [councilAddressTouched, setCouncilAddressTouched] = React.useState(false);
+  const emailLocked = !!draft.isCouncilEmailLocked;
+  const trimmedEmail = draft.councilEmail.trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const hasEmail = trimmedEmail.length > 0;
+  const emailValid = !hasEmail || emailPattern.test(trimmedEmail);
+  const showCouncilNameError = (showValidationErrors || councilNameTouched) && !draft.councilName.trim();
+  const showCouncilEmailError =
+    (showValidationErrors || councilEmailTouched) && (!hasEmail || !emailValid);
+  const councilEmailErrorMessage = !hasEmail ? 'Council email is required.' : 'Enter a valid email address.';
+  const showCouncilAddressError =
+    (showValidationErrors || councilAddressTouched) && !draft.councilAddress.trim();
+  const showNoDefaultEmail = !showCouncilEmailError && !!draft.councilName.trim() && !hasEmail;
+  const councilEmailDescribedBy = [
+    councilEmailHelpId,
+    showCouncilEmailError ? councilEmailErrorId : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const councilAddressDescribedBy = [
+    councilAddressHelpId,
+    showCouncilAddressError ? councilAddressErrorId : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
   const premisesAddressRef = refs.premisesAddress as React.RefObject<HTMLTextAreaElement>;
 
   /* CN:TEMPLATES-PREVIEW-START */
@@ -808,8 +844,14 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
       onChange(
         {
           councilName: res.councilName || draft.councilName,
-          councilEmail: res.councilEmail || draft.councilEmail,
-          councilAddress: res.councilAddress || draft.councilAddress,
+          councilEmail:
+            typeof res.councilEmail === 'string' ? res.councilEmail : draft.councilEmail,
+          councilAddress:
+            typeof res.councilAddress === 'string' ? res.councilAddress : draft.councilAddress,
+          isCouncilEmailLocked:
+            typeof res.councilEmail === 'string'
+              ? !!res.councilEmail
+              : draft.isCouncilEmailLocked,
         },
         { ensureUrn: true }
       );
@@ -845,8 +887,18 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             onChange(
               {
                 councilName: council.councilName || draft.councilName,
-                councilEmail: council.councilEmail || draft.councilEmail,
-                councilAddress: council.councilAddress || draft.councilAddress,
+                councilEmail:
+                  typeof council.councilEmail === 'string'
+                    ? council.councilEmail
+                    : draft.councilEmail,
+                councilAddress:
+                  typeof council.councilAddress === 'string'
+                    ? council.councilAddress
+                    : draft.councilAddress,
+                isCouncilEmailLocked:
+                  typeof council.councilEmail === 'string'
+                    ? !!council.councilEmail
+                    : draft.isCouncilEmailLocked,
               },
               { ensureUrn: true }
             );
@@ -997,21 +1049,46 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             {/* CN:OFFICER-FINAL-END */}
           </div>
           <div className="col-span-12 md:col-span-6">
-            <label htmlFor="councilName" className={UI.label}>
-              Council name<span className="text-rose-600">*</span>
-            </label>
-            <input
+            <CouncilSelect
               id="councilName"
-              ref={refs.councilName}
-              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
-              data-testid="input-council-name"
               value={draft.councilName}
-              onChange={(e) => onChange({ councilName: e.target.value }, { ensureUrn: true })}
-              aria-describedby={councilNameHelpId}
+              inputRef={refs.councilName}
+              onChangeText={(name) => {
+                setCouncilNameTouched(true);
+                lookedUpName.current = '';
+                lookedUpEmail.current = '';
+                lookedUpAddress.current = '';
+                onChange(
+                  {
+                    councilName: name,
+                    isCouncilEmailLocked: false,
+                  },
+                  { ensureUrn: true }
+                );
+              }}
+              onBlur={() => setCouncilNameTouched(true)}
+              onSelect={(council: Council) => {
+                lookedUpName.current = council.name;
+                lookedUpEmail.current = council.email || '';
+                lookedUpAddress.current = council.address || '';
+                onChange(
+                  {
+                    councilName: council.name,
+                    councilEmail: council.email || '',
+                    councilAddress:
+                      typeof council.address === 'string' ? council.address : draft.councilAddress,
+                    isCouncilEmailLocked: !!council.email,
+                  },
+                  { ensureUrn: true }
+                );
+                setCouncilNameTouched(true);
+                if (!council.email) setCouncilEmailTouched(true);
+                if (typeof council.address === 'string' && !council.address) {
+                  setCouncilAddressTouched(true);
+                }
+              }}
+              error={showCouncilNameError ? 'Council name is required.' : undefined}
             />
-            <p id={councilNameHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
-              Licensing authority responsible for this notice.
-            </p>
             {lookedUpName.current && draft.councilName && draft.councilName !== lookedUpName.current && (
               <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                 Value differs from council directory
@@ -1022,16 +1099,54 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <label htmlFor="councilEmail" className={UI.label}>
               Council email<span className="text-rose-600">*</span>
             </label>
-            <input
-              id="councilEmail"
-              type="email"
-              ref={refs.councilEmail}
-              className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
-              data-testid="input-council-email"
-              value={draft.councilEmail}
-              onChange={(e) => onChange({ councilEmail: e.target.value }, { ensureUrn: true })}
-              aria-describedby={councilEmailHelpId}
-            />
+            <div className="relative mt-1">
+              <input
+                id="councilEmail"
+                type="email"
+                ref={refs.councilEmail}
+                className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm ${
+                  showCouncilEmailError ? 'border-red-500 focus:ring-red-500 focus:ring-offset-white' : ''
+                } ${emailLocked ? 'bg-neutral-50' : ''}`}
+                data-testid="input-council-email"
+                value={draft.councilEmail}
+                onChange={(e) => {
+                  setCouncilEmailTouched(true);
+                  onChange(
+                    { councilEmail: e.target.value, isCouncilEmailLocked: false },
+                    { ensureUrn: true }
+                  );
+                }}
+                onBlur={() => setCouncilEmailTouched(true)}
+                readOnly={emailLocked}
+                aria-readonly={emailLocked ? 'true' : undefined}
+                aria-invalid={showCouncilEmailError ? 'true' : undefined}
+                aria-describedby={councilEmailDescribedBy}
+              />
+              <button
+                type="button"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-slate-300 px-2 py-1 text-xs font-medium text-[#192650] transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  !hasEmail && !emailLocked ? 'cursor-not-allowed opacity-50' : 'hover:bg-slate-50'
+                }`}
+                onClick={() => {
+                  if (!hasEmail && !emailLocked) return;
+                  onChange(
+                    { isCouncilEmailLocked: !emailLocked },
+                    { ensureUrn: true }
+                  );
+                }}
+                aria-label={emailLocked ? 'Enable editing email' : 'Lock email'}
+              >
+                {emailLocked ? 'Edit' : 'Lock'}
+              </button>
+            </div>
+            {showCouncilEmailError && (
+              <p id={councilEmailErrorId} className="mt-1 text-xs text-red-600">
+                {councilEmailErrorMessage}
+              </p>
+            )}
+            {showNoDefaultEmail && (
+              <p className="mt-1 text-xs text-amber-600">No default email found — please enter manually.</p>
+            )}
             <p id={councilEmailHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
               Official inbox for licensing representations.
             </p>
@@ -1084,19 +1199,31 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
           </div>
           <div className="col-span-12">
             <label htmlFor="councilAddress" className={UI.label}>
-              Council address <span className="text-xs font-normal text-slate-500">(optional)</span>
+              Council address<span className="text-rose-600">*</span>
             </label>
             <textarea
               id="councilAddress"
               ref={refs.councilAddress as React.RefObject<HTMLTextAreaElement>}
-              className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm`}
+              className={`${UI.input} min-h-[96px] w-full rounded-xl px-3 text-sm ${
+                showCouncilAddressError ? 'border-red-500 focus:ring-red-500 focus:ring-offset-white' : ''
+              }`}
               data-testid="input-council-address"
               value={draft.councilAddress}
-              onChange={(e) => onChange({ councilAddress: e.target.value }, { ensureUrn: true })}
-              aria-describedby={councilAddressHelpId}
+              onChange={(e) => {
+                setCouncilAddressTouched(true);
+                onChange({ councilAddress: e.target.value }, { ensureUrn: true });
+              }}
+              onBlur={() => setCouncilAddressTouched(true)}
+              aria-invalid={showCouncilAddressError ? 'true' : undefined}
+              aria-describedby={councilAddressDescribedBy}
             />
+            {showCouncilAddressError && (
+              <p id={councilAddressErrorId} className="mt-1 text-xs text-red-600">
+                Council address is required.
+              </p>
+            )}
             <p id={councilAddressHelpId} className="mt-1 min-h-5 text-xs text-neutral-500">
-              Provide if the council requests a postal address for representations.
+              Required by many authorities for written representations.
             </p>
             {lookedUpAddress.current && draft.councilAddress && draft.councilAddress !== lookedUpAddress.current && (
               <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
@@ -1347,32 +1474,6 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             </div>
           </div>
           {/* CN:STEP2-COMPLIANCE-END */}
-          <div className="col-span-12 space-y-3">
-            <div className="flex items-start gap-3">
-              <input
-                id="confirm-a"
-                type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
-                checked={confirmA}
-                onChange={(e) => onConfirmAChange(e.target.checked)}
-              />
-              <label htmlFor="confirm-a" className="text-sm leading-5 text-slate-800">
-                I confirm the above text is a true and accurate copy of the notice published/displayed.
-              </label>
-            </div>
-            <div className="flex items-start gap-3">
-              <input
-                id="confirm-b"
-                type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]"
-                checked={confirmB}
-                onChange={(e) => onConfirmBChange(e.target.checked)}
-              />
-              <label htmlFor="confirm-b" className="text-sm leading-5 text-slate-800">
-                I understand that supplying false information is an offence.
-              </label>
-            </div>
-          </div>
         </div>
       </fieldset>
       {/* CN:STEP2-LAYOUT-END */}

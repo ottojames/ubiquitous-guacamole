@@ -244,11 +244,14 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
             {headingTwo && <p className="-mt-2 text-[13px] font-medium text-slate-700">{headingTwo}</p>}
             {bodyLines.map((line, index) =>
               line.trim() ? (
-                <p key={index} className="text-[14px] leading-6 text-slate-800 whitespace-pre-wrap">
+                <p
+                  key={index}
+                  className="text-[14px] leading-6 text-slate-800 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                >
                   {line}
                 </p>
               ) : (
-                <p key={index} className="text-[14px] leading-6 text-slate-800">&nbsp;</p>
+                <p key={index} className="text-[14px] leading-6 text-slate-800 break-words [overflow-wrap:anywhere]">&nbsp;</p>
               )
             )}
           </div>
