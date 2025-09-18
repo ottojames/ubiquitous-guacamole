@@ -4,13 +4,16 @@ import PublishPage from '@/pages/PublishPage';
 
 describe('PublishPage tabs', () => {
   it('renders tabs and enables continue after OCR', async () => {
-    const { container } = render(<PublishPage />);
+    render(<PublishPage />);
     expect(screen.getByText('Upload from Notice')).toBeInTheDocument();
     expect(screen.getByText('Upload via Template')).toBeInTheDocument();
     const btn = screen.getByText('Continue') as HTMLButtonElement;
-    expect(btn).toBeDisabled();
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(btn).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.change(screen.getByTestId('select-notice-type'), { target: { value: 'premises' } });
+    fireEvent.click(screen.getByTestId('btn-continue-step1'));
+    const dropzoneLabel = await screen.findByTestId('notice-upload-pill');
+    const input = dropzoneLabel.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(input, { target: { files: [new File(['hi'], 'test.pdf', { type: 'application/pdf' })] } });
-    await waitFor(() => expect(btn).not.toBeDisabled());
+    await waitFor(() => expect(btn).toHaveAttribute('aria-disabled', 'false'));
   });
 });

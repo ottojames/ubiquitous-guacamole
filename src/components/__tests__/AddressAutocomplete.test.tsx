@@ -15,7 +15,10 @@ describe('AddressAutocomplete', () => {
     const originalFetch = global.fetch;
     const fetchMock = vi
       .fn()
-      .mockResolvedValue({ ok: true, json: async () => ({ items: [] }) } as any);
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ suggestions: [] }),
+      } as any);
     global.fetch = fetchMock as unknown as typeof global.fetch;
 
     render(<AddressAutocomplete onSelect={() => {}} />);
@@ -23,37 +26,45 @@ describe('AddressAutocomplete', () => {
     await userEvent.type(input, '9 lower park');
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/addresses?q=9%20lower%20park');
+    const requested = fetchMock.mock.calls[0][0] as string;
+    expect(requested).toContain('/api/getaddress/autocomplete/9%20lower%20park');
+    expect(requested).toContain('api-key=');
+    expect(requested).toContain('all=true');
     expect(fetchMock.mock.calls[0][1]).toMatchObject({ signal: expect.any(Object) });
 
     global.fetch = originalFetch;
   });
 
-  it('stores UPRN when selecting a postcode result', async () => {
+  it('calls onSelect with the suggestion label and postcode', async () => {
     const originalFetch = global.fetch;
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ items: [{ id: '1', label: '1 High St' }] }),
-      } as any)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ address: { id: '1', lines: ['1 High St'], postcode: 'AB1 2CD', uprn: '999' } }),
-      } as any);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        suggestions: [
+          {
+            id: 'addr-1',
+            address: '1 High St, Town, AB1 2CD',
+            postcode: 'AB1 2CD',
+          },
+        ],
+      }),
+    } as any);
     global.fetch = fetchMock as unknown as typeof global.fetch;
     const onSelect = vi.fn();
 
     render(<AddressAutocomplete onSelect={onSelect} />);
     const input = screen.getByTestId('address-input');
     await userEvent.type(input, 'AB1 2CD');
-    await screen.findByText('1 High St');
+    await screen.findByText(/1 High St, Town/i);
 
-    await userEvent.click(screen.getByText('1 High St'));
+    await userEvent.click(screen.getByText(/1 High St, Town/i));
 
-    await waitFor(() => expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ uprn: '999' })));
-    expect(fetchMock.mock.calls[1][0]).toBe('/api/address/resolve?id=1');
-    expect(screen.getByTestId('uprn-chip')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ label: '1 High St, Town, AB1 2CD', postcode: 'AB1 2CD' }),
+      ),
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
     global.fetch = originalFetch;
   });

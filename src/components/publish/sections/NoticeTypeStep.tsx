@@ -94,8 +94,8 @@ function useTooltipControls() {
   return { open, setOpen, panelRef, buttonRef };
 }
 
-const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
-  ({ value, onChange, onContinue, suppressInlineHelp = false }, ref) => {
+const NoticeTypeStep = forwardRef<HTMLSelectElement | null, Props>(
+  ({ value, onChange, onContinue, suppressInlineHelp = false }, ref: React.ForwardedRef<HTMLSelectElement | null>) => {
     const selectId = useId();
     const helperId = useId();
     const errorId = useId();
@@ -126,7 +126,7 @@ const NoticeTypeStep = forwardRef<HTMLSelectElement, Props>(
       .filter(Boolean)
       .join(' ');
 
-    useImperativeHandle(ref, () => selectRef.current as HTMLSelectElement | null);
+    useImperativeHandle<HTMLSelectElement | null, HTMLSelectElement | null>(ref, () => selectRef.current, []);
 
     useEffect(() => {
       if (!suppressInlineHelp) return;

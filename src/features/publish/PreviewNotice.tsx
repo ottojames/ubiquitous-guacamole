@@ -11,6 +11,7 @@ import {
 /* CN:GUARDRAIL-FINAL-START */
 import { toast, useToastController } from '@/lib/ui/toast';
 /* CN:GUARDRAIL-FINAL-END */
+import { sanitiseNoticeText } from '@/lib/text/sanitiseNotice';
 
 export type PreviewNoticeProps = {
   draft: PublishState;
@@ -75,14 +76,15 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
   const previewText = previewSource === 'ocr' && hasOcr ? ocrText : structuredText;
   /* CN:GUARDRAIL-FINAL-END */
   /* CN:OFFICER-FINAL-START */
-  const hasContent = previewText.trim().length > 0;
+  const safePreviewText = React.useMemo(() => sanitiseNoticeText(previewText), [previewText]);
+  const hasContent = safePreviewText.trim().length > 0;
   const previewIsEmpty = !hasContent;
   /* CN:OFFICER-FINAL-END */
   /* CN:GUARDRAIL-FINAL-START */
   const toastMessage = useToastController();
   /* CN:GUARDRAIL-FINAL-END */
 
-  const lines = React.useMemo(() => previewText.split(/\r?\n/), [previewText]);
+  const lines = React.useMemo(() => safePreviewText.split(/\r?\n/), [safePreviewText]);
   const headingOne = lines[0]?.trim();
   const headingTwo = lines[1]?.trim();
   const bodyLines = React.useMemo(() => {
@@ -93,19 +95,19 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
   const copy = React.useCallback(async () => {
     if (!hasContent) return;
     try {
-      await navigator.clipboard?.writeText(previewText);
+      await navigator.clipboard?.writeText(safePreviewText);
       /* CN:GUARDRAIL-FINAL-START */
       toast('Copied');
       /* CN:GUARDRAIL-FINAL-END */
     } catch {
       /* noop */
     }
-  }, [hasContent, previewText]);
+  }, [hasContent, safePreviewText]);
 
   const download = React.useCallback(() => {
     if (!hasContent) return;
     /* CN:GUARDRAIL-FINAL-START */
-    const blob = new Blob([previewText], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([safePreviewText], { type: 'text/plain;charset=utf-8' });
     /* CN:GUARDRAIL-FINAL-END */
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -113,7 +115,7 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
     a.download = 'notice.txt';
     a.click();
     URL.revokeObjectURL(url);
-  }, [hasContent, previewText]);
+  }, [hasContent, safePreviewText]);
 
   const handleReplace = React.useCallback(() => {
     if (!structuredReplacement.trim()) return;
@@ -141,9 +143,9 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
     }
     return value.trim().length > 0;
   })();
-  const contactEmail = trimmed(authority?.repsEmail) || trimmed(draft.councilEmail);
-  const contactUrl = trimmed(authority?.repsUrl);
-  const contactPostal = trimmed(authority?.postalAddress) || trimmed(draft.councilAddress);
+  const contactEmail = trimmed(draft.councilEmail) || trimmed(authority?.repsEmail);
+  const contactUrl = trimmed(draft.representationsUrl) || trimmed(authority?.repsUrl);
+  const contactPostal = trimmed(draft.councilAddress) || trimmed(authority?.postalAddress);
   const hasContact = !!(contactEmail || contactUrl || contactPostal);
 
   const needsPremisesSummary = !hasOcr && draft.noticeType === 'premises';
@@ -232,14 +234,11 @@ export default function PreviewNotice(props: PreviewNoticeProps) {
       )}
       <div id="notice-preview" className="min-h-[300px] rounded-xl border border-slate-900/5 bg-white p-4">
         {previewIsEmpty ? (
-          <div className="space-y-2 animate-pulse">
-            <div className="h-3 rounded bg-slate-200/70" />
-            <div className="h-3 w-11/12 rounded bg-slate-200/70" />
-            <div className="h-3 w-9/12 rounded bg-slate-200/70" />
-            <div className="h-3 w-7/12 rounded bg-slate-200/70" />
+          <div className="flex min-h-[160px] items-center justify-center rounded-xl bg-slate-50 px-4 text-center text-sm text-slate-500">
+            Your preview will appear here after you upload or type your notice text.
           </div>
         ) : (
-          <div className={`${UI.prose} prose-p:my-2`}>
+          <div className={`${UI.prose} notice-preview prose-p:my-2 whitespace-pre-wrap break-words [overflow-wrap:anywhere]`}>
             {headingOne && <h4 className="mt-0 text-sm font-semibold tracking-wide text-[#192650]">{headingOne.toUpperCase()}</h4>}
             {headingTwo && <p className="-mt-2 text-[13px] font-medium text-slate-700">{headingTwo}</p>}
             {bodyLines.map((line, index) =>

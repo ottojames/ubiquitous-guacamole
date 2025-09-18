@@ -31,9 +31,9 @@ const ensureSentence = (value?: string | null) => {
 
 /* CN:SIGNOFF-START */
 const buildRepresentationsSection = (state: PublishState, authority: Authority | null): string[] => {
-  const online = authority?.repsUrl?.trim() || '';
-  const email = (authority?.repsEmail || state.councilEmail || '').trim();
-  const postal = (authority?.postalAddress || state.councilAddress || '').trim();
+  const online = (state.representationsUrl || '').trim() || authority?.repsUrl?.trim() || '';
+  const email = (state.councilEmail || authority?.repsEmail || '').trim();
+  const postal = (state.councilAddress || authority?.postalAddress || '').trim();
   const section = [
     'How to make representations:',
     `Online: ${online || dash}`,
@@ -182,4 +182,3 @@ export function buildReviewNotice(
 /* CN:LICENSING-TEMPLATES-END */
 /* CN:TEMPLATES-PREVIEW-END */
 /* CN:STEP2-COMPLIANCE-END */
-

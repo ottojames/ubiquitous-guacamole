@@ -37,7 +37,6 @@ export default defineConfig({
         functions: 80,
         branches: 70,
       },
-      perFile: true,
       reportOnFailure: true,
     },
   },

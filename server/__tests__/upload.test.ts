@@ -24,7 +24,7 @@ describe('upload handler (unit)', () => {
     (extractTextFromBuffer as any).mockResolvedValueOnce({ text: '', meta: { engine: 'mock' } });
     const file = {
       originalname: 'blank.png',
-      buffer: Buffer.from('dummy'),
+      buffer: Buffer.from('empty'),
       mimetype: 'image/png',
       size: 12,
     } as any;

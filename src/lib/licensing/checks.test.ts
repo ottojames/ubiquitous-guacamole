@@ -21,7 +21,7 @@ describe('runMandatoryChecks', () => {
     const draft: NoticeDraft = {
       id: '1',
       createdAt: '',
-      noticeType: 'Premises Licence',
+      noticeType: 'premises',
       applicantName: 'A',
       applicantEmail: '',
       premisesAddress: '1 High St',

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Info } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import FileDropOCR from '@/components/upload/FileDropOCR';
 import CouncilSelect, { type Council } from '@/components/CouncilSelect';
@@ -7,7 +8,8 @@ import PreviewNotice from '@/features/publish/PreviewNotice';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
 import KeyDatesCard from '@/components/publish/RightRail/KeyDatesCard';
 import CostCard from '@/components/publish/RightRail/CostCard';
-import AddressSearch from '@/components/address/AddressSearch';
+import AddressSearch, { type AddressItem } from '@/components/address/AddressSearch';
+import { fetchAddressDetail, mapDetail } from '@/lib/addressLookup';
 import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 /* CN:STEP2-START */
@@ -16,7 +18,9 @@ import { calculateRepresentationDeadline } from '@/lib/dates/licensing';
 import { formatDisplayDate } from '@/lib/format';
 import { getAuthorityByName, emailDomainMatchesAuthority } from '@/lib/authorities';
 /* CN:OFFICER-FINAL-START */
-import { extractDeadlineFromOcr, normalizeUKPostcode } from '@/lib/text/extract';
+import { extractDeadlineFromOcr } from '@/lib/text/extract';
+import { pickBestUrl } from '@/lib/urlFromOcr';
+import { extractUKPostcode, formatUKPostcode } from '@/lib/ukPostcode';
 import { buildPremisesNotice, buildVariationNotice, buildReviewNotice } from '@/features/publish/previewBuilders';
 /* CN:OFFICER-FINAL-END */
 // {/* CN:LICENSING-FINAL-END */}
@@ -32,12 +36,12 @@ import NoticeTypeStep, { isLicensingNoticeType } from './sections/NoticeTypeStep
 
 /* CN:STEP2-START */
 type NoticeFieldRefs = {
-  applicant?: React.RefObject<HTMLInputElement>;
-  premisesAddress?: React.RefObject<HTMLInputElement | HTMLTextAreaElement>;
-  councilName?: React.RefObject<HTMLInputElement>;
-  councilEmail?: React.RefObject<HTMLInputElement>;
-  councilAddress?: React.RefObject<HTMLInputElement | HTMLTextAreaElement>;
-  applicationDate?: React.RefObject<HTMLInputElement>;
+  applicant?: React.RefObject<HTMLInputElement | null>;
+  premisesAddress?: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  councilName?: React.RefObject<HTMLInputElement | null>;
+  councilEmail?: React.RefObject<HTMLInputElement | null>;
+  councilAddress?: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  applicationDate?: React.RefObject<HTMLInputElement | null>;
 };
 /* CN:STEP2-END */
 
@@ -61,26 +65,10 @@ function toMultilineAddress(parts: Array<string | undefined | null>): string {
     .join('\n');
 }
 
-async function resolveAddressById(id: string) {
-  const response = await fetch(`/api/address/resolve?id=${encodeURIComponent(id)}`);
-  if (!response.ok) throw new Error(`resolve failed: ${response.status}`);
-  const payload = await response.json();
-  if (!payload?.ok || !payload?.result) {
-    throw new Error(payload?.error || 'bad resolve payload');
-  }
-  return payload.result as {
-    id: string;
-    label: string;
-    line1: string;
-    line2: string;
-    line3: string;
-    city: string;
-    postcode: string;
-  };
-}
-
 export default function UploadNoticeFlow() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [showStep2EditReminder, setShowStep2EditReminder] = useState(false);
+  const hasShownStep2EditReminder = React.useRef(false);
   // {/* CN:LICENSING-FINAL-START */}
   const [ocrText, setOcrText] = useState('');
   // {/* CN:LICENSING-FINAL-END */}
@@ -99,6 +87,7 @@ export default function UploadNoticeFlow() {
     councilEmail: '',
     councilAddress: '',
     isCouncilEmailLocked: false,
+    representationsUrl: '',
     blueNoticeUploads: [],
     status: 'Draft',
     applicationDate: '',
@@ -113,13 +102,17 @@ export default function UploadNoticeFlow() {
   });
   const [hasConfirmedNotice, setHasConfirmedNotice] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [representationsUrlEdited, setRepresentationsUrlEdited] = useState(false);
+  const [autoDetectedRepresentationsUrl, setAutoDetectedRepresentationsUrl] = useState<string | null>(null);
+  const autoDetectedUrlRef = React.useRef<string | null>(null);
   const applicantRef = React.useRef<HTMLInputElement>(null);
   /* CN:STEP2-START */
   const premisesAddressRef = React.useRef<HTMLTextAreaElement | null>(null);
-  const councilNameRef = React.useRef<HTMLInputElement>(null);
-  const councilEmailRef = React.useRef<HTMLInputElement>(null);
-  const councilAddressRef = React.useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-  const applicationDateRef = React.useRef<HTMLInputElement>(null);
+  const councilNameRef = React.useRef<HTMLInputElement | null>(null);
+  const councilEmailRef = React.useRef<HTMLInputElement | null>(null);
+  const councilAddressRef = React.useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const applicationDateRef = React.useRef<HTMLInputElement | null>(null);
+  const paymentHeadingRef = React.useRef<HTMLHeadingElement | null>(null);
   const focusPremisesTextarea = React.useCallback(() => {
     const el = premisesAddressRef.current;
     if (!el) return;
@@ -150,7 +143,6 @@ export default function UploadNoticeFlow() {
   const needsReviewGrounds = !hasOcrText && draft.noticeType === 'review';
   // {/* CN:LICENSING-FINAL-END */}
   /* CN:OFFICER-FINAL-START */
-  const [ignoreOcrDeadlineConflict, setIgnoreOcrDeadlineConflict] = React.useState(false);
   const previewAuthority = React.useMemo(() => getAuthorityByName(draft.councilName), [draft.councilName]);
   const representationDeadlineDate = React.useMemo(() => {
     if (draft.repsDeadline) {
@@ -161,16 +153,8 @@ export default function UploadNoticeFlow() {
     const computed = calculateRepresentationDeadline(draft.applicationDate);
     return Number.isNaN(computed.getTime()) ? null : computed;
   }, [draft.applicationDate, draft.repsDeadline]);
+  const canCopyDeadline = !!representationDeadlineDate;
   const ocrDeadline = React.useMemo(() => extractDeadlineFromOcr(ocrText), [ocrText]);
-  const deadlinesConflict = React.useMemo(() => {
-    if (!ocrDeadline || !representationDeadlineDate) return false;
-    const key = (value: Date) => new Date(value).toISOString().slice(0, 10);
-    return key(ocrDeadline) !== key(representationDeadlineDate);
-  }, [ocrDeadline, representationDeadlineDate]);
-  const showDeadlineWarning = deadlinesConflict && !ignoreOcrDeadlineConflict;
-  React.useEffect(() => {
-    setIgnoreOcrDeadlineConflict(false);
-  }, [ocrText, draft.applicationDate]);
   const structuredReplacement = React.useMemo(() => {
     if (!draft.noticeType) return '';
     const representationIso = representationDeadlineDate ? representationDeadlineDate.toISOString() : '';
@@ -185,12 +169,29 @@ export default function UploadNoticeFlow() {
   }, [draft, previewAuthority, representationDeadlineDate]);
 
   const confirmNoticeText = React.useMemo(() => {
-    const trimmedFinal = (draft.finalText || '').trim();
-    if (trimmedFinal) return trimmedFinal;
+    const final = draft.finalText;
+    if (final && final.trim().length > 0) return final;
     return structuredReplacement.trim();
   }, [draft.finalText, structuredReplacement]);
 
   const previousConfirmNoticeText = React.useRef(confirmNoticeText);
+
+  React.useEffect(() => {
+    if (step !== 4) return;
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      const target = paymentHeadingRef.current || document.querySelector<HTMLElement>('h1, [data-page-title]');
+      target?.focus?.();
+    });
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 2 && !hasShownStep2EditReminder.current) {
+      setShowStep2EditReminder(true);
+      hasShownStep2EditReminder.current = true;
+    }
+  }, [step]);
 
   useEffect(() => {
     if (step !== 3) {
@@ -203,17 +204,12 @@ export default function UploadNoticeFlow() {
       previousConfirmNoticeText.current = confirmNoticeText;
     }
   }, [step, confirmNoticeText]);
-  const handleUseCalculatedDeadline = React.useCallback(() => {
+  const handleCopyDeadlineIntoNotice = React.useCallback(() => {
     const replacement = structuredReplacement.trim();
-    if (replacement) {
-      setOcrText(replacement);
-      setDraft((prev) => ({ ...prev, finalText: replacement }));
-    }
-    setIgnoreOcrDeadlineConflict(true);
-  }, [setDraft, setIgnoreOcrDeadlineConflict, setOcrText, structuredReplacement]);
-  const handleKeepOcrDeadline = React.useCallback(() => {
-    setIgnoreOcrDeadlineConflict(true);
-  }, [setIgnoreOcrDeadlineConflict]);
+    if (!replacement) return;
+    setOcrText(replacement);
+    setDraft((prev) => ({ ...prev, finalText: replacement }));
+  }, [setDraft, setOcrText, structuredReplacement]);
   const handleViewOcrDeadline = React.useCallback(() => {
     const preview = document.getElementById('notice-preview');
     if (!preview) return;
@@ -257,9 +253,9 @@ export default function UploadNoticeFlow() {
   ];
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
-  if (needsApplicationSummary) requiredFields.push(draft.applicationSummary);
-  if (needsVariationSummary) requiredFields.push(draft.variationSummary);
-  if (needsReviewGrounds) requiredFields.push(draft.reviewGrounds);
+  if (needsApplicationSummary && draft.applicationSummary) requiredFields.push(draft.applicationSummary);
+  if (needsVariationSummary && draft.variationSummary) requiredFields.push(draft.variationSummary);
+  if (needsReviewGrounds && draft.reviewGrounds) requiredFields.push(draft.reviewGrounds);
   /* CN:LICENSING-TEMPLATES-END */
   /* CN:TEMPLATES-PREVIEW-END */
   const validCount = requiredFields.filter((value) => !!value?.toString().trim()).length;
@@ -276,7 +272,63 @@ export default function UploadNoticeFlow() {
     }
   }, [detailsComplete]);
 
+  useEffect(() => {
+    const trimmed = ocrText.trim();
+    if (!trimmed) {
+      setAutoDetectedRepresentationsUrl(null);
+      autoDetectedUrlRef.current = null;
+      return;
+    }
+    if (representationsUrlEdited) return;
+    const best = pickBestUrl(trimmed);
+    setAutoDetectedRepresentationsUrl(best);
+    if (!best) {
+      autoDetectedUrlRef.current = null;
+      return;
+    }
+    setDraft((prev) => {
+      const current = (prev.representationsUrl ?? '').trim();
+      const previousAuto = autoDetectedUrlRef.current ?? '';
+      if (!current || current === previousAuto) {
+        if (current === best) {
+          autoDetectedUrlRef.current = best;
+          return prev;
+        }
+        autoDetectedUrlRef.current = best;
+        return { ...prev, representationsUrl: best };
+      }
+      return prev;
+    });
+  }, [ocrText, representationsUrlEdited, setDraft]);
+
   const handleBack = () => setStep((prev) => Math.max(1, (prev as number) - 1) as 1 | 2 | 3 | 4);
+
+  const handleReturnToDetails = React.useCallback(() => {
+    setShowValidationErrors(true);
+    setStep(2);
+  }, [setShowValidationErrors, setStep]);
+
+  const handleNoticeTextChange = React.useCallback(
+    (value: string) => {
+      setDraft((prev) => ({ ...prev, finalText: value }));
+      setOcrText(value);
+    },
+    [setDraft, setOcrText]
+  );
+
+  const handleRepresentationsUrlChange = React.useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      setDraft((prev) => {
+        const current = prev.representationsUrl ?? '';
+        if (current === trimmed) return prev;
+        return { ...prev, representationsUrl: trimmed };
+      });
+      autoDetectedUrlRef.current = trimmed || null;
+      setRepresentationsUrlEdited(trimmed.length > 0);
+    },
+    [setDraft, setRepresentationsUrlEdited]
+  );
 
   /* CN:STEP2-START */
   const makeReference = React.useCallback(() => {
@@ -413,6 +465,23 @@ export default function UploadNoticeFlow() {
           {/* CN:STEP1-END */}
           {step === 2 && (
             <>
+              {showStep2EditReminder && (
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-900">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2">
+                      <Info aria-hidden className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-600" />
+                      <p className="font-medium">You can fully edit the notice text in the next step.</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-indigo-700 underline underline-offset-2"
+                      onClick={() => setShowStep2EditReminder(false)}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* CN:STEP2-LAYOUT-START */}
               <div className="[&>div]:p-6 [&>div]:md:p-6">
                 <FileDropOCR
@@ -422,7 +491,12 @@ export default function UploadNoticeFlow() {
                     setDraft((d) => ({ ...d, finalText: t }));
                     // {/* CN:LICENSING-FINAL-END */}
                   }}
-                  onMeta={(m) => setDraft((d) => ({ ...d, originalFileMeta: m }))}
+                  onMeta={(m) =>
+                    setDraft((d) => ({
+                      ...d,
+                      originalFileMeta: { ...(d.originalFileMeta || {}), ...(m as any) },
+                    }))
+                  }
                 />
               </div>
               <section className={`${UI.section} space-y-6 p-6`} data-testid="required-inline">
@@ -454,11 +528,13 @@ export default function UploadNoticeFlow() {
                   // {/* CN:LICENSING-FINAL-END */}
                   /* CN:OFFICER-FINAL-START */
                   ocrDeadline={ocrDeadline}
-                  showDeadlineWarning={showDeadlineWarning}
-                  onUseCalculatedDeadline={handleUseCalculatedDeadline}
-                  onKeepOcrDeadline={handleKeepOcrDeadline}
+                  onCopyDeadlineIntoNotice={handleCopyDeadlineIntoNotice}
                   onViewOcrDeadline={handleViewOcrDeadline}
+                  representationsUrlEdited={representationsUrlEdited}
+                  autoDetectedRepresentationsUrl={autoDetectedRepresentationsUrl}
+                  onRepresentationsUrlChange={handleRepresentationsUrlChange}
                   representationDeadlineDate={representationDeadlineDate}
+                  canCopyDeadline={canCopyDeadline}
                   focusPremisesTextarea={focusPremisesTextarea}
                   /* CN:OFFICER-FINAL-END */
                 />
@@ -472,10 +548,12 @@ export default function UploadNoticeFlow() {
                 noticeText={confirmNoticeText}
                 confirmed={hasConfirmedNotice}
                 onConfirmedChange={setHasConfirmedNotice}
-                ready={detailsComplete}
+                detailsReady={detailsComplete}
+                onReturnToDetails={detailsComplete ? undefined : handleReturnToDetails}
+                onNoticeTextChange={handleNoticeTextChange}
                 onConfirmAndContinue={async () => {
                   if (!detailsComplete) {
-                    setShowValidationErrors(true);
+                    handleReturnToDetails();
                     return;
                   }
                   const textForHash = draft.finalText || confirmNoticeText || '';
@@ -493,10 +571,22 @@ export default function UploadNoticeFlow() {
             </div>
           )}
           {step === 4 && (
-            <div>
-              Pay step.
-              <div className="mt-4 flex items-center justify-between">
-                <button className={UI.btnSecondary} onClick={handleBack} data-testid="btn-back">Back</button>
+            <div className="space-y-4">
+              <h2
+                ref={paymentHeadingRef}
+                data-page-title
+                tabIndex={-1}
+                className="text-2xl font-semibold text-[#192650] focus:outline-none"
+              >
+                Payment details
+              </h2>
+              <p className="text-sm text-slate-600">
+                Complete your payment to submit this notice.
+              </p>
+              <div className="mt-6 flex items-center justify-between">
+                <button className={UI.btnSecondary} onClick={handleBack} data-testid="btn-back">
+                  Back
+                </button>
                 <span />
               </div>
             </div>
@@ -602,7 +692,7 @@ export default function UploadNoticeFlow() {
               {/* CN:STEP2-COMPLIANCE-END */}
               <ComplianceCard items={runMandatoryChecks(draft)} onFix={handleFix} />
               <KeyDatesCard
-                applicationDate={draft.applicationDate}
+                applicationDate={draft.applicationDate ?? ''}
                 representationDeadline={draft.repsDeadline || ''}
                 consultationDays={28}
               />
@@ -637,11 +727,13 @@ type NoticeDetailsSectionsProps = {
   // {/* CN:LICENSING-FINAL-END */}
   /* CN:OFFICER-FINAL-START */
   ocrDeadline: Date | null;
-  showDeadlineWarning: boolean;
-  onUseCalculatedDeadline: () => void;
-  onKeepOcrDeadline: () => void;
+  onCopyDeadlineIntoNotice: () => void;
   onViewOcrDeadline: () => void;
+  representationsUrlEdited: boolean;
+  autoDetectedRepresentationsUrl: string | null;
+  onRepresentationsUrlChange: (value: string) => void;
   representationDeadlineDate: Date | null;
+  canCopyDeadline: boolean;
   /* CN:OFFICER-FINAL-END */
 };
 
@@ -655,11 +747,13 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     hasOcrText,
     /* CN:OFFICER-FINAL-START */
     ocrDeadline,
-    showDeadlineWarning,
-    onUseCalculatedDeadline,
-    onKeepOcrDeadline,
+    onCopyDeadlineIntoNotice,
     onViewOcrDeadline,
+    representationsUrlEdited,
+    autoDetectedRepresentationsUrl,
+    onRepresentationsUrlChange,
     representationDeadlineDate,
+    canCopyDeadline,
     /* CN:OFFICER-FINAL-END */
   } = props;
   /* CN:STEP2-COMPLIANCE-START */
@@ -674,6 +768,8 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const councilEmailErrorId = React.useId();
   const councilAddressHelpId = React.useId();
   const councilAddressErrorId = React.useId();
+  const representationsUrlHelpId = React.useId();
+  const representationsUrlErrorId = React.useId();
   const submissionHelpId = React.useId();
   const deadlineHelpId = React.useId();
   /* CN:OFFICER-FINAL-START */
@@ -688,8 +784,6 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     return () => clearTimeout(timer);
   }, [postcodeNormalizedAt]);
   const showPostcodeNormalised = postcodeNormalizedAt > 0;
-  const formattedOcrDeadline = ocrDeadline ? formatDisplayDate(ocrDeadline) : '';
-  const formattedCalculatedDeadline = representationDeadlineDate ? formatDisplayDate(representationDeadlineDate) : '';
   /* CN:OFFICER-FINAL-END */
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
@@ -705,21 +799,43 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
+  const premisesSelectionIdRef = React.useRef<string | null>(null);
   const [councilNameTouched, setCouncilNameTouched] = React.useState(false);
   const [councilEmailTouched, setCouncilEmailTouched] = React.useState(false);
   const [councilAddressTouched, setCouncilAddressTouched] = React.useState(false);
+  const [representationsUrlTouched, setRepresentationsUrlTouched] = React.useState(false);
   const emailLocked = !!draft.isCouncilEmailLocked;
-  const trimmedEmail = draft.councilEmail.trim();
+  const trimmedEmail = (draft.councilEmail ?? '').trim();
+  const trimmedCouncilAddress = (draft.councilAddress ?? '').trim();
+  const trimmedRepresentationsUrl = (draft.representationsUrl ?? '').trim();
+  const representationsUrlValid =
+    !trimmedRepresentationsUrl || /^https?:\/\/\S+\.\S+$/i.test(trimmedRepresentationsUrl);
+  const showRepresentationsUrlError = representationsUrlTouched && !representationsUrlValid;
+  const representationsUrlDescribedBy = [
+    representationsUrlHelpId,
+    showRepresentationsUrlError ? representationsUrlErrorId : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const representationUrlLabel = React.useMemo(() => {
+    if (!trimmedRepresentationsUrl) return '';
+    try {
+      const parsed = new URL(trimmedRepresentationsUrl);
+      return parsed.host;
+    } catch {
+      return trimmedRepresentationsUrl;
+    }
+  }, [trimmedRepresentationsUrl]);
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const hasEmail = trimmedEmail.length > 0;
   const emailValid = !hasEmail || emailPattern.test(trimmedEmail);
-  const showCouncilNameError = (showValidationErrors || councilNameTouched) && !draft.councilName.trim();
+  const showCouncilNameError = (showValidationErrors || councilNameTouched) && !(draft.councilName ?? '').trim();
   const showCouncilEmailError =
     (showValidationErrors || councilEmailTouched) && (!hasEmail || !emailValid);
   const councilEmailErrorMessage = !hasEmail ? 'Council email is required.' : 'Enter a valid email address.';
   const showCouncilAddressError =
-    (showValidationErrors || councilAddressTouched) && !draft.councilAddress.trim();
-  const showNoDefaultEmail = !showCouncilEmailError && !!draft.councilName.trim() && !hasEmail;
+    (showValidationErrors || councilAddressTouched) && !(draft.councilAddress ?? '').trim();
+  const showNoDefaultEmail = !showCouncilEmailError && !!(draft.councilName ?? '').trim() && !hasEmail;
   const councilEmailDescribedBy = [
     councilEmailHelpId,
     showCouncilEmailError ? councilEmailErrorId : undefined,
@@ -732,7 +848,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   ]
     .filter(Boolean)
     .join(' ');
-  const premisesAddressRef = refs.premisesAddress as React.RefObject<HTMLTextAreaElement>;
+  const premisesAddressRef = refs.premisesAddress as React.RefObject<HTMLTextAreaElement | null>;
 
   /* CN:TEMPLATES-PREVIEW-START */
   /* CN:LICENSING-TEMPLATES-START */
@@ -766,10 +882,14 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const showDomainWarning = !!draft.councilEmail && !emailDomainMatchesAuthority(draft.councilEmail, authority);
   const canonicalAuthorityEmail = authority?.canonicalEmail || authority?.repsEmail || '';
   // {/* CN:LICENSING-FINAL-START */}
-  const authorityRepsEmail = authority?.repsEmail || draft.councilEmail || '';
+  const authorityRepsEmail = authority?.repsEmail || '';
   const authorityRepsUrl = authority?.repsUrl || '';
-  const authorityPostalAddress = authority?.postalAddress || draft.councilAddress || '';
-  const representationContactsIncomplete = !(authorityRepsEmail || authorityRepsUrl || authorityPostalAddress);
+  const authorityPostalAddress = authority?.postalAddress || '';
+  const representationContactsIncomplete = !(
+    (authorityRepsEmail || trimmedEmail) ||
+    (authorityRepsUrl || trimmedRepresentationsUrl) ||
+    (authorityPostalAddress || trimmedCouncilAddress)
+  );
   // {/* CN:LICENSING-FINAL-END */}
   /* CN:LICENSING-TEMPLATES-END */
   /* CN:TEMPLATES-PREVIEW-END */
@@ -804,10 +924,8 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   /* CN:OFFICER-FINAL-END */
 
   const extractPostcodeFromAddress = React.useCallback((input: string): string | null => {
-    if (!input) return null;
-    const matches = input.toUpperCase().match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})/g);
-    if (!matches || matches.length === 0) return null;
-    return normalizeUKPostcode(matches[matches.length - 1]);
+    const postcode = extractUKPostcode(input);
+    return postcode || null;
   }, []);
 
   const toMultiline = (label: string) =>
@@ -860,26 +978,34 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   );
 
   const handlePremisesPick = React.useCallback(
-    async (item: { id: string; label: string }) => {
-      try {
-        const resolved = await resolveAddressById(item.id);
+    (item: AddressItem) => {
+      const fallbackLines = item.label
+        .split(',')
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+      const initialAddress =
+        toMultilineAddress([item.line1, item.line2, item.town]) ||
+        toMultilineAddress(fallbackLines) ||
+        item.label;
+      const suggestionPostcode = formatUKPostcode(
+        item.postcode || extractUKPostcode(item.label) || ''
+      );
 
-        const normalizedPostcode = (resolved.postcode || '').trim();
-        const multiline =
-          toMultilineAddress([resolved.line1, resolved.line2, resolved.line3, resolved.city]) ||
-          resolved.label ||
-          item.label;
+      premisesSelectionIdRef.current = item.id ?? null;
+
+      const applySelection = (address: string, rawPostcode: string) => {
+        const formattedPostcode = formatUKPostcode(rawPostcode);
 
         onChange(
           {
-            premisesAddress: multiline,
-            postcode: normalizedPostcode,
+            premisesAddress: address,
+            postcode: formattedPostcode,
           },
           { ensureUrn: true }
         );
 
-        if (normalizedPostcode) {
-          const council = lookupCouncilByPostcode(normalizedPostcode);
+        if (formattedPostcode) {
+          const council = lookupCouncilByPostcode(formattedPostcode);
           if (council) {
             lookedUpEmail.current = council.councilEmail || '';
             lookedUpName.current = council.councilName || '';
@@ -912,21 +1038,51 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
           lookedUpName.current = '';
           lookedUpAddress.current = '';
         }
+      };
 
+      applySelection(initialAddress, suggestionPostcode);
+
+      if (!item.id) {
         focusPremisesTextarea();
-      } catch (error) {
-        console.error('handlePremisesPick failed', error);
-        onChange(
-          { premisesAddress: item.label, postcode: '' },
-          { ensureUrn: true }
-        );
-        lookedUpEmail.current = '';
-        lookedUpName.current = '';
-        lookedUpAddress.current = '';
-        focusPremisesTextarea();
+        return;
       }
+
+      const selectionId = item.id;
+      premisesSelectionIdRef.current = selectionId;
+
+      void fetchAddressDetail(selectionId)
+        .then((json) => {
+          if (premisesSelectionIdRef.current !== selectionId) return;
+          const detail = mapDetail(json);
+          const formattedLabel = detail.label || item.label;
+          const addressFromDetail = toMultiline(formattedLabel) || initialAddress;
+          const postcodeFromDetail =
+            detail.postcode ||
+            suggestionPostcode ||
+            extractUKPostcode(formattedLabel) ||
+            '';
+          applySelection(addressFromDetail, postcodeFromDetail);
+        })
+        .catch(() => {
+          if (premisesSelectionIdRef.current !== selectionId) return;
+          applySelection(initialAddress, suggestionPostcode);
+        })
+        .finally(() => {
+          if (premisesSelectionIdRef.current === selectionId) {
+            premisesSelectionIdRef.current = null;
+          }
+        });
+
+      focusPremisesTextarea();
     },
-    [onChange, focusPremisesTextarea, draft.councilAddress, draft.councilEmail, draft.councilName]
+    [
+      draft.councilAddress,
+      draft.councilEmail,
+      draft.councilName,
+      draft.isCouncilEmailLocked,
+      focusPremisesTextarea,
+      onChange,
+    ]
   );
 
   const handleSubmissionDate = (value: string) => {
@@ -957,7 +1113,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               ref={refs.applicant}
               className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               data-testid="input-applicant-name"
-              value={draft.applicantName}
+              value={draft.applicantName ?? ''}
               onChange={(e) => onChange({ applicantName: e.target.value }, { ensureUrn: true })}
               aria-describedby={applicantHelpId}
             />
@@ -1020,14 +1176,20 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <input
               id="postcode"
               className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
-              value={draft.postcode}
-              onChange={(e) => onChange({ postcode: e.target.value }, { ensureUrn: true })}
+              value={draft.postcode ?? ''}
+              onChange={(event) => {
+                const raw = event.target.value;
+                const formatted = formatUKPostcode(raw);
+                if (formatted !== raw) {
+                  setPostcodeNormalizedAt(Date.now());
+                } else if (!formatted) {
+                  setPostcodeNormalizedAt(0);
+                }
+                onChange({ postcode: formatted }, { ensureUrn: true });
+              }}
               /* CN:OFFICER-FINAL-START */
               onBlur={(event) => {
-                const normalized = normalizeUKPostcode(event.currentTarget.value);
-                if (normalized !== event.currentTarget.value) {
-                  event.currentTarget.value = normalized;
-                }
+                const normalized = formatUKPostcode(event.currentTarget.value);
                 onChange({ postcode: normalized }, { ensureUrn: true });
                 if (normalized && normalized !== draft.postcode) {
                   setPostcodeNormalizedAt(Date.now());
@@ -1051,7 +1213,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
           <div className="col-span-12 md:col-span-6">
             <CouncilSelect
               id="councilName"
-              value={draft.councilName}
+              value={draft.councilName ?? ''}
               inputRef={refs.councilName}
               onChangeText={(name) => {
                 setCouncilNameTouched(true);
@@ -1108,7 +1270,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
                   showCouncilEmailError ? 'border-red-500 focus:ring-red-500 focus:ring-offset-white' : ''
                 } ${emailLocked ? 'bg-neutral-50' : ''}`}
                 data-testid="input-council-email"
-                value={draft.councilEmail}
+                value={draft.councilEmail ?? ''}
                 onChange={(e) => {
                   setCouncilEmailTouched(true);
                   onChange(
@@ -1208,7 +1370,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
                 showCouncilAddressError ? 'border-red-500 focus:ring-red-500 focus:ring-offset-white' : ''
               }`}
               data-testid="input-council-address"
-              value={draft.councilAddress}
+              value={draft.councilAddress ?? ''}
               onChange={(e) => {
                 setCouncilAddressTouched(true);
                 onChange({ councilAddress: e.target.value }, { ensureUrn: true });
@@ -1376,7 +1538,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
               ref={refs.applicationDate}
               className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm`}
               data-testid="input-application-date"
-              value={draft.applicationDate}
+              value={draft.applicationDate ?? ''}
               onChange={(e) => handleSubmissionDate(e.target.value)}
               aria-describedby={submissionHelpId}
             />
@@ -1407,69 +1569,131 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             </p>
           </div>
           {/* CN:OFFICER-FINAL-START */}
-          {showDeadlineWarning && (
-            <div className="col-span-12">
-              <div className="flex flex-wrap items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900">
-                <span className="font-medium">OCR deadline differs from the calculated deadline.</span>
-                {(formattedOcrDeadline || formattedCalculatedDeadline) && (
-                  <span className="text-[11px] text-amber-800">
-                    OCR: {formattedOcrDeadline || '—'} · Calculated: {formattedCalculatedDeadline || '—'}
-                  </span>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className={`${UI.btnSecondary} py-1 px-2 text-xs`}
-                    onClick={onUseCalculatedDeadline}
-                  >
-                    Use calculated
-                  </button>
-                  <button
-                    type="button"
-                    className={`${UI.btnSecondary} py-1 px-2 text-xs`}
-                    onClick={onKeepOcrDeadline}
-                  >
-                    Keep OCR
-                  </button>
-                  <button
-                    type="button"
-                    className={`${UI.btnSecondary} py-1 px-2 text-xs`}
-                    onClick={onViewOcrDeadline}
-                  >
-                    View in OCR
-                  </button>
-                </div>
+          <div className="col-span-12">
+            <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900">
+              <div className="flex items-start gap-2">
+                <Info aria-hidden className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-600" />
+                <span>
+                  We calculate the representation deadline from your <strong>Date of submission</strong>. Please check this matches the notice text.
+                </span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={`rounded-lg border border-indigo-200 px-2 py-1 text-xs font-medium text-indigo-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
+                    canCopyDeadline ? 'bg-white hover:bg-indigo-100' : 'cursor-not-allowed opacity-50'
+                  }`}
+                  onClick={onCopyDeadlineIntoNotice}
+                  disabled={!canCopyDeadline}
+                  aria-disabled={!canCopyDeadline}
+                >
+                  Copy deadline into notice text
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-lg border border-indigo-200 px-2 py-1 text-xs font-medium text-indigo-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
+                    ocrDeadline ? 'bg-white hover:bg-indigo-100' : 'cursor-not-allowed opacity-50'
+                  }`}
+                  onClick={onViewOcrDeadline}
+                  disabled={!ocrDeadline}
+                  aria-disabled={!ocrDeadline}
+                >
+                  View in OCR
+                </button>
               </div>
             </div>
-          )}
+          </div>
           {/* CN:OFFICER-FINAL-END */}
           {/* CN:STEP2-COMPLIANCE-START */}
-          {/* How to make representations (read-only) */}
           <div className="col-span-12">
             <div className="rounded-xl border border-slate-200/80 bg-neutral-50 p-3 md:p-4">
               <h4 className="mb-2 text-sm font-medium text-[#192650]">How to make representations</h4>
               <div className="space-y-1 text-sm text-[#192650]">
                 <div>
-                  <span className="font-medium">Email:</span> {authorityRepsEmail || '—'}
-                </div>
-                <div>
-                  <span className="font-medium">Online form:</span>{' '}
-                  {authorityRepsUrl ? (
-                    <a href={authorityRepsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline">
-                      {authorityRepsUrl}
+                  <span className="font-medium">Email:</span>{' '}
+                  {trimmedEmail ? (
+                    <a className="text-blue-700 underline break-all" href={`mailto:${trimmedEmail}`}>
+                      {trimmedEmail}
                     </a>
                   ) : (
                     '—'
                   )}
                 </div>
                 <div>
-                  <span className="font-medium">Postal address:</span> {authorityPostalAddress || '—'}
+                  <span className="font-medium">Online form:</span>{' '}
+                  {trimmedRepresentationsUrl ? (
+                    <a
+                      className="text-blue-700 underline break-all"
+                      href={trimmedRepresentationsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {representationUrlLabel}
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </div>
+                <div>
+                  <span className="font-medium">Postal address:</span> {trimmedCouncilAddress || '—'}
                 </div>
                 {representationContactsIncomplete && (
                   <div className="mt-2 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
                     Representation contact details for this council are incomplete. Please verify before continuing.
                   </div>
                 )}
+              </div>
+              <div className="mt-4 space-y-1">
+                <label htmlFor="representationsUrl" className={UI.label}>
+                  Online form (optional)
+                </label>
+                <input
+                  id="representationsUrl"
+                  type="url"
+                  inputMode="url"
+                  className={`${UI.input} h-11 w-full rounded-xl px-3 text-sm ${
+                    showRepresentationsUrlError ? 'border-red-500 focus:ring-red-500 focus:ring-offset-white' : ''
+                  }`}
+                  value={draft.representationsUrl ?? ''}
+                  onChange={(event) => onRepresentationsUrlChange(event.target.value)}
+                  onBlur={() => setRepresentationsUrlTouched(true)}
+                  placeholder="https://example.gov.uk/licensing/representations"
+                  aria-describedby={representationsUrlDescribedBy || undefined}
+                  aria-invalid={showRepresentationsUrlError ? 'true' : undefined}
+                />
+                {!representationsUrlEdited &&
+                  !!trimmedRepresentationsUrl &&
+                  autoDetectedRepresentationsUrl &&
+                  trimmedRepresentationsUrl === autoDetectedRepresentationsUrl && (
+                    <p className="text-xs text-gray-500">Auto-detected from your notice text · Change if needed.</p>
+                  )}
+                {showRepresentationsUrlError && (
+                  <p id={representationsUrlErrorId} className="text-xs text-red-600">
+                    Enter a valid URL.
+                  </p>
+                )}
+                <p id={representationsUrlHelpId} className="min-h-5 text-xs text-neutral-500">
+                  Add a council portal link for online representations (http or https).
+                </p>
+                {!trimmedRepresentationsUrl && authorityRepsUrl && (
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-indigo-700 underline underline-offset-2"
+                    onClick={() => {
+                      onRepresentationsUrlChange(authorityRepsUrl);
+                      setRepresentationsUrlTouched(true);
+                    }}
+                  >
+                    Use council directory link
+                  </button>
+                )}
+                {authorityRepsUrl &&
+                  trimmedRepresentationsUrl &&
+                  trimmedRepresentationsUrl !== authorityRepsUrl && (
+                    <span className="inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                      Value differs from council directory
+                    </span>
+                  )}
               </div>
             </div>
           </div>

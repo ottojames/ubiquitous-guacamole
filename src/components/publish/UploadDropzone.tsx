@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { Info } from 'lucide-react';
 
 export type UploadDropzoneProps = {
   onText: (text: string) => void;
@@ -124,7 +125,11 @@ export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) 
           aria-live="polite"
         />
         <p className="text-sm text-slate-600">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
-        <p className="mt-2 text-xs text-slate-500">OCR will appear below; you can still edit everything.</p>
+        <p className="mt-2 text-sm text-slate-600">OCR will appear below; you can still edit everything.</p>
+        <p className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-gray-800">
+          <Info aria-hidden className="h-4 w-4 text-indigo-600" />
+          <span>You can fully edit the notice text in the next step.</span>
+        </p>
         <div className="sr-only" aria-live="polite">Status: {state}</div>
       </div>
 

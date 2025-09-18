@@ -11,6 +11,8 @@ import { formatDisplayDateTime } from '@/lib/format';
 /* CN:STEP2-COMPLIANCE-UPGRADE-END */
 /* CN:FIX-END */
 import * as UI from '@/styles/ui';
+import { fetchAddressDetail, mapDetail } from '@/lib/addressLookup';
+import { extractUKPostcode, formatUKPostcode } from '@/lib/ukPostcode';
 
 type Props = {
   value: any;
@@ -65,6 +67,7 @@ export default function PremisesForm({
   const [errors] = useState<ErrorItem[]>([]);
   const [pack, setPack] = useState<AuthorityPack | null>(null);
   const [override, setOverride] = useState(false);
+  const premisesSelectionIdRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     autoFocusRef?.current?.focus();
@@ -102,15 +105,44 @@ export default function PremisesForm({
   }
 
   function onAddressSelect(a: AddressWithUPRN) {
-    const next = {
+    const suggestionLabel = a.label || a.line1 || '';
+    const fallbackPostcode = formatUKPostcode(
+      a.postcode || extractUKPostcode(suggestionLabel) || ''
+    );
+    const base = {
       ...form,
-      premisesAddress: a.line1 || '',
-      city: a.city || a.town || '',
-      postcode: a.postcode || '',
-      uprn: a.uprn, // now safe because we extended type
+      premisesAddress: suggestionLabel,
+      city: a.city || a.town || form.city || '',
+      postcode: fallbackPostcode,
+      uprn: a.uprn,
     };
-    setForm(next);
-    onChange(next);
+    premisesSelectionIdRef.current = a.id ?? null;
+    setForm(base);
+    onChange(base);
+
+    if (!a.id) return;
+
+    const selectionId = a.id;
+    void fetchAddressDetail(selectionId)
+      .then((json) => {
+        if (premisesSelectionIdRef.current !== selectionId) return;
+        const detail = mapDetail(json);
+        const formatted = detail.label || suggestionLabel;
+        const postcode = formatUKPostcode(
+          detail.postcode || fallbackPostcode || extractUKPostcode(formatted) || ''
+        );
+        const next = {
+          ...base,
+          premisesAddress: formatted,
+          city: detail.town || base.city,
+          postcode,
+        };
+        setForm(next);
+        onChange(next);
+      })
+      .catch(() => {
+        // fall back to suggestion values; nothing else to do
+      });
   }
 
   function onApplicantAddressSelect(a: AddressWithUPRN) {

@@ -57,6 +57,7 @@ export type NoticeDraft = {
   hours?: Record<string, string>;
   applicationDate: string;
   repsDeadline?: string;
+  representationsUrl?: string;
   inspectionLocation?: string;
   repsMethod?: string;
   statutoryWarningPresent?: boolean;

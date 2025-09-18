@@ -15,11 +15,13 @@ describe('Preview template', () => {
     fireEvent.change(screen.getByLabelText('Operator'), { target: { value: 'Acme' } });
     fireEvent.change(screen.getByLabelText('Vehicles'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Trailers'), { target: { value: '0' } });
-    fireEvent.click(screen.getAllByText('Submit')[1]);
+    const submitButton = await screen.findByRole('button', { name: 'Submit' });
+    fireEvent.click(submitButton);
 
     expect(await screen.findByText(/goods vehicle operator licence/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Expand'));
+    const expandBtn = await screen.findByLabelText('Expand preview');
+    fireEvent.click(expandBtn);
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 });

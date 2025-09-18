@@ -1,22 +1,24 @@
 import React, { useMemo, useState } from 'react';
 import * as UI from '@/styles/ui';
+import { sanitiseNoticeText } from '@/lib/text/sanitiseNotice';
 
 /* CN:STEP2-COMPLIANCE-UPGRADE-START */
 export default function PreviewCard({ text, statusMessage }: { text: string; statusMessage?: string }) {
 /* CN:STEP2-COMPLIANCE-UPGRADE-END */
   const [open, setOpen] = useState(false);
-  const hasPreview = (text ?? '').trim().length > 0;
+  const safeText = useMemo(() => sanitiseNoticeText(text || ''), [text]);
+  const hasPreview = safeText.trim().length > 0;
   /* CN:STEP2-COMPLIANCE-UPGRADE-START */
-  const lines = useMemo(() => (text || '').split(/\r?\n/), [text]);
+  const lines = useMemo(() => safeText.split(/\r?\n/), [safeText]);
   const h1 = lines[0]?.trim();
   const h2 = lines[1]?.trim();
   const body = lines.slice(2);
 
   const copy = async () => {
-    try { await navigator.clipboard?.writeText(text || ''); } catch { /* noop */ }
+    try { await navigator.clipboard?.writeText(safeText || ''); } catch { /* noop */ }
   };
   const download = () => {
-    const blob = new Blob([text || ''], { type: 'text/plain' });
+    const blob = new Blob([safeText || ''], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'notice.txt'; a.click(); URL.revokeObjectURL(url);
@@ -102,7 +104,7 @@ export default function PreviewCard({ text, statusMessage }: { text: string; sta
                 Close
               </button>
             </div>
-            <div className={UI.prose + ' whitespace-pre-wrap'}>{text}</div>
+            <div className={UI.prose + ' whitespace-pre-wrap'}>{safeText}</div>
           </div>
         </div>
       )}

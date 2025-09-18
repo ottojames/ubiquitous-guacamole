@@ -2,18 +2,15 @@ import path from 'path';
 import XLSX from 'xlsx';
 import { createClient } from '@supabase/supabase-js';
 
-interface CouncilRow {
-  name: string;
-  email: string;
-}
+type CouncilRow = { name?: string; email?: string; [k: string]: unknown };
 
 function parseXlsx(filePath: string): CouncilRow[] {
   const wb = XLSX.readFile(filePath);
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: '' }) as CouncilRow[];
 
   return rows
-    .map((r) => {
+    .map((r: CouncilRow) => {
       const normalized = Object.fromEntries(
         Object.entries(r).map(([k, v]) => [k.toLowerCase(), String(v).trim()])
       );
@@ -27,7 +24,7 @@ function parseXlsx(filePath: string): CouncilRow[] {
         normalized['council email'];
       return { name, email } as CouncilRow;
     })
-    .filter((r) => r.name && r.email);
+    .filter((r: CouncilRow) => r.name && r.email);
 }
 
 async function main() {
@@ -54,4 +51,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

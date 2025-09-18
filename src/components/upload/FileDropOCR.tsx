@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Info } from 'lucide-react';
 import * as UI from '@/styles/ui';
 
 // Keep prop compatibility with UploadDropzone
@@ -127,10 +128,11 @@ export default function FileDropOCR({ onText, onMeta }: FileDropOCRProps) {
           aria-live="polite"
         />
         <div className="text-sm text-slate-800">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</div>
-        <div className="mt-2 text-xs text-slate-700">OCR will appear below; you can still edit everything.</div>
-        {/* CN:LICENSING-FINAL-START */}
-        <div className="mt-2 text-xs text-slate-500">You can edit your notice text in the next step if needed.</div>
-        {/* CN:LICENSING-FINAL-END */}
+        <p className="mt-2 text-sm text-slate-600">OCR will appear below; you can still edit everything.</p>
+        <p className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-gray-800">
+          <Info aria-hidden className="h-4 w-4 text-indigo-600" />
+          <span>You can fully edit the notice text in the next step.</span>
+        </p>
         <div className="sr-only" aria-live="polite">Status: {state}</div>
       </label>
 

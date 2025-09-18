@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { sanitiseNoticeText } from '@/lib/text/sanitiseNotice';
 
 export default function NoticePreview({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const reduceMotion = useReducedMotion();
+  const safeText = React.useMemo(() => sanitiseNoticeText(text || ''), [text]);
+  const isEmpty = !safeText.trim();
   const copyText = async () => {
     try {
-      await navigator.clipboard?.writeText(text || '');
+      await navigator.clipboard?.writeText(safeText || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -14,7 +17,7 @@ export default function NoticePreview({ text }: { text: string }) {
     }
   };
   const downloadTxt = () => {
-    const blob = new Blob([text || ''], { type: 'text/plain' });
+    const blob = new Blob([safeText || ''], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -25,7 +28,7 @@ export default function NoticePreview({ text }: { text: string }) {
 
   const downloadProof = async () => {
     const encoder = new TextEncoder();
-    const data = encoder.encode(text || '');
+    const data = encoder.encode(safeText || '');
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer))
       .map((b) => b.toString(16).padStart(2, '0'))
@@ -33,7 +36,7 @@ export default function NoticePreview({ text }: { text: string }) {
     const manifest = {
       hash: hashArray,
       generatedAt: new Date().toISOString(),
-      length: text.length,
+      length: safeText.length,
     };
     const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {
       type: 'application/json',
@@ -53,28 +56,28 @@ export default function NoticePreview({ text }: { text: string }) {
     >
       <h3 className="mb-3 text-sm font-semibold tracking-tight">Notice preview</h3>
       <AnimatePresence mode="wait" initial={false}>
-        {text ? (
+        {!isEmpty ? (
           <motion.pre
-            key={text}
+            key={safeText}
             initial={{ opacity: reduceMotion ? 1 : 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: reduceMotion ? 1 : 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
-            className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed"
+            className="notice-preview max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words [overflow-wrap:anywhere] font-mono text-sm leading-relaxed"
           >
-            {text}
+            {safeText}
           </motion.pre>
         ) : (
-          <motion.p
+          <motion.div
             key="placeholder"
             initial={{ opacity: reduceMotion ? 1 : 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: reduceMotion ? 1 : 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
-            className="text-sm text-slate-500"
+            className="flex min-h-[160px] items-center justify-center rounded-xl bg-gray-50 px-4 text-center text-sm text-slate-500"
           >
-            Your notice will appear here after upload or as you type.
-          </motion.p>
+            Your preview will appear here after you upload or type your notice text.
+          </motion.div>
         )}
       </AnimatePresence>
       <div className="mt-6 flex justify-end gap-2">

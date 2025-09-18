@@ -19,7 +19,7 @@ export default function DetailsPage() {
     setForm((f) => ({ ...f, [k]: v }));
     if (k === "postcode") {
       const guess = inferCouncil(String(v));
-      if (guess && !form.council) setForm((f) => ({ ...f, council: guess }));
+      if (guess && !form.councilName) setForm((f) => ({ ...f, councilName: guess }));
     }
   }
 
@@ -53,12 +53,14 @@ export default function DetailsPage() {
       premisesName: form.premisesName,
       premisesAddress: form.premisesAddress!,
       postcode: form.postcode!,
-      council: form.council,
-      councilEmail: form.councilEmail,
+      councilName: form.councilName ?? '',
+      councilEmail: form.councilEmail ?? '',
+      councilAddress: form.councilAddress ?? '',
       consultationStart: form.consultationStart,
       consultationEnd: form.consultationEnd,
       blueNoticeUploads: files,
       status: "Draft",
+      applicationDate: form.applicationDate ?? '',
     };
     const existing = JSON.parse(localStorage.getItem("noticeDrafts") || "[]");
     existing.unshift(draft);
@@ -187,8 +189,8 @@ export default function DetailsPage() {
           <label className="text-sm">Council / Licensing Authority</label>
           <input
             className="w-full border rounded p-2"
-            value={form.council || ""}
-            onChange={(e) => update("council", e.target.value)}
+            value={form.councilName || ""}
+            onChange={(e) => update("councilName", e.target.value)}
           />
         </div>
         <div className="md:col-span-2">
@@ -199,10 +201,10 @@ export default function DetailsPage() {
             placeholder="e.g. licensing@council.gov.uk"
             onChange={(e) => update("councilEmail", e.target.value)}
           />
-          {form.postcode && form.council && (
+          {form.postcode && form.councilName && (
             <div className="text-xs text-slate-500 mt-1">
               Tip: try licensing@
-              {String(form.council).toLowerCase().replace(/\s+/g, "")}.
+              {String(form.councilName).toLowerCase().replace(/\s+/g, "")}.
               gov.uk (edit if different).
             </div>
           )}

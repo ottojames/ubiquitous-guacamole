@@ -43,6 +43,8 @@ export default function CouncilSelect({
   const fallbackRef = useRef<HTMLInputElement>(null);
   const resolvedInputRef = inputRef ?? fallbackRef;
   const listRef = useRef<HTMLUListElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const pointerDownRef = useRef(false);
 
   useEffect(() => {
     setQuery(value ?? '');
@@ -66,6 +68,18 @@ export default function CouncilSelect({
       setOpen(options.length > 0);
     }
   }, [options.length, query]);
+
+  useEffect(() => {
+    function handleDocumentMouseDown(event: MouseEvent) {
+      const root = rootRef.current;
+      if (!root) return;
+      if (root.contains(event.target as Node)) return;
+      setOpen(false);
+      pointerDownRef.current = false;
+    }
+    document.addEventListener('mousedown', handleDocumentMouseDown);
+    return () => document.removeEventListener('mousedown', handleDocumentMouseDown);
+  }, []);
 
   function select(option: Council) {
     setQuery(option.name);
@@ -106,7 +120,7 @@ export default function CouncilSelect({
   }
 
   return (
-    <div className="w-full">
+    <div ref={rootRef} className="w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-900">
         {label}
         {required && <span className="text-red-500"> *</span>}
@@ -124,19 +138,39 @@ export default function CouncilSelect({
           onChange={(event) => {
             const next = event.target.value;
             setQuery(next);
-            if (!next.trim()) {
-              setOpen(false);
-            }
+            setOpen(true);
             onChangeText?.(next);
           }}
-          onFocus={() => setOpen(options.length > 0 && query.trim().length > 0)}
+          onMouseDownCapture={() => {
+            pointerDownRef.current = true;
+          }}
+          onMouseUpCapture={() => {
+            pointerDownRef.current = false;
+          }}
+          onFocus={() => {
+            if (pointerDownRef.current) return;
+            setOpen(options.length > 0);
+          }}
+          onClick={() => {
+            setOpen((prev) => (options.length > 0 ? !prev : false));
+            pointerDownRef.current = false;
+          }}
           onBlur={() => {
-            if (typeof window !== 'undefined') {
-              window.requestAnimationFrame(() => setOpen(false));
-            } else {
+            if (typeof window === 'undefined') {
               setOpen(false);
+              onBlur?.();
+              return;
             }
-            onBlur?.();
+            window.requestAnimationFrame(() => {
+              const root = rootRef.current;
+              const active = document.activeElement;
+              if (root && active && root.contains(active)) {
+                return;
+              }
+              setOpen(false);
+              onBlur?.();
+              pointerDownRef.current = false;
+            });
           }}
           onKeyDown={handleKeyDown}
           role="combobox"

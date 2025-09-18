@@ -32,7 +32,7 @@ describe('compliance engine', () => {
       applicationType: 'grant',
       applicationDate: '2024-01-01',
       representationDeadline: '2024-01-29',
-      activities: [{ type: 'alcohol_on', days: ['Mon'], start: '09:00', end: '23:00' }],
+      activities: [{ kind: 'alcohol', alcoholOnOff: 'on', days: ['Mon'], start: '09:00', end: '23:00' }],
     };
     const res = runCompliance(data, premisesRules);
     expect(res.every(r => r.ok)).toBe(true);

@@ -46,28 +46,27 @@ export function mapAddress(raw: any): AddressOption {
   };
 }
 
-async function resolveOption(item: AddressItem): Promise<AddressOption> {
-  try {
-    const response = await fetch(`/api/address/resolve?id=${encodeURIComponent(item.id)}`);
-    if (response.ok) {
-      const payload = await response.json();
-      if (payload?.address) {
-        return mapAddress({ ...payload.address, label: item.label, id: item.id });
-      }
-    }
-  } catch (error) {
-    console.warn('[addresses] resolve option failed', error);
-  }
-
+function toOption(item: AddressItem): AddressOption {
+  const baseLines = [item.line1, item.line2, item.town]
+    .map((segment) => (segment ?? '').trim())
+    .filter(Boolean);
   const fallbackLines = item.label
     .split(',')
     .map((segment) => segment.trim())
     .filter(Boolean);
+  const lines = baseLines.length ? baseLines : fallbackLines;
+  const postcode = (item.postcode ?? '').trim() || normalizeUKPostcode(item.label) || '';
+
   return mapAddress({
     id: item.id,
     label: item.label,
-    lines: fallbackLines,
-    postcode: normalizeUKPostcode(item.label) || '',
+    line1: baseLines[0] ?? item.line1 ?? undefined,
+    line2: baseLines[1] ?? item.line2 ?? undefined,
+    town: item.town ?? fallbackLines[fallbackLines.length - 2] ?? undefined,
+    city: item.town ?? undefined,
+    postcode,
+    lines,
+    uprn: item.uprn ?? undefined,
   });
 }
 
@@ -89,8 +88,8 @@ export default function AddressAutocomplete({
   }, []);
 
   const handlePick = React.useCallback(
-    async (item: AddressItem) => {
-      const option = await resolveOption(item);
+    (item: AddressItem) => {
+      const option = toOption(item);
       setSelected(option);
       onSelect(option);
     },

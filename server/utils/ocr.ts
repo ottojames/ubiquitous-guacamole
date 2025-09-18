@@ -40,7 +40,7 @@ async function ocrImageBuffer(buf: Buffer): Promise<string> {
       .toFormat('png')
       .toBuffer();
     try {
-      const result = await Tesseract.recognize(processed, 'eng', { tessedit_pageseg_mode: 6 as any });
+      const result = await Tesseract.recognize(processed, 'eng', { tessedit_pageseg_mode: 6 } as any);
       return result.data.text;
     } catch (e) {
       console.error('tesseract processed image failed', e);
