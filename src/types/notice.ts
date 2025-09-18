@@ -45,6 +45,7 @@ export type NoticeDraft = {
   councilName: string;
   councilEmail: string;
   councilAddress: string;
+  isCouncilEmailLocked?: boolean;
   consultationStart?: string; // yyyy-mm-dd
   consultationEnd?: string;   // yyyy-mm-dd
   blueNoticeUploads: UploadedFile[];

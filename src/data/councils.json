@@ -1,13 +1,14 @@
 [
   {
-    "id": "lambeth",
-    "name": "London Borough of Lambeth",
-    "licensingEmail": "licensing@lambeth.gov.uk",
-    "postal": "Licensing Team, Civic Centre, 6 Brixton Hill, London SW2 1RW",
-    "postalAddress": "Licensing Team, Civic Centre, 6 Brixton Hill, London SW2 1RW",
-    "officeAddress": "Civic Centre, 6 Brixton Hill, London SW2 1RW",
-    "licensingUrl": "https://www.lambeth.gov.uk/licensing",
-    "repsEmail": "licensing@lambeth.gov.uk",
-    "repsUrl": "https://www.lambeth.gov.uk/licensing"
+    "name": "Worcester City Council",
+    "email": "wrsenquiries@worcsregservices.gov.uk",
+    "address": "",
+    "aliases": []
+  },
+  {
+    "name": "Leeds City Council",
+    "email": "entertainment.licensing@leeds.gov.uk",
+    "address": "",
+    "aliases": []
   }
 ]
