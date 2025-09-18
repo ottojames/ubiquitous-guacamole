@@ -576,11 +576,11 @@ export default function UploadNoticeFlow() {
                 ref={paymentHeadingRef}
                 data-page-title
                 tabIndex={-1}
-                className="text-2xl font-semibold text-[#192650] focus:outline-none"
+                className="text-2xl font-semibold text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-transparent"
               >
                 Payment details
               </h2>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-white/90">
                 Complete your payment to submit this notice.
               </p>
               <div className="mt-6 flex items-center justify-between">
@@ -697,13 +697,7 @@ export default function UploadNoticeFlow() {
                 consultationDays={28}
               />
               {/* CN:STEP2-COMPLIANCE-START */}
-              {step !== 2 && (
-                <CostCard
-                  cost={0}
-                  canSubmit={step === 3 && readyForPayment}
-                  label={step === 3 ? 'Continue to payment' : undefined}
-                />
-              )}
+              {step !== 2 && <CostCard cost={0} canSubmit={step === 3 && readyForPayment} />}
               {/* CN:STEP2-COMPLIANCE-END */}
             </>
           )}

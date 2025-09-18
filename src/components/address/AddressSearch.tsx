@@ -76,6 +76,7 @@ export default function AddressSearch({
   const manualLine1Ref = React.useRef<HTMLInputElement | null>(null);
   const search = React.useMemo(() => makeAddressSearcher(), []);
   const focusedRef = React.useRef(focused);
+  const suppressSearchRef = React.useRef(false);
 
   React.useEffect(() => {
     focusedRef.current = focused;
@@ -95,6 +96,16 @@ export default function AddressSearch({
       setLoading(false);
       setOpen(false);
       setHi(-1);
+      return;
+    }
+
+    if (suppressSearchRef.current) {
+      suppressSearchRef.current = false;
+      setOpen(false);
+      setHi(-1);
+      setLoading(false);
+      setRawItems([]);
+      setError(null);
       return;
     }
 
@@ -204,10 +215,14 @@ export default function AddressSearch({
   // PICK: do NOT call onChange; only onPick (prevents postcode pollution)
   const commitPick = React.useCallback(
     (item: AddressItem) => {
+      suppressSearchRef.current = true;
+      setLoading(false);
+      setError(null);
+      setRawItems([]);
       setInputValue(item.label); // reflect the pick in the input UI
       setOpen(false);
       setHi(-1);
-      onPick?.(item);            // parent resolves and fills textarea/postcode/council
+      onPick?.(item); // parent resolves and fills textarea/postcode/council
     },
     [onPick],
   );
