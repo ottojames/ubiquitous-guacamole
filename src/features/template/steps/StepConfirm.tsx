@@ -5,19 +5,36 @@ import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
 import { buildChecklist } from '../checks';
 import { buildNoticeText } from '../noticeRenderer';
 import { useTemplateBuilder, useTemplateNotice, useTemplateStep } from '../TemplateBuilderProvider';
+import { trackTemplateEvent } from '../telemetry';
 
 export default function StepConfirm() {
   const notice = useTemplateNotice();
   const [, setStep] = useTemplateStep();
   const { patchNotice } = useTemplateBuilder();
-  const [confirmed, setConfirmed] = React.useState(false);
   const preview = React.useMemo(() => buildNoticeText(notice), [notice]);
   const checklist = React.useMemo(() => buildChecklist(notice), [notice]);
 
   const handleContinue = () => {
-    if (!confirmed) return;
+    if (!notice.declarationAccepted) return;
     patchNotice({});
     setStep(4);
+  };
+
+  const handleFix = (target?: string) => {
+    trackTemplateEvent('fix_link_clicked', { target });
+    setStep(2);
+    if (!target) return;
+    window.setTimeout(() => {
+      const el = document.getElementById(target);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const focusable = (el.querySelector('input,textarea,select,button,[tabindex]') as HTMLElement | null) || (el as HTMLElement);
+      focusable?.focus?.();
+    }, 120);
+  };
+
+  const toggleDeclaration = (next: boolean) => {
+    patchNotice({ declarationAccepted: next }, true);
   };
 
   return (
@@ -38,17 +55,22 @@ export default function StepConfirm() {
             Edit details
           </button>
         </div>
+        {notice.declEditMeta?.deadlineEdited && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Deadline edited from auto calculation.
+          </div>
+        )}
         <NoticePreview text={preview} />
         <div className="flex items-start gap-3 border-t border-slate-200 pt-4">
           <input
             id="confirm-notice"
             type="checkbox"
             className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-            checked={confirmed}
-            onChange={(event) => setConfirmed(event.target.checked)}
+            checked={notice.declarationAccepted}
+            onChange={(event) => toggleDeclaration(event.target.checked)}
           />
           <label htmlFor="confirm-notice" className="text-sm text-slate-700">
-            I confirm the notice text is complete and accurate.
+            I confirm the above information is accurate and matches the application submitted to the licensing authority.
           </label>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
@@ -57,15 +79,15 @@ export default function StepConfirm() {
           </button>
           <button
             type="button"
-            className={`${UI.btnPrimary} h-11 px-6 text-sm ${!confirmed ? 'cursor-not-allowed opacity-50' : ''}`}
-            aria-disabled={!confirmed}
+            className={`${UI.btnPrimary} h-11 px-6 text-sm ${!notice.declarationAccepted ? 'cursor-not-allowed opacity-50' : ''}`}
+            aria-disabled={!notice.declarationAccepted}
             onClick={handleContinue}
           >
             Continue to payment
           </button>
         </div>
       </section>
-      <ComplianceCard items={checklist} onFix={() => setStep(2)} />
+      <ComplianceCard items={checklist} onFix={handleFix} />
     </div>
   );
 }

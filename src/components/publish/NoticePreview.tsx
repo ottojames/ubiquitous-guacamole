@@ -7,6 +7,22 @@ export default function NoticePreview({ text }: { text: string }) {
   const reduceMotion = useReducedMotion();
   const safeText = React.useMemo(() => sanitiseNoticeText(text || ''), [text]);
   const isEmpty = !safeText.trim();
+  const segments = React.useMemo(() => {
+    const parts = safeText.split(/(\[\[missing:[^\]]+\]\])/g);
+    return parts.map((part, index) => {
+      if (/^\[\[missing:[^\]]+\]\]$/.test(part)) {
+        return (
+          <span
+            key={`missing-${index}`}
+            className="rounded bg-rose-50 px-1 py-0.5 text-xs font-medium text-rose-600"
+          >
+            {part}
+          </span>
+        );
+      }
+      return <React.Fragment key={`text-${index}`}>{part}</React.Fragment>;
+    });
+  }, [safeText]);
   const copyText = async () => {
     try {
       await navigator.clipboard?.writeText(safeText || '');
@@ -65,7 +81,7 @@ export default function NoticePreview({ text }: { text: string }) {
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
             className="notice-preview max-h-[70vh] overflow-y-auto whitespace-pre-wrap break-words [overflow-wrap:anywhere] font-mono text-sm leading-relaxed"
           >
-            {safeText}
+            {segments}
           </motion.pre>
         ) : (
           <motion.div

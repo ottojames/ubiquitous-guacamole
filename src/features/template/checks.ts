@@ -1,33 +1,47 @@
 import type { ChecklistItem } from '@/components/publish/ComplianceChecklist';
 import { formatUKPostcode } from '@/lib/ukPostcode';
 import type { TemplateNotice } from './types';
+import { hasEnabledHours } from './noticeRenderer';
 
 export function buildChecklist(notice: TemplateNotice): ChecklistItem[] {
   const trimmed = (value?: string | null) => value?.trim() ?? '';
-  const postcodeOk = notice.premisesAddress?.postcode ? formatUKPostcode(notice.premisesAddress.postcode) : '';
-  const hasActivities = Object.values(notice.activities || {}).some((week: any) => {
-    if (!week) return false;
-    return Object.values(week).some((range: any) => range?.enabled);
-  });
-  const representationDate = trimmed(notice.representationDeadline);
+  const postcode = notice.premisesAddress?.postcode
+    ? formatUKPostcode(notice.premisesAddress.postcode)
+    : '';
+  const premisesAddressComplete =
+    trimmed(notice.premisesAddress?.line1).length > 0 &&
+    trimmed(notice.premisesAddress?.town).length > 0 &&
+    postcode.length > 0;
 
   const items: ChecklistItem[] = [
     {
-      id: 'applicant-name',
+      id: 'applicant-legal-name',
       label: 'Applicant legal name present',
-      ok: trimmed(notice.applicantName).length >= 2,
-      target: 'applicantName',
+      ok: trimmed(notice.applicantLegalName).length >= 2,
+      target: 'applicantLegalName',
     },
     {
-      id: 'premises-postcode',
-      label: 'Premises postcode captured',
-      ok: !!postcodeOk,
-      target: 'premises-address-picker-postcode',
+      id: 'applicant-phone',
+      label: 'Applicant phone provided',
+      ok: trimmed(notice.contactPhone).length >= 7,
+      target: 'contactPhone',
+    },
+    {
+      id: 'premises-name',
+      label: 'Premises or trading name provided',
+      ok: !!trimmed(notice.premisesName) || !!trimmed(notice.tradingName),
+      target: 'tradingName',
+    },
+    {
+      id: 'premises-address',
+      label: 'Premises address complete',
+      ok: premisesAddressComplete,
+      target: 'premisesAddress-line1',
     },
     {
       id: 'activities-hours',
       label: 'Activities and hours completed',
-      ok: hasActivities,
+      ok: hasEnabledHours(notice.activities),
       target: 'activities-grid',
     },
     {
@@ -39,8 +53,14 @@ export function buildChecklist(notice: TemplateNotice): ChecklistItem[] {
     {
       id: 'representation-deadline',
       label: 'Representation deadline calculated',
-      ok: representationDate.length > 0,
+      ok: !!trimmed(notice.representationDeadline),
       target: 'representationDeadline',
+    },
+    {
+      id: 'declaration',
+      label: 'Declaration confirmed',
+      ok: notice.declarationAccepted,
+      target: 'confirm-notice',
     },
   ];
 

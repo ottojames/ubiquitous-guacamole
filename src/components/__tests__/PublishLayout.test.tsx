@@ -8,6 +8,6 @@ describe('Publish layout', () => {
     expect(screen.getByText('Upload your Notice')).toBeInTheDocument();
     expect(screen.getByText('Preview')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Upload via Template'));
-    expect(screen.getByLabelText('Premises name')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Confirm notice type' })).toBeInTheDocument();
   });
 });
