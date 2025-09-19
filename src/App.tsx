@@ -11,6 +11,8 @@ export default function App() {
       return <Dashboard />;
     case "/publish":
       return <PublishPage />;
+    case "/notices/upload/template":
+      return <PublishPage />;
     case "/success":
       return <Success />;
     case "/details":

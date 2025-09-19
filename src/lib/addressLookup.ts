@@ -46,9 +46,9 @@ function responseError(status: number): never {
 }
 
 export function mapAutocomplete(json: any): AddressSuggestion[] {
-  const suggestions = Array.isArray(json?.suggestions) ? json.suggestions : [];
+  const suggestions = Array.isArray(json?.suggestions) ? (json.suggestions as any[]) : [];
   const mapped = suggestions
-    .map((entry): AddressSuggestion | null => {
+    .map((entry: any): AddressSuggestion | null => {
       if (!entry || typeof entry !== 'object') return null;
       const id = typeof entry.id === 'string' ? entry.id : null;
       const label = typeof entry.address === 'string' ? entry.address : null;
@@ -60,9 +60,9 @@ export function mapAutocomplete(json: any): AddressSuggestion[] {
 
   if (mapped.length > 0) return mapped;
 
-  const results = Array.isArray(json?.results) ? json.results : [];
+  const results = Array.isArray(json?.results) ? (json.results as any[]) : [];
   return results
-    .map((entry): AddressSuggestion | null => {
+    .map((entry: any): AddressSuggestion | null => {
       const dpa = entry?.DPA;
       if (!dpa || typeof dpa !== 'object') return null;
       const id = typeof dpa.UPRN === 'string' ? dpa.UPRN : typeof dpa.UPRN === 'number' ? String(dpa.UPRN) : null;

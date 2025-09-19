@@ -28,6 +28,7 @@
     "@supabase/supabase-js": "^2.46.0",
     "busboy": "^1.6.0",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "framer-motion": "^12.23.12",

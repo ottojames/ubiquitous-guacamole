@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as UI from '@/styles/ui';
 import UploadNoticeFlow from '@/components/publish/UploadNoticeFlow';
-import TemplateBuilder from './publish';
+import TemplateUploadFlow from '@/features/template/TemplateUploadFlow';
 import Header from '@/components/layout/Header';
 
 export default function PublishPage() {
@@ -10,7 +10,13 @@ export default function PublishPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tab');
-    if (t === 'template') setTab('template');
+    if (t === 'template') {
+      setTab('template');
+      return;
+    }
+    if (window.location.pathname.includes('/template')) {
+      setTab('template');
+    }
   }, []);
 
   useEffect(() => {
@@ -70,7 +76,7 @@ export default function PublishPage() {
         <div id="template-panel" role="tabpanel" hidden={tab !== 'template'}>
           {tab === 'template' && (
             <div data-testid="tab-template-root">
-              <TemplateBuilder />
+              <TemplateUploadFlow />
             </div>
           )}
         </div>
