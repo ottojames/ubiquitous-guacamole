@@ -25,6 +25,14 @@ const dayLabels: Record<typeof dayOrder[number], string> = {
   sun: 'Sun',
 };
 
+const missingToken = (field: string): string => `[[missing: ${field}]]`;
+
+const ensureValue = (value: string | null | undefined, field: string): string => {
+  const trimmed = value?.trim();
+  if (trimmed) return trimmed;
+  return missingToken(field);
+};
+
 export const hasEnabledHours = (activities: Activities | undefined | null): boolean => {
   if (!activities) return false;
   return Object.values(activities).some((week) => {
@@ -33,7 +41,7 @@ export const hasEnabledHours = (activities: Activities | undefined | null): bool
   });
 };
 
-const formatTimeRange = (start: string, end: string): string => `${start}–${end}`;
+const formatTimeRange = (start: string, end: string): string => `${start}–${end === '00:00' ? '00:00' : end}`;
 
 const renderActivityRow = (label: string, hours?: Activities[keyof Activities]): string => {
   if (!hours) return '';
@@ -47,36 +55,33 @@ const renderActivityRow = (label: string, hours?: Activities[keyof Activities]):
   return `${label} | ${cells.join(' | ')}`;
 };
 
-const ensureSentence = (value: string): string => {
+const ensureSentence = (value: string, field: string): string => {
   const trimmed = value.trim();
-  if (!trimmed) return '';
+  if (!trimmed) return missingToken(field);
   if (/[.!?]$/.test(trimmed)) return trimmed;
   return `${trimmed}.`;
 };
 
+const addressOrMissing = (address: AddressValue | null | undefined, field: string): string => {
+  if (!address) return missingToken(field);
+  const line1 = address.line1?.trim();
+  const town = address.town?.trim();
+  const postcode = address.postcode?.trim();
+  if (!line1 || !town || !postcode) return missingToken(field);
+  return [line1, address.line2?.trim(), town, postcode].filter(Boolean).join(', ');
+};
+
 export const renderActivitiesTable = (activities?: Activities): string => {
-  if (!activities) {
-    return 'No licensable activities selected.';
+  if (!activities || !hasEnabledHours(activities)) {
+    return missingToken('activities');
   }
   const header = ['Activity', ...dayOrder.map((day) => dayLabels[day])];
-  const rows = [header.join(' | ')];
-  rows.push(header.map(() => '---').join(' | '));
+  const rows = [header.join(' | '), header.map(() => '---').join(' | ')];
   (Object.keys(activityLabels) as ActivityKey[]).forEach((key) => {
     const row = renderActivityRow(activityLabels[key], activities[key]);
     if (row) rows.push(row);
   });
-  if (rows.length === 2) {
-    rows.push('No licensable activities are selected.');
-  }
   return rows.join('\n');
-};
-
-const oneLineAddress = (address?: AddressValue | null): string => {
-  if (!address) return '';
-  return [address.line1, address.line2, address.town, address.postcode]
-    .map((part) => (part || '').trim())
-    .filter(Boolean)
-    .join(', ');
 };
 
 const formatDeadline = (iso: string): string => {
@@ -87,31 +92,38 @@ const formatDeadline = (iso: string): string => {
 };
 
 const fallbackPremisesName = (notice: TemplateNotice): string => {
-  const { premisesName, tradingName } = notice;
-  if (premisesName && premisesName.trim()) return premisesName.trim();
-  if (tradingName && tradingName.trim()) return tradingName.trim();
-  const address = oneLineAddress(notice.premisesAddress);
-  return address || 'the premises';
+  const primary = notice.premisesName?.trim();
+  if (primary) return primary;
+  const trading = notice.tradingName?.trim();
+  if (trading) return trading;
+  const address = addressOrMissing(notice.premisesAddress, 'premisesAddress');
+  if (address.startsWith('[[missing')) return missingToken('premisesName');
+  return address;
 };
 
 const renderStandardFooter = (notice: TemplateNotice): string[] => {
   const council = notice.council;
   const lines: string[] = [];
-  const repEmail = council?.repEmail ?? notice.representationChannel?.email ?? '';
-  const repPostal = council?.repPostal ?? notice.representationChannel?.postal ?? '';
-  const deadline = formatDeadline(notice.representationDeadline);
-  const councilName = council?.name ?? '';
+  const repEmail = ensureValue(council?.repEmail, 'councilRepEmail');
+  const repPostal = ensureValue(council?.repPostal, 'councilRepPostal');
+  const deadline = ensureValue(formatDeadline(notice.representationDeadline), 'representationDeadline');
 
   lines.push(
-    `Any person wishing to make representations concerning this application shall give notice in writing to ${repPostal || 'the licensing authority'} or by email to ${repEmail || 'the licensing authority'} no later than ${deadline || 'the stated deadline'}.`
+    `Any person wishing to make representations concerning this application shall give notice in writing to ${repPostal} or by email to ${repEmail} no later than ${deadline}.`
   );
 
-  if (council?.officeAddress || council?.website) {
-    const office = council.officeAddress || 'the council offices';
-    const website = council.website || 'the council website';
-    lines.push(`A record of the application may be inspected at ${office} during normal office hours or via ${website}.`);
-  } else if (councilName) {
-    lines.push(`A record of the application may be inspected at the offices of ${councilName} during normal office hours.`);
+  const office = council?.officeAddress?.trim();
+  const website = council?.website?.trim();
+  const councilName = council?.name?.trim();
+
+  if (office || website) {
+    lines.push(
+      `A record of the application may be inspected at ${ensureValue(office, 'councilOfficeAddress')} during normal office hours or via ${ensureValue(website, 'councilWebsite')}.`
+    );
+  } else {
+    lines.push(
+      `A record of the application may be inspected at ${ensureValue(councilName, 'councilName')} during normal office hours.`
+    );
   }
 
   lines.push(
@@ -122,10 +134,10 @@ const renderStandardFooter = (notice: TemplateNotice): string[] => {
 };
 
 export const buildNoticeText = (notice: TemplateNotice): string => {
-  const councilName = notice.council?.name || 'the licensing authority';
-  const applicantName = notice.applicantName || 'the applicant';
+  const applicantName = ensureValue(notice.applicantLegalName, 'applicantLegalName');
+  const councilName = ensureValue(notice.council?.name, 'councilName');
   const premises = fallbackPremisesName(notice);
-  const premisesAddress = oneLineAddress(notice.premisesAddress);
+  const premisesAddress = addressOrMissing(notice.premisesAddress, 'premisesAddress');
   const activitiesTable = renderActivitiesTable(notice.activities);
   const footer = renderStandardFooter(notice);
 
@@ -134,10 +146,10 @@ export const buildNoticeText = (notice: TemplateNotice): string => {
       'LICENSING ACT 2003',
       `NOTICE IS HEREBY GIVEN that ${applicantName} has applied to ${councilName} to vary the premises licence in respect of ${premises}, ${premisesAddress}.`,
       '',
-      `The proposed variation is as follows: ${ensureSentence(notice.variationDescription || '')}`,
+      `The proposed variation is as follows: ${ensureSentence(notice.variationDescription || '', 'variationDescription')}`,
     ];
 
-    if (hasEnabledHours(notice.activities)) {
+    if (!activitiesTable.startsWith('[[missing')) {
       paragraphs.push('', 'The application also seeks to permit the following licensable activities and hours:', activitiesTable);
     }
 
@@ -146,11 +158,11 @@ export const buildNoticeText = (notice: TemplateNotice): string => {
   }
 
   if (notice.noticeType === 'review') {
-    const reviewApplicant = (notice.reviewApplicant || notice.applicantName || '').trim();
-    const reviewGrounds = ensureSentence(notice.reviewGrounds || '');
+    const reviewApplicant = ensureValue(notice.reviewApplicant || notice.applicantLegalName, 'reviewApplicant');
+    const reviewGrounds = ensureSentence(notice.reviewGrounds || '', 'reviewGrounds');
     const paragraphs = [
       'LICENSING ACT 2003',
-      `NOTICE IS HEREBY GIVEN that an application has been made by ${reviewApplicant || applicantName} to ${councilName} for a review of the premises licence in respect of ${premises}, ${premisesAddress}.`,
+      `NOTICE IS HEREBY GIVEN that an application has been made by ${reviewApplicant} to ${councilName} for a review of the premises licence in respect of ${premises}, ${premisesAddress}.`,
       '',
       `The grounds for the review are as follows: ${reviewGrounds}`,
       '',
@@ -166,8 +178,8 @@ export const buildNoticeText = (notice: TemplateNotice): string => {
     'The application is to permit the following licensable activities and hours:',
     activitiesTable,
   ];
-  const conditionsSentence = ensureSentence(notice.conditionsSummary || '');
-  if (conditionsSentence) {
+  const conditionsSentence = ensureSentence(notice.conditionsSummary || '', 'conditionsSummary');
+  if (!conditionsSentence.startsWith('[[missing')) {
     paragraphs.push('', `Summary of proposed conditions: ${conditionsSentence}`);
   }
   paragraphs.push('', ...footer);

@@ -7,7 +7,7 @@ describe('Error summary and fix links', () => {
     (HTMLFormElement.prototype as any).requestSubmit = () => {};
     render(<PublishPage />);
     // switch to gvol
-    fireEvent.change(screen.getByLabelText('What type of notice do you require?'), { target: { value: 'gvol' } });
+    fireEvent.change(screen.getByLabelText('Notice type'), { target: { value: 'gvol' } });
     fireEvent.click(screen.getAllByText('Submit')[1]);
     // error summary link
     const errLink = await screen.findAllByText(/is required/);

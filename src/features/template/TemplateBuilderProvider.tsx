@@ -118,19 +118,28 @@ export const TemplateBuilderProvider: React.FC<{ children: React.ReactNode }> = 
   }, [state.step]);
 
   useEffect(() => {
-    if (!state.notice.council) return;
     if (!state.notice.intendedPublicationDate) return;
+    if (state.notice.declEditMeta?.deadlineEdited) return;
     const deadline = calculateRepresentationDeadline(state.notice.intendedPublicationDate, {
-      shiftWeekend: state.notice.council.policy?.shiftWeekendDeadline === true,
+      shiftWeekend: state.notice.council?.policy?.shiftWeekendDeadline === true,
     });
     if (!deadline) return;
     if (deadline === state.notice.representationDeadline) return;
+    const patch: Partial<TemplateNotice> = { representationDeadline: deadline };
+    if (state.notice.declEditMeta) {
+      patch.declEditMeta = undefined;
+    }
     dispatch({
       type: 'PATCH_NOTICE',
-      patch: { representationDeadline: deadline },
+      patch,
       markDirty: false,
     });
-  }, [state.notice.council, state.notice.intendedPublicationDate, state.notice.representationDeadline]);
+  }, [
+    state.notice.intendedPublicationDate,
+    state.notice.council?.policy?.shiftWeekendDeadline,
+    state.notice.representationDeadline,
+    state.notice.declEditMeta?.deadlineEdited,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

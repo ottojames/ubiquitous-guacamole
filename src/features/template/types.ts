@@ -32,8 +32,13 @@ export type Activities = Partial<Record<ActivityKey, WeekHours>>;
 export interface AddressValue {
   line1: string;
   line2?: string;
-  town?: string;
+  town: string;
   postcode: string;
+}
+
+export interface DeclEditMeta {
+  deadlineEdited: boolean;
+  deadlineEditReason?: string;
 }
 
 export interface CouncilValue {
@@ -50,16 +55,18 @@ export interface CouncilValue {
 
 export interface TemplateNotice {
   noticeType: TemplateNoticeType | null;
-  applicantName: string;
-  applicantAddress: string;
+  applicantLegalName: string;
+  applicantAddressType: 'registeredOffice' | 'homeAddress';
+  applicantAddress: AddressValue;
   contactEmail: string;
-  contactPhone?: string;
+  contactPhone: string;
   premisesName?: string;
   tradingName?: string;
   premisesAddress: AddressValue | null;
   council: CouncilValue | null;
   intendedPublicationDate: string;
   representationDeadline: string;
+  declarationAccepted: boolean;
   representationChannel?: {
     email?: string;
     postal?: string;
@@ -70,6 +77,7 @@ export interface TemplateNotice {
   variationDescription?: string;
   reviewApplicant?: string;
   reviewGrounds?: string;
+  declEditMeta?: DeclEditMeta;
   autosaveVersion?: number;
 }
 
