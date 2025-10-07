@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 
-const POSTCODE_RE = /^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})$/i;
+const POSTCODE_RE = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/i;
 
 type SortDirection = 'asc' | 'desc';
 
@@ -18,11 +18,20 @@ function normaliseSortColumn(raw: string): string {
 }
 
 function normalisePostcode(raw: string): { full: string; outward: string } | null {
-  const match = raw.trim().toUpperCase().match(POSTCODE_RE);
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const match = trimmed.toUpperCase().match(POSTCODE_RE);
   if (!match) return null;
   const outward = match[1];
   const inward = match[2];
   return { full: `${outward} ${inward}`, outward };
+}
+
+function buildIlikeFilter(column: string, raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const safeValue = trimmed.replace(/"/g, '""');
+  return `${column}.ilike."%${safeValue}%"`;
 }
 
 function parseLimit(value: any): number {
@@ -48,6 +57,8 @@ const router = Router();
 
 router.get('/notices/search', async (req, res) => {
   try {
+    console.log('[notice-search] Incoming query params:', req.query);
+
     const q = String(req.query.q ?? '').trim();
     const postcodeParam = String(req.query.postcode ?? '').trim();
     const councilParam = String((req.query.councilId ?? req.query.council) ?? '').trim();
@@ -102,14 +113,16 @@ router.get('/notices/search', async (req, res) => {
       }
 
       if (q && !postcodeFromQuery) {
-        qb = qb.or(
-          [
-            `notice_type.ilike.%${q}%`,
-            `premises->>name.ilike.%${q}%`,
-            `premises->>address.ilike.%${q}%`,
-            `extras->>applicantDisplayName.ilike.%${q}%`,
-          ].join(',')
-        );
+        const filters = [
+          buildIlikeFilter('notice_type', q),
+          buildIlikeFilter('premises->>name', q),
+          buildIlikeFilter('premises->>address', q),
+          buildIlikeFilter('extras->>applicantDisplayName', q),
+        ].filter(Boolean) as string[];
+
+        if (filters.length) {
+          qb = qb.or(filters.join(','));
+        }
       }
 
       return qb;
@@ -122,6 +135,7 @@ router.get('/notices/search', async (req, res) => {
     });
 
     if (response?.error) {
+      console.error('[notice-search] Supabase error:', response.error);
       return res.status(500).json({ error: response.error.message });
     }
 
@@ -143,13 +157,16 @@ router.get('/notices/search', async (req, res) => {
       };
     });
 
+    console.log('[notice-search] Result count:', items.length);
+
     return res.json({
       items,
       query: q,
       postcode: effectivePostcode?.full || null,
     });
   } catch (error: any) {
-    return res.status(500).json({ error: error?.message || 'search failed' });
+    console.error('❌ [notice-search] Unexpected server error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
