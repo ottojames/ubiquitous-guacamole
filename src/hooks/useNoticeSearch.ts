@@ -26,8 +26,13 @@ export function useNoticeSearch(options: UseNoticeSearchOptions = {}): UseNotice
     start,
     end,
     radiusKm,
+    latitude,
+    longitude,
     limit,
     sort,
+    bbox,
+    zoom,
+    cluster,
   } = options;
 
   const queryString = useMemo(
@@ -41,10 +46,31 @@ export function useNoticeSearch(options: UseNoticeSearchOptions = {}): UseNotice
         start,
         end,
         radiusKm,
+        latitude,
+        longitude,
         limit,
         sort,
+        bbox,
+        zoom,
+        cluster,
       }),
-    [query, postcode, councilId, type, status, start, end, radiusKm, limit, sort]
+    [
+      query,
+      postcode,
+      councilId,
+      type,
+      status,
+      start,
+      end,
+      radiusKm,
+      latitude,
+      longitude,
+      limit,
+      sort,
+      bbox,
+      zoom,
+      cluster,
+    ]
   );
 
   const controllerRef = useRef<AbortController | null>(null);

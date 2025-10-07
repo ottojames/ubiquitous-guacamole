@@ -22,6 +22,26 @@ Vite runs at http://localhost:5173.
 
 Set `ADDRESS_PROVIDER` in `.env` to choose an address lookup service. The default `mock` provider returns static data and needs no API key.
 
+## Map tiles
+
+The map view uses [MapLibre GL](https://maplibre.org/). Provide a vector style URL via `VITE_MAP_STYLE_URL`:
+
+```bash
+VITE_MAP_STYLE_URL=https://api.maptiler.com/maps/streets-v2/style.json?key=<your_maptiler_key>
+```
+
+Any compatible style (self-hosted or MapTiler) will work.
+
+## Geocoding & location backfill
+
+Notices are geocoded via [postcodes.io](https://postcodes.io/). Override the endpoint with `POSTCODES_IO_URL` if you operate a mirror. To populate latitude/longitude for existing rows run:
+
+```bash
+npm run backfill:locations
+```
+
+Use `npm run backfill:locations -- --dry-run` to see which notices would be updated without persisting changes.
+
 ## Council ingest
 
 A helper script reads a Word document of councils and uploads the data to Supabase. Place your source file at `data/councils.docx` then run:

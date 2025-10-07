@@ -1,17 +1,33 @@
 import { API_BASE } from './api';
 import type { Address } from './address';
 
+export type NoticeBoundingBox = [number, number, number, number];
+
+export type NoticeAddressSummary =
+  | null
+  | string
+  | {
+      line1?: string | null;
+      line2?: string | null;
+      town?: string | null;
+      postcode?: string | null;
+      [key: string]: any;
+    };
+
 export type NoticeSearchItem = {
   id: string;
   noticeType: string;
   status: string;
   premisesName?: string | null;
-  premisesAddress?: any;
+  premisesAddress?: NoticeAddressSummary;
+  premisesPostcode?: string | null;
   repsDeadline?: string | null;
   applicationDate?: string | null;
   publicationDate?: string | null;
   newspaper?: string | null;
   viewUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type NoticeSearchParams = {
@@ -23,8 +39,13 @@ export type NoticeSearchParams = {
   start?: string;
   end?: string;
   radiusKm?: number;
+  latitude?: number;
+  longitude?: number;
   limit?: number;
   sort?: string;
+  bbox?: NoticeBoundingBox;
+  zoom?: number;
+  cluster?: boolean;
 };
 
 export function buildNoticeSearchQuery(params: NoticeSearchParams = {}): string {
@@ -40,10 +61,25 @@ export function buildNoticeSearchQuery(params: NoticeSearchParams = {}): string 
   if (typeof params.radiusKm === 'number' && Number.isFinite(params.radiusKm)) {
     sp.set('radius_km', String(params.radiusKm));
   }
+  if (typeof params.latitude === 'number' && Number.isFinite(params.latitude)) {
+    sp.set('lat', String(params.latitude));
+  }
+  if (typeof params.longitude === 'number' && Number.isFinite(params.longitude)) {
+    sp.set('lng', String(params.longitude));
+  }
   if (typeof params.limit === 'number' && Number.isFinite(params.limit)) {
     sp.set('limit', String(params.limit));
   }
   if (params.sort) sp.set('sort', params.sort);
+  if (params.bbox && params.bbox.length === 4) {
+    sp.set('bbox', params.bbox.join(','));
+  }
+  if (typeof params.zoom === 'number' && Number.isFinite(params.zoom)) {
+    sp.set('zoom', String(params.zoom));
+  }
+  if (typeof params.cluster === 'boolean') {
+    sp.set('cluster', params.cluster ? 'true' : 'false');
+  }
 
   return sp.toString();
 }

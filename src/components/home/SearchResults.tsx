@@ -9,6 +9,9 @@ type SearchResultsProps = {
   loading?: boolean;
   loadingMessage?: string;
   emptyMessage?: string;
+  activeNoticeId?: string | null;
+  onSelectNotice?: (notice: NoticeSearchItem) => void;
+  onHoverNotice?: (noticeId: string | null) => void;
 };
 
 function formatAddress(address: any): string {
@@ -27,7 +30,16 @@ function formatShortDate(value?: string | null): string {
   return date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export default function SearchResults({ results, query, loading, loadingMessage, emptyMessage }: SearchResultsProps) {
+export default function SearchResults({
+  results,
+  query,
+  loading,
+  loadingMessage,
+  emptyMessage,
+  activeNoticeId,
+  onSelectNotice,
+  onHoverNotice,
+}: SearchResultsProps) {
   if (loading) {
     return <p className="text-sm text-neutral-600">{loadingMessage ?? `Searching for “${query}”...`}</p>;
   }
@@ -38,8 +50,21 @@ export default function SearchResults({ results, query, loading, loadingMessage,
     <div className="space-y-4">
       {results.map((item) => {
         const href = item.viewUrl ?? `/notices/${item.id}`;
+        const isActive = activeNoticeId === item.id;
         return (
-          <article key={item.id} className={`${UI.card} p-5`}>
+          <article
+            key={item.id}
+            className={`${UI.card} p-5 transition ${isActive ? 'border-blue-600 shadow-lg' : ''} ${onSelectNotice ? 'cursor-pointer select-none hover:shadow-md' : ''}`}
+            onClick={() => {
+              if (onSelectNotice) onSelectNotice(item);
+            }}
+            onMouseEnter={() => {
+              if (onHoverNotice) onHoverNotice(item.id);
+            }}
+            onMouseLeave={() => {
+              if (onHoverNotice) onHoverNotice(null);
+            }}
+          >
             <h3 className="text-base font-semibold text-neutral-900">{item.noticeType}</h3>
             <p className="mt-1 text-sm text-neutral-600">{item.premisesName || 'Unnamed premises'}</p>
             <p className="text-sm text-neutral-500">{formatAddress(item.premisesAddress)}</p>

@@ -2,10 +2,53 @@
 create extension if not exists pgcrypto;
 
 -- Enums
-create type if not exists notice_region as enum ('england_wales','scotland','ni');
-create type if not exists notice_status as enum ('draft','submitted','council_review','approved','published','rejected');
-create type if not exists notice_application_type as enum ('grant','variation','review');
-create type if not exists notice_actor_role as enum ('applicant','council','system');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_region') THEN
+    CREATE TYPE notice_region AS ENUM (
+      'england_wales',
+      'scotland',
+      'ni'
+    );
+  END IF;
+END
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_status') THEN
+    CREATE TYPE notice_status AS ENUM (
+      'draft',
+      'submitted',
+      'council_review',
+      'approved',
+      'published',
+      'rejected'
+    );
+  END IF;
+END
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_application_type') THEN
+    CREATE TYPE notice_application_type AS ENUM (
+      'grant',
+      'variation',
+      'review'
+    );
+  END IF;
+END
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notice_actor_role') THEN
+    CREATE TYPE notice_actor_role AS ENUM (
+      'applicant',
+      'council',
+      'system'
+    );
+  END IF;
+END
+$$;
 
 -- Councils table adjustments
 alter table public.councils

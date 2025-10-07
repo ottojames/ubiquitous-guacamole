@@ -75,6 +75,15 @@ CREATE TABLE IF NOT EXISTS public.proofs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Ensure JSONB columns exist for indexing
+ALTER TABLE public.notices
+  ADD COLUMN IF NOT EXISTS notice_type TEXT,
+  ADD COLUMN IF NOT EXISTS applicant JSONB,
+  ADD COLUMN IF NOT EXISTS premises JSONB,
+  ADD COLUMN IF NOT EXISTS consultation JSONB,
+  ADD COLUMN IF NOT EXISTS publication JSONB,
+  ADD COLUMN IF NOT EXISTS extras JSONB DEFAULT '{}'::jsonb;
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_notices_updated_at ON public.notices (updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notices_postcode ON public.notices ((premises->>'postcode'));

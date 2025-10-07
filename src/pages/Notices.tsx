@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 
 import AddressSearchBar, { type AddressSearchSubmitPayload } from '@/components/search/AddressSearchBar';
 import SearchResults from '@/components/home/SearchResults';
+import NoticesMapView from '@/components/search/NoticesMapView';
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import { useNoticeSearch } from '@/hooks/useNoticeSearch';
+import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
 import * as UI from '@/styles/ui';
 
@@ -20,6 +22,24 @@ function formatPostcodeForDisplay(compact?: string | null) {
 
 function sanitizePostcode(raw: string): string {
   return (raw || '').toUpperCase().replace(/\s+/g, '');
+}
+
+function parseBoundingBoxParam(raw: string | null | undefined): NoticeBoundingBox | null {
+  if (!raw) return null;
+  const parts = raw
+    .split(',')
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value));
+  if (parts.length !== 4) return null;
+  const [south, west, north, east] = parts as NoticeBoundingBox;
+  if (south < -90 || south > 90 || north < -90 || north > 90) return null;
+  if (west < -180 || west > 180 || east < -180 || east > 180) return null;
+  if (north <= south || east <= west) return null;
+  return [south, west, north, east];
+}
+
+function formatBoundingBoxParam(bbox: NoticeBoundingBox): string {
+  return bbox.map((value) => value.toFixed(5)).join(',');
 }
 
 export default function NoticesPage() {
@@ -37,6 +57,8 @@ export default function NoticesPage() {
   const endFilter = (searchParams.get('end') ?? '').trim();
   const viewParam = (searchParams.get('view') ?? '').trim();
   const radiusParam = searchParams.get('radius_km');
+  const bboxParamRaw = (searchParams.get('bbox') ?? '').trim();
+  const zoomParamRaw = (searchParams.get('zoom') ?? '').trim();
 
   const radiusValue = (() => {
     const numeric = Number(radiusParam);
@@ -45,6 +67,17 @@ export default function NoticesPage() {
     }
     return 5;
   })();
+
+  const mapBoundingBox = useMemo(() => parseBoundingBoxParam(bboxParamRaw), [bboxParamRaw]);
+  const mapZoom = useMemo(() => {
+    const parsed = Number(zoomParamRaw);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }, [zoomParamRaw]);
+
+  const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null);
+  const [hoveredNoticeId, setHoveredNoticeId] = useState<string | null>(null);
+
+  const mapView = viewParam === 'map';
 
   useEffect(() => {
     setAddressValue(queryParam);
@@ -78,6 +111,9 @@ export default function NoticesPage() {
     start: startFilter || undefined,
     end: endFilter || undefined,
     radiusKm: radiusValue,
+    bbox: mapBoundingBox ?? undefined,
+    zoom: mapZoom,
+    cluster: mapView,
   });
 
   const filteredResults = useMemo(() => {
@@ -98,7 +134,18 @@ export default function NoticesPage() {
     });
   }, [notices, typeFilter, statusFilter, startFilter, endFilter]);
 
-  const mapView = viewParam === 'map';
+  useEffect(() => {
+    if (activeNoticeId && !filteredResults.some((item) => item.id === activeNoticeId)) {
+      setActiveNoticeId(null);
+    }
+  }, [activeNoticeId, filteredResults]);
+
+  useEffect(() => {
+    if (hoveredNoticeId && !filteredResults.some((item) => item.id === hoveredNoticeId)) {
+      setHoveredNoticeId(null);
+    }
+  }, [hoveredNoticeId, filteredResults]);
+
   const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || radiusParam);
   const searchLabel = (formatPostcodeForDisplay(postcodeParam) ?? queryParam) || 'your filters';
 
@@ -110,6 +157,29 @@ export default function NoticesPage() {
     },
     [searchParams, setSearchParams]
   );
+
+  const handleMapBoundsChange = useCallback(
+    (bbox: NoticeBoundingBox, zoom: number) => {
+      if (!mapView) return;
+      const formattedBbox = formatBoundingBoxParam(bbox);
+      const formattedZoom = zoom.toFixed(2);
+      const currentZoomFormatted = typeof mapZoom === 'number' ? mapZoom.toFixed(2) : null;
+      if (bboxParamRaw === formattedBbox && formattedZoom === (currentZoomFormatted ?? zoomParamRaw)) {
+        return;
+      }
+      updateParams((params) => {
+        params.set('bbox', formattedBbox);
+        params.set('zoom', formattedZoom);
+        params.set('view', 'map');
+      }, true);
+    },
+    [bboxParamRaw, mapView, mapZoom, updateParams, zoomParamRaw]
+  );
+
+  const handleListSelectNotice = useCallback((notice: NoticeSearchItem) => {
+    setActiveNoticeId(notice.id);
+    setHoveredNoticeId(null);
+  }, []);
 
   const handleAddressSubmit = useCallback(async ({ query, suggestion }: AddressSearchSubmitPayload) => {
     const raw = (query || addressValue).trim();
@@ -330,11 +400,53 @@ export default function NoticesPage() {
         )}
 
         {mapView ? (
-          <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-sm text-slate-500">
-            Map view coming soon
+          <div className="flex flex-col gap-6 lg:flex-row">
+            <div className="relative flex-1 min-h-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 sm:h-[420px] md:h-[520px] lg:h-[65vh]">
+              <NoticesMapView
+                notices={filteredResults}
+                loading={loading}
+                activeNoticeId={activeNoticeId}
+                hoveredNoticeId={hoveredNoticeId}
+                onActiveNoticeChange={setActiveNoticeId}
+                onHoverNoticeChange={setHoveredNoticeId}
+                onBoundsChange={handleMapBoundsChange}
+                initialBounds={mapBoundingBox}
+                initialViewState={mapZoom ? { zoom: mapZoom } : undefined}
+                autoFitToNotices={!mapBoundingBox}
+                className="h-full"
+              />
+              <div className="pointer-events-none absolute left-4 top-4 z-10 hidden sm:block">
+                <div className="rounded-full bg-white/90 px-4 py-1 text-xs font-semibold text-slate-700 shadow">
+                  {loading
+                    ? 'Loading notices…'
+                    : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
+                </div>
+              </div>
+            </div>
+            <div className="lg:w-[360px] lg:flex-none">
+              <div className="h-[260px] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-sm sm:h-[320px] md:h-[520px] lg:h-[65vh]">
+                <SearchResults
+                  results={filteredResults}
+                  query={searchLabel}
+                  loading={loading}
+                  loadingMessage="Loading notices…"
+                  emptyMessage="No notices located in this map view yet."
+                  activeNoticeId={activeNoticeId}
+                  onSelectNotice={handleListSelectNotice}
+                  onHoverNotice={setHoveredNoticeId}
+                />
+              </div>
+            </div>
           </div>
         ) : (
-          <SearchResults results={filteredResults} query={searchLabel} loading={loading} />
+          <SearchResults
+            results={filteredResults}
+            query={searchLabel}
+            loading={loading}
+            activeNoticeId={activeNoticeId}
+            onSelectNotice={handleListSelectNotice}
+            onHoverNotice={setHoveredNoticeId}
+          />
         )}
       </main>
 
