@@ -5,6 +5,7 @@ if (typeof HTMLElement !== 'undefined' && !HTMLElement.prototype.scrollIntoView)
   HTMLElement.prototype.scrollIntoView = () => {};
 }
 
+(import.meta.env as Record<string, any>).VITE_GETADDRESS_KEY ??= 'test-key';
 (import.meta.env as Record<string, any>).VITE_GETADDRESS_API_KEY ??= 'test-key';
 
 if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {

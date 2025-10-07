@@ -8,8 +8,13 @@ import PreviewNotice from '@/features/publish/PreviewNotice';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
 import KeyDatesCard from '@/components/publish/RightRail/KeyDatesCard';
 import CostCard from '@/components/publish/RightRail/CostCard';
-import AddressSearch, { type AddressItem } from '@/components/address/AddressSearch';
-import { fetchAddressDetail, mapDetail } from '@/lib/addressLookup';
+import AddressLookup, {
+  getAddressProvider,
+  mockProvider,
+  type AddressResult,
+  type AddressSuggestion,
+  type AddressProvider,
+} from '@/components/AddressLookup';
 import { lookupCouncilByPostcode } from '@/lib/councilLookup';
 import { runMandatoryChecks, calcRepsDeadline } from '@/lib/licensing/checks';
 /* CN:STEP2-START */
@@ -104,6 +109,10 @@ export default function UploadNoticeFlow() {
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [representationsUrlEdited, setRepresentationsUrlEdited] = useState(false);
   const [autoDetectedRepresentationsUrl, setAutoDetectedRepresentationsUrl] = useState<string | null>(null);
+  const addressLookupProvider = React.useMemo(() => {
+    const apiKey = import.meta.env.VITE_GETADDRESS_KEY as string | undefined;
+    return apiKey ? getAddressProvider(apiKey) : mockProvider;
+  }, []);
   const autoDetectedUrlRef = React.useRef<string | null>(null);
   const applicantRef = React.useRef<HTMLInputElement>(null);
   /* CN:STEP2-START */
@@ -537,6 +546,7 @@ export default function UploadNoticeFlow() {
                   canCopyDeadline={canCopyDeadline}
                   focusPremisesTextarea={focusPremisesTextarea}
                   /* CN:OFFICER-FINAL-END */
+                  addressLookupProvider={addressLookupProvider}
                 />
                 {/* CN:STEP2-END */}
               </section>
@@ -729,6 +739,7 @@ type NoticeDetailsSectionsProps = {
   representationDeadlineDate: Date | null;
   canCopyDeadline: boolean;
   /* CN:OFFICER-FINAL-END */
+  addressLookupProvider: AddressProvider;
 };
 
 function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
@@ -749,6 +760,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     representationDeadlineDate,
     canCopyDeadline,
     /* CN:OFFICER-FINAL-END */
+    addressLookupProvider,
   } = props;
   /* CN:STEP2-COMPLIANCE-START */
   const [ignoreDomainWarning, setIgnoreDomainWarning] = React.useState(false);
@@ -793,7 +805,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const lookedUpEmail = React.useRef('');
   const lookedUpName = React.useRef('');
   const lookedUpAddress = React.useRef('');
-  const premisesSelectionIdRef = React.useRef<string | null>(null);
+  const searchPrefilledRef = React.useRef(false);
   const [councilNameTouched, setCouncilNameTouched] = React.useState(false);
   const [councilEmailTouched, setCouncilEmailTouched] = React.useState(false);
   const [councilAddressTouched, setCouncilAddressTouched] = React.useState(false);
@@ -922,20 +934,63 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     return postcode || null;
   }, []);
 
-  const toMultiline = (label: string) =>
-    label
-      .split(',')
-      .map((segment) => segment.trim())
-      .filter(Boolean)
-      .join('\n');
+  const applyCouncilLookup = React.useCallback(
+    (rawPostcode: string | null | undefined) => {
+      const formatted = formatUKPostcode(rawPostcode || '');
+      if (!formatted) {
+        lookedUpEmail.current = '';
+        lookedUpName.current = '';
+        lookedUpAddress.current = '';
+        return;
+      }
+
+      onChange({ postcode: formatted }, { ensureUrn: true });
+      const council = lookupCouncilByPostcode(formatted);
+      if (!council) {
+        lookedUpEmail.current = '';
+        lookedUpName.current = '';
+        lookedUpAddress.current = '';
+        return;
+      }
+
+      lookedUpEmail.current = council.councilEmail || '';
+      lookedUpName.current = council.councilName || '';
+      lookedUpAddress.current = council.councilAddress || '';
+      onChange(
+        {
+          councilName: council.councilName || draft.councilName,
+          councilEmail:
+            typeof council.councilEmail === 'string' ? council.councilEmail : draft.councilEmail,
+          councilAddress:
+            typeof council.councilAddress === 'string'
+              ? council.councilAddress
+              : draft.councilAddress,
+          isCouncilEmailLocked:
+            typeof council.councilEmail === 'string'
+              ? !!council.councilEmail
+              : draft.isCouncilEmailLocked,
+        },
+        { ensureUrn: true }
+      );
+    },
+    [
+      draft.councilAddress,
+      draft.councilEmail,
+      draft.councilName,
+      draft.isCouncilEmailLocked,
+      onChange,
+    ]
+  );
 
   const handlePremisesAddressCommit = React.useCallback(
     (rawAddress: string, opts?: { updatePremises?: boolean }) => {
       const trimmed = rawAddress.trim();
       if (opts?.updatePremises ?? true) {
-        const multiline = toMultiline(trimmed);
-        onChange({ premisesAddress: multiline || trimmed }, { ensureUrn: true });
+        const segments = trimmed ? trimmed.split(',') : [];
+        const formattedAddress = segments.length > 0 ? toMultilineAddress(segments) || trimmed : trimmed;
+        onChange({ premisesAddress: formattedAddress }, { ensureUrn: true });
       }
+
       if (!trimmed) {
         lookedUpEmail.current = '';
         lookedUpName.current = '';
@@ -944,139 +999,59 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
       }
 
       const postcode = extractPostcodeFromAddress(trimmed);
-      if (!postcode) return;
-
-      onChange({ postcode }, { ensureUrn: true });
-      const res = lookupCouncilByPostcode(postcode);
-      if (!res) return;
-
-      lookedUpEmail.current = res.councilEmail || '';
-      lookedUpName.current = res.councilName || '';
-      lookedUpAddress.current = res.councilAddress || '';
-      onChange(
-        {
-          councilName: res.councilName || draft.councilName,
-          councilEmail:
-            typeof res.councilEmail === 'string' ? res.councilEmail : draft.councilEmail,
-          councilAddress:
-            typeof res.councilAddress === 'string' ? res.councilAddress : draft.councilAddress,
-          isCouncilEmailLocked:
-            typeof res.councilEmail === 'string'
-              ? !!res.councilEmail
-              : draft.isCouncilEmailLocked,
-        },
-        { ensureUrn: true }
-      );
-    },
-    [onChange, extractPostcodeFromAddress, draft.councilAddress, draft.councilEmail, draft.councilName, toMultiline]
-  );
-
-  const handlePremisesPick = React.useCallback(
-    (item: AddressItem) => {
-      const fallbackLines = item.label
-        .split(',')
-        .map((segment) => segment.trim())
-        .filter(Boolean);
-      const initialAddress =
-        toMultilineAddress([item.line1, item.line2, item.town]) ||
-        toMultilineAddress(fallbackLines) ||
-        item.label;
-      const suggestionPostcode = formatUKPostcode(
-        item.postcode || extractUKPostcode(item.label) || ''
-      );
-
-      premisesSelectionIdRef.current = item.id ?? null;
-
-      const applySelection = (address: string, rawPostcode: string) => {
-        const formattedPostcode = formatUKPostcode(rawPostcode);
-
-        onChange(
-          {
-            premisesAddress: address,
-            postcode: formattedPostcode,
-          },
-          { ensureUrn: true }
-        );
-
-        if (formattedPostcode) {
-          const council = lookupCouncilByPostcode(formattedPostcode);
-          if (council) {
-            lookedUpEmail.current = council.councilEmail || '';
-            lookedUpName.current = council.councilName || '';
-            lookedUpAddress.current = council.councilAddress || '';
-            onChange(
-              {
-                councilName: council.councilName || draft.councilName,
-                councilEmail:
-                  typeof council.councilEmail === 'string'
-                    ? council.councilEmail
-                    : draft.councilEmail,
-                councilAddress:
-                  typeof council.councilAddress === 'string'
-                    ? council.councilAddress
-                    : draft.councilAddress,
-                isCouncilEmailLocked:
-                  typeof council.councilEmail === 'string'
-                    ? !!council.councilEmail
-                    : draft.isCouncilEmailLocked,
-              },
-              { ensureUrn: true }
-            );
-          } else {
-            lookedUpEmail.current = '';
-            lookedUpName.current = '';
-            lookedUpAddress.current = '';
-          }
-        } else {
-          lookedUpEmail.current = '';
-          lookedUpName.current = '';
-          lookedUpAddress.current = '';
-        }
-      };
-
-      applySelection(initialAddress, suggestionPostcode);
-
-      if (!item.id) {
-        focusPremisesTextarea();
+      if (!postcode) {
+        lookedUpEmail.current = '';
+        lookedUpName.current = '';
+        lookedUpAddress.current = '';
         return;
       }
 
-      const selectionId = item.id;
-      premisesSelectionIdRef.current = selectionId;
+      applyCouncilLookup(postcode);
+    },
+    [applyCouncilLookup, extractPostcodeFromAddress, onChange]
+  );
 
-      void fetchAddressDetail(selectionId)
-        .then((json) => {
-          if (premisesSelectionIdRef.current !== selectionId) return;
-          const detail = mapDetail(json);
-          const formattedLabel = detail.label || item.label;
-          const addressFromDetail = toMultiline(formattedLabel) || initialAddress;
-          const postcodeFromDetail =
-            detail.postcode ||
-            suggestionPostcode ||
-            extractUKPostcode(formattedLabel) ||
-            '';
-          applySelection(addressFromDetail, postcodeFromDetail);
-        })
-        .catch(() => {
-          if (premisesSelectionIdRef.current !== selectionId) return;
-          applySelection(initialAddress, suggestionPostcode);
-        })
-        .finally(() => {
-          if (premisesSelectionIdRef.current === selectionId) {
-            premisesSelectionIdRef.current = null;
-          }
-        });
+  const handlePremisesLookupResolved = React.useCallback(
+    (full: AddressResult, suggestion?: AddressSuggestion) => {
+      const suggestionLabel = suggestion?.label?.trim() ?? '';
+      const suggestionParts = suggestionLabel ? suggestionLabel.split(',') : [];
+      const detailAddress = toMultilineAddress([
+        full.line1,
+        full.line2,
+        full.line3,
+        full.town,
+        full.county,
+      ]);
+      const fallbackAddress =
+        detailAddress ||
+        (suggestionParts.length > 0 ? toMultilineAddress(suggestionParts) : '') ||
+        suggestionLabel ||
+        draft.premisesAddress;
+
+      const patch: Partial<NoticeDraft> = { premisesAddress: fallbackAddress || '' };
+      const postcodeCandidate =
+        full.postcode?.trim() ||
+        (typeof suggestion?.description === 'string' ? suggestion.description : '') ||
+        extractUKPostcode(suggestionLabel) ||
+        '';
+      const formattedPostcode = formatUKPostcode(postcodeCandidate);
+      if (formattedPostcode) {
+        patch.postcode = formattedPostcode;
+      }
+
+      onChange(patch, { ensureUrn: true });
+
+      if (formattedPostcode) {
+        applyCouncilLookup(formattedPostcode);
+      } else {
+        lookedUpEmail.current = '';
+        lookedUpName.current = '';
+        lookedUpAddress.current = '';
+      }
 
       focusPremisesTextarea();
     },
-    [
-      draft.councilAddress,
-      draft.councilEmail,
-      draft.councilName,
-      draft.isCouncilEmailLocked,
-      focusPremisesTextarea,
-      onChange,
-    ]
+    [applyCouncilLookup, draft.premisesAddress, focusPremisesTextarea, onChange]
   );
 
   const handleSubmissionDate = (value: string) => {
@@ -1088,6 +1063,41 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
     const iso = Number.isNaN(computed.getTime()) ? '' : computed.toISOString();
     onChange({ applicationDate: value, repsDeadline: iso }, { ensureUrn: true });
   };
+
+  useEffect(() => {
+    if (searchPrefilledRef.current) return;
+    let candidate = '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      candidate = params.get('q')?.trim() ?? '';
+      if (!candidate && window.history.state && typeof window.history.state === 'object') {
+        const navState = (window.history.state as any).usr;
+        if (navState && typeof navState.q === 'string') {
+          candidate = navState.q.trim();
+        }
+      }
+      if (!candidate) {
+        const stored = window.sessionStorage?.getItem('pn:publish:q');
+        if (stored) candidate = stored.trim();
+      }
+    } catch {
+      candidate = '';
+    }
+
+    if (!candidate) return;
+
+    const postcode = extractUKPostcode(candidate);
+    const initial = postcode && postcode.length === candidate.trim().length ? postcode : candidate;
+
+    searchPrefilledRef.current = true;
+    handlePremisesAddressCommit(initial, { updatePremises: false });
+
+    try {
+      window.sessionStorage?.removeItem('pn:publish:q');
+    } catch {
+      // ignore storage issues
+    }
+  }, [handlePremisesAddressCommit]);
 
   return (
     <div>
@@ -1139,12 +1149,18 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             <label htmlFor="premisesSearch" className={UI.label}>
               Premises address (search)<span className="text-rose-600">*</span>
             </label>
-            <AddressSearch
-              name="premisesSearch"
-              required
+            <AddressLookup
+              provider={addressLookupProvider}
+              placeholder="Search address or postcode"
+              onResolved={handlePremisesLookupResolved}
               inputTestId="input-premises-address"
-              onChange={handlePremisesAddressCommit}
-              onPick={handlePremisesPick}
+              inputProps={{
+                id: 'premisesSearch',
+                name: 'premisesSearch',
+                required: true,
+                autoComplete: 'off',
+                'aria-required': true,
+              }}
             />
           </div>
           <div className="col-span-12 md:col-span-8">

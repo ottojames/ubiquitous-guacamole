@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import PublishPage from "@/pages/PublishPage";
 import Success from "./pages/Success";
 import DetailsPage from "./pages/DetailsPage";
+import NoticesPage from "@/pages/Notices";
+import AddressLookupDebug from "@/pages/debug/AddressLookupDebug";
 
 export default function App() {
   return (
@@ -17,10 +19,12 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/notices" element={<NoticesPage />} />
         <Route path="/publish" element={<PublishPage />} />
         <Route path="/notices/upload/template" element={<PublishPage />} />
         <Route path="/success" element={<Success />} />
         <Route path="/details" element={<DetailsPage />} />
+        <Route path="/debug/address" element={<AddressLookupDebug />} />
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish" element={<PublishLayout />}>
             <Route index element={<Navigate to="type" replace />} />

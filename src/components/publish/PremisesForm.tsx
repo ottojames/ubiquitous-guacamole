@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import AddressAutocomplete, { type AddressOption } from '@/components/AddressAutocomplete';
 import UploadDropzone from '@/components/publish/UploadDropzone';
-import ActivitiesHoursGrid, { defaultGrid, type GridRow } from '@/components/publish/ActivitiesHoursGrid';
+import ActivitiesHours, {
+  type ActivityGroup,
+  type ActivityHours,
+  type DayKey,
+} from '@/components/notice/ActivitiesHours';
 import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary';
 import { listAuthorityPacks, type AuthorityPack } from '@/lib/authorityPacks';
 /* CN:FIX-START */
@@ -32,6 +36,31 @@ const inputClass = UI.input;
 // extend AddressOption so we can safely read uprn
 type AddressWithUPRN = AddressOption & { uprn?: string };
 
+const DAY_KEYS: DayKey[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const GROUP_LABELS: Record<string, string> = {
+  alcohol_on: 'Sale of alcohol (on premises)',
+  alcohol_off: 'Sale of alcohol (off premises)',
+  alcohol_on_off: 'Sale of alcohol (on & off premises)',
+  late_refreshment: 'Late-night refreshment',
+  live_music: 'Live music',
+  recorded_music: 'Recorded music',
+};
+
+function createEmptyHours(): ActivityHours {
+  return DAY_KEYS.reduce<ActivityHours>((acc, day) => {
+    acc[day] = { open: null, close: null, lateIntoNextDay: false };
+    return acc;
+  }, {} as ActivityHours);
+}
+
+const DEFAULT_ACTIVITY_GROUPS: ActivityGroup[] = Object.entries(GROUP_LABELS).map(([id, label]) => ({
+  id,
+  label,
+  enabled: true,
+  hours: createEmptyHours(),
+}));
+
 export default function PremisesForm({
   value,
   onChange,
@@ -56,7 +85,6 @@ export default function PremisesForm({
     postcode: '',
     uprn: undefined as string | undefined,
     applicationDate: '',
-    activitiesGrid: defaultGrid(),
     activities: [] as any[],
     /* CN:STEP2-COMPLIANCE-UPGRADE-START */
     applicationSummary: '',
@@ -78,7 +106,6 @@ export default function PremisesForm({
       setForm((f: any) => ({
         ...f,
         ...value,
-        activitiesGrid: value.activitiesGrid || f.activitiesGrid,
       }));
     }
   }, [value]);
@@ -172,19 +199,6 @@ export default function PremisesForm({
     setForm((f: any) => ({ ...f, ocrTextPresent: present }));
     onChange({ ...form, ocrTextPresent: present });
     /* CN:STEP2-COMPLIANCE-UPGRADE-END */
-  }
-
-  function flattenActivities(rows: GridRow[]) {
-    const activities: any[] = [];
-    rows.forEach((row) => {
-      (Object.entries(row.hours) as [string, { start: string; end: string } | null][]).forEach(
-        ([day, h]) => {
-          if (h && h.start && h.end)
-            activities.push({ type: row.activity, days: [day], start: h.start, end: h.end });
-        },
-      );
-    });
-    return activities;
   }
 
   const packs = listAuthorityPacks();
@@ -387,15 +401,18 @@ export default function PremisesForm({
       {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
 
       <section className={UI.section}>
-        <ActivitiesHoursGrid
-          value={form.activitiesGrid || defaultGrid()}
-          onChange={(rows) => {
-            const activities = flattenActivities(rows);
-            const next = { ...form, activitiesGrid: rows, activities };
-            setForm(next);
-            onChange(next);
-          }}
-        />
+        <div
+          id="activities-grid"
+          data-testid="activities-grid"
+          className="space-y-4"
+          tabIndex={-1}
+        >
+          <h2 className={UI.h2}>Activities &amp; hours</h2>
+          <ActivitiesHours
+            persistKey="publish.activitiesHours"
+            defaultGroups={DEFAULT_ACTIVITY_GROUPS}
+          />
+        </div>
       </section>
     </form>
   );

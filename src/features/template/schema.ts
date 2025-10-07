@@ -81,7 +81,7 @@ const DeclEditMetaSchema = z
   });
 
 const contactPhoneSchema = z
-  .string({ required_error: 'Phone number is required' })
+  .string()
   .trim()
   .min(7, 'Phone must be 7–20 characters')
   .max(20, 'Phone must be 7–20 characters')
@@ -163,9 +163,10 @@ type SharedRefinementFields = {
 };
 
 const withSharedRefinements = <T extends z.ZodTypeAny>(schema: T) =>
-  schema.superRefine((value: SharedRefinementFields, ctx) => {
-    const hasPremisesName = typeof value.premisesName === 'string' ? value.premisesName.trim() : '';
-    const hasTradingName = typeof value.tradingName === 'string' ? value.tradingName.trim() : '';
+  schema.superRefine((value, ctx) => {
+    const data = value as SharedRefinementFields;
+    const hasPremisesName = typeof data.premisesName === 'string' ? data.premisesName.trim() : '';
+    const hasTradingName = typeof data.tradingName === 'string' ? data.tradingName.trim() : '';
     if (!hasPremisesName && !hasTradingName) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -173,7 +174,7 @@ const withSharedRefinements = <T extends z.ZodTypeAny>(schema: T) =>
         path: ['tradingName'],
       });
     }
-    if (value.premisesAddress == null) {
+    if (data.premisesAddress == null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Premises address is required',

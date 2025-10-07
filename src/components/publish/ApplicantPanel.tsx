@@ -1,19 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import AddressAutocomplete, { AddressOption } from '@/components/AddressAutocomplete';
-import councils from '@/data/councils.json';
+import { getCouncilDirectory, type CouncilDirectoryItem } from '@/lib/councils';
 import { getAuthorityPack, AuthorityPack, loadAuthorityPack } from '@/lib/authorityPacks';
-
-export type CouncilDirectoryItem = {
-  id: string;
-  name: string;
-  licensingEmail: string;
-  postal: string;
-  postalAddress?: string;
-  officeAddress?: string;
-  licensingUrl?: string;
-  repsEmail?: string;
-  repsUrl?: string;
-};
 
 type Props = {
   applicantName: string;
@@ -32,7 +20,7 @@ type Props = {
 };
 
 export default function ApplicantPanel({ applicantName, applicantEmail, councilName, councilEmail, address, region, representationEmail, representationUrl, representationPostal, consultationDays, onPatch, onSelectAddress, onCouncilMeta }: Props) {
-  const directory = councils as CouncilDirectoryItem[];
+  const directory = getCouncilDirectory();
   const selected = useMemo(() => directory.find((d) => d.name === councilName), [directory, councilName]);
   const [pack, setPack] = useState<AuthorityPack | undefined>();
   const [manualEmail, setManualEmail] = useState(false);

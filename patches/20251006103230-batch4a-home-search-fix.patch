@@ -1,0 +1,1454 @@
+diff --git a/e2e/home/search.spec.ts b/e2e/home/search.spec.ts
+new file mode 100644
+index 0000000..88acb61
+--- /dev/null
++++ b/e2e/home/search.spec.ts
+@@ -0,0 +1,114 @@
++// @ts-nocheck
++import { expect, test } from '@playwright/test';
++
++const BASE_URL = (process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173').replace(/\/$/, '');
++
++const suggestion = {
++  id: 'addr-9',
++  label: '9 Lower Park Road, Camden, CA1 4XY',
++  line1: '9 Lower Park Road',
++  town: 'Camden',
++  postcode: 'CA1 4XY',
++  uprn: '100010011',
++};
++
++test.describe('Homepage publish address search', () => {
++  test.beforeEach(async ({ page }) => {
++    await page.addInitScript((config) => {
++      window.__addrApiConfig = config;
++    }, { url: 'https://addr.mock', key: 'test-key' });
++
++    await page.route('**/suggest?*', async (route) => {
++      const body = JSON.stringify({ results: [suggestion] });
++      await route.fulfill({
++        status: 200,
++        headers: { 'content-type': 'application/json' },
++        body,
++      });
++    });
++  });
++
++  test('selecting an address creates a draft and navigates to publish', async ({ page }) => {
++    let draftRequestBody: any = null;
++
++    await page.route('**/api/notices/draft', async (route) => {
++      draftRequestBody = await route.request().postDataJSON();
++      await route.fulfill({
++        status: 200,
++        headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ id: 'draft-123' }),
++      });
++    });
++
++    await page.goto(`${BASE_URL}/`);
++
++    const input = page.getByTestId('home-address-input');
++    await input.fill('9 lower park roa');
++
++    const menu = page.getByTestId('home-suggest-menu');
++    await expect(menu).toBeVisible();
++    await expect(menu.getByTestId('home-suggest-item')).toHaveCount(1);
++    await expect(menu).toContainText(suggestion.label);
++
++    await input.press('ArrowDown');
++    await input.press('Enter');
++
++    await expect(page).toHaveURL(/\/publish\?draft=draft-123/);
++
++    expect(draftRequestBody).toBeTruthy();
++    expect(draftRequestBody.address.line1).toBe('9 Lower Park Road');
++    expect(draftRequestBody.address.postcode).toBe('CA1 4XY');
++    expect(draftRequestBody.councilId).toBe('camden');
++    expect(draftRequestBody.postcode).toBe('CA14XY');
++  });
++
++  test('shows fallback link when no suggestions', async ({ page }) => {
++    await page.route('**/suggest?*', async (route) => {
++      await route.fulfill({
++        status: 200,
++        headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ results: [] }),
++      });
++    });
++
++    await page.goto(`${BASE_URL}/`);
++
++    const input = page.getByTestId('home-address-input');
++    await input.fill('zzzx unknown lane');
++
++    const menu = page.getByTestId('home-suggest-menu');
++    await expect(menu).toBeVisible();
++    await expect(menu).toContainText('No suggestions');
++
++    const fallback = menu.getByTestId('home-suggest-fallback');
++    await expect(fallback).toBeVisible();
++    await fallback.click();
++
++    await expect(page).toHaveURL(/\/notices\?query=zzzx%20unknown%20lane/);
++  });
++
++  test('surfaces inline message when credentials are invalid', async ({ page }) => {
++    const warnings: string[] = [];
++    page.on('console', (message) => {
++      if (message.type() === 'warning') {
++        warnings.push(message.text());
++      }
++    });
++
++    await page.route('**/suggest?*', async (route) => {
++      await route.fulfill({
++        status: 401,
++        headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ results: [] }),
++      });
++    });
++
++    await page.goto(`${BASE_URL}/`);
++
++    const input = page.getByTestId('home-address-input');
++    await input.fill('10 downing');
++
++    await expect(page.getByText('Address service credentials invalid. Contact support.')).toBeVisible();
++    expect(warnings.some((text) => /401/.test(text))).toBeTruthy();
++  });
++});
+diff --git a/src/components/common/AddressSearch.tsx b/src/components/common/AddressSearch.tsx
+new file mode 100644
+index 0000000..03efeb7
+--- /dev/null
++++ b/src/components/common/AddressSearch.tsx
+@@ -0,0 +1,419 @@
++import * as React from 'react';
++import { Loader2 } from 'lucide-react';
++
++import {
++  MIN_QUERY_LENGTH,
++  addressDebugEnabled,
++  envReady,
++  queryAddressAPI,
++  suggestionToAddress,
++  type Address,
++  type AddressSuggestion,
++} from '@/lib/address';
++
++export type AddressSelection = {
++  suggestion: AddressSuggestion;
++  address: Address;
++  query: string;
++};
++
++type AddressSearchProps = {
++  onSelected: (selection: AddressSelection) => void | Promise<void>;
++  onFallback?: (query: string) => void | Promise<void>;
++  placeholder?: string;
++  hint?: string;
++  defaultValue?: string;
++  disabled?: boolean;
++  autoFocus?: boolean;
++  debounceMs?: number;
++  testIdPrefix?: string;
++};
++
++const DEFAULT_HINT = 'Start typing the premises postcode or address.';
++const DEFAULT_DEBOUNCE = 320;
++
++function normaliseQuery(input: string): string {
++  return input.replace(/,+$/, '').replace(/\s+/g, ' ').trim();
++}
++
++export default function AddressSearch({
++  onSelected,
++  onFallback,
++  placeholder = 'Search for the premises address',
++  hint = DEFAULT_HINT,
++  defaultValue = '',
++  disabled,
++  autoFocus,
++  debounceMs = DEFAULT_DEBOUNCE,
++  testIdPrefix = 'address-search',
++}: AddressSearchProps) {
++  const inputId = React.useId();
++  const listboxId = `${inputId}-options`;
++  const helperId = `${inputId}-helper`;
++  const errorId = `${inputId}-error`;
++
++  const [value, setValue] = React.useState(defaultValue);
++  const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
++  const [loading, setLoading] = React.useState(false);
++  const [menuOpen, setMenuOpen] = React.useState(false);
++  const [isFocused, setIsFocused] = React.useState(false);
++  const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
++  const [inlineError, setInlineError] = React.useState<string | null>(null);
++  const [inlineInfo, setInlineInfo] = React.useState<string | null>(null);
++
++  const abortRef = React.useRef<AbortController | null>(null);
++  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
++  const retryRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
++  const envWarnedRef = React.useRef(false);
++
++  const queryValue = React.useMemo(() => normaliseQuery(value), [value]);
++  const showFallback = queryValue.length > 0;
++  const fallbackIndex = suggestions.length;
++  const totalOptions = suggestions.length + (showFallback ? 1 : 0);
++  const activeOptionId = highlightedIndex >= 0
++    ? highlightedIndex === fallbackIndex && showFallback
++      ? `${listboxId}-fallback`
++      : `${listboxId}-option-${highlightedIndex}`
++    : undefined;
++
++  const resetPending = React.useCallback(() => {
++    if (debounceRef.current) {
++      clearTimeout(debounceRef.current);
++      debounceRef.current = null;
++    }
++    if (retryRef.current) {
++      clearTimeout(retryRef.current);
++      retryRef.current = null;
++    }
++    if (abortRef.current) {
++      abortRef.current.abort();
++      abortRef.current = null;
++    }
++  }, []);
++
++  React.useEffect(() => resetPending, [resetPending]);
++
++  const fetchSuggestions = React.useCallback(async (query: string, attempt = 0) => {
++    resetPending();
++    const controller = new AbortController();
++    abortRef.current = controller;
++    setLoading(true);
++
++    try {
++      const { suggestions: results, meta } = await queryAddressAPI(query, { signal: controller.signal });
++      if (controller.signal.aborted) return;
++      const statuses = [meta.primary.status, meta.fallback.status];
++      const numericStatuses = statuses.filter((status): status is number => typeof status === 'number');
++      const debugMode = addressDebugEnabled();
++
++      setSuggestions(results);
++      setMenuOpen(true);
++      setHighlightedIndex(results.length > 0 ? 0 : -1);
++
++      if (numericStatuses.some((code) => code === 401 || code === 403)) {
++        const code = numericStatuses.find((c) => c === 401 || c === 403);
++        if (debugMode) {
++          console.warn(`[address] provider returned ${code}; credentials invalid.`);
++        } else {
++          console.warn('[address] provider credentials rejected (401/403).');
++        }
++        setInlineInfo(null);
++        setInlineError('Address service credentials invalid. Contact support.');
++        return;
++      }
++
++      if (numericStatuses.includes(429)) {
++        console.warn('[address] provider rate limited the request (429).');
++        if (attempt < 2) {
++          setInlineError(null);
++          setInlineInfo('Rate limited—retrying…');
++          retryRef.current = window.setTimeout(() => fetchSuggestions(query, attempt + 1), 1000);
++        } else {
++          setInlineInfo(null);
++          setInlineError('Address service is busy. Try again soon.');
++        }
++        return;
++      }
++
++      const bothSkipped = meta.primary.status === 'skipped' && meta.fallback.status === 'skipped';
++      if (bothSkipped) {
++        if (!envWarnedRef.current) {
++          console.warn('[address] no providers configured; check ADDRESS_API_URL/KEY.');
++          envWarnedRef.current = true;
++        }
++        setInlineInfo(null);
++        setInlineError('Address search unavailable. Contact support.');
++        return;
++      }
++
++      const bothErrored =
++        (meta.primary.status === 'error' || meta.primary.status === null) &&
++        (meta.fallback.status === 'error' || meta.fallback.status === null) &&
++        results.length === 0;
++
++      if (bothErrored) {
++        setInlineInfo(null);
++        setInlineError('Address lookup unavailable. Try again.');
++        return;
++      }
++
++      setInlineInfo(null);
++      setInlineError(null);
++    } catch (error: any) {
++      if (controller.signal.aborted) return;
++      console.warn('[address] suggestion fetch failed', error);
++      setSuggestions([]);
++      setMenuOpen(true);
++      setHighlightedIndex(-1);
++      setInlineInfo(null);
++      setInlineError('Address lookup unavailable. Try again.');
++    } finally {
++      if (abortRef.current === controller) {
++        abortRef.current = null;
++      }
++      setLoading(false);
++    }
++  }, [resetPending]);
++
++  React.useEffect(() => {
++    const query = queryValue;
++    resetPending();
++
++    if (disabled) {
++      setSuggestions([]);
++      setMenuOpen(false);
++      return;
++    }
++
++    if (!query) {
++      setSuggestions([]);
++      setMenuOpen(showFallback);
++      setInlineError(null);
++      setInlineInfo(null);
++      return;
++    }
++
++    if (query.length < MIN_QUERY_LENGTH) {
++      setSuggestions([]);
++      setMenuOpen(true);
++      return;
++    }
++
++    if (!envReady()) {
++      if (!envWarnedRef.current) {
++        console.warn('[address] environment missing ADDRESS_API_URL/KEY.');
++        envWarnedRef.current = true;
++      }
++      setSuggestions([]);
++      setMenuOpen(true);
++      setInlineInfo(null);
++      setInlineError('Address search unavailable. Contact support.');
++      return;
++    }
++
++    debounceRef.current = window.setTimeout(() => {
++      fetchSuggestions(query, 0);
++    }, Math.max(100, debounceMs));
++  }, [debounceMs, disabled, fetchSuggestions, queryValue, resetPending, showFallback]);
++
++  React.useEffect(() => {
++    return () => resetPending();
++  }, [resetPending]);
++
++  const handleSelect = React.useCallback(
++    (suggestion: AddressSuggestion) => {
++      resetPending();
++      const address = suggestionToAddress(suggestion);
++      const payload: AddressSelection = {
++        suggestion,
++        address,
++        query: queryValue || suggestion.label,
++      };
++      setValue(suggestion.label);
++      setSuggestions([]);
++      setMenuOpen(false);
++      setHighlightedIndex(-1);
++      void Promise.resolve(onSelected(payload));
++    },
++    [onSelected, queryValue, resetPending]
++  );
++
++  const handleFallback = React.useCallback(() => {
++    resetPending();
++    setMenuOpen(false);
++    setHighlightedIndex(-1);
++    if (queryValue && onFallback) {
++      void Promise.resolve(onFallback(queryValue));
++    }
++  }, [onFallback, queryValue, resetPending]);
++
++  const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
++    if (event.key === 'ArrowDown') {
++      if (!totalOptions) return;
++      event.preventDefault();
++      setMenuOpen(true);
++      setHighlightedIndex((prev) => {
++        if (prev < 0) return 0;
++        return (prev + 1) % totalOptions;
++      });
++      return;
++    }
++    if (event.key === 'ArrowUp') {
++      if (!totalOptions) return;
++      event.preventDefault();
++      setMenuOpen(true);
++      setHighlightedIndex((prev) => {
++        if (prev < 0) return totalOptions - 1;
++        return prev === 0 ? totalOptions - 1 : prev - 1;
++      });
++      return;
++    }
++    if (event.key === 'Enter') {
++      if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
++        event.preventDefault();
++        handleSelect(suggestions[highlightedIndex]);
++        return;
++      }
++      if (showFallback && highlightedIndex === fallbackIndex) {
++        event.preventDefault();
++        handleFallback();
++        return;
++      }
++      if (queryValue && onFallback) {
++        event.preventDefault();
++        handleFallback();
++      }
++      return;
++    }
++    if (event.key === 'Escape') {
++      event.preventDefault();
++      setMenuOpen(false);
++      setHighlightedIndex(-1);
++    }
++  };
++
++  const showMenu = isFocused && menuOpen;
++  const showEmptyState =
++    showMenu &&
++    !loading &&
++    !inlineError &&
++    queryValue.length >= MIN_QUERY_LENGTH &&
++    suggestions.length === 0;
++
++  const helperText = inlineInfo ?? hint;
++
++  return (
++    <div className="relative z-50">
++      <div className="relative">
++        <label className="sr-only" htmlFor={inputId}>
++          {placeholder}
++        </label>
++        <input
++          id={inputId}
++          type="text"
++          autoFocus={autoFocus}
++          disabled={disabled}
++          value={value}
++          onChange={(event) => {
++            setValue(event.target.value);
++            setMenuOpen(true);
++          }}
++          onFocus={() => {
++            setIsFocused(true);
++            setMenuOpen(true);
++          }}
++          onBlur={() => {
++            setIsFocused(false);
++            window.setTimeout(() => setMenuOpen(false), 120);
++          }}
++          onKeyDown={onKeyDown}
++          placeholder={placeholder}
++          role="combobox"
++          aria-autocomplete="list"
++          aria-expanded={showMenu}
++          aria-controls={showMenu ? listboxId : undefined}
++          aria-activedescendant={showMenu ? activeOptionId : undefined}
++          aria-describedby={[helperId, inlineError ? errorId : undefined]
++            .filter(Boolean)
++            .join(' ') || undefined}
++          data-testid={`${testIdPrefix}-address-input`}
++          autoComplete="off"
++          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-60"
++        />
++        {showMenu && (
++          <ul
++            id={listboxId}
++            role="listbox"
++            aria-label="Address suggestions"
++            data-testid={`${testIdPrefix}-suggest-menu`}
++            className="absolute left-0 right-0 top-full mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 text-sm shadow-xl"
++          >
++            {loading && (
++              <li className="flex items-center gap-2 px-3 py-2 text-slate-500">
++                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
++                Searching…
++              </li>
++            )}
++            {!loading &&
++              suggestions.map((suggestion, index) => {
++                const highlighted = index === highlightedIndex;
++                return (
++                  <li
++                    key={`${suggestion.id}-${index}`}
++                    id={`${listboxId}-option-${index}`}
++                    role="option"
++                    aria-selected={highlighted}
++                    data-testid={`${testIdPrefix}-suggest-item`}
++                    className={`cursor-pointer px-3 py-2 ${
++                      highlighted ? 'bg-blue-50 text-blue-700' : 'text-slate-800 hover:bg-slate-100'
++                    }`}
++                    onMouseEnter={() => setHighlightedIndex(index)}
++                    onPointerDown={(event) => {
++                      event.preventDefault();
++                      handleSelect(suggestion);
++                    }}
++                  >
++                    {suggestion.label}
++                  </li>
++                );
++              })}
++            {showEmptyState && (
++              <li className="px-3 py-2 text-slate-500">No suggestions</li>
++            )}
++            {showEmptyState && (
++              <li className="px-3 pb-2 text-xs text-slate-400">
++                Try a full postcode or "street + town".
++              </li>
++            )}
++            {showFallback && (
++              <li
++                id={`${listboxId}-fallback`}
++                role="option"
++                aria-selected={highlightedIndex === fallbackIndex}
++                data-testid={`${testIdPrefix}-suggest-fallback`}
++                className={`cursor-pointer px-3 py-2 font-medium ${
++                  highlightedIndex === fallbackIndex ? 'bg-blue-50 text-blue-700' : 'text-blue-700 hover:bg-blue-50'
++                }`}
++                onMouseEnter={() => setHighlightedIndex(fallbackIndex)}
++                onPointerDown={(event) => {
++                  event.preventDefault();
++                  handleFallback();
++                }}
++              >
++                Search for "{queryValue}" -> results
++              </li>
++            )}
++          </ul>
++        )}
++      </div>
++      <p id={helperId} className="mt-2 text-xs text-slate-500">
++        {helperText}
++      </p>
++      {inlineError && (
++        <p id={errorId} role="alert" className="mt-1 text-xs text-rose-600">
++          {inlineError}
++        </p>
++      )}
++    </div>
++  );
++}
+diff --git a/src/lib/address.ts b/src/lib/address.ts
+new file mode 100644
+index 0000000..444a5dc
+--- /dev/null
++++ b/src/lib/address.ts
+@@ -0,0 +1,785 @@
++import { listAuthorityPacks } from './authorityPacks';
++import { lookupCouncilByPostcode } from './councilLookup';
++
++export type Address = {
++  uprn?: string;
++  line1: string;
++  line2?: string;
++  town: string;
++  postcode: string;
++  country?: 'UK';
++};
++
++export type AddressSuggestion = Address & {
++  id: string;
++  label: string;
++  source?: 'primary' | 'fallback';
++};
++
++export type AddressProviderStatus = number | 'skipped' | 'error' | 'aborted' | null;
++
++export type AddressProviderMeta = {
++  url: string | null;
++  status: AddressProviderStatus;
++  count: number;
++};
++
++export type AddressQueryMeta = {
++  query: string;
++  primary: AddressProviderMeta;
++  fallback: AddressProviderMeta;
++};
++
++export type AddressQueryOptions = {
++  signal?: AbortSignal;
++  onMeta?: (meta: AddressQueryMeta) => void;
++};
++
++export type AddressQueryResult = {
++  suggestions: AddressSuggestion[];
++  meta: AddressQueryMeta;
++};
++
++const RAW_API_URL = ((import.meta.env.VITE_ADDR_API_URL as string | undefined) ?? '').trim();
++const RAW_API_KEY = ((import.meta.env.VITE_ADDR_API_KEY as string | undefined) ?? '').trim();
++const RAW_FALLBACK_URL = ((import.meta.env.VITE_ADDR_FALLBACK_URL as string | undefined) ?? '').trim();
++
++type AddressApiOverride = {
++  url?: string;
++  key?: string;
++  fallbackUrl?: string;
++};
++
++declare global {
++  interface Window {
++    __addrApiConfig?: AddressApiOverride;
++  }
++}
++
++type ApiConfig = {
++  url: string;
++  key: string;
++  fallbackUrl: string;
++};
++
++function resolveApiConfig(): ApiConfig {
++  const override: AddressApiOverride | undefined =
++    typeof window !== 'undefined' ? window.__addrApiConfig : undefined;
++
++  const url = String(override?.url ?? RAW_API_URL ?? '').trim().replace(/\/+$/, '');
++  const key = String(override?.key ?? RAW_API_KEY ?? '').trim();
++  const fallbackUrl = String(override?.fallbackUrl ?? RAW_FALLBACK_URL ?? '').trim();
++
++  return { url, key, fallbackUrl };
++}
++
++const loggedMessages = new Set<string>();
++
++function logOnce(key: string, level: 'error' | 'warn', ...args: unknown[]) {
++  if (loggedMessages.has(key)) return;
++  loggedMessages.add(key);
++  if (level === 'warn') {
++    console.warn(...args);
++  } else {
++    console.error(...args);
++  }
++}
++
++export const MIN_QUERY_LENGTH = 3;
++
++export function canQuery(query: string) {
++  return (query?.trim().length ?? 0) >= MIN_QUERY_LENGTH;
++}
++const FB_URL = RAW_FALLBACK_URL;
++
++type FallbackOpts = { limit?: number; country?: string };
++
++function fallbackBase(): string {
++  const { fallbackUrl } = resolveApiConfig();
++  const base = (fallbackUrl || FB_URL || '').trim();
++  return base ? base.replace(/\/+$/, '') : '';
++}
++
++function fbUrl(q: string, opts: FallbackOpts = {}, baseOverride?: string) {
++  const base = baseOverride ? baseOverride.trim().replace(/\/+$/, '') : fallbackBase();
++  if (!base) return '';
++  const limit = String(opts.limit ?? 30);
++  const country = (opts.country ?? 'gb').toLowerCase();
++  const u = new URL(`${base}/search`);
++  u.searchParams.set('q', q);
++  u.searchParams.set('format', 'jsonv2');
++  u.searchParams.set('addressdetails', '1');
++  u.searchParams.set('countrycodes', country);
++  u.searchParams.set('dedupe', '1');
++  u.searchParams.set('limit', limit);
++  u.searchParams.set('accept-language', 'en-GB');
++  return u.toString();
++}
++
++function tokenize(q: string): string[] {
++  return q.toLowerCase().replace(/[^a-z0-9\s]/gi, ' ').split(/\s+/).filter(Boolean);
++}
++
++function score(label: string, tokens: string[]): number {
++  const l = label.toLowerCase();
++  let s = 0;
++  for (const t of tokens) {
++    if (l.includes(t)) s += 1;
++  }
++  if (/^\d+\b/.test(label)) s += 0.5;
++  return s;
++}
++
++export function envReady(): boolean {
++  const { url, key } = resolveApiConfig();
++  return Boolean(url && key);
++}
++
++function norm(value: string): string {
++  return (value ?? '').trim();
++}
++
++function toPC(value: string): string {
++  return value.toUpperCase().replace(/\s+/g, '');
++}
++
++function extractPostcode(value: string): string | null {
++  const match = value.toUpperCase().match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/);
++  return match ? toPC(match[0]) : null;
++}
++
++function buildFallbackEndpoint(base: string, query: string): string {
++  if (!base) return '';
++  if (base.includes('{query}')) {
++    return base.replace('{query}', encodeURIComponent(query));
++  }
++  const separator = base.includes('?') ? '&' : '?';
++  return `${base}${separator}q=${encodeURIComponent(query)}`;
++}
++
++function shapePrimary(entries: any[]): AddressSuggestion[] {
++  const mapped: AddressSuggestion[] = [];
++  for (const entry of entries ?? []) {
++    const suggestion = safeToSuggestion(entry);
++    if (suggestion) {
++      mapped.push({ ...suggestion, source: 'primary' });
++    }
++  }
++  return mapped;
++}
++
++function shapeFallback(items: any[]): AddressSuggestion[] {
++  const shaped: AddressSuggestion[] = [];
++
++  for (const entry of items ?? []) {
++    if (!entry || typeof entry !== 'object') continue;
++    const address = entry?.address ?? {};
++    const rawLine1 =
++      (address?.house_number && address?.road)
++        ? `${address.house_number} ${address.road}`
++        : entry?.name ?? address?.road ?? (typeof entry?.display_name === 'string' ? entry.display_name.split(',')[0] : '');
++    const line1 = typeof rawLine1 === 'string' ? rawLine1.trim() : '';
++    const town = String(
++      address?.town ??
++      address?.city ??
++      address?.village ??
++      address?.suburb ??
++      address?.hamlet ??
++      ''
++    ).trim();
++    const rawPostcode = address?.postcode ?? entry?.postcode ?? '';
++    const postcode = rawPostcode ? toPC(String(rawPostcode)) : '';
++    const label = (typeof entry?.display_name === 'string' && entry.display_name.trim())
++      ? entry.display_name.trim()
++      : [line1, postcode, town].filter(Boolean).join(', ');
++
++    if (!label) continue;
++
++    shaped.push({
++      id: String(entry?.place_id ?? cryptoRandomId()),
++      uprn: entry?.uprn ? String(entry.uprn) : undefined,
++      line1: line1 || label.split(',')[0]?.trim() || '',
++      line2: '',
++      town,
++      postcode,
++      country: 'UK',
++      label,
++      source: 'fallback',
++    });
++  }
++
++  return shaped;
++}
++
++function extractCandidates(payload: any): any[] {
++  if (!payload) return [];
++  if (Array.isArray(payload)) return payload;
++  const buckets = [
++    payload.results,
++    payload.suggestions,
++    payload.items,
++    payload.features,
++    payload.addresses,
++    payload.data,
++  ];
++  for (const bucket of buckets) {
++    if (Array.isArray(bucket)) return bucket;
++  }
++  if (payload.result && Array.isArray(payload.result)) return payload.result;
++  if (payload.result && typeof payload.result === 'object') return [payload.result];
++  return [];
++}
++
++function normaliseKeyPart(value: string | undefined): string {
++  return value ? value.trim().replace(/\s+/g, ' ').toLowerCase() : '';
++}
++
++function suggestionKeys(suggestion: AddressSuggestion): string[] {
++  const keys: string[] = [];
++  const uprn = suggestion.uprn?.trim();
++  if (uprn) {
++    keys.push(uprn.toLowerCase());
++  }
++
++  const postcodeKey = suggestion.postcode ? toPC(suggestion.postcode).toLowerCase() : '';
++  const line1Key = normaliseKeyPart(suggestion.line1);
++  const townKey = normaliseKeyPart(suggestion.town);
++
++  if (postcodeKey || line1Key || townKey) {
++    keys.push(`${postcodeKey}|${line1Key}|${townKey}`);
++  }
++
++  const labelKey = normaliseKeyPart(suggestion.label);
++  if (!keys.length && labelKey) {
++    keys.push(labelKey);
++  }
++
++  return keys.filter(Boolean);
++}
++
++function dedupeSuggestions(list: AddressSuggestion[]): AddressSuggestion[] {
++  const seen = new Set<string>();
++  const deduped: AddressSuggestion[] = [];
++
++  for (const item of list) {
++    const keys = suggestionKeys(item);
++    const alreadySeen = keys.some((key) => seen.has(key));
++    if (alreadySeen) continue;
++
++    deduped.push(item);
++    for (const key of keys) {
++      seen.add(key);
++    }
++  }
++
++  return deduped;
++}
++
++type ProviderDebugRecord = {
++  url: string | null;
++  status: number | 'skipped' | 'error' | 'aborted' | null;
++  count: number;
++  labels: string[];
++};
++
++class ProviderResponseError extends Error {
++  provider: 'primary' | 'fallback';
++  status: number;
++
++  constructor(provider: 'primary' | 'fallback', status: number, message?: string) {
++    super(message ?? `Request failed with status ${status}`);
++    this.name = 'ProviderResponseError';
++    this.provider = provider;
++    this.status = status;
++  }
++}
++
++function toProviderMeta(record: ProviderDebugRecord): AddressProviderMeta {
++  return {
++    url: record.url ?? null,
++    status: record.status ?? null,
++    count: record.count,
++  };
++}
++
++function buildQueryMeta(query: string, info: Record<'primary' | 'fallback', ProviderDebugRecord>): AddressQueryMeta {
++  return {
++    query,
++    primary: toProviderMeta(info.primary),
++    fallback: toProviderMeta(info.fallback),
++  };
++}
++
++function isLikelyCorsError(error: unknown): boolean {
++  if (!error) return false;
++  if (error instanceof TypeError) {
++    const msg = typeof error.message === 'string' ? error.message : '';
++    return /failed to fetch|network/i.test(msg);
++  }
++  const message = typeof (error as any)?.message === 'string' ? (error as any).message : '';
++  return /cors/i.test(message);
++}
++
++export async function fetchAddressSuggestions(
++  query: string,
++  options: AddressQueryOptions = {}
++): Promise<AddressSuggestion[]> {
++  const trimmed = norm(query);
++  const { signal, onMeta } = options;
++
++  if (!canQuery(trimmed)) {
++    const emptyInfo: Record<'primary' | 'fallback', ProviderDebugRecord> = {
++      primary: { url: null, status: 'skipped', count: 0, labels: [] },
++      fallback: { url: null, status: 'skipped', count: 0, labels: [] },
++    };
++    onMeta?.(buildQueryMeta(trimmed, emptyInfo));
++    return [];
++  }
++
++  const tokens = tokenize(trimmed);
++  const { url: API_URL, key: API_KEY, fallbackUrl } = resolveApiConfig();
++  const debugActive = debugEnabled();
++
++  if (!API_URL || !API_KEY) {
++    logOnce('address-env-missing', 'warn', '[address] primary provider not configured; using fallback');
++  }
++
++  const primaryUrl = API_URL && API_KEY
++    ? `${API_URL.replace(/\/+$/, '')}/suggest?q=${encodeURIComponent(trimmed)}`
++    : '';
++
++  const fallbackBase = (fallbackUrl || FB_URL || '').trim().replace(/\/+$/, '');
++  const fallbackEndpoint = fbUrl(trimmed, { limit: 30 }, fallbackBase);
++
++  const debugInfo: Record<'primary' | 'fallback', ProviderDebugRecord> = {
++    primary: { url: primaryUrl || null, status: primaryUrl ? null : 'skipped', count: 0, labels: [] },
++    fallback: { url: fallbackEndpoint || null, status: fallbackEndpoint ? null : 'skipped', count: 0, labels: [] },
++  };
++
++  const fetchPrimary = async (): Promise<AddressSuggestion[]> => {
++    if (!primaryUrl) return [];
++    try {
++      const response = await fetch(primaryUrl, {
++        headers: { Authorization: `Bearer ${API_KEY}` },
++        signal,
++      });
++      debugInfo.primary.status = response.status;
++      if (!response.ok) {
++        throw new ProviderResponseError('primary', response.status);
++      }
++      const payload = await response.json().catch(() => null);
++      const shaped = shapePrimary(extractCandidates(payload ?? []));
++      debugInfo.primary.count = shaped.length;
++      debugInfo.primary.labels = shaped.slice(0, 3).map((item) => item.label);
++      return shaped;
++    } catch (error: any) {
++      if (error?.name === 'AbortError') {
++        debugInfo.primary.status = 'aborted';
++        return [];
++      }
++      const status =
++        error instanceof ProviderResponseError
++          ? error.status
++          : typeof error?.status === 'number'
++            ? error.status
++            : 'error';
++      debugInfo.primary.status = status;
++      logOnce('address-primary-error', 'error', '[address] primary failed', error);
++      if (debugActive) console.warn('[address] primary failed', error);
++      return [];
++    }
++  };
++
++  const fetchFallback = async (): Promise<AddressSuggestion[]> => {
++    if (!fallbackEndpoint) return [];
++    try {
++      const response = await fetch(fallbackEndpoint, { signal });
++      debugInfo.fallback.status = response.status;
++      if (!response.ok) {
++        throw new ProviderResponseError('fallback', response.status);
++      }
++      const payload = await response.json().catch(() => null);
++      const shaped = shapeFallback(Array.isArray(payload) ? payload : extractCandidates(payload));
++      debugInfo.fallback.count = shaped.length;
++      debugInfo.fallback.labels = shaped.slice(0, 3).map((item) => item.label);
++      return shaped;
++    } catch (error: any) {
++      if (error?.name === 'AbortError') {
++        debugInfo.fallback.status = 'aborted';
++        return [];
++      }
++      const status =
++        error instanceof ProviderResponseError
++          ? error.status
++          : typeof error?.status === 'number'
++            ? error.status
++            : 'error';
++      debugInfo.fallback.status = status;
++      if (isLikelyCorsError(error)) {
++        logOnce(
++          'address-fallback-cors',
++          'warn',
++          '[address] fallback blocked by browser CORS. Point VITE_ADDR_FALLBACK_URL to a proxy endpoint (e.g. /api/geo) that forwards to Nominatim.'
++        );
++      } else {
++        logOnce('address-fallback-error', 'warn', '[address] fallback failed', error);
++      }
++      if (debugActive) console.warn('[address] fallback failed', error);
++      return [];
++    }
++  };
++
++  const pPrimary: Promise<AddressSuggestion[]> = API_URL && API_KEY
++    ? fetchPrimary()
++    : Promise.resolve([]);
++  const pFallback: Promise<AddressSuggestion[]> = fallbackEndpoint
++    ? fetchFallback()
++    : Promise.resolve([]);
++
++  const [primaryResult, fallbackResult] = await Promise.allSettled([pPrimary, pFallback]);
++
++  const primarySuggestions =
++    primaryResult.status === 'fulfilled' ? primaryResult.value : [];
++  const fallbackSuggestions =
++    fallbackResult.status === 'fulfilled' ? fallbackResult.value : [];
++
++  if (primaryResult.status === 'rejected' && (debugInfo.primary.status === null || debugInfo.primary.status === undefined)) {
++    debugInfo.primary.status = 'error';
++  }
++  if (fallbackResult.status === 'rejected' && (debugInfo.fallback.status === null || debugInfo.fallback.status === undefined)) {
++    debugInfo.fallback.status = 'error';
++  }
++
++  const merged = dedupeSuggestions([...primarySuggestions, ...fallbackSuggestions]);
++
++  merged.sort((a, b) => {
++    const sa = score(a.label, tokens);
++    const sb = score(b.label, tokens);
++    return sb - sa || a.label.localeCompare(b.label);
++  });
++
++  if (debugActive) {
++    console.log('[address] request urls', {
++      primary: debugInfo.primary.url ?? 'skipped',
++      fallback: debugInfo.fallback.url ?? 'skipped',
++    });
++    console.log('[address] primary response', {
++      status: debugInfo.primary.status ?? 'unknown',
++      count: debugInfo.primary.count,
++      labels: debugInfo.primary.labels,
++    });
++    console.log('[address] fallback response', {
++      status: debugInfo.fallback.status ?? 'unknown',
++      count: debugInfo.fallback.count,
++      labels: debugInfo.fallback.labels,
++    });
++    console.log('[address suggestions]', {
++      query: trimmed,
++      count: merged.length,
++      sources: merged.map((item) => item.source ?? 'unknown'),
++    });
++  }
++
++  const limited = merged.slice(0, 20);
++  onMeta?.(buildQueryMeta(trimmed, debugInfo));
++  return limited;
++}
++
++export async function queryAddressAPI(
++  query: string,
++  options: AddressQueryOptions = {}
++): Promise<AddressQueryResult> {
++  let capturedMeta: AddressQueryMeta | null = null;
++  const suggestions = await fetchAddressSuggestions(query, {
++    signal: options.signal,
++    onMeta: (meta) => {
++      capturedMeta = meta;
++      options.onMeta?.(meta);
++    },
++  });
++
++  if (capturedMeta) {
++    return { suggestions, meta: capturedMeta };
++  }
++
++  const fallbackInfo: Record<'primary' | 'fallback', ProviderDebugRecord> = {
++    primary: { url: null, status: 'skipped', count: 0, labels: [] },
++    fallback: { url: null, status: 'skipped', count: 0, labels: [] },
++  };
++  return {
++    suggestions,
++    meta: buildQueryMeta(norm(query), fallbackInfo),
++  };
++}
++
++function debugEnabled(): boolean {
++  try {
++    const search = typeof location !== 'undefined' ? location.search ?? '' : '';
++    if (!search) return false;
++    if (search.includes('debug=address=1')) return true;
++    const sp = new URLSearchParams(search);
++    const debugParam = sp.get('debug');
++    if (debugParam === 'address' || debugParam === 'address=1') return true;
++    if (typeof debugParam === 'string' && debugParam.includes('address=1')) return true;
++    return sp.get('debug:address') === '1';
++  } catch {
++    return false;
++  }
++}
++
++export function addressDebugEnabled(): boolean {
++  return debugEnabled();
++}
++
++export async function resolveToPostcodeOrNull(
++  inputOrSuggestion: string | AddressSuggestion
++): Promise<string | null> {
++  const suggestion = typeof inputOrSuggestion === 'object' ? inputOrSuggestion : null;
++  if (suggestion?.postcode) {
++    return compressPostcode(suggestion.postcode);
++  }
++
++  const text = typeof inputOrSuggestion === 'string'
++    ? inputOrSuggestion
++    : suggestion?.label ?? [suggestion?.line1, suggestion?.town].filter(Boolean).join(', ');
++
++  const direct = compressPostcode(text);
++  if (direct) return direct;
++
++  const config = resolveApiConfig();
++
++  const tryPrimary = async () => {
++    if (!config.url || !config.key) return null;
++    const endpoint = `${config.url}/postcode?text=${encodeURIComponent(norm(text))}`;
++    const headers = { Authorization: `Bearer ${config.key}` };
++    return fetchPostcode(endpoint, headers);
++  };
++
++  const tryFallback = async () => {
++    const base = config.fallbackUrl ? config.fallbackUrl.replace(/\/+$/, '') : `${config.url}/geocode`;
++    const endpoint = buildFallbackEndpoint(base, text);
++    const headers = config.fallbackUrl ? undefined : config.url && config.key ? { Authorization: `Bearer ${config.key}` } : undefined;
++    return fetchPostcode(endpoint, headers);
++  };
++
++  const fromPrimary = await tryPrimary();
++  if (fromPrimary) return fromPrimary;
++
++  const fromFallback = await tryFallback();
++  if (fromFallback) return fromFallback;
++
++  return null;
++}
++
++async function fetchPostcode(endpoint: string, headers?: Record<string, string>): Promise<string | null> {
++  if (!endpoint) return null;
++  try {
++    const res = await fetch(endpoint, { headers });
++    if (!res.ok) return null;
++    const data = await res.json().catch(() => null);
++    const candidate = pickFirstPostcode(data);
++    return candidate ? candidate.replace(/\s+/g, '') : null;
++  } catch (error: any) {
++    if (error?.name === 'AbortError') return null;
++    logOnce(`postcode-error-${endpoint}`, 'warn', '[address] postcode resolve failed', error);
++    return null;
++  }
++}
++
++function pickFirstPostcode(payload: any): string | null {
++  const queue: any[] = [payload];
++  const visited = new Set<any>();
++
++  while (queue.length) {
++    const current = queue.shift();
++    if (!current || typeof current === 'number' || typeof current === 'boolean') continue;
++    if (visited.has(current)) continue;
++
++    if (typeof current === 'string') {
++      const matched = normalisePostcode(current);
++      if (matched) return matched;
++      continue;
++    }
++
++    if (typeof current === 'object') {
++      visited.add(current);
++      const fields = [
++        current.postcode,
++        current.post_code,
++        current.POSTCODE,
++        current.Postcode,
++        current.postalCode,
++        current.postal_code,
++      ];
++      for (const field of fields) {
++        const matched = normalisePostcode(field);
++        if (matched) return matched;
++      }
++
++      const nested = [
++        current.result,
++        current.results,
++        current.items,
++        current.suggestions,
++        current.features,
++        current.addresses,
++        current.data,
++        current.list,
++      ];
++      for (const entry of nested) {
++        if (Array.isArray(entry)) {
++          queue.push(...entry);
++        } else if (entry && typeof entry === 'object') {
++          queue.push(entry);
++        }
++      }
++
++      for (const value of Object.values(current)) {
++        if (typeof value === 'string' || typeof value === 'object') {
++          queue.push(value);
++        }
++      }
++    }
++  }
++
++  return null;
++}
++
++function safeToSuggestion(it: any): AddressSuggestion | null {
++  if (!it || typeof it !== 'object') return null;
++  const id = String(it?.id ?? it?.uprn ?? cryptoRandomId());
++  let line1 = normaliseLine(it?.line1 ?? it?.address_line_1 ?? it?.ADDRESS_LINE_1);
++  const line2 = normaliseOptional(it?.line2 ?? it?.address_line_2 ?? it?.ADDRESS_LINE_2);
++  let town = normaliseLine(it?.town ?? it?.post_town ?? it?.city);
++  const postcode = normalisePostcode(it?.postcode ?? it?.post_code ?? it?.POSTCODE ?? it?.postal_code) ?? '';
++
++  const explicitLabel =
++    typeof it?.label === 'string'
++      ? it.label
++      : typeof it?.formatted === 'string'
++        ? it.formatted
++        : typeof it?.address === 'string'
++          ? it.address
++          : undefined;
++
++  const label = explicitLabel?.trim() || buildLabel({ ...it, line1, line2, town, postcode });
++  if (!label) return null;
++
++  if (!line1) {
++    line1 = label.split(',')[0]?.trim() || '';
++  }
++
++  if (!town) {
++    town = it?.town ?? it?.post_town ?? it?.city ?? label.split(',').slice(-1)[0]?.trim() ?? '';
++  }
++
++  return {
++    id,
++    uprn: it?.uprn ? String(it.uprn) : undefined,
++    line1,
++    line2,
++    town,
++    postcode,
++    country: 'UK',
++    label,
++  };
++}
++
++function buildLabel(it: any): string {
++  if (typeof it?.label === 'string' && it.label.trim()) return it.label.trim();
++  if (typeof it?.formatted === 'string' && it.formatted.trim()) return it.formatted.trim();
++  if (typeof it?.address === 'string' && it.address.trim()) return it.address.trim();
++  const bits = [
++    it.line1 ?? it.address_line_1 ?? it.ADDRESS_LINE_1,
++    it.line2 ?? it.address_line_2 ?? it.ADDRESS_LINE_2,
++    it.town ?? it.post_town ?? it.city,
++    normalisePostcode(it.postcode ?? it.post_code ?? it.POSTCODE ?? it.postal_code),
++  ];
++  return bits.filter(Boolean).join(', ');
++}
++
++function normaliseLine(value: unknown): string {
++  return typeof value === 'string' && value.trim() ? value.trim() : '';
++}
++
++function normaliseOptional(value: unknown): string | undefined {
++  const line = normaliseLine(value);
++  return line || undefined;
++}
++
++export function normalisePostcode(value: unknown): string | null {
++  if (typeof value !== 'string') return null;
++  const trimmed = value.trim();
++  if (!trimmed) return null;
++  const match = trimmed.match(/^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})$/i);
++  if (!match) return null;
++  return `${match[1].toUpperCase()} ${match[2].toUpperCase()}`;
++}
++
++export function compressPostcode(raw: unknown): string | null {
++  const normalised = typeof raw === 'string' ? normalisePostcode(raw) : null;
++  return normalised ? normalised.replace(/\s+/g, '') : null;
++}
++
++export function suggestionToAddress(suggestion: AddressSuggestion): Address {
++  const parts = suggestion.label
++    .split(',')
++    .map((segment) => segment.trim())
++    .filter(Boolean);
++
++  const directPostcode = normalisePostcode(suggestion.postcode);
++  let postcode = directPostcode ?? '';
++  if (!postcode) {
++    for (const part of parts) {
++      const candidate = normalisePostcode(part);
++      if (candidate) {
++        postcode = candidate;
++        break;
++      }
++    }
++  }
++
++  const withoutPostcode = postcode
++    ? parts.filter((part) => normalisePostcode(part) !== postcode)
++    : parts.slice();
++
++  const line1 = normaliseLine(suggestion.line1) || withoutPostcode.shift() || suggestion.label;
++  const rawLine2 = normaliseOptional(suggestion.line2) ?? withoutPostcode.shift();
++  const town = normaliseLine(suggestion.town) || withoutPostcode.pop() || '';
++  const line2 = rawLine2 && rawLine2 !== line1 && rawLine2 !== town ? rawLine2 : undefined;
++
++  return {
++    uprn: suggestion.uprn?.trim() || undefined,
++    line1,
++    line2,
++    town,
++    postcode,
++    country: 'UK',
++  };
++}
++
++export type CouncilMatch = {
++  id: string | null;
++  name: string;
++  email?: string;
++  address?: string;
++};
++
++export function mapPostcodeToCouncil(postcode: string): CouncilMatch | null {
++  const lookup = lookupCouncilByPostcode(postcode);
++  if (!lookup) return null;
++  const pack = listAuthorityPacks().find((entry) => entry.name === lookup.councilName);
++  return {
++    id: pack?.id ?? null,
++    name: lookup.councilName,
++    email: lookup.councilEmail || pack?.representation.email || undefined,
++    address: lookup.councilAddress || pack?.representation.postal || undefined,
++  };
++}
++
++function cryptoRandomId() {
++  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
++    return crypto.randomUUID();
++  }
++  return Math.random().toString(36).slice(2);
++}
+diff --git a/src/routes/index.tsx b/src/routes/index.tsx
+new file mode 100644
+index 0000000..a6a2882
+--- /dev/null
++++ b/src/routes/index.tsx
+@@ -0,0 +1,112 @@
++import * as React from 'react';
++import { useNavigate } from 'react-router-dom';
++
++import AddressSearch, { type AddressSelection } from '@/components/common/AddressSearch';
++import { compressPostcode, mapPostcodeToCouncil, normalisePostcode } from '@/lib/address';
++import { createDraftNotice } from '@/lib/notices';
++
++export default function HomeRoute() {
++  const navigate = useNavigate();
++  const [submitting, setSubmitting] = React.useState(false);
++  const [feedback, setFeedback] = React.useState<string | null>(null);
++
++  const handleSelected = React.useCallback(
++    async ({ suggestion, address }: AddressSelection) => {
++      const rawPostcode = address.postcode || suggestion.postcode || suggestion.label;
++      let normalisedPostcode = normalisePostcode(rawPostcode);
++
++      if (!normalisedPostcode && suggestion.label) {
++        const fromLabel = suggestion.label
++          .split(',')
++          .map((segment) => normalisePostcode(segment))
++          .find((segment): segment is string => Boolean(segment));
++        normalisedPostcode = fromLabel ?? null;
++      }
++
++      if (!normalisedPostcode) {
++        setFeedback('We could not detect a postcode for that address yet. Try searching with the postcode.');
++        return;
++      }
++
++      const council = mapPostcodeToCouncil(normalisedPostcode);
++      if (!council?.id) {
++        setFeedback('We do not support that council yet. Try another address or contact support.');
++        return;
++      }
++
++      setSubmitting(true);
++      setFeedback(null);
++
++      try {
++        const preparedAddress = { ...address, postcode: normalisedPostcode };
++        const payload = {
++          address: preparedAddress,
++          postcode: compressPostcode(normalisedPostcode) ?? normalisedPostcode.replace(/\s+/g, ''),
++          councilId: council.id,
++        };
++        const response = await createDraftNotice(payload);
++        const draftId = response.id;
++
++        navigate(`/publish?draft=${encodeURIComponent(draftId)}` , {
++          state: {
++            draftId,
++            address: preparedAddress,
++            council,
++            postcode: normalisedPostcode,
++            source: 'home-search',
++          },
++        });
++      } catch (error) {
++        console.warn('[home] failed to create draft notice', error);
++        setFeedback('Couldn’t start the publish flow. Try again.');
++      } finally {
++        setSubmitting(false);
++      }
++    },
++    [navigate]
++  );
++
++  const handleFallback = React.useCallback(
++    (query: string) => {
++      const params = new URLSearchParams();
++      params.set('query', query);
++      params.set('postcode', '');
++      params.set('council', '');
++      params.set('type', '');
++      params.set('status', '');
++      params.set('start', '');
++      params.set('end', '');
++      navigate(`/notices?${params.toString()}`);
++    },
++    [navigate]
++  );
++
++  return (
++    <main className="mx-auto flex min-h-[70vh] max-w-3xl flex-col justify-center px-4 py-16">
++      <header className="mb-8 text-center">
++        <h1 className="text-3xl font-semibold text-slate-900">Publish a statutory notice</h1>
++        <p className="mt-3 text-base text-slate-600">
++          Start by finding the premises address. We will pre-fill the council and create a draft for you.
++        </p>
++      </header>
++
++      <section className="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-xl backdrop-blur">
++        <AddressSearch
++          onSelected={handleSelected}
++          onFallback={handleFallback}
++          disabled={submitting}
++          testIdPrefix="home"
++          hint="Pick an address to create a draft notice in Publish."
++        />
++        {submitting && (
++          <p className="mt-3 text-sm text-slate-600">Creating draft…</p>
++        )}
++        {feedback && (
++          <p role="alert" className="mt-3 text-sm text-rose-600">
++            {feedback}
++          </p>
++        )}
++      </section>
++    </main>
++  );
++}

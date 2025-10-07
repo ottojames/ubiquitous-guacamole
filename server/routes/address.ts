@@ -18,6 +18,30 @@ const GET_SUGGEST_URL = (q: string, key: string) =>
 const GET_RESOLVE_URL = (id: string, key: string) =>
   `https://api.getaddress.io/get/${encodeURIComponent(id)}?api-key=${key}`;
 
+function resolveKey(): string {
+  const candidates = [
+    process.env.VITE_GETADDRESS_KEY,
+    process.env.VITE_GETADDRESS_API_KEY,
+    process.env.ADDRESS_API_KEY,
+    process.env.GETADDRESS_API_KEY,
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const trimmed = candidate.trim();
+    if (!trimmed) continue;
+    const match = trimmed.match(/^\$\{(.+)}$/);
+    if (match) {
+      const ref = process.env[match[1]];
+      if (ref && ref.trim()) return ref.trim();
+      continue;
+    }
+    return trimmed;
+  }
+
+  return '';
+}
+
 function getQ(raw: unknown): string {
   if (typeof raw === 'string') return raw.trim();
   if (Array.isArray(raw)) return String(raw[0] ?? '').trim();
@@ -51,7 +75,7 @@ router.get('/addresses', async (req, res) => {
   const q = getQ(req.query.q);
   if (q.length < 2) return res.json({ items: [], source: 'none' });
 
-  const key = process.env.GETADDRESS_API_KEY || '';
+  const key = resolveKey();
   if (!key) return res.json({ items: [], source: 'missing-key' });
 
   const cacheKey = q.toLowerCase();
@@ -78,7 +102,7 @@ router.get('/addresses', async (req, res) => {
 
 router.get('/address/resolve', async (req, res) => {
   const id = getQ(req.query.id);
-  const key = process.env.GETADDRESS_API_KEY || '';
+  const key = resolveKey();
 
   if (!id) return res.status(400).json({ ok: false, error: 'missing id' });
   if (!key) return res.status(500).json({ ok: false, error: 'missing GETADDRESS_API_KEY' });

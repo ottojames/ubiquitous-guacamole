@@ -1,18 +1,6 @@
 import React, { useMemo } from 'react';
 import AddressAutocomplete, { AddressOption } from '@/components/AddressAutocomplete';
-import councils from '@/data/councils.json';
-
-export type CouncilDirectoryItem = {
-  id: string;
-  name: string;
-  licensingEmail: string;
-  postal: string;
-  postalAddress?: string;
-  officeAddress?: string;
-  licensingUrl?: string;
-  repsEmail?: string;
-  repsUrl?: string;
-};
+import { getCouncilDirectory, type CouncilDirectoryItem } from '@/lib/councils';
 
 type Props = {
   applicantName: string;
@@ -26,7 +14,7 @@ type Props = {
 };
 
 export default function StickyRail({ applicantName, applicantEmail, councilName, councilEmail, address, onPatch, onSelectAddress, onCouncilMeta }: Props) {
-  const directory = councils as CouncilDirectoryItem[];
+  const directory = getCouncilDirectory();
   const selectedCouncil = useMemo(() => directory.find((d) => d.name === councilName), [directory, councilName]);
 
   function pickCouncil(id: string) {

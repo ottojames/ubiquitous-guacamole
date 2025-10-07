@@ -4,7 +4,7 @@ const GLOBAL_KEYS = ['__NOTICE_PROFILE__', '__PUBLIC_NOTICE_PROFILE__', '__APP_P
 
 export function readProfilePrefill<T extends Record<string, any> = Payload>(): T | null {
   if (typeof window === 'undefined') return null;
-  const w = window as Record<string, unknown>;
+  const w = window as unknown as Record<string, unknown>;
   for (const key of GLOBAL_KEYS) {
     const candidate = w[key];
     if (candidate && typeof candidate === 'object') {

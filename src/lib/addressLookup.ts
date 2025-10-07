@@ -1,9 +1,16 @@
 import { extractUKPostcode } from '@/lib/ukPostcode';
+import { getGetAddressKey } from '@/lib/env';
 
 export type AddressSuggestion = {
   id: string;
   label: string;
   postcode?: string;
+  line1?: string;
+  line2?: string;
+  line3?: string;
+  town?: string;
+  city?: string;
+  uprn?: string;
 };
 
 export type AddressDetail = {
@@ -16,7 +23,7 @@ export type AddressDetail = {
 };
 
 function apiKey(): string {
-  return ((import.meta.env as Record<string, unknown>).VITE_GETADDRESS_API_KEY as string | undefined) ?? '';
+  return getGetAddressKey() ?? '';
 }
 
 function ensureKey(): string {
@@ -54,7 +61,12 @@ export function mapAutocomplete(json: any): AddressSuggestion[] {
       const label = typeof entry.address === 'string' ? entry.address : null;
       if (!id || !label) return null;
       const postcode = typeof entry.postcode === 'string' ? entry.postcode : undefined;
-      return { id, label, postcode };
+      const uprn = typeof entry.uprn === 'string' ? entry.uprn : undefined;
+      const line1 = typeof entry.line_1 === 'string' ? entry.line_1 : undefined;
+      const line2 = typeof entry.line_2 === 'string' ? entry.line_2 : undefined;
+      const town = typeof entry.town === 'string' ? entry.town : undefined;
+      const city = typeof entry.city === 'string' ? entry.city : undefined;
+      return { id, label, postcode, uprn, line1, line2, town, city };
     })
     .filter(Boolean) as AddressSuggestion[];
 
@@ -69,7 +81,14 @@ export function mapAutocomplete(json: any): AddressSuggestion[] {
       const label = typeof dpa.ADDRESS === 'string' ? dpa.ADDRESS : null;
       if (!id || !label) return null;
       const postcode = typeof dpa.POSTCODE === 'string' ? dpa.POSTCODE : undefined;
-      return { id, label, postcode };
+      const line1 = typeof dpa.THOROUGHFARE_NAME === 'string'
+        ? dpa.THOROUGHFARE_NAME
+        : typeof dpa.ADDRESS === 'string'
+          ? dpa.ADDRESS.split(',')[0]?.trim()
+          : undefined;
+      const line2 = typeof dpa.DEPENDENT_LOCALITY === 'string' ? dpa.DEPENDENT_LOCALITY : undefined;
+      const town = typeof dpa.POST_TOWN === 'string' ? dpa.POST_TOWN : undefined;
+      return { id, label, postcode, line1, line2, town, uprn: id };
     })
     .filter(Boolean) as AddressSuggestion[];
 }

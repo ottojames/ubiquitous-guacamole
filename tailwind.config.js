@@ -10,6 +10,8 @@ export default {
         body: ['Inter', 'ui-sans-serif', 'system-ui'],
       },
       colors: {
+        primary: '#2563EB',
+        'primary-foreground': '#FFFFFF',
         brand: {
           50: '#f3f7ff',
           100: '#e6efff',

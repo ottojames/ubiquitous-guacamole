@@ -3,8 +3,14 @@ import * as UI from '@/styles/ui';
 import UploadNoticeFlow from '@/components/publish/UploadNoticeFlow';
 import TemplateUploadFlow from '@/features/template/TemplateUploadFlow';
 import Header from '@/components/layout/Header';
+import { NEW_PUBLISH_FLOW_ENABLED } from '@/config/flags';
+import NextPublishPage from '@/next/publish/PublishPage';
 
 export default function PublishPage() {
+  if (NEW_PUBLISH_FLOW_ENABLED) {
+    return <NextPublishPage />;
+  }
+
   const [tab, setTab] = useState<'notice' | 'template'>('notice');
 
   useEffect(() => {

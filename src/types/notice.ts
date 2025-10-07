@@ -71,3 +71,52 @@ export type NoticeDraft = {
   finalText?: string;
   proofHash?: string;
 };
+
+export type Address = {
+  uprn?: string;
+  line1: string;
+  line2?: string;
+  town: string;
+  postcode: string;
+  country?: 'UK';
+};
+
+export type Applicant = {
+  type: 'individual' | 'company';
+  fullName?: string;
+  companyName?: string;
+  companyNumber?: string;
+  registeredOffice?: Address;
+  serviceAddress?: Address;
+  contactEmail: string;
+  contactPhone?: string;
+};
+
+export type PublicationPlan = {
+  newspaper: string;
+  targetDate: string;
+  priceExVat?: number;
+  urn?: string;
+};
+
+export type Consultation = {
+  applicationDate: string;
+  repsDeadline: string;
+  windowRule?:
+    | 'LA2003_28D'
+    | 'LA2003_NEWS_10WD'
+    | 'GAMBLING_28D'
+    | 'GVOL_-21_TO_+21'
+    | 'PLANNING_21D_MIN'
+    | 'TRUSTEE_S27_2MONTHS';
+};
+
+export type NoticeBase = {
+  id?: string;
+  noticeType: string;
+  applicant: Applicant;
+  premises?: { name?: string; address: Address };
+  publication: PublicationPlan;
+  consultation: Consultation;
+  extras?: Record<string, any>;
+};

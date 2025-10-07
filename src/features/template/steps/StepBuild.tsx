@@ -4,7 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import dayjs from 'dayjs';
 import * as UI from '@/styles/ui';
 import ErrorSummary, { type ErrorItem } from '@/components/publish/ErrorSummary';
-import ActivityHoursMatrix from '../components/ActivityHoursMatrix';
+import ActivitiesHours, {
+  type ActivityGroup,
+  type ActivityHours,
+  type DayKey,
+} from '@/components/notice/ActivitiesHours';
 import AddressPicker from '../components/AddressPicker';
 import CouncilContactAuto from '../components/CouncilContactAuto';
 import InlineHelp from '../components/InlineHelp';
@@ -13,13 +17,21 @@ import {
   TemplateNoticeSchema,
   createEmptyNotice,
   calculateRepresentationDeadline,
+  DefaultWeekHours,
 } from '../schema';
 import {
   useTemplateBuilder,
   useTemplateNotice,
   useTemplateStep,
 } from '../TemplateBuilderProvider';
-import type { AddressValue, DeclEditMeta, TemplateNotice } from '../types';
+import type {
+  Activities,
+  ActivityKey,
+  AddressValue,
+  DeclEditMeta,
+  TemplateNotice,
+  WeekHours,
+} from '../types';
 import { readProfilePrefill, trackTemplateEvent } from '../telemetry';
 
 const CONDITION_SNIPPETS = [
@@ -69,6 +81,111 @@ function formatDeadlineDisplay(iso: string): string {
   const parsed = dayjs(iso);
   if (!parsed.isValid()) return '';
   return parsed.format('D MMMM YYYY');
+}
+
+const DAY_KEYS: DayKey[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const DAY_TO_WEEK_KEY: Record<DayKey, keyof WeekHours> = {
+  Mon: 'mon',
+  Tue: 'tue',
+  Wed: 'wed',
+  Thu: 'thu',
+  Fri: 'fri',
+  Sat: 'sat',
+  Sun: 'sun',
+};
+
+const TEMPLATE_ACTIVITY_DEFINITIONS: Array<{ id: string; label: string; key: ActivityKey }> = [
+  { id: 'alcohol_on', label: 'Sale of alcohol (on-sales)', key: 'alcoholOn' },
+  { id: 'alcohol_off', label: 'Sale of alcohol (off-sales)', key: 'alcoholOff' },
+  { id: 'late_refreshment', label: 'Late night refreshment', key: 'lateRefreshment' },
+  { id: 'live_music', label: 'Live music', key: 'liveMusic' },
+  { id: 'recorded_music', label: 'Recorded music', key: 'recordedMusic' },
+  { id: 'dance', label: 'Performance of dance', key: 'dance' },
+  { id: 'similar', label: 'Anything of a similar description', key: 'similar' },
+];
+
+function createEmptyActivityHours(): ActivityHours {
+  return DAY_KEYS.reduce<ActivityHours>((acc, day) => {
+    acc[day] = { open: null, close: null, lateIntoNextDay: false };
+    return acc;
+  }, {} as ActivityHours);
+}
+
+function sanitizeTime(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function timeToMinutes(value: string | null): number | null {
+  if (!value) return null;
+  const [hours, minutes] = value.split(':');
+  if (!hours || !minutes) return null;
+  const parsedHours = Number.parseInt(hours, 10);
+  const parsedMinutes = Number.parseInt(minutes, 10);
+  if (Number.isNaN(parsedHours) || Number.isNaN(parsedMinutes)) return null;
+  return parsedHours * 60 + parsedMinutes;
+}
+
+function crossesMidnight(open: string | null, close: string | null): boolean {
+  const start = timeToMinutes(open);
+  const end = timeToMinutes(close);
+  if (start == null || end == null) return false;
+  return end <= start;
+}
+
+function hasHoursConfigured(hours: ActivityHours): boolean {
+  return DAY_KEYS.some((day) => Boolean(hours[day].open && hours[day].close));
+}
+
+function groupsFromActivities(activities?: Activities | null): Record<string, ActivityGroup> {
+  return TEMPLATE_ACTIVITY_DEFINITIONS.reduce<Record<string, ActivityGroup>>((acc, definition) => {
+    const week = activities?.[definition.key];
+    const hours = createEmptyActivityHours();
+    if (week) {
+      DAY_KEYS.forEach((day) => {
+        const range = week[DAY_TO_WEEK_KEY[day]];
+        const open = range?.enabled ? sanitizeTime(range.start) : null;
+        const close = range?.enabled ? sanitizeTime(range.end) : null;
+        hours[day] = open && close
+          ? {
+              open,
+              close,
+              lateIntoNextDay: crossesMidnight(open, close),
+            }
+          : { open: null, close: null, lateIntoNextDay: false };
+      });
+    }
+    acc[definition.id] = {
+      id: definition.id,
+      label: definition.label,
+      enabled: hasHoursConfigured(hours),
+      hours,
+    };
+    return acc;
+  }, {} as Record<string, ActivityGroup>);
+}
+
+function activitiesFromGroups(groups: Record<string, ActivityGroup>): Activities {
+  const result: Activities = {};
+  TEMPLATE_ACTIVITY_DEFINITIONS.forEach((definition) => {
+    const group = groups[definition.id];
+    const sourceHours = group?.hours ?? createEmptyActivityHours();
+    const week = DefaultWeekHours();
+    const groupEnabled = group?.enabled !== false;
+    DAY_KEYS.forEach((day) => {
+      const config = sourceHours[day];
+      const open = sanitizeTime(config?.open);
+      const close = sanitizeTime(config?.close);
+      const weekKey = DAY_TO_WEEK_KEY[day];
+      if (open) week[weekKey].start = open;
+      if (close) week[weekKey].end = close;
+      week[weekKey].enabled = groupEnabled && Boolean(open && close);
+    });
+    result[definition.key] = week;
+  });
+  return result;
 }
 
 export default function StepBuild() {
@@ -153,6 +270,27 @@ export default function StepBuild() {
   }, [form, patchNotice, state.restoredFromDraft]);
 
   const activities = form.watch('activities') ?? {};
+  const activitiesGroups = React.useMemo(() => groupsFromActivities(activities), [activities]);
+  const defaultActivityGroups = React.useMemo(
+    () =>
+      TEMPLATE_ACTIVITY_DEFINITIONS.map((definition) => ({
+        id: definition.id,
+        label: definition.label,
+        enabled: false,
+        hours: createEmptyActivityHours(),
+      })),
+    []
+  );
+  const handleActivitiesChange = React.useCallback(
+    (nextGroups: Record<string, ActivityGroup>) => {
+      const nextActivities = activitiesFromGroups(nextGroups);
+      form.setValue('activities', nextActivities, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    },
+    [form]
+  );
   const publicationDate = form.watch('intendedPublicationDate');
   const council = form.watch('council');
   const currentDeadline = form.watch('representationDeadline');
@@ -472,10 +610,24 @@ export default function StepBuild() {
           />
         </section>
 
-        <ActivityHoursMatrix
-          value={activities}
-          onChange={(next) => form.setValue('activities', next, { shouldDirty: true, shouldValidate: true })}
-        />
+        <section
+          className={`${UI.card} p-5 md:p-6 space-y-4`}
+          aria-label="Licensable activities"
+          id="activities-grid"
+        >
+          <div>
+            <h2 className="text-base font-semibold text-blue-900">Activities &amp; hours</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Use 24-hour time. Mark days as closed where the activity is not authorised.
+            </p>
+          </div>
+          <ActivitiesHours
+            value={activitiesGroups}
+            defaultGroups={defaultActivityGroups}
+            onChange={handleActivitiesChange}
+            persistKey="template.activitiesHours"
+          />
+        </section>
 
         {selectedType === 'new' && (
           <section className={`${UI.card} p-5 md:p-6 space-y-3`}>

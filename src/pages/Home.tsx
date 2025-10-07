@@ -1,12 +1,19 @@
-import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import * as UI from '@/styles/ui';
 import {
-  FileText, MapPin, CheckCircle2, ClipboardCopy, CopyCheck,
-  MessageCircle, Printer, ArrowRight, Menu, X,
+  FileText, MapPin, CheckCircle2,
+  ArrowRight, Menu, X,
   Upload, Search, Archive
 } from "lucide-react";
 import FilterBar from "../components/FilterBar";
-import { filterNotices, type Filters } from "../lib/filter";
+import type { Filters } from "../lib/filter";
+import AddressSearchBar, { type AddressSearchSubmitPayload } from "@/components/search/AddressSearchBar";
+import SearchResults from "@/components/home/SearchResults";
+import { resolveToPostcodeOrNull } from '@/lib/address';
+import { getCouncilForPostcode } from '@/lib/councils';
+import useNoticeSearch from '@/hooks/useNoticeSearch';
+import { toast, useToastController } from '@/lib/ui/toast';
 
 // -------- analytics stub (replace with your pipe) --------
 function track(event: string, payload: Record<string, unknown> = {}) {
@@ -18,70 +25,6 @@ const fontImport = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
   html { font-family: 'Inter', Arial, sans-serif !important; }
 `;
-
-// -------- demo data --------
-const demoNotices = [
-  {
-    id: 1,
-    type: "Premises Licence",
-    address: "34 High St, London W2 1AA",
-    summary: "New bar applying to stay open until 1am on Fridays.",
-    description:
-      "Applicant requests late trading for Friday/Saturday. Consultation includes local residents’ feedback on noise and disturbance. See full application for plans and contact details.",
-    council: "Westminster City Council",
-    councilVerified: true,
-    deadline: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    status: "Open",
-    distance: 1.2,
-    submitter: "A. Smith",
-    submitted: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    proofId: "PL-134ABC",
-    pdf: "/notices/134abc.pdf",
-    pdfSizeKb: 312,
-    ward: "Hyde Park Ward",
-    tags: ["Late hours", "Alcohol", "Noise risk"],
-  },
-  {
-    id: 2,
-    type: "Traffic Order",
-    address: "Stamford Rd, Reading RG1 8AN",
-    summary: "Temporary closure for resurfacing, 15 Aug – 18 Aug.",
-    description:
-      "Essential resurfacing work by council contractors. Diversion routes will be signposted. Noise is expected during daytime hours only.",
-    council: "Reading Borough Council",
-    councilVerified: true,
-    deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    status: "Open",
-    distance: 2.7,
-    submitter: "R. Evans",
-    submitted: new Date(Date.now() - 0.5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    proofId: "TR-287YZA",
-    pdf: "/notices/287yza.pdf",
-    pdfSizeKb: 928,
-    ward: "Abbey Ward",
-    tags: ["Roadworks", "Noise risk"],
-  },
-  {
-    id: 3,
-    type: "Planning",
-    address: "5 The Parade, Leeds LS2 3AB",
-    summary: "Change of use from retail to restaurant with outdoor seating.",
-    description:
-      "Proposed change to Class E restaurant, external seating area. All plans available online. Open for comment from local residents.",
-    council: "Leeds City Council",
-    councilVerified: false,
-    deadline: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    status: "Closed",
-    distance: 5.0,
-    submitter: "S. Lee",
-    submitted: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    proofId: "PL-398KLM",
-    pdf: "/notices/398klm.pdf",
-    pdfSizeKb: 611,
-    ward: "City Ward",
-    tags: ["Restaurant", "Outdoor seating", "Noise risk"],
-  },
-];
 
 const testimonials = [
   { text: "“Instant publication, easy exports, and our legal team love the audit trail.”", name: "David J, Legal Officer", council: "Leeds City Council" },
@@ -95,28 +38,11 @@ const councilLogos = [
   { src: "/logos/manchester.png", alt: "Manchester City Council", width: 180, height: 28 },
 ];
 
-const activityStats = [
-  { icon: <FileText className="w-4 h-4" aria-hidden="true" />, label: "notices", value: "1,842+" },
-  { icon: <MessageCircle className="w-4 h-4" aria-hidden="true" />, label: "comments", value: "12,455+" },
-  { icon: <CheckCircle2 className="w-4 h-4" aria-hidden="true" />, label: "councils", value: "92+" },
-];
-
-// -------- utils --------
-function daysLeft(deadline: string) {
-  const d = Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  return d > 0 ? d : 0;
+function formatPostcodeForDisplay(compact?: string | null) {
+  if (!compact) return null;
+  if (compact.length <= 3) return compact;
+  return `${compact.slice(0, compact.length - 3)} ${compact.slice(-3)}`;
 }
-function Spinner() {
-  return (
-    <svg className="animate-spin w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-      <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-70" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-    </svg>
-  );
-}
-
-// lightweight local autocomplete
-const exampleAreas = ["SW1A 1AA","Westminster","Leeds LS2","Manchester M2","Camden","Ealing","Islington","Birmingham B1","Bristol BS1","Reading RG1","Oxford OX1"];
 
 export default function Home() {
   // header
@@ -144,115 +70,76 @@ export default function Home() {
     return () => window.removeEventListener("hashchange", fn);
   }, []);
 
-  // hero search
-  const [postcode, setPostcode] = useState("");
-  const [radius, setRadius] = useState(2);
-  const [searching, setSearching] = useState(false);
+  // homepage browse/search state
+  const navigate = useNavigate();
+  const [addressValue, setAddressValue] = useState('');
+  const [addressInlineError, setAddressInlineError] = useState<string | null>(null);
 
-  const [geoLoading, setGeoLoading] = useState(false);
-  const [geoError, setGeoError] = useState("");
+  const toastMessage = useToastController();
 
   const [filters, setFilters] = useState<Filters>({ type: "", status: "", start: "", end: "", authority: "" });
-  const [mapView, setMapView] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
 
-  // autocomplete
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [suggestLoading, setSuggestLoading] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const listboxRef = useRef<HTMLUListElement>(null);
+  const { notices: latestNotices, loading: latestLoading, error: latestError, refetch: refetchLatest } = useNoticeSearch({
+    limit: 5,
+    sort: 'created_at.desc',
+  });
 
-  // content
-  const [notices, setNotices] = useState(demoNotices);
-  const [expandedCard, setExpandedCard] = useState<number | null>(null);
-  const [copySuccess, setCopySuccess] = useState("");
-
-  // testimonials
   const [testiIdx, setTestiIdx] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setTestiIdx((i) => (i + 1) % testimonials.length), 7000);
     return () => clearInterval(t);
   }, []);
 
-  // local storage (kept)
-  const [rememberArea, setRememberArea] = useState(false);
-  useEffect(() => {
-    const pc = window.localStorage.getItem("pn_postcode");
-    const rd = window.localStorage.getItem("pn_radius");
-    if (pc && rd) { setPostcode(pc); setRadius(Number(rd)); setRememberArea(true); }
-  }, []);
-  useEffect(() => {
-    if (rememberArea) { window.localStorage.setItem("pn_postcode", postcode); window.localStorage.setItem("pn_radius", String(radius)); }
-  }, [postcode, radius, rememberArea]);
+  const handleAddressSubmit = useCallback(async ({ query, suggestion }: AddressSearchSubmitPayload) => {
+    const rawInput = (query || addressValue).trim();
+    if (!rawInput) return;
+    setAddressInlineError(null);
 
-  // autocomplete debounce
-  useEffect(() => {
-    if (!postcode.trim()) { setSuggestions([]); setActiveIndex(-1); return; }
-    setSuggestLoading(true);
-    const t = setTimeout(() => {
-      const q = postcode.toLowerCase();
-      const matches = exampleAreas.filter(a => a.toLowerCase().includes(q)).slice(0, 6);
-      setSuggestions(matches);
-      setSuggestLoading(false);
-      setActiveIndex(matches.length ? 0 : -1);
-    }, 180);
-    return () => clearTimeout(t);
-  }, [postcode]);
-
-  function handleSearch(e?: FormEvent) {
-    if (e) e.preventDefault();
-    setSearching(true);
-    setGeoError("");
-    track("search_submit", { source: "hero", query: postcode, geo_used: false, audience: "public" });
-    setTimeout(() => {
-      const filtered = filterNotices(demoNotices, filters);
-      setNotices(filtered);
-      setSearching(false);
-    }, 600);
-  }
-
-  function handleGeo() {
-    setGeoError("");
-    setGeoLoading(true);
-    if (!navigator.geolocation) {
-      setGeoLoading(false);
-      setGeoError("Your browser doesn't support location. Enter postcode or ward.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGeoLoading(false);
-        track("search_submit", { source: "hero", query: "geo", geo_used: true, audience: "public" });
-        track("geo_allow", { lat: pos.coords.latitude, lon: pos.coords.longitude, audience: "public" });
-      },
-      () => {
-        setGeoLoading(false);
-        setGeoError("Couldn’t access location. Enter postcode or ward.");
+    try {
+      const resolvedPostcode = await resolveToPostcodeOrNull(suggestion ?? rawInput);
+      let councilId = '';
+      let councilName = '';
+      if (resolvedPostcode) {
+        try {
+          const council = await getCouncilForPostcode(resolvedPostcode);
+          councilId = council?.id ?? '';
+          councilName = council?.name ?? '';
+        } catch (lookupError) {
+          console.warn('[council lookup error]', lookupError);
+        }
       }
-    );
-  }
 
-  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (!suggestions.length) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, suggestions.length - 1)); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
-    else if (e.key === "Enter" && activeIndex >= 0) {
-      e.preventDefault();
-      const pick = suggestions[activeIndex];
-      setPostcode(pick); setSuggestions([]); setActiveIndex(-1);
-      track("autocomplete_select", { entity_type: "area", entity_id: pick, audience: "public" });
+      const params = new URLSearchParams();
+      params.set('query', rawInput);
+      if (resolvedPostcode) params.set('postcode', resolvedPostcode);
+      if (councilId) params.set('council', councilId);
+      if (filters.type) params.set('type', filters.type);
+      if (filters.status) params.set('status', filters.status);
+      if (filters.start) params.set('start', filters.start);
+      if (filters.end) params.set('end', filters.end);
+
+      navigate(`/notices?${params.toString()}`);
+
+      const displayPostcode = formatPostcodeForDisplay(resolvedPostcode);
+      const label = suggestion?.label ?? (councilName || rawInput);
+      toast(
+        displayPostcode
+          ? `Showing notices for ${label} (${displayPostcode})`
+          : `Showing notices for ${label}`
+      );
+      setAddressValue(suggestion?.label ?? rawInput);
+    } catch (err) {
+      console.error('[home] search submit failed', err);
+      setAddressInlineError('Couldn’t load notices. Try again.');
     }
-  }
+  }, [addressValue, filters, navigate, toast]);
 
-  function copyProofId(pid: string) {
-    navigator.clipboard.writeText(pid);
-    setCopySuccess(pid);
-    setTimeout(() => setCopySuccess(""), 1200);
-  }
-
-  const resultsCount = notices.length;
-  const openCount = notices.filter(n => n.status === "Open").length;
-  const closedCount = notices.filter(n => n.status === "Closed").length;
+  const handleFreeText = useCallback((query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    void handleAddressSubmit({ query: trimmed });
+  }, [handleAddressSubmit]);
 
   return (
     <div className={`${UI.pageWrap} relative flex flex-col font-sans`}>
@@ -394,96 +281,24 @@ export default function Home() {
             </button>
 
             {/* Solid panel for the tool */}
-            <div className={`relative ${UI.card} ${UI.cardHover} p-3 md:p-4`}>
-              <form onSubmit={handleSearch} role="search" aria-label="Search notices by postcode or ward" className="flex items-center gap-2" noValidate>
-                <label htmlFor="postcode" className="sr-only">Search by postcode or ward</label>
-
-                <div className="relative flex-1">
-                  <input
-                    id="postcode"
-                    name="postcode"
-                    type="search"
-                    inputMode="search"
-                    autoComplete="off"
-                    placeholder="Search by postcode or ward"
-                    value={postcode}
-                    onChange={(e) => setPostcode(e.target.value)}
-                    onKeyDown={onKeyDown}
-                    className={`h-14 w-full bg-white text-[#0f172a] border border-[rgba(25,38,80,0.12)] rounded-lg px-3 text-[15px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-transparent`}
-                    aria-describedby="search-examples"
-                    aria-autocomplete="list"
-                    aria-expanded={suggestions.length > 0}
-                    aria-controls="area-suggestions"
-                  />
-                  {/* suggestions */}
-                  {suggestions.length > 0 && (
-                    <ul
-                      id="area-suggestions"
-                      ref={listboxRef}
-                      role="listbox"
-                      className={`absolute z-20 mt-2 w-full overflow-hidden ${UI.card}`}
-                    >
-                      {suggestions.map((s, idx) => (
-                        <li
-                          key={s}
-                          role="option"
-                          aria-selected={idx === activeIndex}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            setPostcode(s); setSuggestions([]); setActiveIndex(-1);
-                            track("autocomplete_select", { entity_type: "area", entity_id: s, audience: "public" });
-                          }}
-                          className={`px-4 py-2 cursor-pointer text-sm ${idx === activeIndex ? "bg-blue-50 text-blue-900" : "hover:bg-slate-50"}`}
-                        >
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {suggestLoading && <div className="absolute right-3 top-1/2 -translate-y-1/2"><Spinner /></div>}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleGeo}
-                  disabled={geoLoading}
-                  className={`${UI.btnSecondary} h-14 py-0 disabled:opacity-60 focus:ring-blue-600 focus:ring-offset-transparent`}
-                >
-                  {geoLoading ? "Locating…" : "Use my location"}
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={searching}
-                  className={`${UI.btnPrimary} h-14 py-0 text-sm disabled:opacity-60 focus:ring-blue-600 focus:ring-offset-transparent`}
-                  aria-label="Search now"
-                >
-                  {searching ? <Spinner /> : "Search now"}
-                </button>
-              </form>
-
-              <p id="search-examples" className="mt-2 text-xs text-slate-600 px-1">Examples: SW1A 1AA, Westminster, Leeds LS2</p>
-              {geoError && <p className="mt-1 text-xs text-rose-600 px-1">{geoError}</p>}
+            <div className={`relative overflow-visible ${UI.card} ${UI.cardHover} p-3 md:p-4`}>
+              <AddressSearchBar
+                value={addressValue}
+                onValueChange={(next) => {
+                  setAddressValue(next);
+                  setAddressInlineError(null);
+                }}
+                onSubmit={handleAddressSubmit}
+                onFreeText={handleFreeText}
+                testIdPrefix="home"
+              />
             </div>
+            {addressInlineError && (
+              <p role="alert" className="mt-2 text-sm text-rose-100">{addressInlineError}</p>
+            )}
 
             <div className="mt-2.5">
               <FilterBar filters={filters} setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))} />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => { setFilters((prev) => ({ ...prev, status: "Open" })); handleSearch(); }}
-                className={`${UI.btnSecondary} h-9 py-0 text-sm focus:ring-blue-600 focus:ring-offset-transparent`}
-              >
-                Open consultations near me
-              </button>
-              <button
-                type="button"
-                onClick={() => setMapView((v) => !v)}
-                className={`${UI.btnSecondary} h-9 py-0 text-sm focus:ring-blue-600 focus:ring-offset-transparent`}
-              >
-                {mapView ? "List view" : "Map view"}
-              </button>
             </div>
 
             {/* supporting stats under input */}
@@ -544,97 +359,50 @@ export default function Home() {
 </section>
 
 
-      {/* -------- RESULTS / NOTICE CARDS -------- */}
+      {/* -------- LATEST NOTICES -------- */}
       <section id="notices" className="w-full pt-12 md:pt-14 pb-16 md:pb-20 scroll-mt-[84px]">
         <div className={UI.container}>
-        <h2 className={`${UI.h2} text-center mb-6 max-w-[60ch] mx-auto`}>
-          Instantly <span className="text-blue-600">search, publish, and verify</span> legal notices
-        </h2>
+          <h2 className={`${UI.h2} text-center mb-4 max-w-[60ch] mx-auto`}>
+            Latest public notices across the UK
+          </h2>
+          <p className="text-center text-sm text-slate-600 mb-6">
+            The five most recent publications, refreshed automatically.
+          </p>
 
-        {/* live region for count */}
-        <p className="sr-only" aria-live="polite">{resultsCount} results</p>
+          {latestError && (
+            <div className="mx-auto max-w-xl rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <p>Couldn’t load the latest notices. {latestError}</p>
+              <button
+                type="button"
+                onClick={refetchLatest}
+                className="mt-3 inline-flex items-center gap-1 rounded-full border border-rose-300 bg-white px-3 py-1 text-xs font-medium text-rose-700 hover:border-rose-400"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-        {mapView ? (
-          <div className="mx-auto h-64 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-700">
-            Map view: {openCount} open / {closedCount} closed
+          {!latestError && (
+            <div className="mx-auto mt-6 md:mt-8 w-full max-w-4xl">
+              <SearchResults
+                results={latestNotices}
+                query="latest notices"
+                loading={latestLoading}
+                loadingMessage="Loading the most recent notices…"
+                emptyMessage="No notices published yet. Check back soon."
+              />
+            </div>
+          )}
+
+          <div className="mt-8 text-center">
+            <a
+              href="/notices"
+              className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
+            >
+              Browse all notices
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </a>
           </div>
-        ) : (
-          <div className="mx-auto mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {notices.map((n) => {
-            const dl = daysLeft(n.deadline);
-            return (
-              <article key={n.id} className={`${UI.card} ${UI.cardHover} p-6 flex flex-col min-h-[280px]`} aria-label={`Notice: ${n.type}, ${n.address}`}>
-                {/* metadata */}
-                <div className="flex items-center gap-2 text-[13px] text-slate-700 mb-2">
-                  <span className={`inline-flex items-center h-6 px-2 rounded-full text-xs ${n.type === 'Planning' ? 'bg-purple-100 text-purple-800' : n.type === 'Traffic Order' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`} aria-label={`Category: ${n.type}`}>{n.type}</span>
-                  <span>•</span>
-                  <span>{n.status === "Open" && dl > 0 ? `${dl} day${dl !== 1 ? "s" : ""} left` : "Closed"}</span>
-                  <span>•</span>
-                  <span className="capitalize">{n.status.toLowerCase()}</span>
-                  <span>•</span>
-                  <span>{n.ward}</span>
-                </div>
-
-                <h3 className="text-blue-900 font-extrabold text-[20px] mb-1">{n.address}</h3>
-                <p className="text-gray-700 mb-2 text-[16px]">{n.summary}</p>
-                <p className="text-xs text-slate-700 mb-3">Risks/Impacts: {n.tags.join(", ")}</p>
-
-                {/* actions */}
-                <div className="mt-auto pt-2 flex items-center justify-between border-t border-blue-50">
-                  <button
-                    className="inline-flex items-center gap-2 text-blue-600 text-sm font-medium underline underline-offset-2 transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
-                    onClick={() => { const open = expandedCard === n.id ? null : n.id; setExpandedCard(open); track("notice_open", { id: n.id, source: "card", audience: "public" }); }}
-                    aria-expanded={expandedCard === n.id}
-                  >
-                    View notice
-                  </button>
-
-                  <a
-                    href={n.pdf}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("pdf_open", { id: n.id, size_kb: n.pdfSizeKb, audience: "public" })}
-                    className="inline-flex items-center gap-2 text-blue-600 text-sm font-medium underline underline-offset-2 transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
-                  >
-                    Download proof (PDF)
-                  </a>
-                </div>
-
-                {n.status === "Open" && (
-                  <div className="mt-2">
-                    <button className="text-sm text-blue-600 underline hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">Comment</button>
-                  </div>
-                )}
-
-                {expandedCard === n.id && (
-                  <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm shadow-inner">
-                    <div className="mb-2 text-blue-900 font-medium">{n.description}</div>
-                    <div className="mb-2 text-blue-700 text-xs">
-                      <span className="font-semibold">Applicant:</span> {n.submitter} &nbsp;|&nbsp;
-                      <span className="font-semibold">Submitted:</span> {n.submitted}
-                    </div>
-                    <div className="flex gap-2 flex-wrap mt-2">
-                      <button
-                        onClick={() => copyProofId(n.proofId)}
-                        className="bg-white border border-blue-200 rounded px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 inline-flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white"
-                        aria-label="Copy proof ID"
-                      >
-                        {copySuccess === n.proofId ? <CopyCheck /> : <ClipboardCopy />} Proof ID
-                      </button>
-                      <button
-                        className="text-xs text-blue-600 underline hover:text-blue-700 inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white rounded"
-                        onClick={() => window.print()}
-                      >
-                        <Printer className="mr-1 w-4 h-4" aria-hidden="true" /> Print/download
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </article>
-            );
-          })}
-          </div>
-        )}
         </div>
       </section>
 
@@ -798,6 +566,16 @@ export default function Home() {
             </button>
           </div>
         </dialog>
+      )}
+
+      {toastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 right-4 rounded-md bg-slate-900 px-4 py-2 text-xs text-white shadow-lg"
+        >
+          {toastMessage}
+        </div>
       )}
 
       {/* small utilities */}

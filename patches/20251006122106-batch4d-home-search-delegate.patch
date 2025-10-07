@@ -1,0 +1,111 @@
+diff --git a/src/components/publish/UploadNoticeFlow.tsx b/src/components/publish/UploadNoticeFlow.tsx
+index 45b502e..4603e38 100644
+--- a/src/components/publish/UploadNoticeFlow.tsx
++++ b/src/components/publish/UploadNoticeFlow.tsx
+@@ -104,6 +104,8 @@ export default function UploadNoticeFlow() {
+   const [showValidationErrors, setShowValidationErrors] = useState(false);
+   const [representationsUrlEdited, setRepresentationsUrlEdited] = useState(false);
+   const [autoDetectedRepresentationsUrl, setAutoDetectedRepresentationsUrl] = useState<string | null>(null);
++  const [premisesSearchValue, setPremisesSearchValue] = useState('');
++  const searchPrefilledRef = React.useRef(false);
+   const autoDetectedUrlRef = React.useRef<string | null>(null);
+   const applicantRef = React.useRef<HTMLInputElement>(null);
+   /* CN:STEP2-START */
+@@ -229,13 +231,13 @@ export default function UploadNoticeFlow() {
+   /* CN:TEMPLATES-PREVIEW-END */
+ 
+   const requiredOk =
+-    draft.applicantName.trim() &&
+-    draft.premisesAddress.trim() &&
+-    draft.postcode.trim() &&
+-    draft.councilName.trim() &&
+-    draft.councilEmail.trim() &&
+-    draft.councilAddress.trim() &&
+-    draft.applicationDate.trim() &&
++    !!draft.applicantName.trim() &&
++    !!draft.premisesAddress.trim() &&
++    !!draft.postcode.trim() &&
++    !!draft.councilName.trim() &&
++    !!draft.councilEmail.trim() &&
++    !!draft.councilAddress.trim() &&
++    !!draft.applicationDate.trim() &&
+     /* CN:TEMPLATES-PREVIEW-START */
+     /* CN:LICENSING-TEMPLATES-START */
+     summariesOk;
+@@ -971,6 +973,14 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
+     [onChange, extractPostcodeFromAddress, draft.councilAddress, draft.councilEmail, draft.councilName, toMultiline]
+   );
+ 
++  const handleSearchChange = React.useCallback(
++    (value: string) => {
++      setPremisesSearchValue(value);
++      handlePremisesAddressCommit(value);
++    },
++    [handlePremisesAddressCommit],
++  );
++
+   const handlePremisesPick = React.useCallback(
+     (item: AddressItem) => {
+       const fallbackLines = item.label
+@@ -986,6 +996,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
+       );
+ 
+       premisesSelectionIdRef.current = item.id ?? null;
++      setPremisesSearchValue(item.label);
+ 
+       const applySelection = (address: string, rawPostcode: string) => {
+         const formattedPostcode = formatUKPostcode(rawPostcode);
+@@ -1089,6 +1100,42 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
+     onChange({ applicationDate: value, repsDeadline: iso }, { ensureUrn: true });
+   };
+ 
++  useEffect(() => {
++    if (searchPrefilledRef.current) return;
++    let candidate = '';
++    try {
++      const params = new URLSearchParams(window.location.search);
++      candidate = params.get('q')?.trim() ?? '';
++      if (!candidate && window.history.state && typeof window.history.state === 'object') {
++        const navState = (window.history.state as any).usr;
++        if (navState && typeof navState.q === 'string') {
++          candidate = navState.q.trim();
++        }
++      }
++      if (!candidate) {
++        const stored = window.sessionStorage?.getItem('pn:publish:q');
++        if (stored) candidate = stored.trim();
++      }
++    } catch {
++      candidate = '';
++    }
++
++    if (!candidate) return;
++
++    const postcode = extractUKPostcode(candidate);
++    const initial = postcode && postcode.length === candidate.trim().length ? postcode : candidate;
++
++    searchPrefilledRef.current = true;
++    setPremisesSearchValue(initial);
++    handlePremisesAddressCommit(initial);
++
++    try {
++      window.sessionStorage?.removeItem('pn:publish:q');
++    } catch {
++      // ignore storage issues
++    }
++  }, [handlePremisesAddressCommit]);
++
+   return (
+     <div>
+       {/* CN:STEP2-LAYOUT-START */}
+@@ -1142,8 +1189,9 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
+             <AddressSearch
+               name="premisesSearch"
+               required
++              value={premisesSearchValue}
+               inputTestId="input-premises-address"
+-              onChange={handlePremisesAddressCommit}
++              onChange={handleSearchChange}
+               onPick={handlePremisesPick}
+             />
+           </div>

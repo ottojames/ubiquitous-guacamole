@@ -13,7 +13,7 @@ type Props = {
   onSelect: (council: Council) => void;
   onChangeText?: (value: string) => void;
   onBlur?: () => void;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
   label?: string;
   placeholder?: string;
   id?: string;
