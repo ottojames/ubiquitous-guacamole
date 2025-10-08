@@ -148,18 +148,45 @@ describe('GET /api/notices/search', () => {
     });
 
     const postcodeFilter = queryLog.find(
-      (entry) => entry.type === 'ilike' && entry.column === 'premises->>postcode'
+      (entry) =>
+        entry.type === 'filter' &&
+        entry.column === "coalesce(premises->>'postcode', premises_address->>'postcode')"
     );
-    expect(postcodeFilter?.pattern).toBe('W4%');
+    expect(postcodeFilter?.value).toBe('W4%');
     expect(queryLog.some((entry) => entry.type === 'or')).toBe(false);
   });
 
   it('applies bounding box filters when bbox query is present', async () => {
+    supabaseResponse = {
+      data: [
+        {
+          id: 'notice-bbox',
+          notice_type: 'Premises Licence',
+          status: 'published',
+          premises: {
+            name: 'Bbox Cafe',
+            address: '5 Map Lane, London, SW1A 1AA',
+            postcode: 'SW1A 1AA',
+          },
+          consultation: {},
+          publication: {},
+          extras: {},
+          latitude: 51.503,
+          longitude: -0.126,
+          published_date: '2025-10-09',
+          created_at: '2025-10-01T12:00:00.000Z',
+          updated_at: '2025-10-01T12:00:00.000Z',
+        },
+      ],
+      error: null,
+    };
+
     const response = await request(app)
       .get('/api/notices/search')
       .query({ bbox: '51.30,-0.50,51.70,0.20', zoom: 12 });
 
     expect(response.status).toBe(200);
+    expect(response.body.items).toHaveLength(1);
     const bboxRpc = queryLog.find(
       (entry) => entry.type === 'rpc' && entry.fn === 'get_bbox_notices'
     );
@@ -169,6 +196,47 @@ describe('GET /api/notices/search', () => {
       max_lat: 51.7,
       max_lng: 0.2,
     });
+    expect(queryLog.find((entry) => entry.type === 'limit')).toBeUndefined();
+  });
+
+  it('returns all published notices inside the bounding box ordered by published date', async () => {
+    const baseLatitude = 51.503;
+    const baseLongitude = -0.128;
+    const notices = Array.from({ length: 10 }).map((_, index) => {
+      const publishedDate = new Date(Date.UTC(2025, 9, 9 - index))
+        .toISOString()
+        .slice(0, 10);
+      return {
+        id: `sw1a-${index}`,
+        notice_type: 'Premises Licence',
+        status: 'published',
+        premises: {
+          name: `Sample Premises ${index}`,
+          address: `${index + 1} Whitehall Place, London, SW1A 1AA`,
+          postcode: 'SW1A 1AA',
+        },
+        consultation: {},
+        publication: {},
+        extras: {},
+        latitude: baseLatitude + index * 0.0001,
+        longitude: baseLongitude + index * 0.0001,
+        published_date: publishedDate,
+        created_at: `${publishedDate}T12:00:00.000Z`,
+        updated_at: `${publishedDate}T12:00:00.000Z`,
+      };
+    });
+
+    supabaseResponse = { data: notices, error: null };
+
+    const response = await request(app)
+      .get('/api/notices/search')
+      .query({ bbox: '51.5025,-0.1295,51.5045,-0.1255' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.items).toHaveLength(10);
+    const returnedIds = response.body.items.map((item: any) => item.id);
+    expect(returnedIds).toEqual(notices.map((notice) => notice.id));
+    expect(queryLog.find((entry) => entry.type === 'limit')).toBeUndefined();
   });
 
   it('applies radius filter when postcode and radius are provided', async () => {
@@ -193,5 +261,58 @@ describe('GET /api/notices/search', () => {
       radius_meters: 15000,
     });
     expect(geocodeMock).toHaveBeenCalledWith('SW1A 1AA');
+  });
+
+  it('hydrates legacy flat notice records without nested JSON structures', async () => {
+    geocodeMock.mockResolvedValueOnce({
+      postcode: 'SW1A 1AA',
+      latitude: 51.503,
+      longitude: -0.127,
+      source: 'cache',
+    });
+
+    supabaseResponse = {
+      data: [
+        {
+          id: 'flat-notice-1',
+          notice_type: 'Premises Licence',
+          status: 'published',
+          applicant_name: 'Whitehall Dining Group Ltd',
+          trading_name: 'No.10 Terrace',
+          premises_address: '10 Downing Street, London',
+          postcode: 'SW1A 2AA',
+          latitude: 51.5035,
+          longitude: -0.1276,
+          published_date: '2025-10-09',
+          representation_deadline: '2025-10-16',
+          notice_text:
+            'Licensing Act 2003. Notice is hereby given that Whitehall Dining Group Ltd has applied to City of Westminster Council for a premises licence for No.10 Terrace, 10 Downing Street, London, to permit the sale of alcohol on and off the premises.',
+          proof_hash: '95e69532ecf40283930df86c62bc1f98e59884cba8dee69314f8c974d9f35a2e',
+          council_name: 'City of Westminster',
+          created_at: '2025-10-09T09:00:00.000Z',
+          updated_at: '2025-10-09T09:00:00.000Z',
+        },
+      ],
+      error: null,
+    };
+
+    const response = await request(app)
+      .get('/api/notices/search')
+      .query({ postcode: 'SW1A 1AA', radius_km: 5 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.items).toHaveLength(1);
+    expect(response.body.items[0]).toMatchObject({
+      id: 'flat-notice-1',
+      noticeType: 'Premises Licence',
+      status: 'published',
+      premisesName: 'No.10 Terrace',
+      premisesAddress: '10 Downing Street, London',
+      premisesPostcode: 'SW1A 2AA',
+      repsDeadline: '2025-10-16',
+      publicationDate: '2025-10-09',
+      latitude: 51.5035,
+      longitude: -0.1276,
+    });
   });
 });

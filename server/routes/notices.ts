@@ -12,6 +12,8 @@ const DEFAULT_SORT: { column: string; direction: SortDirection } = {
   direction: 'desc',
 };
 
+const POSTCODE_JSON_EXPRESSION = "coalesce(premises->>'postcode', premises_address->>'postcode')";
+
 function normaliseSortColumn(raw: string): string {
   if (!raw) return DEFAULT_SORT.column;
   if (raw === 'createdAt') return 'created_at';
@@ -144,6 +146,141 @@ function sortRowsBy(rows: any[], column: string, direction: SortDirection) {
   return sorted;
 }
 
+function firstNonEmptyString(...values: any[]): string | null {
+  for (const value of values) {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed) return trimmed;
+    }
+  }
+  return null;
+}
+
+function firstFiniteTimestamp(...values: any[]): number {
+  for (const value of values) {
+    const timestamp = toTimestamp(value);
+    if (Number.isFinite(timestamp)) {
+      return timestamp;
+    }
+  }
+  return NaN;
+}
+
+function extractPostcode(row: any): string | null {
+  const postcode = firstNonEmptyString(
+    row?.premises?.postcode,
+    row?.postcode,
+    row?.premises_address?.postcode
+  );
+  return postcode ? postcode.toUpperCase() : null;
+}
+
+function extractPremisesAddress(row: any): string | null {
+  if (typeof row?.premises?.address === 'string') {
+    const trimmed = row.premises.address.trim();
+    if (trimmed) return trimmed;
+  }
+
+  const premisesAddress = row?.premises_address;
+  if (typeof premisesAddress === 'string') {
+    const trimmed = premisesAddress.trim();
+    if (trimmed) return trimmed;
+  }
+
+  if (premisesAddress && typeof premisesAddress === 'object' && !Array.isArray(premisesAddress)) {
+    const segments = ['line1', 'line2', 'town', 'postcode']
+      .map((key) => (typeof premisesAddress?.[key] === 'string' ? premisesAddress[key].trim() : ''))
+      .filter(Boolean);
+    if (segments.length) {
+      return segments.join(', ');
+    }
+  }
+
+  return null;
+}
+
+function extractPremisesName(row: any): string | null {
+  const fromPremises = firstNonEmptyString(row?.premises?.name);
+  if (fromPremises) return fromPremises;
+
+  const tradingName = firstNonEmptyString(row?.trading_name);
+  if (tradingName) return tradingName;
+
+  return null;
+}
+
+function extractRepsDeadline(row: any): string | null {
+  const deadline = firstNonEmptyString(
+    row?.consultation?.repsDeadline,
+    row?.representation_deadline,
+    row?.reps_deadline
+  );
+  return deadline;
+}
+
+function extractPublicationDate(row: any): string | null {
+  const directValue = firstNonEmptyString(
+    row?.publication?.targetDate,
+    row?.published_date,
+    row?.notice_publication_date
+  );
+  if (directValue) return directValue;
+
+  const timestamp = firstFiniteTimestamp(row?.published_at, row?.created_at);
+  if (Number.isFinite(timestamp)) {
+    return new Date(timestamp).toISOString();
+  }
+
+  return null;
+}
+
+function extractApplicantDisplayName(row: any): string | null {
+  const displayName = firstNonEmptyString(
+    row?.extras?.applicantDisplayName,
+    row?.applicant?.displayName,
+    row?.applicant_name
+  );
+  return displayName;
+}
+
+function extractDateLike(...values: any[]): string | null {
+  for (const value of values) {
+    if (!value) continue;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed) return trimmed;
+    }
+    const timestamp = toTimestamp(value);
+    if (Number.isFinite(timestamp)) {
+      return new Date(timestamp).toISOString();
+    }
+  }
+  return null;
+}
+
+function extractLatitude(row: any): number | null {
+  const value = typeof row?.latitude === 'number' ? row.latitude : Number(row?.latitude);
+  return Number.isFinite(value) ? value : null;
+}
+
+function extractLongitude(row: any): number | null {
+  const value = typeof row?.longitude === 'number' ? row.longitude : Number(row?.longitude);
+  return Number.isFinite(value) ? value : null;
+}
+
+function getPublishedTimestamp(row: any): number {
+  return firstFiniteTimestamp(
+    row?.publication?.targetDate,
+    row?.published_at,
+    row?.published_date,
+    row?.created_at
+  );
+}
+
+function getCreatedTimestamp(row: any): number {
+  return firstFiniteTimestamp(row?.created_at, row?.published_at, row?.published_date);
+}
+
 const router = Router();
 
 type DraftNoticeAddress = {
@@ -272,7 +409,7 @@ router.get('/notices/search', async (req, res) => {
     }
 
     const client = createClient(url, key);
-    const selectColumns = 'id, notice_type, status, premises, consultation, publication, extras, latitude, longitude, created_at, updated_at';
+    const selectColumns = '*';
 
     const postcodeFromParam = postcodeParam ? normalisePostcode(postcodeParam) : null;
     const postcodeFromQuery = q ? normalisePostcode(q) : null;
@@ -299,7 +436,8 @@ router.get('/notices/search', async (req, res) => {
       let qb = queryBuilder;
 
       if (effectivePostcode) {
-        qb = qb.ilike('premises->>postcode', `${effectivePostcode.outward}%`);
+        const outwardPattern = `${effectivePostcode.outward}%`;
+        qb = qb.filter(POSTCODE_JSON_EXPRESSION, 'ilike', outwardPattern);
       }
 
       if (typeParam) {
@@ -388,56 +526,71 @@ router.get('/notices/search', async (req, res) => {
     }
 
     const filteredRows = rows.filter((row: any) => {
-      if (effectivePostcode) {
-        const rowPostcode = typeof row?.premises?.postcode === 'string' ? row.premises.postcode.toUpperCase() : '';
-        if (!rowPostcode.startsWith(effectivePostcode.outward)) {
+      if (bbox) {
+        const [south, west, north, east] = bbox;
+        const lat = extractLatitude(row);
+        const lng = extractLongitude(row);
+
+        if (lat === null || lng === null) {
           return false;
         }
-      }
 
-      if (typeParam && row.notice_type !== typeParam) {
-        return false;
+        if (lat < south || lat > north || lng < west || lng > east) {
+          return false;
+        }
       }
 
       if (statusParam && row.status !== statusParam) {
         return false;
       }
 
+      if (typeParam && row.notice_type !== typeParam) {
+        return false;
+      }
+
       if (councilParam) {
-        const rowCouncil = typeof row?.extras?.councilId === 'string' ? row.extras.councilId : null;
+        const rowCouncil = firstNonEmptyString(row?.extras?.councilId, row?.council_id, row?.councilId);
         if (rowCouncil !== councilParam) {
           return false;
         }
       }
 
+      const rowPostcode = extractPostcode(row);
+      if (effectivePostcode && (!rowPostcode || !rowPostcode.startsWith(effectivePostcode.outward))) {
+        return false;
+      }
+
       if (startParam) {
-        const createdAt = row?.created_at ? new Date(row.created_at).getTime() : NaN;
-        const startTime = new Date(startParam).getTime();
-        if (Number.isFinite(startTime) && (!Number.isFinite(createdAt) || createdAt < startTime)) {
+        const createdTimestamp = getCreatedTimestamp(row);
+        const startTime = toTimestamp(startParam);
+        if (Number.isFinite(startTime) && (!Number.isFinite(createdTimestamp) || createdTimestamp < startTime)) {
           return false;
         }
       }
 
       if (endParam) {
-        const createdAt = row?.created_at ? new Date(row.created_at).getTime() : NaN;
-        const endTime = new Date(endParam).getTime();
-        if (Number.isFinite(endTime) && (!Number.isFinite(createdAt) || createdAt > endTime)) {
+        const createdTimestamp = getCreatedTimestamp(row);
+        const endTime = toTimestamp(endParam);
+        if (Number.isFinite(endTime) && (!Number.isFinite(createdTimestamp) || createdTimestamp > endTime)) {
           return false;
         }
       }
 
       if (q && !postcodeFromQuery) {
         const lowerQ = q.toLowerCase();
-        const matches = [
+        const premisesAddress = extractPremisesAddress(row);
+        const premisesName = extractPremisesName(row);
+        const applicantDisplayName = extractApplicantDisplayName(row);
+        const haystack = [
           typeof row.notice_type === 'string' ? row.notice_type.toLowerCase() : '',
-          typeof row?.premises?.name === 'string' ? row.premises.name.toLowerCase() : '',
-          typeof row?.premises?.address === 'string' ? row.premises.address.toLowerCase() : '',
-          typeof row?.extras?.applicantDisplayName === 'string'
-            ? row.extras.applicantDisplayName.toLowerCase()
-            : '',
-        ].some((value) => value.includes(lowerQ));
+          premisesName ? premisesName.toLowerCase() : '',
+          premisesAddress ? premisesAddress.toLowerCase() : '',
+          applicantDisplayName ? applicantDisplayName.toLowerCase() : '',
+          typeof row.trading_name === 'string' ? row.trading_name.toLowerCase() : '',
+          typeof row.notice_text === 'string' ? row.notice_text.toLowerCase() : '',
+        ];
 
-        if (!matches) {
+        if (!haystack.some((value) => value.includes(lowerQ))) {
           return false;
         }
       }
@@ -445,27 +598,62 @@ router.get('/notices/search', async (req, res) => {
       return true;
     });
 
-    const sortedRows = sortRowsBy(filteredRows, sortColumn, direction);
-    const limitedRows = sortedRows.slice(0, limitParam);
+    let sortedRows: any[];
+    if (bbox) {
+      sortedRows = [...filteredRows].sort((a, b) => {
+        const aPublished = getPublishedTimestamp(a);
+        const bPublished = getPublishedTimestamp(b);
+        const aHasPublished = Number.isFinite(aPublished);
+        const bHasPublished = Number.isFinite(bPublished);
+
+        if (aHasPublished && bHasPublished && aPublished !== bPublished) {
+          return bPublished - aPublished;
+        }
+        if (aHasPublished && !bHasPublished) return -1;
+        if (!aHasPublished && bHasPublished) return 1;
+
+        const aCreated = getCreatedTimestamp(a);
+        const bCreated = getCreatedTimestamp(b);
+        const aHasCreated = Number.isFinite(aCreated);
+        const bHasCreated = Number.isFinite(bCreated);
+
+        if (aHasCreated && bHasCreated && aCreated !== bCreated) {
+          return bCreated - aCreated;
+        }
+        if (aHasCreated && !bHasCreated) return -1;
+        if (!aHasCreated && bHasCreated) return 1;
+
+        return 0;
+      });
+    } else {
+      sortedRows = sortRowsBy(filteredRows, sortColumn, direction);
+    }
+
+    const limitedRows = bbox ? sortedRows : sortedRows.slice(0, limitParam);
 
     const items = limitedRows.map((row: any) => {
-      const premises = row.premises || {};
-      const consultation = row.consultation || {};
-      const publication = row.publication || {};
+      const premises = row?.premises && typeof row.premises === 'object' ? row.premises : {};
+      const consultation = row?.consultation && typeof row.consultation === 'object' ? row.consultation : {};
+      const publication = row?.publication && typeof row.publication === 'object' ? row.publication : {};
+      const extras = row?.extras && typeof row.extras === 'object' ? row.extras : {};
+
+      const latitude = extractLatitude(row);
+      const longitude = extractLongitude(row);
+
       return {
         id: row.id,
         noticeType: row.notice_type,
         status: row.status,
-        premisesName: premises.name || null,
-        premisesAddress: premises.address || null,
-        premisesPostcode: premises.postcode || null,
-        repsDeadline: consultation.repsDeadline || null,
-        applicationDate: consultation.applicationDate || null,
-        publicationDate: publication.targetDate || null,
-        newspaper: publication.newspaper || null,
-        viewUrl: (row.extras && row.extras.viewUrl) || null,
-        latitude: typeof row.latitude === 'number' ? row.latitude : null,
-        longitude: typeof row.longitude === 'number' ? row.longitude : null,
+        premisesName: extractPremisesName(row),
+        premisesAddress: extractPremisesAddress(row),
+        premisesPostcode: extractPostcode(row),
+        repsDeadline: extractRepsDeadline(row),
+        applicationDate: extractDateLike(consultation.applicationDate, row?.application_date),
+        publicationDate: extractPublicationDate(row),
+        newspaper: firstNonEmptyString(publication.newspaper, row?.newspaper),
+        viewUrl: firstNonEmptyString(extras.viewUrl, row?.view_url),
+        latitude,
+        longitude,
       };
     });
 
