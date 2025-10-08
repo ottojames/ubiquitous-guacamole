@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { AnimatePresence, motion } from 'framer-motion';
 import AddressSearchBar, { type AddressSearchSubmitPayload } from '@/components/search/AddressSearchBar';
 import SearchResults from '@/components/home/SearchResults';
 import NoticesMapView from '@/components/search/NoticesMapView';
+import Header from '@/components/layout/Header';
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import { useNoticeSearch } from '@/hooks/useNoticeSearch';
 import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
-import * as UI from '@/styles/ui';
 
 const TYPE_OPTIONS = ['Premises Licence', 'Traffic Order', 'Planning'];
 const STATUS_OPTIONS = ['Open', 'Closed'];
@@ -76,6 +77,7 @@ export default function NoticesPage() {
 
   const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null);
   const [hoveredNoticeId, setHoveredNoticeId] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const mapView = viewParam === 'map';
 
@@ -246,12 +248,15 @@ export default function NoticesPage() {
     }, true);
   }, [updateParams]);
 
-  const toggleMapView = useCallback(() => {
-    updateParams((params) => {
-      if (params.get('view') === 'map') params.delete('view');
-      else params.set('view', 'map');
-    }, true);
-  }, [updateParams]);
+  const setViewMode = useCallback(
+    (mode: 'map' | 'list') => {
+      updateParams((params) => {
+        if (mode === 'map') params.set('view', 'map');
+        else params.delete('view');
+      }, true);
+    },
+    [updateParams]
+  );
 
   const clearFilters = useCallback(() => {
     updateParams((params) => {
@@ -276,185 +281,398 @@ export default function NoticesPage() {
     refetch();
   }, [refetch]);
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50/80 backdrop-blur">
-        <div className={`${UI.container} py-4 space-y-3`}>
-          <AddressSearchBar
-            value={addressValue}
-            onValueChange={(next) => {
-              setAddressValue(next);
-              setAddressInlineError(null);
-            }}
-            onSubmit={handleAddressSubmit}
-            onFreeText={handleFreeText}
-            testIdPrefix="notices"
-          />
-          {addressInlineError && (
-            <p role="alert" className="text-sm text-rose-600">{addressInlineError}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-2">
-            {TYPE_OPTIONS.map((option) => {
-              const active = typeFilter === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleType(option)}
-                  className={`rounded-full border px-3 py-1 text-sm transition ${
-                    active ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  {option}
-                </button>
-              );
-            })}
-            {STATUS_OPTIONS.map((option) => {
-              const active = statusFilter.toLowerCase() === option.toLowerCase();
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleStatus(option)}
-                  className={`rounded-full border px-3 py-1 text-sm transition ${
-                    active ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  {option}
-                </button>
-              );
-            })}
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <label className="flex items-center gap-1">
-                <span className="sr-only">Start date</span>
-                <input
-                  type="date"
-                  value={startFilter}
-                  onChange={(event) => handleDateChange('start', event.target.value)}
-                  className="rounded-md border border-slate-200 px-2 py-1 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </label>
-              <span>to</span>
-              <label className="flex items-center gap-1">
-                <span className="sr-only">End date</span>
-                <input
-                  type="date"
-                  value={endFilter}
-                  onChange={(event) => handleDateChange('end', event.target.value)}
-                  className="rounded-md border border-slate-200 px-2 py-1 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </label>
-            </div>
+  const FilterControls = ({
+    layout = 'row',
+    showClear = true,
+    className = '',
+  }: {
+    layout?: 'row' | 'column';
+    showClear?: boolean;
+    className?: string;
+  }) => {
+    const stack = layout === 'column';
+    const containerClass = `${stack ? 'flex flex-col gap-4' : 'flex flex-col gap-3'} ${className}`;
+    const chipBase =
+      'rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-150 backdrop-blur-sm shadow-[0_0_0_1px_rgba(14,23,42,0.04)]';
+    const chipActive =
+      'border-transparent bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] text-white shadow-[0_10px_24px_rgba(37,99,235,0.26)]';
+    const chipInactive =
+      'border-transparent bg-white/80 text-slate-600 hover:border-slate-200 hover:text-slate-900';
+
+    return (
+      <div className={containerClass}>
+        <div className={`flex flex-wrap items-center gap-2 ${stack ? '' : ''}`}>
+          {TYPE_OPTIONS.map((option) => {
+            const active = typeFilter === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => toggleType(option)}
+                className={`${chipBase} ${active ? chipActive : chipInactive}`}
+              >
+                {option}
+              </button>
+            );
+          })}
+          {STATUS_OPTIONS.map((option) => {
+            const active = statusFilter.toLowerCase() === option.toLowerCase();
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => toggleStatus(option)}
+                className={`${chipBase} ${active ? chipActive : chipInactive}`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium text-slate-700">From</span>
+            <input
+              type="date"
+              value={startFilter}
+              onChange={(event) => handleDateChange('start', event.target.value)}
+              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium text-slate-700">To</span>
+            <input
+              type="date"
+              value={endFilter}
+              onChange={(event) => handleDateChange('end', event.target.value)}
+              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            />
+          </label>
+          {showClear && hasActiveFilters && (
             <button
               type="button"
-              onClick={toggleMapView}
-              className={`ml-auto rounded-full border px-3 py-1 text-sm transition ${
-                mapView ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-700 hover:border-slate-300'
-              }`}
+              onClick={clearFilters}
+              className="ml-auto rounded-full border border-transparent px-3 py-1.5 text-sm font-semibold text-slate-600 hover:border-slate-200 hover:text-slate-900"
             >
-              {mapView ? 'List view' : 'Map view'}
+              Clear filters
             </button>
-            {hasActiveFilters && (
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-[#eef3ff] to-[#f8faff]">
+      <Header />
+      <div id="header-sentinel" className="h-px w-full" aria-hidden="true" />
+
+      <main className="relative">
+        <div className="mx-auto max-w-7xl space-y-10 px-6 py-12 lg:px-12">
+          <section className="flex flex-col items-center gap-6 text-center">
+            <div className="space-y-3">
+              <h1 className="text-3xl font-semibold text-slate-800 md:text-4xl">Find notices near…</h1>
+              <p className="mx-auto max-w-2xl text-base text-slate-600">
+                Search licensing, planning, and traffic notices across the UK. Use filters or explore the live map to
+                see everything nearby.
+              </p>
+            </div>
+            <div className="w-full max-w-3xl">
+              <AddressSearchBar
+                value={addressValue}
+                onValueChange={(next) => {
+                  setAddressValue(next);
+                  setAddressInlineError(null);
+                }}
+                onSubmit={handleAddressSubmit}
+                onFreeText={handleFreeText}
+                testIdPrefix="notices"
+              />
+              {addressInlineError && (
+                <p role="alert" className="mt-2 text-sm font-medium text-rose-600">
+                  {addressInlineError}
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="inline-flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                <span className="text-sm font-semibold text-slate-700">
+                  {loading
+                    ? 'Updating notices…'
+                    : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
+                </span>
+                <span className="text-slate-500">
+                  for <span className="font-semibold text-slate-700">{searchLabel}</span>
+                </span>
+                {hasActiveFilters && (
+                  <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+                    Filters on
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/80 px-4 py-1.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-slate-200 hover:text-slate-900 lg:hidden"
+                >
+                  Filters
+                </button>
+                <div className="flex rounded-full bg-slate-100/90 p-1 shadow-inner transition">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('map')}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 ${
+                      mapView
+                        ? 'bg-white text-slate-900 shadow-[0_1px_3px_rgba(15,23,42,0.08)]'
+                        : 'text-slate-500 hover:bg-white/70 hover:text-slate-700'
+                    }`}
+                  >
+                    Map view
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-150 ${
+                      mapView
+                        ? 'text-slate-500 hover:bg-white/70 hover:text-slate-700'
+                        : 'bg-white text-slate-900 shadow-[0_1px_3px_rgba(15,23,42,0.08)]'
+                    }`}
+                  >
+                    List view
+                  </button>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="hidden items-center rounded-full border border-transparent px-3 py-1.5 text-sm font-semibold text-slate-600 hover:border-slate-200 hover:text-slate-900 lg:inline-flex"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="hidden lg:block">
+              <div className="rounded-2xl border border-white/30 bg-white/70 p-6 shadow-sm backdrop-blur-md">
+                <FilterControls showClear={false} className="w-full" />
+              </div>
+            </div>
+          </section>
+
+          {error && (
+            <div className="rounded-2xl border border-rose-200/70 bg-white px-6 py-5 text-sm text-rose-700 shadow-[0_1px_4px_rgba(0,0,0,0.05)]">
+              <p className="font-medium">
+                Search failed for <span className="font-semibold text-rose-800">{searchLabel}</span>. {error}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={retryFetch}
+                  className="inline-flex items-center rounded-full border border-rose-200 bg-white px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300"
+                >
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={broadenRadius}
+                  className="inline-flex items-center rounded-full border border-rose-200 bg-white px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300"
+                >
+                  Broaden search
+                </button>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex items-center rounded-full border border-rose-200 bg-white px-3 py-1.5 text-sm font-semibold text-rose-600 transition hover:border-rose-300"
+                >
+                  Clear filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          <AnimatePresence mode="wait">
+            {mapView ? (
+              <motion.div
+                key="map-view"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.28, ease: 'easeOut' }}
+              >
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                  <section className="relative">
+                    <div className="relative h-[340px] overflow-hidden sm:h-[420px] md:h-[520px] lg:h-[70vh]">
+                      <NoticesMapView
+                        notices={filteredResults}
+                        loading={loading}
+                        activeNoticeId={activeNoticeId}
+                        hoveredNoticeId={hoveredNoticeId}
+                        onActiveNoticeChange={setActiveNoticeId}
+                        onHoverNoticeChange={setHoveredNoticeId}
+                        onBoundsChange={handleMapBoundsChange}
+                        initialBounds={mapBoundingBox}
+                        initialViewState={mapZoom ? { zoom: mapZoom } : undefined}
+                        autoFitToNotices={!mapBoundingBox}
+                        className="h-full"
+                      />
+                      <div className="pointer-events-none absolute left-6 top-6 z-10">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700 shadow-sm backdrop-blur">
+                          {loading
+                            ? 'Loading notices…'
+                            : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <aside className="flex h-[340px] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] backdrop-blur sm:h-[420px] md:h-[520px] lg:h-[70vh]">
+                    <div className="space-y-3 border-b border-slate-200/60 px-6 py-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-700">
+                            {loading
+                              ? 'Updating results…'
+                              : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
+                          </p>
+                          <p className="text-xs text-slate-500">For {searchLabel}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFiltersOpen(true)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 lg:hidden"
+                        >
+                          Filters
+                        </button>
+                      </div>
+                      <div className="hidden lg:block">
+                        <FilterControls layout="column" className="w-full" />
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                      <SearchResults
+                        results={filteredResults}
+                        query={searchLabel}
+                        loading={loading}
+                        loadingMessage="Loading notices…"
+                        emptyMessage="No notices located in this map view yet."
+                        activeNoticeId={activeNoticeId}
+                        onSelectNotice={handleListSelectNotice}
+                        onHoverNotice={setHoveredNoticeId}
+                      />
+                    </div>
+                  </aside>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="list-view"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.28, ease: 'easeOut' }}
+              >
+                <div className="rounded-2xl border border-white/50 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 px-6 py-5">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">
+                        {loading
+                          ? 'Updating results…'
+                          : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
+                      </p>
+                      <p className="text-xs text-slate-500">For {searchLabel}</p>
+                    </div>
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="inline-flex items-center rounded-full border border-transparent px-3 py-1.5 text-sm font-semibold text-slate-600 hover:border-slate-200 hover:text-slate-900"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                  <div className="px-6 py-6">
+                    <SearchResults
+                      results={filteredResults}
+                      query={searchLabel}
+                      loading={loading}
+                      loadingMessage="Loading notices…"
+                      activeNoticeId={activeNoticeId}
+                      onSelectNotice={handleListSelectNotice}
+                      onHoverNotice={setHoveredNoticeId}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+
+      {filtersOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 px-4 py-6 backdrop-blur-sm sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="notice-filters-title"
+          onClick={() => setFiltersOpen(false)}
+        >
+          <div
+            className="w-full max-w-xl overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_32px_80px_rgba(15,23,42,0.18)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <h2 id="notice-filters-title" className="text-base font-semibold text-slate-800">
+                Filters
+              </h2>
               <button
                 type="button"
-                onClick={clearFilters}
-                className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-700 hover:border-slate-300"
+                onClick={() => setFiltersOpen(false)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-slate-500 hover:border-slate-200 hover:text-slate-900"
+                aria-label="Close filters"
               >
-                Clear all
+                ×
               </button>
-            )}
+            </div>
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+              <FilterControls layout="column" className="w-full" />
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/60 px-6 py-4">
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearFilters();
+                    setFiltersOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-200 hover:text-slate-900"
+                >
+                  Clear filters
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
-      </header>
-
-      <main className={`${UI.container} py-8 space-y-6`}>
-        {error && (
-          <div className="space-y-3 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            <p>
-              Search failed for <strong>{searchLabel}</strong>. {error}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={retryFetch}
-                className="rounded-full border border-rose-300 bg-white px-3 py-1 text-sm font-medium text-rose-700 hover:border-rose-400"
-              >
-                Retry
-              </button>
-              <button
-                type="button"
-                onClick={broadenRadius}
-                className="rounded-full border border-rose-300 bg-white px-3 py-1 text-sm font-medium text-rose-700 hover:border-rose-400"
-              >
-                Broaden search
-              </button>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="rounded-full border border-rose-300 bg-white px-3 py-1 text-sm font-medium text-rose-700 hover:border-rose-400"
-              >
-                Clear filters
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mapView ? (
-          <div className="flex flex-col gap-6 lg:flex-row">
-            <div className="relative flex-1 min-h-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 sm:h-[420px] md:h-[520px] lg:h-[65vh]">
-              <NoticesMapView
-                notices={filteredResults}
-                loading={loading}
-                activeNoticeId={activeNoticeId}
-                hoveredNoticeId={hoveredNoticeId}
-                onActiveNoticeChange={setActiveNoticeId}
-                onHoverNoticeChange={setHoveredNoticeId}
-                onBoundsChange={handleMapBoundsChange}
-                initialBounds={mapBoundingBox}
-                initialViewState={mapZoom ? { zoom: mapZoom } : undefined}
-                autoFitToNotices={!mapBoundingBox}
-                className="h-full"
-              />
-              <div className="pointer-events-none absolute left-4 top-4 z-10 hidden sm:block">
-                <div className="rounded-full bg-white/90 px-4 py-1 text-xs font-semibold text-slate-700 shadow">
-                  {loading
-                    ? 'Loading notices…'
-                    : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
-                </div>
-              </div>
-            </div>
-            <div className="lg:w-[360px] lg:flex-none">
-              <div className="h-[260px] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-sm sm:h-[320px] md:h-[520px] lg:h-[65vh]">
-                <SearchResults
-                  results={filteredResults}
-                  query={searchLabel}
-                  loading={loading}
-                  loadingMessage="Loading notices…"
-                  emptyMessage="No notices located in this map view yet."
-                  activeNoticeId={activeNoticeId}
-                  onSelectNotice={handleListSelectNotice}
-                  onHoverNotice={setHoveredNoticeId}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <SearchResults
-            results={filteredResults}
-            query={searchLabel}
-            loading={loading}
-            activeNoticeId={activeNoticeId}
-            onSelectNotice={handleListSelectNotice}
-            onHoverNotice={setHoveredNoticeId}
-          />
-        )}
-      </main>
+      )}
 
       {toastMessage && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-4 right-4 rounded-md bg-slate-900 px-4 py-2 text-xs text-white shadow-lg"
+          className="fixed bottom-5 right-5 rounded-full bg-slate-900/90 px-4 py-2 text-xs font-semibold text-white shadow-lg"
         >
           {toastMessage}
         </div>

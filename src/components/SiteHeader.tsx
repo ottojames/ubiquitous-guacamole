@@ -28,11 +28,12 @@ export default function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 ${compact ? 'bg-white/90 shadow-[0_1px_0_0_rgba(2,6,23,0.06)]' : 'bg-white/75 border-b border-transparent'}`}
+      className={`sticky top-0 z-50 bg-gradient-to-r from-[#eef3ff] to-[#f8faff] backdrop-blur-md shadow-sm transition-shadow duration-200 ${
+        compact ? 'shadow-md' : ''
+      }`}
       style={{ height: 'var(--headerH)' }}
     >
-      <div className={`${UI.container ?? 'max-w-6xl mx-auto px-4 sm:px-6'} h-full`}>
-        <div className="h-full flex items-center justify-between">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6 lg:px-12">
           {/* Left: logo + desktop nav */}
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center text-slate-900 font-extrabold tracking-tight" style={{ letterSpacing: '-0.5px' }}>
@@ -83,7 +84,6 @@ export default function SiteHeader() {
             </button>
           </div>
         </div>
-      </div>
 
       {/* Mobile sheet */}
       {mobileOpen && (
