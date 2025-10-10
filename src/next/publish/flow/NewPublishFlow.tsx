@@ -14,106 +14,94 @@ import { buildSampleDraft } from '@/next/publish/sampleData';
 import { setNested } from '@/next/publish/utils/object';
 import TemplateBuilderForm from './TemplateBuilderForm';
 import TemplatePreview from './TemplatePreview';
+import NoticePreview, { type PreviewIssue } from './NoticePreview';
 
 const labels = ['Confirm notice type', 'Upload your notice', 'Confirm your notice', 'Pay'];
 
 type Step = 1 | 2 | 3 | 4;
 
-type FlowState = {
-  definitionId: string | null;
-  uploadMethod: UploadMethod | null;
-  templateDraft: Record<string, unknown> | null;
-};
-
-const initialState: FlowState = {
-  definitionId: null,
-  uploadMethod: null,
-  templateDraft: null,
-};
+type TemplateDraft = Record<string, unknown> | null;
 
 export default function NewPublishFlow() {
   const [step, setStep] = useState<Step>(1);
-  const [state, setState] = useState<FlowState>(initialState);
-  const selectedDefinition = useMemo<NoticeDefinition | null>(
-    () => (state.definitionId ? getDefinitionById(state.definitionId) ?? null : null),
-    [state.definitionId]
+  const [definitionId, setDefinitionId] = useState<string | null>(null);
+  const definition = useMemo<NoticeDefinition | null>(
+    () => (definitionId ? getDefinitionById(definitionId) ?? null : null),
+    [definitionId]
   );
-  const builder = useMemo(() => {
-    if (!selectedDefinition) return null;
-    return getNoticeBuilder(selectedDefinition.id);
-  }, [selectedDefinition?.id]);
-
-  const templateRenderer = useMemo(() => {
-    if (!selectedDefinition) return null;
-    return getNoticeTemplateRenderer(selectedDefinition.templateKey);
-  }, [selectedDefinition?.templateKey]);
+  const [uploadMethod, setUploadMethod] = useState<UploadMethod | null>(null);
+  const [templateDraft, setTemplateDraft] = useState<TemplateDraft>(null);
 
   useEffect(() => {
-    if (!selectedDefinition && step > 1) {
-      setStep(1);
+    if (!definition) {
+      setUploadMethod(null);
+      setTemplateDraft(null);
+      if (step > 1) {
+        setStep(1);
+      }
     }
-  }, [selectedDefinition, step]);
+  }, [definition, step]);
 
-  const handleSelectDefinition = (id: string, _definition: NoticeDefinition) => {
-    setState({ definitionId: id, uploadMethod: null, templateDraft: {} });
-  };
+  const handleSelectDefinition = React.useCallback((id: string, _definition: NoticeDefinition) => {
+    setDefinitionId(id);
+    setUploadMethod(null);
+    setTemplateDraft({});
+  }, []);
 
-  const handleContinueFromStep1 = () => {
-    if (!state.definitionId) return;
+  const handleContinueFromStep1 = React.useCallback(() => {
+    if (!definitionId) return;
     setStep(2);
-  };
+  }, [definitionId]);
 
-  const handleUploadMethodChange = (method: UploadMethod) => {
-    setState((prev) => ({
-      ...prev,
-      uploadMethod: method,
-      templateDraft: method === 'template' ? prev.templateDraft ?? {} : prev.templateDraft,
-    }));
-  };
+  const handleMethodChange = React.useCallback((method: UploadMethod) => {
+    setUploadMethod(method);
+    if (method === 'template') {
+      setTemplateDraft((prev) => prev ?? {});
+    }
+  }, []);
 
-  const handleContinueFromStep2 = () => {
-    if (!state.uploadMethod) return;
-    setStep(3);
-  };
-
-  const handleBackToStep1 = () => {
+  const handleBackToStep1 = React.useCallback(() => {
     setStep(1);
-  };
+  }, []);
 
-  const handleBackToStep2 = () => {
+  const handleContinueFromStep2 = React.useCallback(() => {
+    if (!uploadMethod) return;
+    setStep(3);
+  }, [uploadMethod]);
+
+  const handleBackToStep2 = React.useCallback(() => {
     setStep(2);
-  };
+  }, []);
 
-  const handleContinueToPayment = () => {
+  const handleContinueToPayment = React.useCallback(() => {
     setStep(4);
-  };
+  }, []);
 
-  const handleSubmit = () => {
-    // Placeholder for integration with payment/submit endpoint
-    console.info('Submit notice', computedNotice);
-  };
+  const builder = useMemo(() => {
+    if (!definition) return null;
+    return getNoticeBuilder(definition.id);
+  }, [definition?.id]);
+
+  const templateRenderer = useMemo(() => {
+    if (!definition) return null;
+    return getNoticeTemplateRenderer(definition.templateKey);
+  }, [definition?.templateKey]);
 
   const handleTemplatePatch = React.useCallback((patch: Record<string, unknown>) => {
-    setState((prev) => ({
-      ...prev,
-      templateDraft: { ...(prev.templateDraft ?? {}), ...patch },
-    }));
+    setTemplateDraft((prev) => ({ ...(prev ?? {}), ...patch }));
   }, []);
 
   const updateTemplateDraftPath = React.useCallback((path: (string | number)[], value: unknown) => {
-    setState((prev) => ({
-      ...prev,
-      templateDraft: setNested(prev.templateDraft ?? {}, path, value),
-    }));
+    setTemplateDraft((prev) => setNested(prev ?? {}, path, value));
   }, []);
 
   const templatePayload = useMemo(() => {
-    if (!builder || state.uploadMethod !== 'template') return null;
+    if (!builder || uploadMethod !== 'template') return null;
     return {
-      ...(state.templateDraft ?? {}),
-      variant: selectedDefinition?.id,
+      ...(templateDraft ?? {}),
+      variant: definition?.id,
     };
-  }, [builder, state.uploadMethod, state.templateDraft, selectedDefinition?.id]);
+  }, [builder, uploadMethod, templateDraft, definition?.id]);
 
   const templateParse = useMemo(() => {
     if (!builder || !templatePayload) return null;
@@ -154,8 +142,15 @@ export default function NewPublishFlow() {
     return [...flat.formErrors, ...fieldErrors];
   }, [templateParseErrors]);
 
+  const issues = useMemo<PreviewIssue[]>(() => {
+    if (uploadMethod !== 'template') return [];
+    const parseIssues = parseMessages.map<PreviewIssue>((message) => ({ type: 'parse', message }));
+    const windowRuleIssues = validationIssues.map<PreviewIssue>((issue) => ({ type: 'window', message: issue.message }));
+    return [...parseIssues, ...windowRuleIssues];
+  }, [uploadMethod, parseMessages, validationIssues]);
+
   const confirmMetadata = useMemo(() => {
-    if (state.uploadMethod !== 'template') return null;
+    if (uploadMethod !== 'template') return null;
     if (parseMessages.length === 0 && validationIssues.length === 0) return null;
     return (
       <div className="space-y-3">
@@ -181,14 +176,19 @@ export default function NewPublishFlow() {
         )}
       </div>
     );
-  }, [state.uploadMethod, parseMessages, validationIssues]);
+  }, [uploadMethod, parseMessages, validationIssues]);
 
-  const computedNotice: NoticeBase | null = state.uploadMethod === 'template' ? templateNotice : null;
+  const computedNotice: NoticeBase | null = uploadMethod === 'template' ? templateNotice : null;
+
+  const handleSubmit = React.useCallback(() => {
+    // Placeholder for integration with payment/submit endpoint
+    console.info('Submit notice', computedNotice);
+  }, [computedNotice]);
 
   const sampleTemplateDraft = useMemo(() => {
-    if (!selectedDefinition) return null;
-    return buildSampleDraft(selectedDefinition.id);
-  }, [selectedDefinition?.id]);
+    if (!definition) return null;
+    return buildSampleDraft(definition.id);
+  }, [definition?.id]);
 
   const fromNoticePlaceholder = (
     <div className="p-6 text-sm text-neutral-600 space-y-3">
@@ -198,16 +198,15 @@ export default function NewPublishFlow() {
       <p>
         The new flow will use structured parsing, red required placeholders, and unified address lookup.
       </p>
+      <p>
+        You can still continue with manual entry today by selecting the template builder option.
+      </p>
     </div>
   );
 
   const templateFormContent = builder ? (
     <div className="space-y-4 p-6">
-      <TemplateBuilderForm
-        definition={selectedDefinition!}
-        draft={state.templateDraft}
-        onChange={updateTemplateDraftPath}
-      />
+      <TemplateBuilderForm definition={definition!} draft={templateDraft} onChange={updateTemplateDraftPath} />
       {sampleTemplateDraft && (
         <button
           type="button"
@@ -225,7 +224,7 @@ export default function NewPublishFlow() {
   );
 
   const previewNode = useMemo(() => {
-    if (state.uploadMethod === 'template') {
+    if (uploadMethod === 'template') {
       return <TemplatePreview text={templateText ?? ''} />;
     }
     return (
@@ -233,7 +232,7 @@ export default function NewPublishFlow() {
         Preview will appear here once the notice is built.
       </div>
     );
-  }, [state.uploadMethod, templateText]);
+  }, [uploadMethod, templateText]);
 
   return (
     <div className="space-y-6" data-testid="publish-next-flow">
@@ -242,42 +241,45 @@ export default function NewPublishFlow() {
           <ProgressBar step={step} totalSteps={4} labels={labels} />
           {step === 1 && (
             <NoticeTypeStep
-              selectedId={state.definitionId}
+              selectedId={definitionId}
               onSelect={handleSelectDefinition}
               onContinue={handleContinueFromStep1}
             />
           )}
-          {step === 2 && selectedDefinition && (
+          {step === 2 && definition && (
             <UploadMethodStep
-              definition={selectedDefinition}
-              method={state.uploadMethod}
-              onMethodChange={handleUploadMethodChange}
+              definition={definition}
+              method={uploadMethod}
+              onMethodChange={handleMethodChange}
               onBack={handleBackToStep1}
               onContinue={handleContinueFromStep2}
-              continueDisabled={
-                state.uploadMethod === 'template'
-                  ? !(templateParse && templateParse.success)
-                  : !state.uploadMethod
-              }
+              continueDisabled={!uploadMethod}
               fromNoticeContent={fromNoticePlaceholder}
               templateContent={templateFormContent}
+              rightRail={
+                <NoticePreview
+                  definition={definition}
+                  draft={templateDraft}
+                  issues={issues}
+                />
+              }
             />
           )}
-          {step === 3 && selectedDefinition && state.uploadMethod && (
+          {step === 3 && definition && uploadMethod && (
             <ConfirmStep
-              definition={selectedDefinition}
+              definition={definition}
               notice={computedNotice}
-              uploadMethod={state.uploadMethod}
+              uploadMethod={uploadMethod}
               onBack={handleBackToStep2}
               onContinue={handleContinueToPayment}
-              continueDisabled={!computedNotice}
+              continueDisabled={uploadMethod === 'template' && !computedNotice}
               preview={previewNode}
               metadata={confirmMetadata}
             />
           )}
-          {step === 4 && selectedDefinition && (
+          {step === 4 && definition && (
             <PaymentStep
-              definition={selectedDefinition}
+              definition={definition}
               notice={computedNotice}
               onBack={() => setStep(3)}
               onSubmit={handleSubmit}
@@ -290,16 +292,14 @@ export default function NewPublishFlow() {
             <dl className="space-y-2 text-sm text-neutral-600">
               <div>
                 <dt className="font-medium text-neutral-700">Notice type</dt>
-                <dd className="mt-0.5 text-neutral-600">
-                  {selectedDefinition ? selectedDefinition.label : 'Not selected'}
-                </dd>
+                <dd className="mt-0.5 text-neutral-600">{definition ? definition.label : 'Not selected'}</dd>
               </div>
               <div>
                 <dt className="font-medium text-neutral-700">Upload method</dt>
                 <dd className="mt-0.5 text-neutral-600">
-                  {state.uploadMethod === 'notice'
+                  {uploadMethod === 'notice'
                     ? 'Upload from notice'
-                    : state.uploadMethod === 'template'
+                    : uploadMethod === 'template'
                       ? 'Upload via template'
                       : 'Not selected'}
                 </dd>
@@ -314,7 +314,8 @@ export default function NewPublishFlow() {
           </div>
           <div className="rounded-2xl border border-neutral-200 bg-neutral-50/90 p-5 text-sm text-neutral-600">
             <p>
-              All new functionality is behind the <code className="rounded bg-neutral-100 px-1">NEW_PUBLISH_FLOW</code> flag. Disable it to return to the existing Licensing Act 2003 path.
+              All new functionality is behind the <code className="rounded bg-neutral-100 px-1">NEW_PUBLISH_FLOW</code> flag. Disable it
+              to return to the existing Licensing Act 2003 path.
             </p>
           </div>
         </aside>
