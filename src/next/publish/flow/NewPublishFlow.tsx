@@ -1,21 +1,19 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import * as UI from "@/styles/ui";
-import ProgressBar from "@/components/publish/ProgressBar";
-import NoticeTypeStep from "./steps/NoticeTypeStep";
-import UploadMethodStep, { type UploadMethod } from "./steps/UploadMethodStep";
-import TemplateBuilderForm from "./TemplateBuilderForm";
-import TemplatePreview from "./TemplatePreview";
-import ConfirmStep from "./steps/ConfirmStep";
-import PaymentStep from "./steps/PaymentStep";
-import UploadDropzone from "@/components/publish/UploadDropzone";
-import NoticePreview from "@/components/publish/NoticePreview";
-import { getDefinitionById } from "@/next/publish/config/noticeTypes";
-import { getNoticeTemplateRenderer } from "@/next/publish/templates";
-import { validateWindowRules } from "@/next/publish/validation/windowRules";
-
-const labels = ["Confirm notice type", "Upload your notice", "Confirm your notice", "Pay"];
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import ProgressBar from '@/components/publish/ProgressBar';
+import NoticeTypeStep from './steps/NoticeTypeStep';
+import UploadMethodStep, { type UploadMethod } from './steps/UploadMethodStep';
+import TemplateBuilderForm from './TemplateBuilderForm';
+import ConfirmStep from './steps/ConfirmStep';
+import PaymentStep from './steps/PaymentStep';
+import UploadDropzone from '@/components/publish/UploadDropzone';
+import NoticePreview from '@/components/publish/NoticePreview';
+import { getDefinitionById } from '@/next/publish/config/noticeTypes';
+import { getNoticeTemplateRenderer } from '@/next/publish/templates';
+import { validateWindowRules } from '@/next/publish/validation/windowRules';
 
 type Step = 1 | 2 | 3 | 4;
+
+const labels = ['Confirm notice type', 'Upload your notice', 'Confirm your notice', 'Pay'];
 
 export default function NewPublishFlow() {
   const [step, setStep] = useState<Step>(1);
@@ -26,7 +24,7 @@ export default function NewPublishFlow() {
 
   const definition = useMemo(() => (definitionId ? getDefinitionById(definitionId) : null), [definitionId]);
   const renderer = useMemo(
-    () => (definition ? getNoticeTemplateRenderer(definition) : null),
+    () => (definition ? getNoticeTemplateRenderer(definition.templateKey) : null),
     [definition]
   );
 
@@ -40,13 +38,13 @@ export default function NewPublishFlow() {
   const back = useCallback(() => setStep((s) => Math.max(1, s - 1)), []);
 
   return (
-    <div className="max-w-7xl mx-auto py-8">
+    <>
       <ProgressBar step={step} labels={labels} />
       <div className="mt-8">
         {step === 1 && (
           <NoticeTypeStep
             selectedId={definitionId}
-            onSelect={(id, def) => {
+            onSelect={(id/*, def*/) => {
               setDefinitionId(id);
               setUploadMethod(null);
               setTemplateDraft({});
@@ -68,7 +66,7 @@ export default function NewPublishFlow() {
                 definition={definition}
                 onUploadComplete={(draft) => {
                   setTemplateDraft(draft);
-                  setUploadMethod("notice");
+                  setUploadMethod('notice');
                 }}
               />
             }
@@ -95,8 +93,10 @@ export default function NewPublishFlow() {
           />
         )}
 
-        {step === 4 && <PaymentStep definition={definition} draft={templateDraft} onBack={back} />}
+        {step === 4 && (
+          <PaymentStep definition={definition} draft={templateDraft} onBack={back} />
+        )}
       </div>
-    </div>
+    </>
   );
 }

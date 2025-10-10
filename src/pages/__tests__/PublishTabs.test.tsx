@@ -2,18 +2,19 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import PublishPage from '@/pages/PublishPage';
 
-describe('PublishPage tabs', () => {
-  it('renders tabs and enables continue after OCR', async () => {
+describe('PublishPage wizard flow', () => {
+  it('only shows upload method tabs on step 2', async () => {
     render(<PublishPage />);
+
+    expect(screen.getByTestId('notice-step')).toBeInTheDocument();
+    expect(screen.queryByText('Upload from Notice')).not.toBeInTheDocument();
+    expect(screen.queryByText('Upload via Template')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('notice-option-licensing-premises-new'));
+    fireEvent.click(screen.getByTestId('notice-step-continue'));
+
+    await waitFor(() => expect(screen.getByTestId('upload-method-step')).toBeInTheDocument());
     expect(screen.getByText('Upload from Notice')).toBeInTheDocument();
     expect(screen.getByText('Upload via Template')).toBeInTheDocument();
-    const btn = screen.getByText('Continue') as HTMLButtonElement;
-    expect(btn).toHaveAttribute('aria-disabled', 'true');
-    fireEvent.change(screen.getByTestId('select-notice-type'), { target: { value: 'premises' } });
-    fireEvent.click(screen.getByTestId('btn-continue-step1'));
-    const dropzoneLabel = await screen.findByTestId('notice-upload-pill');
-    const input = dropzoneLabel.querySelector('input[type="file"]') as HTMLInputElement;
-    fireEvent.change(input, { target: { files: [new File(['hi'], 'test.pdf', { type: 'application/pdf' })] } });
-    await waitFor(() => expect(btn).toHaveAttribute('aria-disabled', 'false'));
   });
 });
