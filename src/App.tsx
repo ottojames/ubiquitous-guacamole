@@ -7,7 +7,7 @@ import StepConfirm from "@/routes/next/publish/StepConfirm";
 import StepPay from "@/routes/next/publish/StepPay";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
-import PublishPage from "@/pages/PublishPage";
+import PublishPage from "@/next/publish/PublishPage";
 import Success from "./pages/Success";
 import DetailsPage from "./pages/DetailsPage";
 import NoticesPage from "@/pages/Notices";
