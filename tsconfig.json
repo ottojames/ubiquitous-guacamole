@@ -15,6 +15,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@styles/*": ["src/styles/*"],
       "lodash.debounce": ["src/shims/lodash.debounce.ts"]
     }
   },

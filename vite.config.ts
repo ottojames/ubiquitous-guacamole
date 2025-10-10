@@ -15,7 +15,12 @@ export default defineConfig(({ mode }) => {
         globals: { Buffer: true, process: true },
       }),
     ],
-    resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+        '@styles': path.resolve(__dirname, 'src/styles'),
+      },
+    },
     define: {
       'import.meta.env.VITE_NEW_PUBLISH_FLOW': JSON.stringify(newPublishFlow),
       'import.meta.env.NEW_PUBLISH_FLOW': JSON.stringify(newPublishFlow),
