@@ -61,13 +61,16 @@ export default function NoticesPage() {
   const bboxParamRaw = (searchParams.get('bbox') ?? '').trim();
   const zoomParamRaw = (searchParams.get('zoom') ?? '').trim();
 
+  // RADIUS SLIDER: default 1 mile -> 1.60934 km (sent to API)
+  const DEFAULT_RADIUS_KM = 1.60934; // RADIUS SLIDER
   const radiusValue = (() => {
     const numeric = Number(radiusParam);
     if (!Number.isNaN(numeric) && numeric > 0) {
-      return Math.min(Math.max(Math.round(numeric), 1), 50);
+      return Math.min(Math.max(numeric, 1), 50);
     }
-    return 5;
+    return DEFAULT_RADIUS_KM;
   })();
+  const radiusMiles = useMemo(() => Math.max(1, Math.min(25, Number((radiusValue / 1.60934).toFixed(2)))) , [radiusValue]); // RADIUS SLIDER
 
   const mapBoundingBox = useMemo(() => parseBoundingBoxParam(bboxParamRaw), [bboxParamRaw]);
   const mapZoom = useMemo(() => {
@@ -148,7 +151,14 @@ export default function NoticesPage() {
     }
   }, [hoveredNoticeId, filteredResults]);
 
-  const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || radiusParam);
+  // RADIUS SLIDER: include radius in filters only when not default
+  const hasRadiusFilter = useMemo(() => {
+    if (!radiusParam) return false;
+    const numeric = Number(radiusParam);
+    if (!Number.isFinite(numeric)) return false;
+    return Math.abs(numeric - DEFAULT_RADIUS_KM) > 1e-3;
+  }, [radiusParam]);
+  const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || hasRadiusFilter);
   const searchLabel = (formatPostcodeForDisplay(postcodeParam) ?? queryParam) || 'your filters';
 
   const updateParams = useCallback(
@@ -328,6 +338,32 @@ export default function NoticesPage() {
               </button>
             );
           })}
+          {/* RADIUS SLIDER: Search radius control (miles) */}
+          <div className="ml-2 flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5">
+            <label htmlFor="radius-mi" className="text-xs font-semibold text-slate-600">
+              Search radius
+            </label>
+            <input
+              id="radius-mi"
+              type="range"
+              min={1}
+              max={25}
+              step={0.5}
+              value={radiusMiles}
+              onChange={(e) => {
+                const miles = Number(e.target.value);
+                const km = Math.max(1, Math.min(50, miles * 1.60934));
+                updateParams((params) => {
+                  params.set('radius_km', String(Number(km.toFixed(5))));
+                }, true);
+              }}
+              className="h-1 w-40 cursor-pointer appearance-none rounded bg-slate-200 accent-sky-600"
+              aria-label="Search radius in miles"
+            />
+            <span className="text-xs font-semibold text-slate-700" aria-live="polite">
+              {Number(radiusMiles.toFixed(1))} mi
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

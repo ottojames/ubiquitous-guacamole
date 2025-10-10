@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
-
+import { Pool } from 'pg';
+import { getSupa, resolveCouncilId } from '../services/councils';
+import { z } from 'zod';
 import { ensurePostcodeCoordinates, normalisePostcode as geocodeNormalisePostcode } from '../lib/geocode';
+import PgBoss from 'pg-boss';
 
 const POSTCODE_RE = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/i;
 
@@ -283,6 +286,50 @@ function getCreatedTimestamp(row: any): number {
 
 const router = Router();
 
+// Minimal pg-boss publisher (best-effort)
+let _boss: PgBoss | null = null;
+async function getBoss(): Promise<PgBoss | null> {
+  if (_boss) return _boss;
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.SUPABASE_DB_URL ||
+    process.env.SUPABASE_POSTGRES_URL ||
+    process.env.POSTGRES_URL ||
+    '';
+  if (!url) return null;
+  try {
+    const boss = new PgBoss({ connectionString: url });
+    await boss.start();
+    _boss = boss;
+    return boss;
+  } catch (e) {
+    console.warn('[queue] boss start failed', e);
+    return null;
+  }
+}
+
+// Lightweight pg pool for direct SQL when needed
+let _pool: Pool | null = null;
+async function getPgPool(): Promise<Pool | null> {
+  if (_pool) return _pool;
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.SUPABASE_DB_URL ||
+    process.env.SUPABASE_POSTGRES_URL ||
+    process.env.POSTGRES_URL ||
+    '';
+  if (!url) return null;
+  try {
+    _pool = new Pool({ connectionString: url, max: 4 });
+    // Test connection
+    await _pool.query('select 1');
+    return _pool;
+  } catch (e) {
+    console.warn('[pg] pool init failed', e);
+    return null;
+  }
+}
+
 type DraftNoticeAddress = {
   line1?: string;
   line2?: string;
@@ -290,6 +337,201 @@ type DraftNoticeAddress = {
   postcode?: string;
   uprn?: string;
 };
+
+// Config healthcheck for notices submission
+router.get('/notices/config', (req, res) => {
+  const missing: string[] = [];
+  if (!process.env.SUPABASE_URL) missing.push('SUPABASE_URL');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+  if (missing.length) return res.status(500).json({ ok: false, code: 'CONFIG', missing });
+  return res.json({ ok: true });
+});
+
+router.get('/councils/health', async (_req, res) => {
+  const supa = getSupa();
+  if (!supa) return res.status(500).json({ ok: false, code: 'CONFIG', missing: ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] });
+  const { data, error } = await supa.from('councils').select('id').limit(1);
+  if (error) return res.status(500).json({ ok: false, error: error.message });
+  return res.json({ ok: true, count: Array.isArray(data) ? data.length : 0 });
+});
+
+// Councils autocomplete (simple name search)
+router.get('/councils', async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (!q) return res.json({ items: [] });
+
+    const supa = getSupa();
+    if (!supa) return res.status(500).json({ ok: false, code: 'CONFIG', missing: ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'] });
+
+    const { data, error } = await supa
+      .from('councils')
+      .select('id,name,slug,region')
+      .ilike('name', `%${q}%`)
+      .limit(10);
+    if (error) return res.status(500).json({ ok: false, error: error.message });
+    return res.json({ items: data });
+  } catch (e: any) {
+    return res.status(500).json({ ok: false, error: 'Unexpected error' });
+  }
+});
+
+// Submit a notice (finalise after payment)
+router.post('/notices', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      return res.status(500).json({ code: 'CONFIG', message: 'Missing SUPABASE_URL or SERVICE_ROLE_KEY' });
+    }
+
+    const client = createClient(url, key);
+
+    // Validate minimal required payload
+    const noticeType = String(body.notice_type || '').trim();
+    const previewText = String(body.preview_text || '').trim();
+    const applicantName = String(body.applicant_name || '').trim();
+    const applicantEmail = String(body.applicant_email || '').trim();
+    if (!noticeType || !previewText) {
+      return res.status(400).json({ code: 'INVALID', message: 'Missing notice_type or preview_text' });
+    }
+
+    const tradingName = String(body.trading_name || '').trim() || null;
+    const applicationDate = String(body.application_date || '').slice(0, 10) || null;
+    const repsDeadline = String(body.reps_deadline || '').slice(0, 10) || null;
+    const region = (body.region || 'england_wales') as any;
+    // Resolve council id from provided id or name
+    const rawCouncilId = body.council_id ?? null;
+    const councilNameFromClient = body?.extras?.council_name ?? null;
+    const { id: resolvedCouncilId, name: resolvedCouncilName } = await resolveCouncilId({
+      id: typeof rawCouncilId === 'string' ? rawCouncilId : null,
+      name: typeof councilNameFromClient === 'string' ? councilNameFromClient : null,
+    });
+    const premisesAddress = body.premises_address || {};
+    const applicationType = (body.application_type || 'grant') as any;
+
+    const upload = body.upload || {};
+    const sourceMode = (body.source_mode === 'ocr' ? 'ocr' : 'structured') as 'ocr' | 'structured';
+    const ocrText = body.ocr_text ? String(body.ocr_text).slice(0, 20000) : '';
+    const fieldsJson = body.structured_fields || {};
+
+    const audit = {
+      notice_type: noticeType,
+      source_mode: sourceMode,
+      upload_ref: upload,
+      ocr_text: ocrText,
+      fields_json: fieldsJson,
+      extras: {
+        ...(body.extras || {}),
+        trading_name: tradingName,
+        application_date: applicationDate,
+      },
+      council_name_input: typeof councilNameFromClient === 'string' ? councilNameFromClient : null,
+      council_name_resolved: resolvedCouncilName || null,
+    };
+
+    // Safe enum mapping to avoid DB enum mismatches
+    const safeAppType = ['grant', 'variation', 'review'].includes(applicationType) ? applicationType : 'grant';
+    const safeRegion = ['england_wales', 'scotland', 'northern_ireland', 'wales', 'england'].includes(region)
+      ? region
+      : 'england_wales';
+
+    const payload: any = {
+      council_id: resolvedCouncilId,
+      applicant_name: applicantName,
+      applicant_email: applicantEmail,
+      // Map to existing column in current DB
+      premises_address: premisesAddress,
+      application_type: safeAppType,
+      region: safeRegion,
+      reps_deadline: repsDeadline,
+      preview_text: previewText,
+      audit,
+    };
+
+    const { data, error } = await client.from('notices').insert(payload).select('id').single();
+    if (error) {
+      const message = String((error as any)?.message || 'Insert failed');
+      const details = (error as any)?.details || null;
+      const pgCode = (error as any)?.code || null;
+      const hint = (error as any)?.hint || null;
+      const code = /permission denied/i.test(message) ? 'RLS_DENIED' : 'INSERT_FAILED';
+      console.error('[notices:submit] Supabase insert failed', { code: pgCode, message, details, hint });
+      return res.status(500).json({ code, message, details, hint });
+    }
+
+    // Best-effort enqueue jobs (do not block response)
+    (async () => {
+      try {
+        const boss = await getBoss();
+        if (!boss) return;
+        const pcFromPremises = (payload?.premises_address?.postcode || payload?.premises?.postcode || '').trim();
+        await boss.publish('geo:ensure-location', { notice_id: data.id, postcode: pcFromPremises || undefined }, {
+          retryLimit: 3,
+          retryBackoff: true,
+          singletonKey: `geo:${data.id}`,
+        } as any);
+        if (typeof payload?.audit?.ocr_text === 'string' && payload.audit.ocr_text.trim().length > 0) {
+          await boss.publish('text:normalize', { notice_id: data.id }, {
+            retryLimit: 2,
+            retryBackoff: true,
+            singletonKey: `text:${data.id}`,
+          } as any);
+        }
+      } catch (e) {
+        console.warn('[queue] publish failed (submit)', e);
+      }
+    })();
+    // SHOW_DRAFTS TEMP: Optionally auto-publish while payments disabled
+    // If PUBLISH_IMMEDIATELY=1, publish the newly created notice right away
+    let finalStatus: 'draft' | 'published' = 'draft';
+    if (process.env.PUBLISH_IMMEDIATELY === '1') {
+      try {
+        // Attempt to set coordinates if missing and we have a postcode
+        let latitude: number | null = null;
+        let longitude: number | null = null;
+        const postcodeInput =
+          (payload as any)?.premises_address?.postcode || (payload as any)?.premises?.postcode || '';
+        const formatted = geocodeNormalisePostcode(postcodeInput || '');
+        if (formatted) {
+          try {
+            const coords = await ensurePostcodeCoordinates(formatted);
+            if (coords) {
+              latitude = coords.latitude;
+              longitude = coords.longitude;
+            }
+          } catch {}
+        }
+
+        const patch: any = { status: 'published' };
+        if (latitude !== null && longitude !== null) {
+          patch.latitude = latitude;
+          patch.longitude = longitude;
+        }
+
+        const { data: updatedRow, error: upErr } = await client
+          .from('notices')
+          .update(patch)
+          .eq('id', data.id)
+          .select('id,status')
+          .single();
+        if (!upErr) {
+          finalStatus = (updatedRow?.status as any) === 'published' ? 'published' : 'draft';
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`[notices] auto-published id=${data.id}`);
+          }
+        }
+      } catch {}
+    }
+
+    // Return minimal final row including status (non-breaking shape)
+    return res.status(201).json({ ok: true, id: data.id, status: finalStatus });
+  } catch (error: any) {
+    console.error('❌ [notices:submit] Unexpected error', error);
+    return res.status(500).json({ code: 'UNEXPECTED', message: error?.message || 'Internal server error' });
+  }
+});
 
 type DraftNoticePayload = {
   address?: DraftNoticeAddress;
@@ -374,6 +616,22 @@ router.post('/notices/draft', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create draft' });
     }
 
+    // Best-effort enqueue jobs for drafts too
+    (async () => {
+      try {
+        const boss = await getBoss();
+        if (!boss) return;
+        const pcFromPremises = (payload?.premises?.postcode || '').trim();
+        await boss.publish('geo:ensure-location', { notice_id: data.id, postcode: pcFromPremises || undefined }, {
+          retryLimit: 3,
+          retryBackoff: true,
+          singletonKey: `geo:${data.id}`,
+        } as any);
+      } catch (e) {
+        console.warn('[queue] publish failed (draft)', e);
+      }
+    })();
+
     return res.status(201).json({ id: data.id });
   } catch (error: any) {
     console.error('❌ [notice-draft] Unexpected server error:', error);
@@ -383,24 +641,61 @@ router.post('/notices/draft', async (req, res) => {
 
 router.get('/notices/search', async (req, res) => {
   try {
-    console.log('[notice-search] Incoming query params:', req.query);
+    const tStart = Date.now();
 
-    const q = String(req.query.q ?? '').trim();
-    const postcodeParam = String(req.query.postcode ?? '').trim();
-    const councilParam = String((req.query.councilId ?? req.query.council) ?? '').trim();
-    const typeParam = String(req.query.type ?? '').trim();
-    const statusParam = String(req.query.status ?? '').trim();
-    const startParam = String(req.query.start ?? '').trim();
-    const endParam = String(req.query.end ?? '').trim();
-    const sortParam = String(req.query.sort ?? '').trim() || undefined;
-    const limitParam = parseLimit(req.query.limit);
-    const radiusKmParam = Number(req.query.radius_km);
-    const latFromQuery = parseLatitude(req.query.lat);
-    const lngFromQuery = parseLongitude(req.query.lng);
-    const bboxParamRaw = Array.isArray(req.query.bbox) ? req.query.bbox[0] : req.query.bbox;
-    const bbox = typeof bboxParamRaw === 'string' ? parseBoundingBox(bboxParamRaw) : null;
-    const zoomParam = Number(req.query.zoom);
-    const clusterParam = parseBoolean(req.query.cluster);
+    const QuerySchema = z.object({
+      q: z.string().optional().transform((v) => (typeof v === 'string' ? v.trim().slice(0, 100) : '')),
+      status: z.enum(['published', 'draft', 'submitted', 'all']).optional(),
+      // SHOW_DRAFTS TEMP: convenience include_drafts flag
+      include_drafts: z
+        .preprocess((v) => (typeof v === 'string' ? v.toLowerCase() : v), z.enum(['1', 'true']).optional())
+        .optional(),
+      council: z.string().optional().transform((v) => (v ? String(v).trim() : '')),
+      councilId: z.string().optional().transform((v) => (v ? String(v).trim() : '')),
+      type: z.string().optional().transform((v) => (v ? String(v).trim() : '')),
+      start: z.string().optional().refine((v) => !v || !Number.isNaN(new Date(v).getTime()), 'Invalid start date'),
+      end: z.string().optional().refine((v) => !v || !Number.isNaN(new Date(v).getTime()), 'Invalid end date'),
+      postcode: z.string().optional().transform((v) => (v ? String(v).trim() : '')),
+      radius_km: z.preprocess((v) => (v === undefined ? undefined : Number(v)), z.number().min(1).max(50)).optional(),
+      lat: z.preprocess((v) => (v === undefined ? undefined : Number(v)), z.number()).optional(),
+      lng: z.preprocess((v) => (v === undefined ? undefined : Number(v)), z.number()).optional(),
+      bbox: z.string().optional().refine((v) => !v || parseBoundingBox(v) !== null, 'Invalid bbox'),
+      page: z.preprocess((v) => (v === undefined ? 1 : Number(v)), z.number().int().min(1).max(200)).optional().default(1),
+      limit: z.preprocess((v) => (v === undefined ? 25 : Number(v)), z.number().int().min(1).max(100)).optional().default(25),
+      sort: z.enum(['created_at.desc', 'created_at.asc', 'updated_at.desc', 'relevance.desc']).optional(),
+      cluster: z.preprocess((v) => (v === undefined ? undefined : String(v)), z.string().optional()),
+      zoom: z.preprocess((v) => (v === undefined ? undefined : Number(v)), z.number().optional()),
+    });
+
+    const parsed = QuerySchema.safeParse(req.query);
+    if (!parsed.success) return res.status(400).json({ error: 'INVALID_PARAMS', details: (parsed as any).error?.issues || [] });
+
+    const {
+      q: qRaw = '',
+      status: statusRaw,
+      council: councilRaw,
+      councilId: councilIdRaw,
+      type: typeParam,
+      start: startParam = '',
+      end: endParam = '',
+      postcode: postcodeParamRaw = '',
+      radius_km: radiusKmParam,
+      lat: latRaw,
+      lng: lngRaw,
+      bbox: bboxRaw,
+      page: pageParam = 1,
+      limit: limitParam = 25,
+      sort: sortParamRaw,
+      cluster: clusterRaw,
+      zoom: zoomRaw,
+      include_drafts: includeDraftsRaw,
+    } = parsed.data;
+
+    const q = qRaw || '';
+    const councilParam = councilIdRaw || councilRaw || '';
+    const bbox = bboxRaw ? parseBoundingBox(bboxRaw) : null;
+    const zoomParam = Number.isFinite(zoomRaw as any) ? (zoomRaw as number) : NaN;
+    const clusterParam = parseBoolean(clusterRaw);
 
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -411,11 +706,13 @@ router.get('/notices/search', async (req, res) => {
     const client = createClient(url, key);
     const selectColumns = '*';
 
-    const postcodeFromParam = postcodeParam ? normalisePostcode(postcodeParam) : null;
+    const postcodeFromParam = postcodeParamRaw ? normalisePostcode(postcodeParamRaw) : null;
     const postcodeFromQuery = q ? normalisePostcode(q) : null;
     const effectivePostcode = postcodeFromParam ?? postcodeFromQuery;
-    const radiusMeters = Number.isFinite(radiusKmParam) && radiusKmParam > 0 ? Math.max(1, Math.floor(radiusKmParam * 1000)) : null;
+    const radiusMeters = Number.isFinite(radiusKmParam as any) && (radiusKmParam as any) > 0 ? Math.max(1, Math.floor((radiusKmParam as number) * 1000)) : null;
 
+    const latFromQuery = parseLatitude(latRaw);
+    const lngFromQuery = parseLongitude(lngRaw);
     let radiusCoordinates: { latitude: number; longitude: number } | null = null;
     if (radiusMeters && latFromQuery !== null && lngFromQuery !== null) {
       radiusCoordinates = { latitude: latFromQuery, longitude: lngFromQuery };
@@ -432,204 +729,148 @@ router.get('/notices/search', async (req, res) => {
 
     const radiusSearchReady = Boolean(radiusMeters && radiusCoordinates);
 
-    const applyQueryFilters = (queryBuilder: any) => {
-      let qb = queryBuilder;
-
-      if (effectivePostcode) {
-        const outwardPattern = `${effectivePostcode.outward}%`;
-        qb = qb.filter(POSTCODE_JSON_EXPRESSION, 'ilike', outwardPattern);
-      }
-
-      if (typeParam) {
-        qb = qb.eq('notice_type', typeParam);
-      }
-
-      if (statusParam) {
-        qb = qb.eq('status', statusParam);
-      }
-
-      if (councilParam) {
-        qb = qb.eq('extras->>councilId', councilParam);
-      }
-
-      if (startParam) {
-        qb = qb.gte('created_at', startParam);
-      }
-
-      if (endParam) {
-        qb = qb.lte('created_at', endParam);
-      }
-
-      if (q && !postcodeFromQuery) {
-        const filters = [
-          buildIlikeFilter('notice_type', q),
-          buildIlikeFilter('premises->>name', q),
-          buildIlikeFilter('premises->>address', q),
-          buildIlikeFilter('extras->>applicantDisplayName', q),
-        ].filter(Boolean) as string[];
-
-        if (filters.length) {
-          qb = qb.or(filters.join(','));
-        }
-      }
-
-      return qb;
-    };
-
-    const { column: sortColumn, direction } = parseSort(sortParam);
+    const page = Math.max(1, Number(pageParam));
+    const limit = Math.max(1, Math.min(100, Number(limitParam)));
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
     let rows: any[] = [];
+    let total = 0;
+    // SHOW_DRAFTS TEMP: status defaulting logic
+    const includeDraftsFlag = includeDraftsRaw === '1' || includeDraftsRaw === 'true' || process.env.SHOW_DRAFTS_IN_SEARCH === '1';
+    // SHOW_DRAFTS TEMP: If include_drafts flag or env is set → default to 'all' (allow override via status), else force 'published'
+    const effectiveStatus: 'published' | 'draft' | 'submitted' | 'all' = includeDraftsFlag
+      ? ((statusRaw as any) || 'all')
+      : 'published';
+
+    let plan: 'rpc-published' | 'sql-bbox' | 'sql-radius' | 'fts' | 'fallback' | 'list' = 'list';
+
     if (bbox) {
       const [south, west, north, east] = bbox;
-      const { data, error } = await client.rpc('get_bbox_notices', {
-        min_lat: south,
-        min_lng: west,
-        max_lat: north,
-        max_lng: east,
-      });
-
-      if (error) {
-        console.error('[notice-search] Supabase bbox RPC error:', error);
-        return res.status(500).json({ error: error.message });
+      if (effectiveStatus === 'published') {
+        // Published-only path uses existing RPC
+        const { data, error } = await client.rpc('get_bbox_notices', {
+          min_lat: south,
+          min_lng: west,
+          max_lat: north,
+          max_lng: east,
+        });
+        if (error) {
+          console.error('[notice-search] Supabase bbox RPC error:', error);
+          return res.status(500).json({ error: error.message });
+        }
+        rows = Array.isArray(data) ? data : [];
+        total = rows.length;
+        plan = 'rpc-published';
+      } else {
+        // Drafts or all: direct SQL to bypass published-only RPC
+        const pool = await getPgPool();
+        if (!pool) return res.status(500).json({ error: 'Database unavailable' });
+        const statuses = effectiveStatus === 'all' ? ['draft', 'published'] : [effectiveStatus];
+        const sql = `
+          select * from public.notices n
+          where n.location is not null
+            and ST_Contains(ST_MakeEnvelope($1, $2, $3, $4, 4326), n.location::geometry)
+            and n.status = ANY($5)
+        `;
+        const { rows: sqlRows } = await pool.query(sql, [west, south, east, north, statuses]);
+        rows = Array.isArray(sqlRows) ? sqlRows : [];
+        total = rows.length;
+        plan = 'sql-bbox';
       }
-
-      rows = Array.isArray(data) ? data : [];
     } else if (radiusSearchReady && radiusCoordinates) {
-      const { data, error } = await client.rpc('get_nearby_notices', {
-        lng: radiusCoordinates.longitude,
-        lat: radiusCoordinates.latitude,
-        radius_meters: radiusMeters,
-      });
-
-      if (error) {
-        console.error('[notice-search] Supabase radius RPC error:', error);
-        return res.status(500).json({ error: error.message });
+      if (effectiveStatus === 'published') {
+        const { data, error } = await client.rpc('get_nearby_notices', {
+          lng: radiusCoordinates.longitude,
+          lat: radiusCoordinates.latitude,
+          radius_meters: radiusMeters,
+        });
+        if (error) {
+          console.error('[notice-search] Supabase radius RPC error:', error);
+          return res.status(500).json({ error: error.message });
+        }
+        rows = Array.isArray(data) ? data : [];
+        total = rows.length;
+        plan = 'rpc-published';
+      } else {
+        const pool = await getPgPool();
+        if (!pool) return res.status(500).json({ error: 'Database unavailable' });
+        const statuses = effectiveStatus === 'all' ? ['draft', 'published'] : [effectiveStatus];
+        const sql = `
+          select * from public.notices n
+          where n.location is not null
+            and ST_DWithin(
+              n.location,
+              ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+              $3
+            )
+            and n.status = ANY($4)
+        `;
+        const { rows: sqlRows } = await pool.query(sql, [radiusCoordinates.longitude, radiusCoordinates.latitude, radiusMeters, statuses]);
+        rows = Array.isArray(sqlRows) ? sqlRows : [];
+        total = rows.length;
+        plan = 'sql-radius';
       }
-
-      rows = Array.isArray(data) ? data : [];
     } else {
-      const queryBuilder = applyQueryFilters(
-        client.from('notices').select(selectColumns).limit(limitParam)
-      );
+      const sortParam = sortParamRaw || (q ? 'relevance.desc' : 'created_at.desc');
+      const { column: sortColumn, direction } = sortParam.startsWith('relevance') ? { column: 'rank', direction: 'desc' as const } : parseSort(sortParam);
+      // SHOW_DRAFTS TEMP: Apply effective status to plain text and listing
+      const statusParam = effectiveStatus;
 
-      const response = await queryBuilder.order(sortColumn, {
-        ascending: direction === 'asc',
-        nullsFirst: direction === 'asc',
-      });
+      const escapedQ = q.replace(/'/g, "''");
+      const computedSelect = q ? `${selectColumns}, rank:ts_rank_cd(search_vector, plainto_tsquery('english','${escapedQ}'))` : selectColumns;
 
+      let qb: any = client.from('notices').select(computedSelect, { count: 'exact' as any });
+      if (statusParam !== 'all') qb = qb.eq('status', statusParam);
+      if (effectivePostcode) qb = qb.filter(POSTCODE_JSON_EXPRESSION, 'ilike', `${effectivePostcode.outward}%`);
+      if (typeParam) qb = qb.eq('notice_type', typeParam);
+      if (councilParam) qb = qb.eq('extras->>councilId', councilParam);
+      if (startParam) qb = qb.gte('created_at', startParam);
+      if (endParam) qb = qb.lte('created_at', endParam);
+      if (q) { try { qb = qb.textSearch('search_vector', q, { type: 'plain', config: 'english' }); } catch {} }
+      const response = await qb.order(sortColumn, { ascending: direction === 'asc', nullsFirst: direction === 'asc' }).range(from, to);
       if (response?.error) {
         console.error('[notice-search] Supabase error:', response.error);
         return res.status(500).json({ error: response.error.message });
       }
-
       rows = Array.isArray(response.data) ? response.data : [];
+      total = typeof response.count === 'number' ? response.count : rows.length;
+      plan = q ? 'fts' : 'list';
+
+      if (q && rows.length < 5) {
+        const like = q.replace(/[%_]/g, (m) => '\\' + m);
+        let fb: any = client
+          .from('notices')
+          .select(selectColumns, { count: 'exact' as any })
+          .eq('status', statusParam)
+          .or([
+            `notice_type.ilike.%${like}%`,
+            `premises->>name.ilike.%${like}%`,
+            `premises->>address.ilike.%${like}%`,
+            `extras->>applicantDisplayName.ilike.%${like}%`,
+            `extras->>trading_name.ilike.%${like}%`,
+            `preview_text.ilike.%${like}%`,
+            `premises_address->>line1.ilike.%${like}%`,
+            `premises_address->>line2.ilike.%${like}%`,
+            `premises_address->>town.ilike.%${like}%`,
+            `premises_address->>postcode.ilike.%${like}%`,
+          ].join(','))
+          .range(from, to)
+          .order('created_at', { ascending: false });
+        if (effectivePostcode) fb = fb.filter(POSTCODE_JSON_EXPRESSION, 'ilike', `${effectivePostcode.outward}%`);
+        if (typeParam) fb = fb.eq('notice_type', typeParam);
+        if (councilParam) fb = fb.eq('extras->>councilId', councilParam);
+        if (startParam) fb = fb.gte('created_at', startParam);
+        if (endParam) fb = fb.lte('created_at', endParam);
+        const fbRes = await fb;
+        if (!fbRes.error) {
+          rows = Array.isArray(fbRes.data) ? fbRes.data : rows;
+          total = typeof fbRes.count === 'number' ? fbRes.count : rows.length;
+          plan = 'fallback';
+        }
+      }
     }
-
-    const filteredRows = rows.filter((row: any) => {
-      if (bbox) {
-        const [south, west, north, east] = bbox;
-        const lat = extractLatitude(row);
-        const lng = extractLongitude(row);
-
-        if (lat === null || lng === null) {
-          return false;
-        }
-
-        if (lat < south || lat > north || lng < west || lng > east) {
-          return false;
-        }
-      }
-
-      if (statusParam && row.status !== statusParam) {
-        return false;
-      }
-
-      if (typeParam && row.notice_type !== typeParam) {
-        return false;
-      }
-
-      if (councilParam) {
-        const rowCouncil = firstNonEmptyString(row?.extras?.councilId, row?.council_id, row?.councilId);
-        if (rowCouncil !== councilParam) {
-          return false;
-        }
-      }
-
-      const rowPostcode = extractPostcode(row);
-      if (effectivePostcode && (!rowPostcode || !rowPostcode.startsWith(effectivePostcode.outward))) {
-        return false;
-      }
-
-      if (startParam) {
-        const createdTimestamp = getCreatedTimestamp(row);
-        const startTime = toTimestamp(startParam);
-        if (Number.isFinite(startTime) && (!Number.isFinite(createdTimestamp) || createdTimestamp < startTime)) {
-          return false;
-        }
-      }
-
-      if (endParam) {
-        const createdTimestamp = getCreatedTimestamp(row);
-        const endTime = toTimestamp(endParam);
-        if (Number.isFinite(endTime) && (!Number.isFinite(createdTimestamp) || createdTimestamp > endTime)) {
-          return false;
-        }
-      }
-
-      if (q && !postcodeFromQuery) {
-        const lowerQ = q.toLowerCase();
-        const premisesAddress = extractPremisesAddress(row);
-        const premisesName = extractPremisesName(row);
-        const applicantDisplayName = extractApplicantDisplayName(row);
-        const haystack = [
-          typeof row.notice_type === 'string' ? row.notice_type.toLowerCase() : '',
-          premisesName ? premisesName.toLowerCase() : '',
-          premisesAddress ? premisesAddress.toLowerCase() : '',
-          applicantDisplayName ? applicantDisplayName.toLowerCase() : '',
-          typeof row.trading_name === 'string' ? row.trading_name.toLowerCase() : '',
-          typeof row.notice_text === 'string' ? row.notice_text.toLowerCase() : '',
-        ];
-
-        if (!haystack.some((value) => value.includes(lowerQ))) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
-    let sortedRows: any[];
-    if (bbox) {
-      sortedRows = [...filteredRows].sort((a, b) => {
-        const aPublished = getPublishedTimestamp(a);
-        const bPublished = getPublishedTimestamp(b);
-        const aHasPublished = Number.isFinite(aPublished);
-        const bHasPublished = Number.isFinite(bPublished);
-
-        if (aHasPublished && bHasPublished && aPublished !== bPublished) {
-          return bPublished - aPublished;
-        }
-        if (aHasPublished && !bHasPublished) return -1;
-        if (!aHasPublished && bHasPublished) return 1;
-
-        const aCreated = getCreatedTimestamp(a);
-        const bCreated = getCreatedTimestamp(b);
-        const aHasCreated = Number.isFinite(aCreated);
-        const bHasCreated = Number.isFinite(bCreated);
-
-        if (aHasCreated && bHasCreated && aCreated !== bCreated) {
-          return bCreated - aCreated;
-        }
-        if (aHasCreated && !bHasCreated) return -1;
-        if (!aHasCreated && bHasCreated) return 1;
-
-        return 0;
-      });
-    } else {
-      sortedRows = sortRowsBy(filteredRows, sortColumn, direction);
-    }
-
-    const limitedRows = bbox ? sortedRows : sortedRows.slice(0, limitParam);
+    const limitedRows = rows; // pagination already handled in SQL for non-geo; RPC returns are small
 
     const items = limitedRows.map((row: any) => {
       const premises = row?.premises && typeof row.premises === 'object' ? row.premises : {};
@@ -657,23 +898,20 @@ router.get('/notices/search', async (req, res) => {
       };
     });
 
-    console.log('[notice-search] Result count:', items.length, {
-      postcode: effectivePostcode?.full || null,
-      radiusKm: radiusMeters ? radiusMeters / 1000 : null,
-      coordinates: radiusCoordinates,
-      bbox,
-      zoom: Number.isFinite(zoomParam) ? zoomParam : null,
-      cluster: clusterParam,
-    });
-
-    return res.json({
-      items,
-      query: q,
-      postcode: effectivePostcode?.full || null,
-      bbox,
-      zoom: Number.isFinite(zoomParam) ? zoomParam : null,
-      radiusKm: radiusMeters ? radiusMeters / 1000 : null,
-    });
+    const timing_ms = Date.now() - tStart;
+    const payload: any = { items, total, page, limit, timing_ms };
+    if (process.env.NODE_ENV !== 'production') {
+      payload.debug = {
+        plan,
+        query: q,
+        postcode: effectivePostcode?.full || null,
+        bbox,
+        zoom: Number.isFinite(zoomParam) ? zoomParam : null,
+        radiusKm: radiusMeters ? radiusMeters / 1000 : null,
+        cluster: clusterParam,
+      };
+    }
+    return res.json(payload);
   } catch (error: any) {
     console.error('❌ [notice-search] Unexpected server error:', error);
     return res.status(500).json({ error: 'Internal server error' });
