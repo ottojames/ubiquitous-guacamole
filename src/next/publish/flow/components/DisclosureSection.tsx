@@ -26,12 +26,12 @@ export default function DisclosureSection({
       open={open}
       onToggle={onToggle}
       data-testid={testId}
-      className="group rounded-2xl border border-slate-200/70 bg-white/95 shadow-[0_12px_32px_rgba(15,23,42,0.08)] transition-all duration-200 open:border-[#2563EB]/40 open:bg-white open:shadow-[0_20px_48px_rgba(37,99,235,0.12)]"
+      className="group rounded-2xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all duration-200 open:border-blue-200 open:shadow-[0_16px_40px_rgba(37,99,235,0.1)]"
     >
-      <summary className="cursor-pointer select-none list-none px-4 py-3 text-[13px] font-semibold text-slate-800 sm:px-5 sm:py-3.5">
+      <summary className="cursor-pointer select-none list-none px-6 py-5 text-lg font-bold tracking-tight text-slate-900 transition-colors duration-200 hover:text-blue-700">
         {title}
       </summary>
-      <div className="px-4 pb-4 pt-2 sm:px-5 sm:pb-5 sm:pt-3">{children}</div>
+      <div className="px-6 pb-6 pt-2">{children}</div>
     </details>
   );
 }

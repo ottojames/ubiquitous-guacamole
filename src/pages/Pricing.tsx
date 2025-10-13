@@ -6,7 +6,6 @@ const NAV_LINKS = [
   { href: "/#notices", label: "Find notices" },
   { href: "/#for-councils", label: "For councils" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/#docs", label: "Docs" },
 ] as const;
 
 type BillingCycle = "monthly" | "annual";
@@ -161,7 +160,7 @@ export default function Pricing() {
             </div>
             {/* Right: ghost + primary */}
             <div className="flex items-center gap-3">
-              <a href="#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>
+              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>
                 Sign in
               </a>
               <a href="/publish" className={`${UI.btnPrimary} h-11 py-0 text-sm`}>

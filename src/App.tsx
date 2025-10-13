@@ -8,6 +8,8 @@ import StepPay from "@/routes/next/publish/StepPay";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import PublishPage from "@/pages/PublishPage";
+import Pricing from "@/pages/Pricing";
+import Login from "@/pages/Login";
 import Success from "./pages/Success";
 import DetailsPage from "./pages/DetailsPage";
 import NoticesPage from "@/pages/Notices";
@@ -20,7 +22,9 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notices" element={<NoticesPage />} />
-        <Route path="/publish" element={<PublishPage />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/publish/*" element={<PublishPage />} />
         <Route path="/notices/upload/template" element={<PublishPage />} />
         <Route path="/success" element={<Success />} />
         <Route path="/details" element={<DetailsPage />} />

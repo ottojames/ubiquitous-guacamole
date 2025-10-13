@@ -66,128 +66,165 @@ export default function UploadMethodStep({
 
   return (
     <section
-      className="space-y-6"
+      className="mx-auto max-w-6xl space-y-10"
       data-testid="upload-method-step"
       aria-busy={continuePending || switching ? "true" : undefined}
     >
-      <div data-e2e="step-marker" data-step="step-2">STEP: UploadMethodStep</div>
+      {/* Glass Section Header Card */}
+      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
+        <div className="space-y-8">
+          <div className="space-y-4 text-center">
+            <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
+              Upload your notice
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600">
+              You can upload a signed notice or build from our structured template. We'll extract your text automatically.
+            </p>
+          </div>
+
+          {/* Premium Segmented Control */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
+              <button
+                type="button"
+                onClick={() => toggle("notice")}
+                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                  active === "notice"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                aria-pressed={active === "notice"}
+              >
+                Upload & OCR
+              </button>
+              <button
+                type="button"
+                onClick={() => toggle("template")}
+                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                  active === "template"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                aria-pressed={active === "template"}
+              >
+                Structured template
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <StickyRailLayout
         left={
-          <div className="relative space-y-12 pb-32">
-            <section className={`${UI.wizardCard} border-blue-100/70 shadow-[0_32px_96px_rgba(15,23,42,0.16)]`}>
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(37,99,235,0.12)_0%,rgba(37,99,235,0)_55%)]"
-              />
-              <div className="relative flex flex-col gap-8 px-8 py-12 sm:px-12 sm:py-14">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <span className={UI.wizardPill}>Step 2 of 4</span>
-                  <span className="text-xs text-slate-500">Upload or build from template — switch any time.</span>
-                </div>
+          <div className="relative space-y-8 pb-32">
+            {/* Upload Content */}
+            {active === "notice" ? (
+              <div className="space-y-6">
+                <UploadOcrPane
+                  {...uploadPaneProps}
+                  onSwitchToTemplate={() => toggle("template")}
+                />
 
-                <div className="space-y-5">
-                  <h2 className="text-4xl font-bold leading-tight text-slate-900 sm:text-[40px] lg:text-5xl">
-                    Prepare your notice
-                  </h2>
-                  <p className="max-w-2xl text-lg leading-relaxed text-slate-600">
-                    Upload the signed notice for OCR or complete the structured template tailored to{" "}
-                    <strong className="font-semibold text-slate-900">{defLabel}</strong>. We validate the essentials while you work.
-                  </p>
+                {/* Reassurance Row */}
+                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Encrypted in transit
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    OCR completes in seconds
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    You can edit everything after upload
+                  </span>
                 </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-slate-200 bg-white p-6">
+                  <div className="mb-4 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Structured fields
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Tailored questions keep you compliant. Switch back to OCR at any point—your inputs are preserved.
+                    </p>
+                  </div>
+                  {templateContent}
+                </div>
+                <p className="text-xs text-slate-500">
+                  Already have a signed notice? Choose Upload & OCR to extract the text automatically.
+                </p>
+              </div>
+            )}
 
-                <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/80 p-1.5 text-sm font-semibold text-slate-600 shadow-inner">
+            {/* Premium Sticky Action Bar */}
+            <div className="sticky bottom-6 -mx-4 sm:-mx-0">
+              <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 shadow-[0_16px_48px_rgba(15,23,42,0.15)] backdrop-blur-2xl">
+                <div className="flex items-center justify-between gap-6 px-8 py-6">
                   <button
                     type="button"
-                    onClick={() => toggle("notice")}
-                    className={`flex-1 rounded-xl px-5 py-3 transition-all duration-300 ease-out ${
-                      active === "notice"
-                        ? "bg-white text-slate-900 shadow-[0_16px_36px_rgba(15,23,42,0.08)] scale-[1.01]"
-                        : "hover:text-slate-900 hover:bg-white/50"
-                    }`}
-                    aria-pressed={active === "notice"}
+                    onClick={onBack}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900"
+                    data-testid="upload-step-back"
                   >
-                    Upload & OCR
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => toggle("template")}
-                    className={`flex-1 rounded-xl px-5 py-3 transition-all duration-300 ease-out ${
-                      active === "template"
-                        ? "bg-white text-slate-900 shadow-[0_16px_36px_rgba(15,23,42,0.08)] scale-[1.01]"
-                        : "hover:text-slate-900 hover:bg-white/50"
-                    }`}
-                    aria-pressed={active === "template"}
-                  >
-                    Structured template
-                  </button>
-                </div>
 
-                <div className="space-y-8">
-                  {active === "notice" ? (
-                    <UploadOcrPane
-                      {...uploadPaneProps}
-                      onSwitchToTemplate={() => toggle("template")}
-                    />
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_20px_48px_rgba(15,23,42,0.08)]">
-                        <div className="space-y-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                            Structured fields
-                          </p>
-                          <p className="text-sm leading-6 text-slate-600">
-                            Tailored questions keep you compliant. Switch back to OCR at any point—your inputs are preserved.
-                          </p>
-                        </div>
-                        <div className="space-y-6">{templateContent}</div>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        Already have a signed notice? Choose Upload &amp; OCR to extract the text automatically.
+                  <div className="flex flex-1 items-center justify-end gap-6">
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-slate-900">
+                        {continueDisabled ? "Complete required fields" : "Looking good"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {continueDisabled
+                          ? "All mandatory fields must appear on the public notice."
+                          : "Ready to review your notice details."}
                       </p>
                     </div>
-                  )}
+                    <button
+                      type="button"
+                      onClick={onContinue}
+                      disabled={!!continueDisabled || continuePending || switching}
+                      className={`inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                        continueDisabled
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                          : 'bg-blue-600 text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] hover:bg-blue-700 hover:shadow-[0_12px_32px_rgba(37,99,235,0.45)] hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
+                      data-testid="upload-step-continue"
+                    >
+                      {continuePending ? (
+                        <>
+                          <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                          </svg>
+                          Working...
+                        </>
+                      ) : (
+                        <>
+                          Continue
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </section>
-
-            <footer className="pointer-events-none sticky bottom-8">
-              <div className="pointer-events-auto flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white/95 px-6 py-5 shadow-[0_28px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="button"
-                  className={`${UI.btnSecondary} transition-all duration-200 hover:scale-[1.02]`}
-                  onClick={onBack}
-                  data-testid="upload-step-back"
-                >
-                  Back
-                </button>
-                <div className="flex flex-1 items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    className={`${UI.btnSecondary} hidden transition-all duration-200 hover:scale-[1.02] sm:inline-flex`}
-                    onClick={() => toggle("notice")}
-                    disabled={continuePending || switching}
-                    data-testid="upload-step-use-ocr"
-                  >
-                    Use OCR
-                  </button>
-                  <button
-                    type="button"
-                    className={`${UI.btnPrimary} min-w-[168px] transition-all duration-200 hover:scale-[1.02]`}
-                    onClick={onContinue}
-                    disabled={!!continueDisabled || continuePending || switching}
-                    data-testid="upload-step-continue"
-                  >
-                    {continuePending ? "Working…" : "Continue"}
-                  </button>
-                </div>
-              </div>
-            </footer>
-
-            {active === "notice" ? (
-              <p className="px-2 text-xs text-slate-500">
-                These details must appear on the public notice. You can refine the text before publishing.
-              </p>
-            ) : null}
+            </div>
           </div>
         }
         right={rightRail ?? null}

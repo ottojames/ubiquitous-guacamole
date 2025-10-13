@@ -1005,23 +1005,47 @@ export default function NewPublishFlow() {
 
   return (
     <WizardBoundary contextKey={boundaryContextKey} onReset={() => goToStep(1, { replace: true })}>
-      <div className="mx-auto max-w-5xl space-y-8" data-testid="publish-next-flow">
-        {/* Stepper + Save Status */}
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <WizardStepper currentPath={pathname} guards={stepGuards} hrefs={stepHrefMap} />
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-emerald-50/80 px-4 py-2 text-xs font-semibold text-emerald-900 shadow-sm backdrop-blur">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" aria-hidden />
-            {saveState === 'saving'
-              ? 'Saving…'
-              : savedAt
-              ? `Saved • ${formatRelativeTimestamp(savedAt)}`
-              : 'Saved • just now'}
-          </span>
-        </div>
+      <div className="relative">
+        {/* Hero Band with Integrated Stepper */}
+        <section className="relative overflow-hidden pb-8 pt-12 md:pb-12 md:pt-16">
+          <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
+
+          <div className={`${UI.container} relative z-10`}>
+            <div className="mx-auto max-w-4xl text-center">
+              <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl lg:text-6xl">
+                Publish with calm,
+                <br />
+                compliant confidence
+              </h1>
+              <p className="mt-6 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-lg">
+                Start by choosing your notice type. We'll tailor everything automatically.
+              </p>
+
+              {/* Integrated Lightweight Stepper */}
+              <div className="mt-12 flex justify-center">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 shadow-lg backdrop-blur-md">
+                  <WizardStepper currentPath={pathname} guards={stepGuards} hrefs={stepHrefMap} />
+                  <div className="ml-4 h-4 w-px bg-white/20" />
+                  <span className="inline-flex items-center gap-2 text-xs font-medium text-white/90">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden />
+                    {saveState === 'saving'
+                      ? 'Saving…'
+                      : savedAt
+                      ? `Saved • ${formatRelativeTimestamp(savedAt)}`
+                      : 'Saved'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Main Content */}
-        <div className="rounded-3xl border border-slate-200/60 bg-white/90 p-8 shadow-xl backdrop-blur-sm md:p-10">
+        <div className="bg-[#F9FAFB] py-12 md:py-16" data-testid="publish-next-flow">
+          <div className={UI.container}>
           {currentStep === 1 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <NoticeTypeStep
               selectedId={definitionId}
               onSelect={handleSelectDefinition}
@@ -1030,9 +1054,11 @@ export default function NewPublishFlow() {
               guardMessage={guardMessage}
               onClearGuard={() => setGuardMessage(null)}
             />
+            </div>
           )}
 
           {currentStep === 2 && !step2Blocked && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <UploadMethodStep
               definition={definition ?? null /* tolerant to transition frames */}
               method={uploadMethod}
@@ -1045,9 +1071,11 @@ export default function NewPublishFlow() {
               templateContent={templateFormContent}
               rightRail={rightRail}
             />
+            </div>
           )}
 
           {currentStep === 3 && !step3Blocked && definition && uploadMethod && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <ConfirmStep
               definition={definition}
               notice={uploadMethod === "template" ? templateNotice : null}
@@ -1085,9 +1113,11 @@ export default function NewPublishFlow() {
                 ) : null
               }
             />
+            </div>
           )}
 
           {currentStep === 4 && !step4Blocked && definition && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <PaymentStep
               definition={definition}
               notice={uploadMethod === "template" ? templateNotice : null}
@@ -1095,7 +1125,9 @@ export default function NewPublishFlow() {
               onSubmit={handleSubmit}
               submitting={paymentPending}
             />
+            </div>
           )}
+          </div>
         </div>
       </div>
     </WizardBoundary>

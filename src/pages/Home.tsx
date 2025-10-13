@@ -4,7 +4,8 @@ import * as UI from '@/styles/ui';
 import {
   FileText, MapPin, CheckCircle2,
   ArrowRight, Menu, X,
-  Upload, Search, Archive
+  Upload, Search, Archive,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import FilterBar from "../components/FilterBar";
 import type { Filters } from "../lib/filter";
@@ -25,7 +26,6 @@ const NAV_LINKS = [
   { href: "#notices", label: "Find notices" },
   { href: "#for-councils", label: "For councils" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/#docs", label: "Docs" },
 ] as const;
 
 // Testimonials
@@ -105,14 +105,42 @@ export default function Home() {
     sort: 'created_at.desc',
   });
 
-  // Testimonial carousel with pause on hover
+  // Testimonial carousel with slide animation
   const [testiIdx, setTestiIdx] = useState(0);
   const [testiPaused, setTestiPaused] = useState(false);
+  const [testiAnimating, setTestiAnimating] = useState(false);
+  const [testiDirection, setTestiDirection] = useState<'left' | 'right'>('right');
+  const [prevIdx, setPrevIdx] = useState(0);
+
   useEffect(() => {
-    if (testiPaused) return;
-    const t = setInterval(() => setTestiIdx((i) => (i + 1) % testimonials.length), 7000);
+    if (testiPaused || testiAnimating) return;
+    const t = setInterval(() => {
+      goToNextTestimonial();
+    }, 7000);
     return () => clearInterval(t);
-  }, [testiPaused]);
+  }, [testiPaused, testiAnimating, testiIdx]);
+
+  const goToPrevTestimonial = () => {
+    if (testiAnimating) return;
+    setTestiAnimating(true);
+    setTestiDirection('left');
+    setPrevIdx(testiIdx);
+    setTimeout(() => {
+      setTestiIdx((i) => (i - 1 + testimonials.length) % testimonials.length);
+    }, 0);
+    setTimeout(() => setTestiAnimating(false), 500);
+  };
+
+  const goToNextTestimonial = () => {
+    if (testiAnimating) return;
+    setTestiAnimating(true);
+    setTestiDirection('right');
+    setPrevIdx(testiIdx);
+    setTimeout(() => {
+      setTestiIdx((i) => (i + 1) % testimonials.length);
+    }, 0);
+    setTimeout(() => setTestiAnimating(false), 500);
+  };
 
   const handleAddressSubmit = useCallback(async ({ query, suggestion }: AddressSearchSubmitPayload) => {
     const rawInput = (query || addressValue).trim();
@@ -195,7 +223,7 @@ export default function Home() {
 
             {/* Right: ghost + primary */}
             <div className="hidden md:flex items-center gap-3">
-              <a href="#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
@@ -254,7 +282,7 @@ export default function Home() {
                 ))}
               </nav>
               <div className="mt-auto flex items-center gap-3">
-                <a href="#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+                <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
                 <a
                   href="/publish"
                   onClick={() => { setMobileOpen(false); track("publish_started", { audience: "public" }); }}
@@ -276,7 +304,14 @@ export default function Home() {
         <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
         {/* Vertical gradient fade - Approach A: "Fade to Canvas" */}
-        <div className="absolute inset-x-0 bottom-0 h-80 bg-gradient-to-b from-transparent via-[var(--canvas)]/30 to-[var(--canvas)] pointer-events-none" aria-hidden="true" />
+        <div
+          className="absolute inset-x-0 bottom-0 pointer-events-none"
+          style={{
+            height: '400px',
+            background: 'linear-gradient(to bottom, rgba(247, 248, 252, 0) 0%, rgba(247, 248, 252, 0.5) 40%, rgba(247, 248, 252, 0.9) 70%, #F7F8FC 100%)'
+          }}
+          aria-hidden="true"
+        />
 
         <div className={`${UI.container} relative z-10`}>
           <div className="mx-auto max-w-4xl text-center">
@@ -391,19 +426,72 @@ export default function Home() {
               onMouseEnter={() => setTestiPaused(true)}
               onMouseLeave={() => setTestiPaused(false)}
             >
+              {/* Previous button - positioned absolutely on the left with higher z-index */}
+              <button
+                onClick={goToPrevTestimonial}
+                disabled={testiAnimating}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 transition hover:bg-slate-50 hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Previous testimonial"
+              >
+                <ChevronLeft className="h-5 w-5 text-slate-700" />
+              </button>
+
+              {/* Next button - positioned absolutely on the right with higher z-index */}
+              <button
+                onClick={goToNextTestimonial}
+                disabled={testiAnimating}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-slate-200 transition hover:bg-slate-50 hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Next testimonial"
+              >
+                <ChevronRight className="h-5 w-5 text-slate-700" />
+              </button>
+
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-900">
                 <CheckCircle2 className="h-4 w-4" />
                 Trusted by {STATS.councils} UK councils
               </div>
 
-              <blockquote className="mx-auto mb-6 max-w-3xl text-2xl font-medium leading-relaxed text-slate-900 md:text-3xl">
-                "{testimonials[testiIdx].text}"
-              </blockquote>
+              {/* Testimonial content with slide animation */}
+              <div className="overflow-hidden relative min-h-[200px]">
+                {testiAnimating && (
+                  /* Previous testimonial sliding out */
+                  <div
+                    className={`absolute inset-0 ${
+                      testiDirection === 'right'
+                        ? 'animate-slideOutLeft'
+                        : 'animate-slideOutRight'
+                    }`}
+                  >
+                    <blockquote className="mx-auto mb-6 max-w-3xl text-2xl font-medium leading-relaxed text-slate-900 md:text-3xl">
+                      "{testimonials[prevIdx].text}"
+                    </blockquote>
 
-              <div className="mb-4 text-base text-slate-700">
-                <span className="font-semibold">{testimonials[testiIdx].name}</span>
-                <span className="mx-2 text-slate-400">·</span>
-                <span>{testimonials[testiIdx].council}</span>
+                    <div className="mb-4 text-base text-slate-700">
+                      <span className="font-semibold">{testimonials[prevIdx].name}</span>
+                      <span className="mx-2 text-slate-400">·</span>
+                      <span>{testimonials[prevIdx].council}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Current testimonial */}
+                <div
+                  className={testiAnimating ? (
+                    testiDirection === 'right'
+                      ? 'animate-slideInFromRight'
+                      : 'animate-slideInFromLeft'
+                  ) : ''}
+                >
+                  <blockquote className="mx-auto mb-6 max-w-3xl text-2xl font-medium leading-relaxed text-slate-900 md:text-3xl">
+                    "{testimonials[testiIdx].text}"
+                  </blockquote>
+
+                  <div className="mb-4 text-base text-slate-700">
+                    <span className="font-semibold">{testimonials[testiIdx].name}</span>
+                    <span className="mx-2 text-slate-400">·</span>
+                    <span>{testimonials[testiIdx].council}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-center gap-2" role="tablist" aria-label="Testimonial navigation">
@@ -413,7 +501,15 @@ export default function Home() {
                     role="tab"
                     aria-selected={testiIdx === idx}
                     aria-label={`View testimonial ${idx + 1}`}
-                    onClick={() => setTestiIdx(idx)}
+                    onClick={() => {
+                      if (testiAnimating || testiIdx === idx) return;
+                      setTestiAnimating(true);
+                      setTestiDirection(idx > testiIdx ? 'right' : 'left');
+                      setTimeout(() => {
+                        setTestiIdx(idx);
+                        setTimeout(() => setTestiAnimating(false), 50);
+                      }, 500);
+                    }}
                     className={`h-2 rounded-full transition-all ${
                       testiIdx === idx ? "w-8 bg-blue-600" : "w-2 bg-slate-300 hover:bg-slate-400"
                     }`}
@@ -608,7 +704,7 @@ export default function Home() {
               <Archive className="h-4 w-4" />
               Enterprise ready
             </div>
-            <h2 className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-700 bg-clip-text text-4xl font-extrabold leading-tight tracking-tight text-transparent md:text-5xl">
+            <h2 className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-700 bg-clip-text text-4xl font-extrabold leading-[1.2] tracking-tight text-transparent md:text-5xl">
               Built for councils, designed for scale
             </h2>
             <p className="mt-6 text-xl leading-relaxed text-slate-600">
@@ -870,6 +966,66 @@ export default function Home() {
           100% {
             background-position: 1000px 0;
           }
+        }
+
+        @keyframes slideOutLeft {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes slideOutRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes slideInFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideInFromLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        .animate-slideOutLeft {
+          animation: slideOutLeft 500ms ease-in-out forwards;
+        }
+
+        .animate-slideOutRight {
+          animation: slideOutRight 500ms ease-in-out forwards;
+        }
+
+        .animate-slideInFromRight {
+          animation: slideInFromRight 500ms ease-in-out forwards;
+        }
+
+        .animate-slideInFromLeft {
+          animation: slideInFromLeft 500ms ease-in-out forwards;
         }
 
         .lucide {

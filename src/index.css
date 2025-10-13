@@ -67,3 +67,15 @@
 }
 
 /* Base resets only; page backgrounds are controlled by the hero-band on the page wrapper */
+
+@keyframes pulse-band {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

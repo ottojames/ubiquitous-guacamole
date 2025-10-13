@@ -20,6 +20,14 @@ export const cardHover =
 export const cardHeader = "text-sm font-semibold text-blue-900";
 export const tinySubheader = "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
 
+// Wizard surfaces
+export const wizardCard =
+  "relative overflow-hidden rounded-[28px] border border-[rgba(37,99,235,0.18)] bg-white/95 shadow-[0_32px_96px_rgba(15,23,42,0.14)] backdrop-blur";
+export const wizardSection =
+  "rounded-2xl border border-slate-200/70 bg-white/80 shadow-[0_14px_40px_rgba(15,23,42,0.08)]";
+export const wizardPill =
+  "inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/80 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-900";
+
 export const h1 = "text-[36px] leading-[44px] font-semibold tracking-tight text-[#192650]";
 export const h2 = "text-[28px] leading-[36px] font-semibold tracking-tight text-[#192650]";
 export const h3 = "text-[20px] leading-[28px] font-medium text-[#192650]";

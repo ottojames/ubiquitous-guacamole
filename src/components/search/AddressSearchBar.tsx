@@ -315,24 +315,41 @@ export function AddressSearchBar({
               {!loading && fetchError && (
                 <li className="px-3 py-2 text-sm text-rose-600">{fetchError}</li>
               )}
-              {!loading && !fetchError && suggestions.map((suggestion, index) => (
-                <li
-                  key={`${suggestion.id}-${index}`}
-                  id={`${listboxId}-option-${index}`}
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  data-testid={`${testIdPrefix}-suggest-item`}
-                  className={`cursor-pointer px-3 py-2 text-sm text-slate-800 ${
-                    index === activeIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-muted/60'
-                  }`}
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    submitSearch(suggestion);
-                  }}
-                >
-                  {suggestion.label}
-                </li>
-              ))}
+              {!loading && !fetchError && suggestions.map((suggestion, index) => {
+                const parts = suggestion.label.split(',').map(p => p.trim());
+                const firstLine = parts[0] || suggestion.label;
+                const restOfAddress = parts.slice(1).join(', ');
+
+                return (
+                  <li
+                    key={`${suggestion.id}-${index}`}
+                    id={`${listboxId}-option-${index}`}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                    data-testid={`${testIdPrefix}-suggest-item`}
+                    className={`cursor-pointer px-4 py-3 text-sm transition-colors duration-150 ${
+                      index === activeIndex
+                        ? 'bg-blue-50 text-blue-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    } ${index > 0 ? 'border-t border-slate-100' : ''}`}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      submitSearch(suggestion);
+                    }}
+                  >
+                    <div className="flex flex-col gap-0.5 text-left">
+                      <span className={`block font-semibold ${index === activeIndex ? 'text-blue-900' : 'text-slate-900'}`}>
+                        {firstLine}
+                      </span>
+                      {restOfAddress && (
+                        <span className={`block text-xs ${index === activeIndex ? 'text-blue-700' : 'text-slate-500'}`}>
+                          {restOfAddress}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
               {showEmptyState && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">No suggestions</li>
               )}

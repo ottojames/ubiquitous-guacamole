@@ -1,12 +1,9 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import '@/styles/map.css';
+import "../../styles/map.css";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import MapGL, {
-  Layer,
-  Popup,
-  Source,
+import MapGL, {Layer, Popup, Source,
   type LayerProps,
   type MapLayerMouseEvent,
   type MapRef,

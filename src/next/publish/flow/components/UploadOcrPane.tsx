@@ -160,21 +160,9 @@ export default function UploadOcrPane({
     );
   };
 
+  // Confidence badges removed - no OCR autofill
   const renderConfidence = (key: RequiredFieldKey | RecommendedFieldKey) => {
-    const entry = meta[key];
-    if (entry?.confidence == null) return null;
-    const rounded = Math.round(entry.confidence * 100);
-    const highConfidence = entry.confidence >= 0.8;
-    const tone = highConfidence
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-      : 'border-amber-200 bg-amber-50 text-amber-700';
-    const label = highConfidence ? 'Detected' : 'Low confidence';
-    return (
-      <span className={`ml-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}>
-        {label}
-        <span>{rounded}% OCR</span>
-      </span>
-    );
+    return null;
   };
 
   const renderError = (key: RequiredFieldKey) => {
@@ -244,19 +232,23 @@ export default function UploadOcrPane({
           <header className="space-y-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-3">
-                <h3 className="text-xl font-semibold leading-7 text-slate-900">A few details must appear on your notice.</h3>
-                <p className="text-sm leading-6 text-slate-600">We surface what’s missing, highlight OCR matches, and keep the preview synced.</p>
+                <h3 className="text-xl font-semibold leading-7 text-slate-900">Complete the required details</h3>
+                <p className="text-sm leading-6 text-slate-600">All fields must be manually entered to ensure accuracy. We've kept your uploaded document for reference.</p>
               </div>
               <button type="button" className={`${UI.btnSecondary} shrink-0`} onClick={onSwitchToTemplate}>
                 Use template instead
               </button>
             </div>
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/80 px-5 py-4 shadow-inner sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Legal details • {missingCount ? `${missingCount} missing` : uploadStatus === 'ready' ? 'All detected' : 'In progress'}
-              </span>
-              <div className="flex flex-wrap gap-2 text-xs text-slate-700">{statusChips}</div>
-            </div>
+            {missingCount > 0 && (
+              <div className="rounded-2xl border border-blue-200/70 bg-blue-50/80 px-5 py-4 shadow-sm">
+                <p className="text-sm font-semibold text-blue-900">
+                  {missingCount} required {missingCount === 1 ? 'field' : 'fields'} remaining
+                </p>
+                <p className="mt-1 text-sm text-blue-700">
+                  Please fill in all mandatory fields marked with an asterisk (*).
+                </p>
+              </div>
+            )}
             {recommendedWarnings.length > 0 && (
               <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 shadow-sm">
                 <p className="font-semibold">Recommended details</p>
@@ -271,10 +263,7 @@ export default function UploadOcrPane({
 
           <div className="space-y-10">
             <section className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h4 className="text-[15px] font-semibold text-slate-900">Applicant</h4>
-                {highlightLink('applicantName')}
-              </div>
+              <h4 className="text-[15px] font-semibold text-slate-900">Applicant</h4>
               <div className="space-y-5">
                 <div className="space-y-3">
                   <label htmlFor="applicant-name" className="text-sm font-medium text-slate-800">
@@ -323,10 +312,7 @@ export default function UploadOcrPane({
             </section>
 
             <section className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h4 className="text-[15px] font-semibold text-slate-900">Location</h4>
-                {highlightLink('premisesLine1')}
-              </div>
+              <h4 className="text-[15px] font-semibold text-slate-900">Location</h4>
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-3 md:col-span-2">
                   <label htmlFor="premises-line1" className="text-sm font-medium text-slate-800">
@@ -442,13 +428,7 @@ export default function UploadOcrPane({
             </section>
 
             <section className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h4 className="text-[15px] font-semibold text-slate-900">Authority & application</h4>
-                <div className="flex gap-2">
-                  {highlightLink('applicationType')}
-                  {highlightLink('council')}
-                </div>
-              </div>
+              <h4 className="text-[15px] font-semibold text-slate-900">Authority & application</h4>
               <div className="space-y-5">
                 <div className="space-y-3">
                   <label htmlFor="application-type" className="text-sm font-medium text-slate-800">
@@ -587,10 +567,7 @@ export default function UploadOcrPane({
             </section>
 
             <section className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-slate-900">Optional summary</h4>
-                {highlightLink('applicationSummary')}
-              </div>
+              <h4 className="text-sm font-semibold text-slate-900">Optional summary</h4>
               <textarea
                 id="application-summary"
                 ref={summaryRef}

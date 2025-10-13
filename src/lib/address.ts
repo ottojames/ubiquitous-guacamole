@@ -633,9 +633,15 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
   if (typeof fetch === 'undefined') return [];
   try {
     const url = `/api/addresses?q=${encodeURIComponent(query)}`;
+    debugLog('[address] builtInAddressFallback fetching', { url, query });
     const response = await fetch(url, { signal });
-    if (!response.ok) return [];
+    debugLog('[address] builtInAddressFallback response', { status: response.status, ok: response.ok });
+    if (!response.ok) {
+      debugLog('[address] builtInAddressFallback failed', { status: response.status });
+      return [];
+    }
     const payload = await response.json().catch(() => null);
+    debugLog('[address] builtInAddressFallback payload', { hasPayload: !!payload, payload: JSON.stringify(payload).substring(0, 200) });
     const items = Array.isArray(payload?.results)
       ? payload.results
       : Array.isArray(payload?.items)
@@ -643,9 +649,34 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
         : Array.isArray(payload)
           ? payload
           : [];
-    return (items as any[])
+    debugLog('[address] builtInAddressFallback items', { count: items.length });
+    const suggestions = (items as any[])
       .map((item, index): AddressSuggestion | null => {
         if (!item || typeof item !== 'object') return null;
+
+        // Backend returns { id, label } format - parse the label
+        if (item.label && typeof item.label === 'string') {
+          const parts = item.label.split(',').map((p: string) => p.trim());
+          const postcode = parts.find((p: string) => normalisePostcode(p));
+          const line1 = parts[0] || '';
+          const town = parts[parts.length - 1] || '';
+
+          if (!line1) return null;
+
+          return {
+            id: String(item.id ?? `builtin-${index}`),
+            uprn: item.uprn ? String(item.uprn) : undefined,
+            line1,
+            line2: undefined,
+            town,
+            postcode: normalisePostcode(postcode || '') || '',
+            country: 'UK',
+            label: item.label,
+            source: 'fallback',
+          };
+        }
+
+        // Fallback to old format if label doesn't exist
         const line1 = normaliseLine(item.line1);
         const town = normaliseLine(item.town);
         const postcode = normalisePostcode(item.postcode) ?? '';
@@ -665,7 +696,10 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
         };
       })
       .filter(Boolean) as AddressSuggestion[];
+    debugLog('[address] builtInAddressFallback returning', { count: suggestions.length });
+    return suggestions;
   } catch (error: any) {
+    debugLog('[address] builtInAddressFallback error', { error: error?.message, name: error?.name });
     if (error?.name === 'AbortError') return [];
     return [];
   }
@@ -734,7 +768,9 @@ export async function fetchAddressSuggestions(
     debugInfo.primary.status = 'skipped';
     debugInfo.fallback.status = 'skipped';
 
+    debugLog('[address] calling builtInAddressFallback', { query: normalizedQuery });
     const builtin = await builtInAddressFallback(normalizedQuery, signal);
+    debugLog('[address] builtInAddressFallback returned', { count: builtin.length });
     if (builtin.length) {
       debugLog('[address] fetchAddressSuggestions using built-in fallback', {
         query: normalizedQuery,
