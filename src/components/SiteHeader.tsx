@@ -28,12 +28,11 @@ export default function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-gradient-to-r from-[#eef3ff] to-[#f8faff] backdrop-blur-md shadow-sm transition-shadow duration-200 ${
-        compact ? 'shadow-md' : ''
-      }`}
+      className={`sticky top-0 z-50 border-b border-white/10 backdrop-blur-lg ${compact ? "bg-white/80" : "bg-white/80"}`}
       style={{ height: 'var(--headerH)' }}
     >
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6 lg:px-12">
+      <div className={`${UI.container} h-full`}>
+        <div className="h-full flex items-center justify-between">
           {/* Left: logo + desktop nav */}
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center text-slate-900 font-extrabold tracking-tight" style={{ letterSpacing: '-0.5px' }}>
@@ -84,6 +83,7 @@ export default function SiteHeader() {
             </button>
           </div>
         </div>
+      </div>
 
       {/* Mobile sheet */}
       {mobileOpen && (

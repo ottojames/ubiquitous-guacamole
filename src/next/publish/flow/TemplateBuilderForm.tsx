@@ -22,22 +22,32 @@ type InputProps = {
   type?: string;
   helperText?: string;
   required?: boolean;
+  span?: 12 | 8 | 6 | 4;
 };
 
-function TextInput({ label, value, onChange, type = 'text', helperText, required }: InputProps) {
+function TextInput({ label, value, onChange, type = 'text', helperText, required, span = 6 }: InputProps) {
+  const inputId = React.useId();
+  const helperId = helperText ? `${inputId}-helper` : undefined;
   return (
-    <label className="block space-y-1">
+    <label className="block space-y-2" data-grid-span={span} htmlFor={inputId}>
       <span className="text-sm font-medium text-neutral-800">
         {label}
         {required ? <span className="ml-1 text-red-600">*</span> : null}
       </span>
       <input
+        id={inputId}
         type={type}
         className={`${UI.input}`}
         value={value}
+        aria-required={required ? 'true' : undefined}
+        aria-describedby={helperId}
         onChange={(event) => onChange(event.target.value)}
       />
-      {helperText ? <span className="text-xs text-neutral-500">{helperText}</span> : null}
+      {helperText ? (
+        <span id={helperId} className="text-xs text-neutral-500">
+          {helperText}
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -49,31 +59,71 @@ type TextAreaProps = {
   rows?: number;
   helperText?: string;
   required?: boolean;
+  span?: 12 | 8 | 6 | 4;
 };
 
-function TextArea({ label, value, onChange, rows = 4, helperText, required }: TextAreaProps) {
+function TextArea({ label, value, onChange, rows = 4, helperText, required, span = 12 }: TextAreaProps) {
+  const inputId = React.useId();
+  const helperId = helperText ? `${inputId}-helper` : undefined;
   return (
-    <label className="block space-y-1">
+    <label className="block space-y-2" data-grid-span={span} htmlFor={inputId}>
       <span className="text-sm font-medium text-neutral-800">
         {label}
         {required ? <span className="ml-1 text-red-600">*</span> : null}
       </span>
       <textarea
+        id={inputId}
         className={`${UI.input} min-h-[120px]`}
         value={value}
         rows={rows}
+        aria-required={required ? 'true' : undefined}
+        aria-describedby={helperId}
         onChange={(event) => onChange(event.target.value)}
       />
-      {helperText ? <span className="text-xs text-neutral-500">{helperText}</span> : null}
+      {helperText ? (
+        <span id={helperId} className="text-xs text-neutral-500">
+          {helperText}
+        </span>
+      ) : null}
     </label>
   );
 }
 
+const GRID_SPAN_CLASSES: Record<number, string> = {
+  12: 'md:col-span-12',
+  8: 'md:col-span-8',
+  6: 'md:col-span-6',
+  4: 'md:col-span-4',
+};
+const DEFAULT_SPAN_CLASS = GRID_SPAN_CLASSES[6];
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const items = React.Children.toArray(children);
   return (
     <section className={`${UI.card} space-y-4 p-6`}>
-      <h3 className="text-base font-semibold text-neutral-900">{title}</h3>
-      <div className="grid gap-4">{children}</div>
+      <h3 className="text-lg font-semibold text-neutral-900">{title}</h3>
+      <div className="grid grid-cols-12 gap-x-6 gap-y-5">
+        {items.map((child, index) => {
+          if (!React.isValidElement(child)) {
+            return (
+              <div key={index} className="col-span-12 md:col-span-12">
+                {child}
+              </div>
+            );
+          }
+          const rawSpan = child.props?.['data-grid-span'];
+          let span = Number(rawSpan);
+          if (!Number.isFinite(span)) span = 6;
+          const spanClass = GRID_SPAN_CLASSES[span] ?? DEFAULT_SPAN_CLASS;
+          const content =
+            rawSpan !== undefined ? React.cloneElement(child, { 'data-grid-span': undefined }) : child;
+          return (
+            <div key={child.key ?? index} className={`col-span-12 ${spanClass}`}>
+              {content}
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -305,7 +355,7 @@ export default function TemplateBuilderForm({ definition, draft, onChange }: Tem
   return (
     <div className="space-y-6">
       <Section title="Applicant details">
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3" data-grid-span={12}>
           <label className="flex items-center gap-2 text-sm font-medium text-neutral-800">
             <input
               type="radio"

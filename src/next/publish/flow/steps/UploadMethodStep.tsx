@@ -1,25 +1,24 @@
-import React from 'react';
-import * as UI from '@/styles/ui';
-import type { NoticeDefinition } from '@/next/publish/config/noticeTypes';
+import React from "react";
+import * as UI from "@/styles/ui";
+import StickyRailLayout from "@/next/publish/flow/components/StickyRailLayout";
+import UploadOcrPane, { type UploadOcrPaneProps } from "@/next/publish/flow/components/UploadOcrPane";
+import type { NoticeDefinition } from "@/next/publish/config/noticeTypes";
+import { useSafeTransition } from "@/wizard/useSafeTransition";
 
-export type UploadMethod = 'notice' | 'template';
+export type UploadMethod = "notice" | "template";
 
-export type UploadMethodStepProps = {
-  definition: NoticeDefinition;
+type Props = {
+  definition: NoticeDefinition | null;
   method: UploadMethod | null;
-  onMethodChange: (method: UploadMethod) => void;
+  onMethodChange: (m: UploadMethod) => void;
   onBack: () => void;
   onContinue: () => void;
   continueDisabled?: boolean;
-  fromNoticeContent: React.ReactNode;
+  continuePending?: boolean;
+  uploadPaneProps: UploadOcrPaneProps;
   templateContent: React.ReactNode;
   rightRail?: React.ReactNode;
 };
-
-const tabs: Array<{ key: UploadMethod; label: string; description: string }> = [
-  { key: 'notice', label: 'Upload from Notice', description: 'Drop your signed notice or supply text for OCR.' },
-  { key: 'template', label: 'Upload via Template', description: 'Generate the notice using our structured form.' },
-];
 
 export default function UploadMethodStep({
   definition,
@@ -28,77 +27,171 @@ export default function UploadMethodStep({
   onBack,
   onContinue,
   continueDisabled,
-  fromNoticeContent,
+  continuePending,
+  uploadPaneProps,
   templateContent,
   rightRail,
-}: UploadMethodStepProps) {
+}: Props) {
+  const inferredDefaultMethod = React.useMemo<UploadMethod>(
+    () => (definition?.id?.includes("premises") ? "notice" : "template"),
+    [definition?.id]
+  );
+  const [active, setActive] = React.useState<UploadMethod>(method ?? inferredDefaultMethod);
+  const methodRef = React.useRef<UploadMethod | null>(method ?? null);
+  const { run: chooseMethod, pending: switching } = useSafeTransition(async (key: UploadMethod) => {
+    if (methodRef.current === key) return;
+    methodRef.current = key;
+    setActive(key);
+    onMethodChange(key);
+  });
+
+  React.useEffect(() => {
+    if (method) {
+      methodRef.current = method;
+      setActive(method);
+    } else {
+      methodRef.current = null;
+      setActive(inferredDefaultMethod);
+    }
+  }, [method, inferredDefaultMethod]);
+
+  const toggle = (key: UploadMethod) => {
+    setActive(key);
+    if (key === "notice" && methodRef.current === null) return;
+    chooseMethod(key);
+  };
+
+  // Guard undefined definition access
+  const defLabel = definition?.label ?? "this notice type";
+
   return (
-    <section className={`${UI.card} p-0`} data-testid="upload-method-step">
-      <div
-        className={`grid gap-0 ${
-          rightRail ? 'md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : 'md:grid-cols-1'
-        }`}
-      >
-        <div className="space-y-6 p-6">
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue/80">Step 2 · Upload your notice</p>
-            <h2 className="text-base font-semibold text-brand-navy">{definition.label}</h2>
-            <p className="text-sm text-neutral-600">
-              Choose how you want to prepare this notice. You can upload an existing draft for OCR or build it via our template.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Upload method">
-            {tabs.map((tab) => {
-              const isActive = method === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`${UI.btnSecondary} h-10 px-4 text-sm transition-colors duration-200 focus:ring-offset-0 focus:ring-offset-transparent ${
-                    isActive
-                      ? 'bg-white text-brand-navy font-semibold shadow-sm border-brand-blue/50'
-                      : 'bg-white/80 text-brand-navy/70 border-white/70 hover:bg-white'
-                  }`}
-                  data-testid={`upload-method-${tab.key}`}
-                  onClick={() => onMethodChange(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="rounded-xl border border-neutral-200 bg-white/80">
-            {method === 'notice' && <div role="tabpanel">{fromNoticeContent}</div>}
-            {method === 'template' && <div role="tabpanel">{templateContent}</div>}
-            {!method && (
-              <div className="p-10 text-center text-sm text-neutral-500" data-testid="upload-method-placeholder">
-                Select an option above to continue.
+    <section
+      className="space-y-6"
+      data-testid="upload-method-step"
+      aria-busy={continuePending || switching ? "true" : undefined}
+    >
+      <div data-e2e="step-marker" data-step="step-2">STEP: UploadMethodStep</div>
+      <StickyRailLayout
+        left={
+          <div className="relative space-y-12 pb-32">
+            <section className={`${UI.wizardCard} border-blue-100/70 shadow-[0_32px_96px_rgba(15,23,42,0.16)]`}>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_0%_0%,rgba(37,99,235,0.12)_0%,rgba(37,99,235,0)_55%)]"
+              />
+              <div className="relative flex flex-col gap-8 px-8 py-12 sm:px-12 sm:py-14">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <span className={UI.wizardPill}>Step 2 of 4</span>
+                  <span className="text-xs text-slate-500">Upload or build from template — switch any time.</span>
+                </div>
+
+                <div className="space-y-5">
+                  <h2 className="text-4xl font-bold leading-tight text-slate-900 sm:text-[40px] lg:text-5xl">
+                    Prepare your notice
+                  </h2>
+                  <p className="max-w-2xl text-lg leading-relaxed text-slate-600">
+                    Upload the signed notice for OCR or complete the structured template tailored to{" "}
+                    <strong className="font-semibold text-slate-900">{defLabel}</strong>. We validate the essentials while you work.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/80 p-1.5 text-sm font-semibold text-slate-600 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => toggle("notice")}
+                    className={`flex-1 rounded-xl px-5 py-3 transition-all duration-300 ease-out ${
+                      active === "notice"
+                        ? "bg-white text-slate-900 shadow-[0_16px_36px_rgba(15,23,42,0.08)] scale-[1.01]"
+                        : "hover:text-slate-900 hover:bg-white/50"
+                    }`}
+                    aria-pressed={active === "notice"}
+                  >
+                    Upload & OCR
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggle("template")}
+                    className={`flex-1 rounded-xl px-5 py-3 transition-all duration-300 ease-out ${
+                      active === "template"
+                        ? "bg-white text-slate-900 shadow-[0_16px_36px_rgba(15,23,42,0.08)] scale-[1.01]"
+                        : "hover:text-slate-900 hover:bg-white/50"
+                    }`}
+                    aria-pressed={active === "template"}
+                  >
+                    Structured template
+                  </button>
+                </div>
+
+                <div className="space-y-8">
+                  {active === "notice" ? (
+                    <UploadOcrPane
+                      {...uploadPaneProps}
+                      onSwitchToTemplate={() => toggle("template")}
+                    />
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_20px_48px_rgba(15,23,42,0.08)]">
+                        <div className="space-y-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            Structured fields
+                          </p>
+                          <p className="text-sm leading-6 text-slate-600">
+                            Tailored questions keep you compliant. Switch back to OCR at any point—your inputs are preserved.
+                          </p>
+                        </div>
+                        <div className="space-y-6">{templateContent}</div>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        Already have a signed notice? Choose Upload &amp; OCR to extract the text automatically.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </section>
+
+            <footer className="pointer-events-none sticky bottom-8">
+              <div className="pointer-events-auto flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white/95 px-6 py-5 shadow-[0_28px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  className={`${UI.btnSecondary} transition-all duration-200 hover:scale-[1.02]`}
+                  onClick={onBack}
+                  data-testid="upload-step-back"
+                >
+                  Back
+                </button>
+                <div className="flex flex-1 items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    className={`${UI.btnSecondary} hidden transition-all duration-200 hover:scale-[1.02] sm:inline-flex`}
+                    onClick={() => toggle("notice")}
+                    disabled={continuePending || switching}
+                    data-testid="upload-step-use-ocr"
+                  >
+                    Use OCR
+                  </button>
+                  <button
+                    type="button"
+                    className={`${UI.btnPrimary} min-w-[168px] transition-all duration-200 hover:scale-[1.02]`}
+                    onClick={onContinue}
+                    disabled={!!continueDisabled || continuePending || switching}
+                    data-testid="upload-step-continue"
+                  >
+                    {continuePending ? "Working…" : "Continue"}
+                  </button>
+                </div>
+              </div>
+            </footer>
+
+            {active === "notice" ? (
+              <p className="px-2 text-xs text-slate-500">
+                These details must appear on the public notice. You can refine the text before publishing.
+              </p>
+            ) : null}
           </div>
-          <div className="flex items-center justify-between pt-2">
-            <button type="button" className={UI.btnSecondary} onClick={onBack} data-testid="upload-method-back">
-              Back
-            </button>
-            <button
-              type="button"
-              className={`${UI.btnPrimary} min-w-[150px]`}
-              onClick={onContinue}
-              disabled={continueDisabled ?? !method}
-              data-testid="upload-method-continue"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-        {rightRail && (
-          <aside className="border-t border-neutral-200 bg-neutral-50/70 p-6 md:border-l md:border-t-0">
-            {rightRail}
-          </aside>
-        )}
-      </div>
+        }
+        right={rightRail ?? null}
+      />
     </section>
   );
 }
