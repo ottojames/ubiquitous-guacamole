@@ -8,6 +8,7 @@ import ActivitiesHours, {
   type ActivityHours,
   type DayKey,
 } from '@/components/notice/ActivitiesHours';
+import AddressLookup, { mockProvider, type AddressResult } from '@/components/AddressLookup';
 
 export type TemplateBuilderFormProps = {
   definition: NoticeDefinition;
@@ -411,6 +412,25 @@ export default function TemplateBuilderForm({ definition, draft, onChange }: Tem
           value={getString(draft, ['applicant', 'contactPhone'])}
           onChange={(value) => onChange(['applicant', 'contactPhone'], value)}
         />
+        <div className="space-y-3" data-grid-span={12}>
+          <label className="text-sm font-medium text-neutral-800">
+            Search service address or postcode (optional)
+          </label>
+          <AddressLookup
+            provider={mockProvider}
+            placeholder="Start typing an address or postcode"
+            onResolved={(address: AddressResult) => {
+              if (address.line1) onChange(['applicant', 'serviceAddress', 'line1'], address.line1);
+              if (address.line2) onChange(['applicant', 'serviceAddress', 'line2'], address.line2);
+              if (address.town) onChange(['applicant', 'serviceAddress', 'town'], address.town);
+              if (address.postcode) onChange(['applicant', 'serviceAddress', 'postcode'], address.postcode);
+            }}
+            className="w-full"
+          />
+          <p className="text-xs leading-5 text-neutral-500">
+            Search for the service address to auto-fill the fields below, or enter manually.
+          </p>
+        </div>
         <TextInput
           label="Service address line 1"
           value={getString(draft, ['applicant', 'serviceAddress', 'line1'])}
@@ -442,6 +462,25 @@ export default function TemplateBuilderForm({ definition, draft, onChange }: Tem
           value={getString(draft, ['premises', 'name'])}
           onChange={(value) => onChange(['premises', 'name'], value)}
         />
+        <div className="space-y-3" data-grid-span={12}>
+          <label className="text-sm font-medium text-neutral-800">
+            Search premises address or postcode (optional)
+          </label>
+          <AddressLookup
+            provider={mockProvider}
+            placeholder="Start typing an address or postcode"
+            onResolved={(address: AddressResult) => {
+              if (address.line1) onChange(['premises', 'address', 'line1'], address.line1);
+              if (address.line2) onChange(['premises', 'address', 'line2'], address.line2);
+              if (address.town) onChange(['premises', 'address', 'town'], address.town);
+              if (address.postcode) onChange(['premises', 'address', 'postcode'], address.postcode);
+            }}
+            className="w-full"
+          />
+          <p className="text-xs leading-5 text-neutral-500">
+            Search for the premises address to auto-fill the fields below, or enter manually.
+          </p>
+        </div>
         <TextInput
           label="Address line 1"
           value={getString(draft, ['premises', 'address', 'line1'])}
@@ -708,6 +747,24 @@ function GvolSpecific({ draft, onChange }: { draft: Record<string, unknown> | nu
   const selectedArea = getNested(draft, ['trafficAreaOverride', 'id']);
   return (
     <Section title="GVOL details">
+      <div className="space-y-3" data-grid-span={12}>
+        <label className="text-sm font-medium text-neutral-800">
+          Search operating centre address or postcode (optional)
+        </label>
+        <AddressLookup
+          provider={mockProvider}
+          placeholder="Start typing an address or postcode"
+          onResolved={(address: AddressResult) => {
+            if (address.line1) onChange(['operatingCentreAddress', 'line1'], address.line1);
+            if (address.town) onChange(['operatingCentreAddress', 'town'], address.town);
+            if (address.postcode) onChange(['operatingCentreAddress', 'postcode'], address.postcode);
+          }}
+          className="w-full"
+        />
+        <p className="text-xs leading-5 text-neutral-500">
+          Search for the operating centre address to auto-fill the fields below, or enter manually.
+        </p>
+      </div>
       <TextInput
         label="Operating centre line 1"
         value={getString(draft, ['operatingCentreAddress', 'line1'])}
@@ -856,6 +913,24 @@ function ProbateSpecific({ draft, onChange }: { draft: Record<string, unknown> |
         onChange={(value) => onChange(['deceased', 'fullName'], value)}
         required
       />
+      <div className="space-y-3" data-grid-span={12}>
+        <label className="text-sm font-medium text-neutral-800">
+          Search deceased's address or postcode (optional)
+        </label>
+        <AddressLookup
+          provider={mockProvider}
+          placeholder="Start typing an address or postcode"
+          onResolved={(address: AddressResult) => {
+            if (address.line1) onChange(['deceased', 'lastAddress', 'line1'], address.line1);
+            if (address.town) onChange(['deceased', 'lastAddress', 'town'], address.town);
+            if (address.postcode) onChange(['deceased', 'lastAddress', 'postcode'], address.postcode);
+          }}
+          className="w-full"
+        />
+        <p className="text-xs leading-5 text-neutral-500">
+          Search for the deceased's last address to auto-fill the fields below, or enter manually.
+        </p>
+      </div>
       <TextInput
         label="Deceased address line 1"
         value={getString(draft, ['deceased', 'lastAddress', 'line1'])}
@@ -887,6 +962,24 @@ function ProbateSpecific({ draft, onChange }: { draft: Record<string, unknown> |
         onChange={(value) => onChange(['solicitorOrPR', 'name'], value)}
         required
       />
+      <div className="space-y-3" data-grid-span={12}>
+        <label className="text-sm font-medium text-neutral-800">
+          Search solicitor/PR address or postcode (optional)
+        </label>
+        <AddressLookup
+          provider={mockProvider}
+          placeholder="Start typing an address or postcode"
+          onResolved={(address: AddressResult) => {
+            if (address.line1) onChange(['solicitorOrPR', 'address', 'line1'], address.line1);
+            if (address.town) onChange(['solicitorOrPR', 'address', 'town'], address.town);
+            if (address.postcode) onChange(['solicitorOrPR', 'address', 'postcode'], address.postcode);
+          }}
+          className="w-full"
+        />
+        <p className="text-xs leading-5 text-neutral-500">
+          Search for the solicitor or personal representative address to auto-fill the fields below, or enter manually.
+        </p>
+      </div>
       <TextInput
         label="Solicitor / PR address line 1"
         value={getString(draft, ['solicitorOrPR', 'address', 'line1'])}

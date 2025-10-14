@@ -704,7 +704,7 @@ export default function Home() {
               <Archive className="h-4 w-4" />
               Enterprise ready
             </div>
-            <h2 className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-700 bg-clip-text text-4xl font-extrabold leading-[1.2] tracking-tight text-transparent md:text-5xl">
+            <h2 className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-700 bg-clip-text text-4xl font-extrabold leading-[1.4] tracking-tight text-transparent md:text-5xl pb-1">
               Built for councils, designed for scale
             </h2>
             <p className="mt-6 text-xl leading-relaxed text-slate-600">

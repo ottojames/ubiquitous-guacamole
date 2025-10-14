@@ -10,7 +10,9 @@ export type RequiredFieldKey =
   | "premisesLine1"
   | "premisesCity"
   | "premisesPostcode"
-  | "council";
+  | "council"
+  | "contactEmail"
+  | "activities";
 
 export const REQUIRED_FIELD_LABELS: Record<RequiredFieldKey, string> = {
   applicationType: "Application type",
@@ -19,6 +21,8 @@ export const REQUIRED_FIELD_LABELS: Record<RequiredFieldKey, string> = {
   premisesCity: "Town / city",
   premisesPostcode: "Postcode",
   council: "Licensing authority",
+  contactEmail: "Contact email",
+  activities: "Licensable activities",
 };
 
 export type RecommendedFieldKey =
@@ -28,7 +32,6 @@ export type RecommendedFieldKey =
   | "representationDeadline"
   | "viewingInformation"
   | "representationContact"
-  | "contactEmail"
   | "contactPhone";
 
 export const APPLICATION_TYPE_OPTIONS = [
@@ -47,14 +50,19 @@ export type LegalDetails = {
   premisesCity: string;
   premisesPostcode: string;
   councilName: string;
+  councilEmail: string;
+  councilAddress: string;
+  councilWebsite: string;
   tradingName: string;
   premisesName: string;
+  aiGeneratedSummary: string;
   applicationSummary: string;
   representationDeadline: string;
   viewingInformation: string;
   representationContact: string;
   contactEmail: string;
   contactPhone: string;
+  activities: string[];
 };
 
 export type LegalMetaEntry = {
@@ -74,6 +82,14 @@ export type OCRHighlight = {
   confidence?: number | null;
 };
 
+export const LICENSABLE_ACTIVITIES = [
+  { value: "alcohol-on", label: "Sale of alcohol for consumption on the premises" },
+  { value: "alcohol-off", label: "Sale of alcohol for consumption off the premises" },
+  { value: "alcohol-both", label: "Sale of alcohol for consumption on and off the premises" },
+  { value: "late-night-refreshment", label: "Provision of late night refreshment" },
+  { value: "regulated-entertainment", label: "Provision of regulated entertainment" },
+] as const;
+
 export function createInitialLegalDetails(): LegalDetails {
   return {
     applicationType: "",
@@ -83,14 +99,19 @@ export function createInitialLegalDetails(): LegalDetails {
     premisesCity: "",
     premisesPostcode: "",
     councilName: "",
+    councilEmail: "",
+    councilAddress: "",
+    councilWebsite: "",
     tradingName: "",
     premisesName: "",
+    aiGeneratedSummary: "",
     applicationSummary: "",
     representationDeadline: "",
     viewingInformation: "",
     representationContact: "",
     contactEmail: "",
     contactPhone: "",
+    activities: [],
   };
 }
 
@@ -160,9 +181,11 @@ function extractCouncil(text: string): {
   range?: { start: number; end: number };
   confidence?: number;
 } {
-  const match = text.match(/(?:licensing authority|licensing act|council)[:\-\s]+(.+?)(?:\n|$)/i);
+  const match = text.match(/(?:licensing authority|council)[:\-\s]+(.+?)(?:\n|$)/i);
   if (match && match[1]) {
-    const raw = match[1].trim();
+    let raw = match[1].trim();
+    // Remove common suffixes that aren't part of the council name
+    raw = raw.replace(/\s*(?:licensing act|2003|act)\s*$/i, '').trim();
     const council = findCouncilByName(raw);
     const idx = text.toLowerCase().indexOf(raw.toLowerCase());
     return {
@@ -185,7 +208,11 @@ function extractAddress(text: string): {
 } {
   const match = text.match(/premises(?: address)?[:\-\s]+(.+?)(?:\n|$)/i);
   if (!match || !match[1]) return {};
-  const raw = match[1].trim();
+  let raw = match[1].trim();
+  // Remove common prefixes that aren't part of the address
+  raw = raw.replace(/^(?:for\s+a\s+)?premises\s+licen[cs]e\s*/i, '').trim();
+  raw = raw.replace(/^licen[cs]e\s+/i, '').trim();
+
   const postcodeMatch = raw.match(POSTCODE_REGEX);
   let postcode = "";
   let before = raw;
@@ -223,6 +250,144 @@ function extractSummary(text: string): { value?: string; range?: { start: number
     };
   }
   return {};
+}
+
+/**
+ * Generate a concise, grammatically correct summary of what is being applied for.
+ * Maximum 10 words, proper capitalization, focusing on application type and activities.
+ */
+export function generateNoticeSummary(text: string): string {
+  if (!text || text.trim().length < 50) {
+    return "";
+  }
+
+  const lower = text.toLowerCase();
+
+  // 1. Determine APPLICATION TYPE with proper capitalization
+  let applicationType = "Premises licence";
+  let isVariation = false;
+
+  if (lower.includes("vary") || lower.includes("variation")) {
+    applicationType = "Variation";
+    isVariation = true;
+  } else if (lower.includes("review")) {
+    applicationType = "Review";
+  } else if (lower.includes("club premises certificate") || lower.includes("club certificate")) {
+    applicationType = "Club premises certificate";
+  } else if (lower.includes("premises licence") || lower.includes("premises license")) {
+    applicationType = "Premises licence";
+  }
+
+  // 2. Identify LICENSABLE ACTIVITIES with smart detection
+  const activities: string[] = [];
+
+  // Alcohol detection (check for all variations)
+  const hasAlcohol = lower.includes("sale of alcohol") ||
+                     lower.includes("supply of alcohol") ||
+                     lower.includes("sale by retail of alcohol") ||
+                     lower.includes("retail sale of alcohol") ||
+                     (lower.includes("alcohol") && (lower.includes("sale") || lower.includes("supply") || lower.includes("retail")));
+
+  if (hasAlcohol) {
+    // Determine alcohol type - check for multiple variations
+    const hasOnAndOff = lower.includes("on and off") ||
+                        lower.includes("on & off") ||
+                        lower.includes("on/off") ||
+                        (lower.includes("on premises") && lower.includes("off premises")) ||
+                        (lower.includes("on the premises") && lower.includes("off the premises"));
+
+    const hasOffOnly = !hasOnAndOff && (
+      lower.includes("off premises") ||
+      lower.includes("off the premises") ||
+      lower.includes("off-premises") ||
+      lower.includes("off sales") ||
+      lower.includes("off-sales") ||
+      (lower.includes("alcohol") && lower.includes("off") && !lower.includes("on"))
+    );
+
+    if (hasOffOnly) {
+      activities.push("off-premises alcohol sales");
+    } else if (hasOnAndOff) {
+      activities.push("on and off-premises alcohol sales");
+    } else {
+      // Default to on-premises or general
+      activities.push("alcohol sales");
+    }
+  }
+
+  // Late night refreshment (handle singular and plural)
+  if (lower.includes("late night refreshment") ||
+      lower.includes("late-night refreshment") ||
+      lower.includes("late night refreshments")) {
+    activities.push("late night refreshment");
+  }
+
+  // Entertainment detection
+  const hasLiveMusic = lower.includes("live music");
+  const hasRecordedMusic = lower.includes("recorded music");
+  const hasEntertainment = lower.includes("regulated entertainment") || lower.includes("provision of entertainment");
+
+  if (hasLiveMusic || hasRecordedMusic || hasEntertainment) {
+    if (hasLiveMusic && hasRecordedMusic) {
+      activities.push("live and recorded music");
+    } else if (hasLiveMusic) {
+      activities.push("live music");
+    } else if (hasRecordedMusic) {
+      activities.push("recorded music");
+    } else {
+      activities.push("entertainment");
+    }
+  }
+
+  // 3. BUILD SUMMARY with proper grammar
+  if (activities.length === 0) {
+    return applicationType;
+  }
+
+  // Format activities list with proper grammar
+  let activityPhrase = "";
+  if (activities.length === 1) {
+    activityPhrase = activities[0];
+  } else if (activities.length === 2) {
+    activityPhrase = `${activities[0]} and ${activities[1]}`;
+  } else {
+    // 3+ activities: use Oxford comma
+    const last = activities[activities.length - 1];
+    const rest = activities.slice(0, -1);
+    activityPhrase = `${rest.join(', ')}, and ${last}`;
+  }
+
+  // Construct final summary
+  let summary = "";
+  if (isVariation) {
+    summary = `Variation for ${activityPhrase}`;
+  } else {
+    summary = `${applicationType} for ${activityPhrase}`;
+  }
+
+  // 4. ENSURE 10-WORD LIMIT with smart truncation
+  const words = summary.split(/\s+/);
+  if (words.length <= 10) {
+    return summary;
+  }
+
+  // If too long, intelligently shorten
+  if (isVariation && activities.length > 0) {
+    // "Variation for [first activity]"
+    return `Variation for ${activities[0]}`;
+  }
+
+  if (activities.length >= 2) {
+    // Use just first two activities
+    const shortened = `${applicationType} for ${activities[0]} and ${activities[1]}`;
+    const shortWords = shortened.split(/\s+/);
+    if (shortWords.length <= 10) {
+      return shortened;
+    }
+  }
+
+  // Last resort: just first activity
+  return `${applicationType} for ${activities[0]}`;
 }
 
 export function extractLegalDetailsFromOcr(text: string): ExtractResult {
@@ -365,7 +530,8 @@ export function validateLegalDetails(
 
   const applicationTypeValid = APPLICATION_TYPE_OPTIONS.some((opt) => opt.value === details.applicationType);
   errors.applicationType = applicationTypeValid ? null : "Select an application type.";
-  statuses.push(buildStatus("applicationType", applicationTypeValid, meta.applicationType));
+  // Application type is selected manually in step 1, so don't pass meta to avoid "review" status
+  statuses.push(buildStatus("applicationType", applicationTypeValid, undefined));
 
   const applicantValid = details.applicantName.trim().length >= 2;
   errors.applicantName = applicantValid ? null : "Applicant name is required.";
@@ -387,6 +553,14 @@ export function validateLegalDetails(
   errors.council = councilValid ? null : "Select a licensing authority.";
   statuses.push(buildStatus("council", councilValid, meta.council));
 
+  const emailValid = details.contactEmail.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.contactEmail);
+  errors.contactEmail = emailValid ? null : "Enter a valid contact email.";
+  statuses.push(buildStatus("contactEmail", emailValid, meta.contactEmail));
+
+  const activitiesValid = details.activities && details.activities.length > 0;
+  errors.activities = activitiesValid ? null : "Select at least one licensable activity.";
+  statuses.push(buildStatus("activities", activitiesValid, undefined));
+
   const recommendedWarnings: string[] = [];
   if (!details.tradingName.trim()) recommendedWarnings.push("Trading name is missing.");
   if (!details.premisesName.trim()) recommendedWarnings.push("Premises name is missing.");
@@ -394,8 +568,8 @@ export function validateLegalDetails(
   if (!details.representationDeadline.trim()) recommendedWarnings.push("Representation deadline not set.");
   if (!details.viewingInformation.trim()) recommendedWarnings.push("Viewing information is missing.");
   if (!details.representationContact.trim()) recommendedWarnings.push("Representation contact details missing.");
-  if (!details.contactEmail.trim() && !details.contactPhone.trim())
-    recommendedWarnings.push("Contact email or phone is missing.");
+  if (!details.contactPhone.trim())
+    recommendedWarnings.push("Contact phone number is missing.");
 
   const missingCount = statuses.filter((status) => status.status === "missing").length;
 

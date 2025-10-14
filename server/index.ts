@@ -9,6 +9,7 @@ import morgan from 'morgan';
 import uploadRouter from './routes/upload';
 import addressRouter from './routes/address';
 import noticesRouter from './routes/notices';
+import aiSummaryRouter from './routes/ai-summary';
 
 export const app = express();
 
@@ -21,6 +22,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/upload', uploadRouter);
 app.use('/api', addressRouter);
 app.use('/api', noticesRouter);
+app.use('/api/ai-summary', aiSummaryRouter);
 
 const PORT = Number(process.env.PORT || 5174);
 

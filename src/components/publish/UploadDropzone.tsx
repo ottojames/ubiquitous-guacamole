@@ -112,6 +112,8 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
       "application/pdf": [".pdf"],
       "application/msword": [".doc"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/vnd.apple.pages": [".pages"],
+      "application/x-iwork-pages-sffpages": [".pages"],
       "application/rtf": [".rtf"],
       "text/rtf": [".rtf"],
       "image/png": [".png"],
@@ -119,7 +121,7 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
       "image/tiff": [".tif", ".tiff"],
     },
     maxSize: 25 * 1024 * 1024,
-    onDropRejected: () => setError("We accept PDF, DOCX, PNG, or JPG up to 25MB."),
+    onDropRejected: () => setError("We accept PDF, DOC, DOCX, Pages, RTF, PNG, JPG, or TIFF up to 25MB."),
   });
 
   const activeFile = acceptedFiles[0] || currentFile;
@@ -194,7 +196,7 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
           <input
             {...getInputProps()}
             ref={fileInputRef}
-            accept=".pdf,.doc,.docx,.rtf,.png,.jpg,.jpeg,.tif,.tiff"
+            accept=".pdf,.doc,.docx,.pages,.rtf,.png,.jpg,.jpeg,.tif,.tiff"
             aria-describedby="upload-help"
             aria-live="polite"
             style={{ display: 'none' }}
@@ -205,7 +207,10 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
           <div className="space-y-2">
             <p className="text-base font-semibold text-slate-900">Drag your notice or browse files</p>
             <p className="text-sm text-slate-500">
-              We’ll extract the text, highlight matches, and stage the details for review.
+              We'll extract the text, highlight matches, and stage the details for review.
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              You can edit your text in the next step
             </p>
           </div>
           <div className="sr-only" aria-live="polite">
@@ -214,7 +219,7 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
         </div>
 
         <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200/60 bg-white/70 px-4 py-3 text-xs text-slate-500">
-          <span id="upload-help">PDF, DOCX, PNG, JPG • up to 25MB</span>
+          <span id="upload-help">PDF, DOC, DOCX, Pages, RTF, PNG, JPG, TIFF • up to 25MB</span>
           <span className="hidden h-4 w-px bg-slate-200 sm:block" aria-hidden />
           <div className="flex items-center gap-2 text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />

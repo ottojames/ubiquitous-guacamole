@@ -1,9 +1,11 @@
 import React from "react";
 import type { Council } from "@/components/CouncilSelect";
 import CouncilSelect from "@/components/CouncilSelect";
+import AddressLookup, { mockProvider, type AddressResult } from "@/components/AddressLookup";
 import * as UI from "@/styles/ui";
 import {
   APPLICATION_TYPE_OPTIONS,
+  LICENSABLE_ACTIVITIES,
   REQUIRED_FIELD_LABELS,
   type LegalDetails,
   type LegalMetaMap,
@@ -27,7 +29,6 @@ const OPTIONAL_KEYS = new Set<RequiredFieldKey | RecommendedFieldKey>([
   "representationDeadline",
   "viewingInformation",
   "representationContact",
-  "contactEmail",
   "contactPhone",
 ]);
 
@@ -175,6 +176,17 @@ export default function UploadOcrPane({
     );
   };
 
+  const renderRequiredBadge = (key: RequiredFieldKey) => {
+    // Only show "Required" badge if the field is missing or invalid
+    const error = errors[key];
+    if (!error) return null;
+    return (
+      <span className="inline-flex items-center rounded-md bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+        Required
+      </span>
+    );
+  };
+
   const fieldDescriptionId = (key: string, hasError: boolean) => {
     const ids = [`${key}-help`];
     if (hasError) ids.push(`${key}-error`);
@@ -184,6 +196,17 @@ export default function UploadOcrPane({
   const handleChange = (key: keyof LegalDetails, value: string) => {
     onChange(key, value);
   };
+
+  const handleAddressResolved = React.useCallback((address: AddressResult) => {
+    if (address.line1) onChange('premisesLine1', address.line1);
+    if (address.line2) onChange('premisesLine2', address.line2);
+    if (address.town) onChange('premisesCity', address.town);
+    if (address.postcode) onChange('premisesPostcode', address.postcode);
+    // Focus the first field after auto-fill so user can see it populated
+    setTimeout(() => {
+      line1Ref.current?.focus();
+    }, 100);
+  }, [onChange]);
 
   const statusChips = statuses.map((status) => {
     const copy = STATUS_COPY[status.status];
@@ -262,12 +285,16 @@ export default function UploadOcrPane({
           </header>
 
           <div className="space-y-10">
-            <section className="space-y-5">
-              <h4 className="text-[15px] font-semibold text-slate-900">Applicant</h4>
-              <div className="space-y-5">
+            <section className="space-y-6">
+              <div className="flex items-baseline gap-3">
+                <h4 className="text-[15px] font-semibold text-slate-900">Applicant</h4>
+                <span className="text-xs text-slate-500">Who is applying for the licence</span>
+              </div>
+              <div className="space-y-6">
                 <div className="space-y-3">
-                  <label htmlFor="applicant-name" className="text-sm font-medium text-slate-800">
-                    Applicant legal name<span className="ml-1 text-rose-600">*</span>
+                  <label htmlFor="applicant-name" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span>Applicant legal name</span>
+                    {renderRequiredBadge('applicantName')}
                     {renderConfidence('applicantName')}
                   </label>
                   <input
@@ -311,12 +338,31 @@ export default function UploadOcrPane({
               </div>
             </section>
 
-            <section className="space-y-5">
-              <h4 className="text-[15px] font-semibold text-slate-900">Location</h4>
-              <div className="grid gap-5 md:grid-cols-2">
+            <section className="space-y-6">
+              <div className="flex items-baseline gap-3">
+                <h4 className="text-[15px] font-semibold text-slate-900">Location</h4>
+                <span className="text-xs text-slate-500">Where the premises is located</span>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-3 md:col-span-2">
-                  <label htmlFor="premises-line1" className="text-sm font-medium text-slate-800">
-                    Address line 1<span className="ml-1 text-rose-600">*</span>
+                  <label className="text-sm font-medium text-slate-800">
+                    Search address or postcode (optional)
+                  </label>
+                  <AddressLookup
+                    provider={mockProvider}
+                    placeholder="Start typing an address or postcode"
+                    onResolved={handleAddressResolved}
+                    className="w-full"
+                  />
+                  <p className="text-xs leading-5 text-slate-500">
+                    Search for your premises address to auto-fill the fields below, or enter manually.
+                  </p>
+                </div>
+
+                <div className="space-y-3 md:col-span-2">
+                  <label htmlFor="premises-line1" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span>Address line 1</span>
+                    {renderRequiredBadge('premisesLine1')}
                     {renderConfidence('premisesLine1')}
                   </label>
                   <input
@@ -330,6 +376,7 @@ export default function UploadOcrPane({
                     aria-invalid={errors.premisesLine1 ? 'true' : undefined}
                     aria-describedby={fieldDescriptionId('premises-line1', Boolean(errors.premisesLine1))}
                     placeholder="Building name and number"
+                    autoComplete="off"
                   />
                   <p id="premises-line1-help" className="text-xs leading-5 text-slate-500">
                     Main address for the premises.
@@ -380,8 +427,9 @@ export default function UploadOcrPane({
                 )}
 
                 <div className="space-y-3">
-                  <label htmlFor="premises-city" className="text-sm font-medium text-slate-800">
-                    Town or city<span className="ml-1 text-rose-600">*</span>
+                  <label htmlFor="premises-city" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span>Town or city</span>
+                    {renderRequiredBadge('premisesCity')}
                     {renderConfidence('premisesCity')}
                   </label>
                   <input
@@ -395,6 +443,7 @@ export default function UploadOcrPane({
                     aria-invalid={errors.premisesCity ? 'true' : undefined}
                     aria-describedby={fieldDescriptionId('premises-city', Boolean(errors.premisesCity))}
                     placeholder="Town or district"
+                    autoComplete="off"
                   />
                   <p id="premises-city-help" className="text-xs leading-5 text-slate-500">
                     Include the local area for clarity.
@@ -403,8 +452,9 @@ export default function UploadOcrPane({
                 </div>
 
                 <div className="space-y-3">
-                  <label htmlFor="premises-postcode" className="text-sm font-medium text-slate-800">
-                    Postcode<span className="ml-1 text-rose-600">*</span>
+                  <label htmlFor="premises-postcode" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span>Postcode</span>
+                    {renderRequiredBadge('premisesPostcode')}
                     {renderConfidence('premisesPostcode')}
                   </label>
                   <input
@@ -418,6 +468,7 @@ export default function UploadOcrPane({
                     aria-invalid={errors.premisesPostcode ? 'true' : undefined}
                     aria-describedby={fieldDescriptionId('premises-postcode', Boolean(errors.premisesPostcode))}
                     placeholder="AA1 1AA"
+                    autoComplete="off"
                   />
                   <p id="premises-postcode-help" className="text-xs leading-5 text-slate-500">
                     We show this near the title for accuracy.
@@ -427,40 +478,16 @@ export default function UploadOcrPane({
               </div>
             </section>
 
-            <section className="space-y-5">
-              <h4 className="text-[15px] font-semibold text-slate-900">Authority & application</h4>
-              <div className="space-y-5">
+            <section className="space-y-6">
+              <div className="flex items-baseline gap-3">
+                <h4 className="text-[15px] font-semibold text-slate-900">Licensing authority</h4>
+                <span className="text-xs text-slate-500">Council responsible for licensing</span>
+              </div>
+              <div className="space-y-6">
                 <div className="space-y-3">
-                  <label htmlFor="application-type" className="text-sm font-medium text-slate-800">
-                    Application type<span className="ml-1 text-rose-600">*</span>
-                    {renderConfidence('applicationType')}
-                  </label>
-                  <select
-                    id="application-type"
-                    ref={applicationTypeRef}
-                    value={details.applicationType}
-                    onChange={(event) => handleChange('applicationType', event.target.value)}
-                    onFocus={() => onFieldFocus('applicationType')}
-                    className={`${UI.input}`}
-                    aria-invalid={errors.applicationType ? 'true' : undefined}
-                    aria-describedby={fieldDescriptionId('application-type', Boolean(errors.applicationType))}
-                  >
-                    <option value="">Select application type</option>
-                    {APPLICATION_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p id="application-type-help" className="text-xs leading-5 text-slate-500">
-                    Controls the template wording and pricing.
-                  </p>
-                  {renderError('applicationType')}
-                </div>
-
-                <div className="space-y-3">
-                  <label htmlFor="licensing-authority" className="text-sm font-medium text-slate-800">
-                    Licensing authority<span className="ml-1 text-rose-600">*</span>
+                  <label htmlFor="licensing-authority" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span>Licensing authority</span>
+                    {renderRequiredBadge('council')}
                     {renderConfidence('council')}
                   </label>
                   <CouncilSelect
@@ -485,6 +512,124 @@ export default function UploadOcrPane({
                   </div>
                 </div>
 
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div className="space-y-3 md:col-span-2">
+                    <label htmlFor="council-email" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                      <span>Council email</span>
+                    </label>
+                    <input
+                      id="council-email"
+                      type="email"
+                      value={details.councilEmail}
+                      onChange={(event) => handleChange('councilEmail', event.target.value)}
+                      className={`${UI.input} bg-slate-50`}
+                      placeholder="licensing@council.gov.uk"
+                      readOnly={!!selectedCouncil?.email}
+                    />
+                    <p id="council-email-help" className="text-xs leading-5 text-slate-500">
+                      Auto-filled from licensing authority. This is where residents send representations.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 md:col-span-2">
+                    <label htmlFor="council-address" className="text-sm font-medium text-slate-800">
+                      Council address
+                    </label>
+                    <input
+                      id="council-address"
+                      type="text"
+                      value={details.councilAddress}
+                      onChange={(event) => handleChange('councilAddress', event.target.value)}
+                      className={`${UI.input}`}
+                      placeholder="Council House, Main Street"
+                    />
+                    <p id="council-address-help" className="text-xs leading-5 text-slate-500">
+                      Physical address for the licensing authority.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label htmlFor="council-website" className="text-sm font-medium text-slate-800">
+                      Council website (optional)
+                    </label>
+                    <input
+                      id="council-website"
+                      type="url"
+                      value={details.councilWebsite}
+                      onChange={(event) => handleChange('councilWebsite', event.target.value)}
+                      className={`${UI.input}`}
+                      placeholder="https://www.council.gov.uk"
+                    />
+                    <p id="council-website-help" className="text-xs leading-5 text-slate-500">
+                      Link to licensing information.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label htmlFor="contact-email" className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <span>Contact email</span>
+                    {renderRequiredBadge('contactEmail')}
+                  </label>
+                  <input
+                    id="contact-email"
+                    ref={contactEmailRef}
+                    type="email"
+                    value={details.contactEmail}
+                    onChange={(event) => handleChange('contactEmail', event.target.value)}
+                    onFocus={() => onFieldFocus('contactEmail')}
+                    className={`${UI.input}`}
+                    placeholder="you@example.com"
+                    required
+                  />
+                  <p id="contact-email-help" className="text-xs leading-5 text-slate-500">
+                    Primary contact email for inquiries about this application.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-5">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[15px] font-semibold text-slate-900">Licensable activities</h4>
+                  {renderRequiredBadge('activities')}
+                </div>
+                <p className="text-sm text-slate-600">Select all activities that apply to this application.</p>
+              </div>
+              <div className="space-y-3">
+                {LICENSABLE_ACTIVITIES.map((activity) => {
+                  const isChecked = details.activities.includes(activity.value);
+                  return (
+                    <label
+                      key={activity.value}
+                      className="flex items-start gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const newActivities = e.target.checked
+                            ? [...details.activities, activity.value]
+                            : details.activities.filter((a) => a !== activity.value);
+                          handleChange('activities' as keyof LegalDetails, newActivities as any);
+                        }}
+                        className="mt-0.5 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        aria-invalid={errors.activities ? 'true' : undefined}
+                      />
+                      <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
+                        {activity.label}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              {renderError('activities')}
+            </section>
+
+            <section className="space-y-5">
+              <h4 className="text-[15px] font-semibold text-slate-900">Additional details</h4>
+              <div className="space-y-5">
                 {showOptional && (
                   <div className="grid gap-5 md:grid-cols-2">
                     <div className="space-y-3">
@@ -532,21 +677,6 @@ export default function UploadOcrPane({
                       />
                     </div>
                     <div className="space-y-3">
-                      <label htmlFor="contact-email" className="text-sm font-medium text-slate-800">
-                        Contact email (optional)
-                      </label>
-                      <input
-                        id="contact-email"
-                        ref={contactEmailRef}
-                        type="email"
-                        value={details.contactEmail}
-                        onChange={(event) => handleChange('contactEmail', event.target.value)}
-                        onFocus={() => onFieldFocus('contactEmail')}
-                        className={`${UI.input}`}
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    <div className="space-y-3">
                       <label htmlFor="contact-phone" className="text-sm font-medium text-slate-800">
                         Contact phone (optional)
                       </label>
@@ -566,22 +696,27 @@ export default function UploadOcrPane({
               </div>
             </section>
 
-            <section className="space-y-2">
-              <h4 className="text-sm font-semibold text-slate-900">Optional summary</h4>
-              <textarea
-                id="application-summary"
-                ref={summaryRef}
-                rows={showOptional ? 5 : 3}
-                value={details.applicationSummary}
-                onChange={(event) => handleChange('applicationSummary', event.target.value)}
-                onFocus={() => onFieldFocus('applicationSummary')}
-                className={`${UI.input} min-h-[120px]`}
-                placeholder="Brief summary of the application."
-              />
-              <p id="application-summary-help" className="text-xs text-slate-500">
-                Helps residents understand the change without reading the full notice.
-              </p>
-            </section>
+            {details.aiGeneratedSummary && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-slate-900">Summary of Application</h4>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    AI Generated
+                  </span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                  <p className="text-sm leading-relaxed text-slate-700">
+                    {details.aiGeneratedSummary}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500">
+                  This summary helps residents quickly understand the application without reading the full notice.
+                </p>
+              </section>
+            )}
           </div>
 
           <button

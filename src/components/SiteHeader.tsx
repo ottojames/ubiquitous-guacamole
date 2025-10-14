@@ -58,7 +58,7 @@ export default function SiteHeader() {
 
           {/* Right: ghost + primary */}
           <div className="hidden md:flex items-center gap-3">
-            <a href="/#signin" className={`text-sm ${UI.btnSecondary} h-9 py-0`}>Sign in</a>
+            <a href="/login" className={`text-sm ${UI.btnSecondary} h-9 py-0`}>Sign in</a>
             <a href="/publish" onClick={() => track('publish_started', { audience: 'public' })} className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
               Publish a notice
             </a>
@@ -118,7 +118,7 @@ export default function SiteHeader() {
               ))}
             </nav>
             <div className="mt-auto flex items-center gap-3">
-              <a href="/#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
               <a href="/publish" onClick={() => { setMobileOpen(false); track('publish_started', { audience: 'public' }); }} className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
                 Publish a notice
               </a>

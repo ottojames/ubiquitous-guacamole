@@ -23,6 +23,7 @@ import {
   APPLICATION_TYPE_OPTIONS,
   createInitialLegalDetails,
   extractLegalDetailsFromOcr,
+  generateNoticeSummary,
   type LegalDetails,
   type LegalMetaMap,
   type OCRHighlight,
@@ -32,6 +33,9 @@ import {
 } from "@/next/publish/flow/lib/legalDetails";
 const LazyTemplateBuilderForm = React.lazy(() => import("./TemplateBuilderForm"));
 const LazyNoticePreview = React.lazy(() => import("./NoticePreview"));
+import ReviewCard from "./components/ReviewCard";
+import ProgressBar from "./components/ProgressBar";
+import StickyRailLayout from "./components/StickyRailLayout";
 
 type Step = (typeof wizardSteps)[number]["id"];
 type TemplateDraft = Record<string, unknown> | null;
@@ -377,32 +381,42 @@ export default function NewPublishFlow() {
   });
 
   const handleOcrText = React.useCallback(
-    (text: string) => {
+    async (text: string) => {
       setTemplateDraft((prev) => ({ ...(prev ?? {}), ocrText: text }));
       setUploadMethod((prev) => prev ?? "notice");
       setPreviewSource("ocr");
       const extraction = extractLegalDetailsFromOcr(text);
+
+      // Generate AI summary for residents using ChatGPT API
+      let aiSummary = "";
+      try {
+        const response = await fetch('/api/ai-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          aiSummary = data.summary || "";
+        } else {
+          // Fallback to heuristic if API fails
+          console.warn('[AI_SUMMARY] API failed, using fallback');
+          aiSummary = generateNoticeSummary(text);
+        }
+      } catch (error) {
+        // Fallback to heuristic if API is unavailable
+        console.error('[AI_SUMMARY] Error calling API:', error);
+        aiSummary = generateNoticeSummary(text);
+      }
+
+      // Store extraction results but DO NOT auto-fill form fields
       setLegalMeta((prev) => ({ ...prev, ...extraction.meta }));
       setOcrHighlights(extraction.highlights);
-      setLegalDetails((prev) => {
-        const next: LegalDetails = { ...prev };
-        (Object.keys(extraction.details) as Array<keyof LegalDetails>).forEach((key) => {
-          const incoming = extraction.details[key];
-          if (incoming == null || incoming === "") return;
-          const current = prev[key];
-          if (typeof current === "string" && current.trim().length > 0) return;
-          next[key] = incoming;
-        });
-        if (!next.councilName && extraction.inferredCouncil) {
-          next.councilName = extraction.inferredCouncil.name;
-        }
-        return next;
-      });
-      if (extraction.inferredCouncil) {
-        setSelectedCouncil(extraction.inferredCouncil);
-      }
+      setLegalDetails((prev) => ({ ...prev, aiGeneratedSummary: aiSummary }));
+      // DO NOT set legalDetails automatically - fields must be filled manually for compliance
       if (text.trim()) {
-        toast('Text extracted');
+        toast('Text extracted. Please complete the required fields manually.');
       }
     },
     []
@@ -410,6 +424,10 @@ export default function NewPublishFlow() {
 
   const handleOcrMeta = React.useCallback((meta: { engine?: string; [k: string]: unknown }) => {
     setTemplateDraft((prev) => ({ ...(prev ?? {}), ocrMeta: meta }));
+  }, []);
+
+  const handleOcrTextChange = React.useCallback((text: string) => {
+    setTemplateDraft((prev) => ({ ...(prev ?? {}), ocrText: text }));
   }, []);
 
   const handleDetailChange = React.useCallback((key: keyof LegalDetails, value: string) => {
@@ -447,7 +465,12 @@ export default function NewPublishFlow() {
 
   const handleCouncilSelect = React.useCallback((council: Council) => {
     setSelectedCouncil(council);
-    setLegalDetails((prev) => ({ ...prev, councilName: council.name }));
+    setLegalDetails((prev) => ({
+      ...prev,
+      councilName: council.name,
+      councilEmail: council.email || prev.councilEmail,
+      councilAddress: council.address || prev.councilAddress,
+    }));
     setLegalMeta((prev) => ({ ...prev, council: { ...(prev.council ?? {}), confidence: 1 } }));
   }, []);
 
@@ -818,9 +841,9 @@ export default function NewPublishFlow() {
           ) : (
             <LazyNoticePreview
               text={String((templateDraft as any)?.ocrText ?? "")}
-              highlights={uploadMethod === "notice" ? ocrHighlights : undefined}
-              activeHighlight={uploadMethod === "notice" ? activeHighlightKey : null}
-              onHighlightClick={(key) => focusField(key as RequiredFieldKey | RecommendedFieldKey)}
+              highlights={undefined}
+              activeHighlight={null}
+              onHighlightClick={undefined}
             />
           )
         ) : uploadMethod === "notice" ? (
@@ -902,7 +925,27 @@ export default function NewPublishFlow() {
       },
     ];
 
-    const outstandingCount = legalValidation.missingCount + issues.length;
+    // Transform compliance items for ReviewCard
+    const reviewComplianceItems = legalValidation.statuses.map((status) => ({
+      key: status.key,
+      label: status.label,
+      status: status.status,
+    }));
+
+    // Transform key dates for ReviewCard
+    const reviewKeyDates = keyDates.map((date) => ({
+      label: date.label,
+      value: date.value,
+    }));
+
+    // Transform detections for ReviewCard (from OCR highlights)
+    const reviewDetections = uploadMethod === "notice" && ocrHighlights.length > 0
+      ? ocrHighlights.slice(0, 5).map((highlight) => ({
+          field: highlight.label,
+          value: String((templateDraft as any)?.ocrText ?? "").slice(highlight.start, highlight.end),
+          confidence: highlight.confidence ?? 0.5,
+        }))
+      : [];
 
     return (
       <>
@@ -916,61 +959,13 @@ export default function NewPublishFlow() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200/40 bg-white/50 p-4 shadow-none backdrop-blur-sm md:p-5 opacity-80 hover:opacity-100 transition-opacity duration-300">
-          <h3 className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Compliance checklist</h3>
-          <ul className="mt-2 space-y-1.5">{complianceItems}</ul>
-          {legalValidation.recommendedWarnings.length > 0 && (
-            <div className="mt-3 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-3 py-2 text-xs text-amber-900">
-              <ul className="list-disc space-y-1 pl-4">
-                {legalValidation.recommendedWarnings.map((warning, index) => (
-                  <li key={index}>{warning}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-2xl border border-slate-200/40 bg-white/50 p-4 shadow-none backdrop-blur-sm md:p-5 opacity-80 hover:opacity-100 transition-opacity duration-300">
-          <h3 className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Key dates</h3>
-          <dl className="mt-3 space-y-3">
-            {keyDates.map((item) => (
-              <div className="flex items-center justify-between" key={item.label}>
-                <dt className="text-[12px] uppercase tracking-wide text-slate-400">{item.label}</dt>
-                <dd className="text-sm font-semibold text-slate-700">
-                  {item.value || '—'}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        <section className="rounded-2xl border border-slate-200/40 bg-white/50 p-4 shadow-none backdrop-blur-sm md:p-5 opacity-80 hover:opacity-100 transition-opacity duration-300">
-          <h3 className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Validation summary</h3>
-          {outstandingCount === 0 ? (
-            <p className="mt-2 text-sm text-slate-600">All good so far.</p>
-          ) : (
-            <button
-              type="button"
-              className="mt-2 text-sm font-medium text-blue-600 underline-offset-4 hover:underline"
-              onClick={() => {
-                const next = legalValidation.statuses.find((item) => item.status === 'missing');
-                if (next) {
-                  focusField(next.key);
-                }
-              }}
-            >
-              {outstandingCount} item{outstandingCount === 1 ? '' : 's'} to finish
-            </button>
-          )}
-          {issues.length > 0 && (
-            <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-slate-600">
-              {issues.slice(0, 4).map((issue, index) => (
-                <li key={index}>{issue.message}</li>
-              ))}
-              {issues.length > 4 && <li>+ {issues.length - 4} more…</li>}
-            </ul>
-          )}
-        </section>
+        <ReviewCard
+          complianceItems={reviewComplianceItems}
+          keyDates={reviewKeyDates}
+          detections={reviewDetections}
+          onItemClick={(key) => focusField(key as RequiredFieldKey | RecommendedFieldKey)}
+          recommendedWarnings={legalValidation.recommendedWarnings}
+        />
       </>
     );
   }, [
@@ -1058,20 +1053,29 @@ export default function NewPublishFlow() {
           )}
 
           {currentStep === 2 && !step2Blocked && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <UploadMethodStep
-              definition={definition ?? null /* tolerant to transition frames */}
-              method={uploadMethod}
-              onMethodChange={handleMethodChange}
-              onBack={handleBackToStep1}
-              onContinue={handleContinueFromStep2}
-              continueDisabled={continueDisabledStep2}
-              continuePending={step2Pending}
-              uploadPaneProps={uploadPaneProps}
-              templateContent={templateFormContent}
-              rightRail={rightRail}
-            />
-            </div>
+            <>
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <UploadMethodStep
+                  definition={definition ?? null /* tolerant to transition frames */}
+                  method={uploadMethod}
+                  onMethodChange={handleMethodChange}
+                  onBack={handleBackToStep1}
+                  onContinue={handleContinueFromStep2}
+                  continueDisabled={continueDisabledStep2}
+                  continuePending={step2Pending}
+                  uploadPaneProps={uploadPaneProps}
+                  templateContent={templateFormContent}
+                  rightRail={rightRail}
+                />
+              </div>
+              {uploadMethod === "notice" && shouldShowRequiredDetails && (
+                <ProgressBar
+                  completed={legalValidation.statuses.filter((s) => s.status === 'found').length}
+                  total={legalValidation.statuses.filter((s) => s.key !== 'representationContact' && s.key !== 'viewingInformation').length}
+                  isComplete={legalValidation.missingCount === 0}
+                />
+              )}
+            </>
           )}
 
           {currentStep === 3 && !step3Blocked && definition && uploadMethod && (
@@ -1084,6 +1088,8 @@ export default function NewPublishFlow() {
               onContinue={handleContinueToPayment}
               continueDisabled={(uploadMethod === "template" && !templateNotice) || !hasDraft}
               continuePending={step3Pending}
+              ocrText={uploadMethod === "notice" ? ocrText : undefined}
+              onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
               preview={
                 <div className="rounded-xl border border-slate-200 p-3">
                   <React.Suspense

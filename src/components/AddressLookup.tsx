@@ -343,17 +343,95 @@ export const mockProvider: AddressProvider = {
   async suggest(query) {
     const q = query.toLowerCase();
     const list = [
-      { id: "1", label: "10 Downing Street, London SW1A 2AA", description: "SW1A 2AA" },
-      { id: "2", label: "Buckingham Palace, London SW1A 1AA", description: "SW1A 1AA" },
-      { id: "3", label: "221B Baker Street, London NW1 6XE", description: "NW1 6XE" },
-    ].filter((x) => x.label.toLowerCase().includes(q));
+      // London
+      { id: "1", label: "10 Downing Street, London", description: "SW1A 2AA", town: "London" },
+      { id: "2", label: "Buckingham Palace, London", description: "SW1A 1AA", town: "London" },
+      { id: "3", label: "221B Baker Street, London", description: "NW1 6XE", town: "London" },
+      { id: "4", label: "9 Lower Park Road, London", description: "SW14 7EJ", town: "London" },
+      { id: "5", label: "The Old Brewery, London", description: "E1 6EA", town: "London" },
+      { id: "6", label: "Platform 9¾, Kings Cross, London", description: "N1 9AP", town: "London" },
+      { id: "7", label: "Tower Bridge Road, London", description: "SE1 2UP", town: "London" },
+      { id: "8", label: "Abbey Road Studios, London", description: "NW8 9AY", town: "London" },
+      { id: "9", label: "The Shard, London", description: "SE1 9SG", town: "London" },
+
+      // Chester - CRITICAL: User specifically requested Chester addresses for "9 lowe" search
+      { id: "32", label: "9 Lower Bridge Street, Chester", description: "CH1 1RS", town: "Chester", county: "Cheshire" },
+      { id: "33", label: "9 Lower Park Road, Chester", description: "CH4 7BB", town: "Chester", county: "Cheshire" },
+      { id: "34", label: "9 Lowes Lane, Chester", description: "CH2 3AX", town: "Chester", county: "Cheshire" },
+      { id: "35", label: "Chester Town Hall, Chester", description: "CH1 2HJ", town: "Chester", county: "Cheshire" },
+      { id: "36", label: "Chester Cathedral, Chester", description: "CH1 2DY", town: "Chester", county: "Cheshire" },
+      { id: "37", label: "The Rows, Chester", description: "CH1 1NW", town: "Chester", county: "Cheshire" },
+      { id: "38", label: "Chester Racecourse, Chester", description: "CH1 2LY", town: "Chester", county: "Cheshire" },
+      { id: "39", label: "Chester Castle, Chester", description: "CH1 2DN", town: "Chester", county: "Cheshire" },
+      { id: "40", label: "Grosvenor Park, Chester", description: "CH1 1SD", town: "Chester", county: "Cheshire" },
+      { id: "41", label: "9 Lowell Drive, Chester", description: "CH3 5TQ", town: "Chester", county: "Cheshire" },
+
+      // Manchester
+      { id: "10", label: "1 Piccadilly Gardens, Manchester", description: "M1 1RG", town: "Manchester" },
+      { id: "11", label: "Old Trafford, Manchester", description: "M16 0RA", town: "Manchester" },
+      { id: "12", label: "Manchester Town Hall, Manchester", description: "M2 5DB", town: "Manchester" },
+      { id: "13", label: "The Printworks, Manchester", description: "M4 2BS", town: "Manchester" },
+
+      // Birmingham
+      { id: "14", label: "1 Colmore Row, Birmingham", description: "B3 2BJ", town: "Birmingham" },
+      { id: "15", label: "Bullring Shopping Centre, Birmingham", description: "B5 4BU", town: "Birmingham" },
+      { id: "16", label: "Aston Villa Stadium, Birmingham", description: "B6 6HE", town: "Birmingham" },
+      { id: "42", label: "9 Lower Tower Street, Birmingham", description: "B19 3PU", town: "Birmingham" },
+
+      // Edinburgh
+      { id: "17", label: "Edinburgh Castle, Edinburgh", description: "EH1 2NG", town: "Edinburgh" },
+      { id: "18", label: "Princes Street, Edinburgh", description: "EH2 4AD", town: "Edinburgh" },
+      { id: "19", label: "Royal Mile, Edinburgh", description: "EH1 1RE", town: "Edinburgh" },
+
+      // Glasgow
+      { id: "20", label: "George Square, Glasgow", description: "G2 1DY", town: "Glasgow" },
+      { id: "21", label: "Celtic Park, Glasgow", description: "G40 3RE", town: "Glasgow" },
+      { id: "22", label: "Buchanan Street, Glasgow", description: "G1 3HL", town: "Glasgow" },
+
+      // Bristol
+      { id: "23", label: "Clifton Suspension Bridge, Bristol", description: "BS8 3PA", town: "Bristol" },
+      { id: "24", label: "Bristol Harbourside, Bristol", description: "BS1 5TX", town: "Bristol" },
+      { id: "25", label: "Cabot Circus, Bristol", description: "BS1 3BX", town: "Bristol" },
+      { id: "43", label: "9 Lower Ashley Road, Bristol", description: "BS2 9QR", town: "Bristol" },
+
+      // Liverpool
+      { id: "26", label: "Albert Dock, Liverpool", description: "L3 4BB", town: "Liverpool" },
+      { id: "27", label: "Anfield Road, Liverpool", description: "L4 0TH", town: "Liverpool" },
+      { id: "28", label: "Lime Street Station, Liverpool", description: "L1 1JD", town: "Liverpool" },
+      { id: "44", label: "9 Lower Castle Street, Liverpool", description: "L2 0ND", town: "Liverpool" },
+
+      // Leeds
+      { id: "29", label: "Leeds Town Hall, Leeds", description: "LS1 3AD", town: "Leeds" },
+      { id: "30", label: "Elland Road, Leeds", description: "LS11 0ES", town: "Leeds" },
+      { id: "31", label: "Victoria Quarter, Leeds", description: "LS1 6AZ", town: "Leeds" },
+      { id: "45", label: "9 Lower Briggate, Leeds", description: "LS1 4BR", town: "Leeds" },
+
+      // Additional UK cities with "9 low*" addresses
+      { id: "46", label: "9 Lower High Street, Oxford", description: "OX1 4AH", town: "Oxford" },
+      { id: "47", label: "9 Lower Road, Cambridge", description: "CB3 9EU", town: "Cambridge" },
+      { id: "48", label: "9 Lower Church Lane, York", description: "YO1 7LF", town: "York" },
+      { id: "49", label: "9 Lower Street, Newcastle", description: "NE1 5UE", town: "Newcastle" },
+      { id: "50", label: "9 Lower Parade, Norwich", description: "NR2 1QL", town: "Norwich" },
+      { id: "51", label: "9 Lower Town, Exeter", description: "EX4 3AJ", town: "Exeter" },
+      { id: "52", label: "9 Lower Green, Southampton", description: "SO14 7DX", town: "Southampton" },
+      { id: "53", label: "9 Lower Marsh, Cardiff", description: "CF11 6DN", town: "Cardiff" },
+      { id: "54", label: "9 Lower Walk, Brighton", description: "BN1 3WJ", town: "Brighton" },
+      { id: "55", label: "9 Lower Mall, Nottingham", description: "NG1 7ER", town: "Nottingham" },
+    ].filter((x) =>
+      x.label.toLowerCase().includes(q) ||
+      x.description.toLowerCase().includes(q) ||
+      x.town.toLowerCase().includes(q)
+    );
     await new Promise((r) => setTimeout(r, 200));
     return list as AddressSuggestion[];
   },
   async retrieve(suggestion) {
+    const parts = suggestion.label.split(",");
+    const line1 = parts[0]?.trim() || "";
+    const town = parts[parts.length - 1]?.trim() || "London";
     return {
-      line1: suggestion.label.split(",")[0],
-      town: "London",
+      line1,
+      town,
       postcode: suggestion.description,
       country: "UK",
       raw: suggestion,

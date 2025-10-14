@@ -32,7 +32,13 @@ export default function Login() {
   };
 
   return (
-    <div className={`${UI.pageWrap} min-h-screen`}>
+    <div className="min-h-screen text-slate-900 relative" style={{
+      background: 'linear-gradient(112deg, #223266 0%, #6EA3F7 53%, #F4F7FD 100%)'
+    }}>
+      {/* Subtle decorative elements */}
+      <div className="absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-white/30 blur-3xl pointer-events-none" />
+      <div className="absolute left-0 top-[300px] h-[400px] w-[400px] rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg" style={{ height: 'var(--headerH)' }}>
         <div className={`${UI.container} h-full`}>
@@ -67,27 +73,14 @@ export default function Login() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden pb-32 pt-16 md:pb-40 md:pt-24 lg:pb-48">
-        <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
-
-        {/* Vertical gradient fade */}
-        <div
-          className="absolute inset-x-0 bottom-0 pointer-events-none"
-          style={{
-            height: '400px',
-            background: 'linear-gradient(to bottom, rgba(247, 248, 252, 0) 0%, rgba(247, 248, 252, 0.5) 40%, rgba(247, 248, 252, 0.9) 70%, #F7F8FC 100%)'
-          }}
-          aria-hidden="true"
-        />
-
+      {/* Hero - minimal, refined */}
+      <section className="relative pt-12 md:pt-16 pb-12">
         <div className={`${UI.container} relative z-10`}>
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-6xl">
+          <div className="mx-auto max-w-xl text-center">
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
               Welcome back
             </h1>
-            <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl">
+            <p className="mt-4 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] font-normal md:text-lg">
               Sign in to your CivicNotices account to manage your statutory notices
             </p>
           </div>
@@ -95,25 +88,25 @@ export default function Login() {
       </section>
 
       {/* Login Form */}
-      <section className="py-16 md:py-24">
+      <section className="pb-20 md:pb-28">
         <div className={UI.container}>
           <div className="mx-auto max-w-md">
-            <div className={`${UI.card} p-8 md:p-10`}>
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="rounded-xl bg-white border border-slate-200/60 p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+              <form onSubmit={handleSubmit} className="space-y-7">
                 {/* Email Field */}
                 <div>
-                  <label htmlFor="email" className={UI.label}>
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                     Email address
                   </label>
-                  <div className="relative mt-2">
-                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
                     <input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className={`${UI.input} w-full pl-10`}
+                      className="w-full h-11 pl-11 pr-4 rounded-lg border border-slate-300 bg-white text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-400"
                       required
                     />
                   </div>
@@ -121,39 +114,39 @@ export default function Login() {
 
                 {/* Password Field */}
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="password" className={UI.label}>
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                       Password
                     </label>
                     <a
                       href="/forgot-password"
-                      className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                      className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-150"
                     >
                       Forgot password?
                     </a>
                   </div>
-                  <div className="relative mt-2">
-                    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
                     <input
                       id="password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className={`${UI.input} w-full pl-10`}
+                      className="w-full h-11 pl-11 pr-4 rounded-lg border border-slate-300 bg-white text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-400"
                       required
                     />
                   </div>
                 </div>
 
                 {/* Remember Me */}
-                <div className="flex items-center">
+                <div className="flex items-center pt-1">
                   <input
                     id="remember"
                     type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 transition-colors"
                   />
-                  <label htmlFor="remember" className="ml-2 text-sm text-slate-700">
+                  <label htmlFor="remember" className="ml-2.5 text-sm text-slate-600">
                     Remember me for 30 days
                   </label>
                 </div>
@@ -170,12 +163,14 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`${UI.btnPrimary} w-full justify-center ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  className={`w-full h-11 flex items-center justify-center gap-2 rounded-lg font-semibold text-[15px] transition-all duration-200 ${
+                    loading
+                      ? "bg-slate-400 text-white cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98] shadow-sm hover:shadow-md"
                   }`}
                 >
                   {loading ? "Signing in..." : "Sign in"}
-                  {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
+                  {!loading && <ArrowRight className="h-[18px] w-[18px]" />}
                 </button>
               </form>
 
@@ -184,18 +179,18 @@ export default function Login() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200" />
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-4 text-slate-500">Or continue with</span>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-white px-3 text-slate-500 font-medium">Or continue with</span>
                 </div>
               </div>
 
               {/* Social Login Buttons */}
-              <div className="space-y-3">
+              <div>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+                  className="flex w-full items-center justify-center gap-3 h-11 rounded-lg border border-slate-300 bg-white px-4 text-[15px] font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:border-slate-400 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -215,109 +210,97 @@ export default function Login() {
                   </svg>
                   Continue with Google
                 </button>
+              </div>
 
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+              {/* Trust Indicators - moved inside card */}
+              <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-5 text-xs text-slate-500">
+                <div className="flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>256-bit SSL</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
-                  Continue with GitHub
-                </button>
+                  <span>GDPR compliant</span>
+                </div>
               </div>
 
               {/* Sign Up Link */}
               <div className="mt-8 text-center">
                 <p className="text-sm text-slate-600">
                   Don't have an account?{" "}
-                  <a href="/signup" className="font-semibold text-blue-700 hover:text-blue-800">
+                  <a href="/signup" className="font-medium text-slate-700 hover:text-slate-900 transition-colors duration-150">
                     Sign up for free
                   </a>
                 </p>
               </div>
             </div>
-
-            {/* Trust Indicators */}
-            <div className="mt-8 space-y-4">
-              <div className="flex items-center justify-center gap-6 text-xs text-slate-500">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  <span>256-bit SSL encryption</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span>GDPR compliant</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="pb-16 md:pb-24">
+      {/* Benefits Section - lighter, more spaced */}
+      <section className="pb-20 md:pb-28">
         <div className={UI.container}>
-          <div className="mx-auto max-w-4xl">
-            <h2 className="mb-8 text-center text-2xl font-bold tracking-tight text-slate-900">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="mb-12 text-center text-xl font-medium text-slate-700">
               Trusted by 40+ UK councils and thousands of users
             </h2>
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className={`${UI.card} p-6 text-center`}>
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                  <svg className="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50/80">
+                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="mb-2 font-semibold text-slate-900">Instant publication</h3>
-                <p className="text-sm text-slate-600">Publish notices in seconds, not weeks</p>
+                <h3 className="mb-2 font-medium text-slate-900 text-[15px]">Instant publication</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">Publish notices in seconds, not weeks</p>
               </div>
 
-              <div className={`${UI.card} p-6 text-center`}>
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                  <Lock className="h-6 w-6 text-blue-700" />
+              <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50/80">
+                  <Lock className="h-5 w-5 text-blue-600" strokeWidth={2} />
                 </div>
-                <h3 className="mb-2 font-semibold text-slate-900">Full audit trail</h3>
-                <p className="text-sm text-slate-600">Cryptographic proof for legal compliance</p>
+                <h3 className="mb-2 font-medium text-slate-900 text-[15px]">Full audit trail</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">Cryptographic proof for legal compliance</p>
               </div>
 
-              <div className={`${UI.card} p-6 text-center`}>
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                  <svg className="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50/80">
+                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="mb-2 font-semibold text-slate-900">Save up to 85%</h3>
-                <p className="text-sm text-slate-600">Compared to traditional newspaper notices</p>
+                <h3 className="mb-2 font-medium text-slate-900 text-[15px]">Save up to 85%</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">Compared to traditional newspaper notices</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 py-12">
+      {/* Footer - lighter, more minimal */}
+      <footer className="border-t border-slate-200/60 py-10">
         <div className={`${UI.container} text-center`}>
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
-            <a href="/about" className="hover:text-slate-900">
+          <div className="mb-5 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+            <a href="/about" className="hover:text-slate-700 transition-colors duration-150">
               About
             </a>
-            <a href="/docs" className="hover:text-slate-900">
+            <a href="/docs" className="hover:text-slate-700 transition-colors duration-150">
               Docs
             </a>
-            <a href="/privacy" className="hover:text-slate-900">
+            <a href="/privacy" className="hover:text-slate-700 transition-colors duration-150">
               Privacy
             </a>
-            <a href="/terms" className="hover:text-slate-900">
+            <a href="/terms" className="hover:text-slate-700 transition-colors duration-150">
               Terms
             </a>
-            <a href="/contact" className="hover:text-slate-900">
+            <a href="/contact" className="hover:text-slate-700 transition-colors duration-150">
               Contact
             </a>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-400">
             © {new Date().getFullYear()} CivicNotices. Modernising statutory notices for the digital age.
           </p>
         </div>

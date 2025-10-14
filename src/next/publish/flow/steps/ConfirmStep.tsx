@@ -14,6 +14,8 @@ export type ConfirmStepProps = {
   metadata?: React.ReactNode;
   continueDisabled?: boolean;
   continuePending?: boolean;
+  ocrText?: string;
+  onOcrTextChange?: (text: string) => void;
 };
 
 export default function ConfirmStep({
@@ -26,6 +28,8 @@ export default function ConfirmStep({
   metadata,
   continueDisabled,
   continuePending,
+  ocrText,
+  onOcrTextChange,
 }: ConfirmStepProps) {
   return (
     <section
@@ -37,19 +41,39 @@ export default function ConfirmStep({
       <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
         <div className="space-y-4 text-center">
           <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
-            Confirm your notice
+            {uploadMethod === "notice" ? "Review your notice" : "Confirm your notice"}
           </h2>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600">
-            Review the generated notice and verify statutory details before continuing to payment.
+            {uploadMethod === "notice"
+              ? "Please review the extracted text below and make any necessary corrections before continuing. This is your final chance to edit the notice."
+              : "Review the generated notice and verify statutory details before continuing to payment."}
           </p>
         </div>
       </header>
 
       <div className="grid gap-8 sm:grid-cols-12">
         <div className="space-y-4 sm:col-span-7">
-          <div className="rounded-3xl border border-slate-200/80 bg-white/95 shadow-[0_20px_48px_rgba(15,23,42,0.12)]">
-            {preview}
-          </div>
+          {uploadMethod === "notice" && onOcrTextChange ? (
+            <div className="space-y-3">
+              <label htmlFor="ocr-text-edit" className="block text-sm font-semibold text-slate-900">
+                Notice text
+              </label>
+              <textarea
+                id="ocr-text-edit"
+                value={ocrText ?? ""}
+                onChange={(e) => onOcrTextChange(e.target.value)}
+                className="w-full min-h-[600px] rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 shadow-sm transition-all duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-mono"
+                placeholder="Your notice text will appear here..."
+              />
+              <p className="text-xs text-slate-500">
+                Make any necessary corrections to the extracted text. Changes will be saved automatically.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-slate-200/80 bg-white/95 shadow-[0_20px_48px_rgba(15,23,42,0.12)]">
+              {preview}
+            </div>
+          )}
         </div>
 
         <aside className="space-y-5 sm:col-span-5">
