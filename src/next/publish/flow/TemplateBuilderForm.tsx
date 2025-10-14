@@ -1,1010 +1,530 @@
-import React from 'react';
-import type { NoticeDefinition } from '@/next/publish/config/noticeTypes';
-import * as UI from '@/styles/ui';
-import { getNested } from '@/next/publish/utils/object';
-import { TRAFFIC_AREAS } from '@/next/publish/config/trafficAreas';
-import ActivitiesHours, {
-  type ActivityGroup,
-  type ActivityHours,
-  type DayKey,
-} from '@/components/notice/ActivitiesHours';
-import AddressLookup, { mockProvider, type AddressResult } from '@/components/AddressLookup';
+import React from "react";
+import type { NoticeDefinition } from "@/next/publish/config/noticeTypes";
+import * as UI from "@/styles/ui";
+import {
+  getFormBlueprint,
+  type FieldBlueprint,
+  type FormBlueprint,
+  type PlaceholderKey,
+} from "@/next/publish/config/formBlueprints";
+import { addDays, addMonths, toISODate } from "@/next/publish/utils/date";
+import AddressLookup, { mockProvider, type AddressResult } from "@/components/AddressLookup";
+import ActivitiesHoursSection, { type ActivitiesHoursData } from "@/components/publish/ActivitiesHoursSection";
+import CouncilSelect, { type Council } from "@/components/CouncilSelect";
 
 export type TemplateBuilderFormProps = {
   definition: NoticeDefinition;
   draft: Record<string, unknown> | null;
   onChange: (path: (string | number)[], value: unknown) => void;
+  errors?: Record<string, string[] | undefined>;
 };
 
-type InputProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  helperText?: string;
-  required?: boolean;
-  span?: 12 | 8 | 6 | 4;
+type SetValueOptions = {
+  fromUser?: boolean;
+  fromAuto?: boolean;
 };
-
-function TextInput({ label, value, onChange, type = 'text', helperText, required, span = 6 }: InputProps) {
-  const inputId = React.useId();
-  const helperId = helperText ? `${inputId}-helper` : undefined;
-  return (
-    <label className="block space-y-2" data-grid-span={span} htmlFor={inputId}>
-      <span className="text-sm font-medium text-neutral-800">
-        {label}
-        {required ? <span className="ml-1 text-red-600">*</span> : null}
-      </span>
-      <input
-        id={inputId}
-        type={type}
-        className={`${UI.input}`}
-        value={value}
-        aria-required={required ? 'true' : undefined}
-        aria-describedby={helperId}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      {helperText ? (
-        <span id={helperId} className="text-xs text-neutral-500">
-          {helperText}
-        </span>
-      ) : null}
-    </label>
-  );
-}
-
-type TextAreaProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  rows?: number;
-  helperText?: string;
-  required?: boolean;
-  span?: 12 | 8 | 6 | 4;
-};
-
-function TextArea({ label, value, onChange, rows = 4, helperText, required, span = 12 }: TextAreaProps) {
-  const inputId = React.useId();
-  const helperId = helperText ? `${inputId}-helper` : undefined;
-  return (
-    <label className="block space-y-2" data-grid-span={span} htmlFor={inputId}>
-      <span className="text-sm font-medium text-neutral-800">
-        {label}
-        {required ? <span className="ml-1 text-red-600">*</span> : null}
-      </span>
-      <textarea
-        id={inputId}
-        className={`${UI.input} min-h-[120px]`}
-        value={value}
-        rows={rows}
-        aria-required={required ? 'true' : undefined}
-        aria-describedby={helperId}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      {helperText ? (
-        <span id={helperId} className="text-xs text-neutral-500">
-          {helperText}
-        </span>
-      ) : null}
-    </label>
-  );
-}
 
 const GRID_SPAN_CLASSES: Record<number, string> = {
-  12: 'md:col-span-12',
-  8: 'md:col-span-8',
-  6: 'md:col-span-6',
-  4: 'md:col-span-4',
-};
-const DEFAULT_SPAN_CLASS = GRID_SPAN_CLASSES[6];
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const items = React.Children.toArray(children);
-  return (
-    <section className={`${UI.card} space-y-4 p-6`}>
-      <h3 className="text-lg font-semibold text-neutral-900">{title}</h3>
-      <div className="grid grid-cols-12 gap-x-6 gap-y-5">
-        {items.map((child, index) => {
-          if (!React.isValidElement(child)) {
-            return (
-              <div key={index} className="col-span-12 md:col-span-12">
-                {child}
-              </div>
-            );
-          }
-          const rawSpan = child.props?.['data-grid-span'];
-          let span = Number(rawSpan);
-          if (!Number.isFinite(span)) span = 6;
-          const spanClass = GRID_SPAN_CLASSES[span] ?? DEFAULT_SPAN_CLASS;
-          const content =
-            rawSpan !== undefined ? React.cloneElement(child, { 'data-grid-span': undefined }) : child;
-          return (
-            <div key={child.key ?? index} className={`col-span-12 ${spanClass}`}>
-              {content}
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-const DAY_KEYS: DayKey[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-type LicensingActivityDefinition = {
-  id: string;
-  label: string;
-  schemaCode: string;
+  12: "md:col-span-12",
+  8: "md:col-span-8",
+  6: "md:col-span-6",
+  4: "md:col-span-4",
 };
 
-const LICENSING_ACTIVITY_DEFINITIONS: LicensingActivityDefinition[] = [
-  { id: 'alcohol_on', label: 'Sale of alcohol (on premises)', schemaCode: 'alcohol_on' },
-  { id: 'alcohol_off', label: 'Sale of alcohol (off premises)', schemaCode: 'alcohol_off' },
-  { id: 'alcohol_on_off', label: 'Sale of alcohol (on & off premises)', schemaCode: 'alcohol_on_off' },
-  { id: 'late_refreshment', label: 'Late-night refreshment', schemaCode: 'late_night_refreshment' },
-  { id: 'live_music', label: 'Live music', schemaCode: 'live_music' },
-  { id: 'recorded_music', label: 'Recorded music', schemaCode: 'recorded_music' },
-  { id: 'dance', label: 'Dance', schemaCode: 'dance' },
-  { id: 'other', label: 'Other licensable activity', schemaCode: 'other' },
-];
-
-const GROUP_ID_TO_SCHEMA_CODE: Record<string, string> = LICENSING_ACTIVITY_DEFINITIONS.reduce(
-  (acc, definition) => {
-    acc[definition.id] = definition.schemaCode;
-    return acc;
-  },
-  {} as Record<string, string>
-);
-
-const SCHEMA_CODE_TO_GROUP_ID: Record<string, string> = LICENSING_ACTIVITY_DEFINITIONS.reduce(
-  (acc, definition) => {
-    acc[definition.schemaCode] = definition.id;
-    return acc;
-  },
-  {} as Record<string, string>
-);
-
-function createEmptyHours(): ActivityHours {
-  return DAY_KEYS.reduce<ActivityHours>((acc, day) => {
-    acc[day] = { open: null, close: null, lateIntoNextDay: false };
-    return acc;
-  }, {} as ActivityHours);
-}
-
-function timeToMinutes(value: string | null): number | null {
+function parseIsoDate(value: string): Date | null {
   if (!value) return null;
-  const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;
-  const hours = Number.parseInt(match[1] ?? '0', 10);
-  const minutes = Number.parseInt(match[2] ?? '0', 10);
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
-  return hours * 60 + minutes;
+  const year = Number.parseInt(match[1]!, 10);
+  const month = Number.parseInt(match[2]!, 10) - 1;
+  const day = Number.parseInt(match[3]!, 10);
+  const date = new Date(Date.UTC(year, month, day));
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
 }
 
-function crossesMidnight(open: string | null, close: string | null): boolean {
-  const start = timeToMinutes(open);
-  const end = timeToMinutes(close);
-  if (start == null || end == null) return false;
-  return end <= start;
+function computeDeadline(rule: FormBlueprint["deadlineRule"], baseValue: string): string | null {
+  if (!rule) return null;
+  const baseDate = parseIsoDate(baseValue);
+  if (!baseDate) return null;
+  if ("offsetDays" in rule) {
+    const adjusted = addDays(baseDate, rule.offsetDays);
+    return toISODate(adjusted);
+  }
+  if ("addMonths" in rule) {
+    const adjusted = addMonths(baseDate, rule.addMonths);
+    return toISODate(adjusted);
+  }
+  return null;
 }
 
-function hasAnyHours(hours: ActivityHours): boolean {
-  return DAY_KEYS.some((day) => {
-    const config = hours[day];
-    return Boolean(config?.open && config?.close);
-  });
+type AliasMap = Map<PlaceholderKey, PlaceholderKey[]>;
+
+function buildAliasMap(blueprint: FormBlueprint): AliasMap {
+  const map: AliasMap = new Map();
+  for (const entry of blueprint.aliasTokens ?? []) {
+    map.set(entry.source, entry.targets);
+  }
+  return map;
 }
 
-function normalizeHours(hours: ActivityHours | null | undefined): ActivityHours {
-  const normalized = createEmptyHours();
-  if (!hours || typeof hours !== 'object') return normalized;
-  for (const day of DAY_KEYS) {
-    const entry = hours[day];
-    if (entry?.open && entry?.close) {
-      normalized[day] = {
-        open: entry.open,
-        close: entry.close,
-        lateIntoNextDay: entry.lateIntoNextDay ?? crossesMidnight(entry.open, entry.close),
-      };
+function isTruthy(value: unknown): boolean {
+  if (Array.isArray(value)) return value.length > 0;
+  return Boolean(typeof value === "string" ? value.trim() : value);
+}
+
+export default function TemplateBuilderForm({
+  definition,
+  draft,
+  onChange,
+  errors,
+}: TemplateBuilderFormProps) {
+  const blueprint = React.useMemo(() => getFormBlueprint(definition), [definition]);
+  const aliasMap = React.useMemo(() => buildAliasMap(blueprint), [blueprint]);
+  const context = React.useMemo(() => ({ definition }), [definition]);
+
+  // Track whether alcohol is selected to show/hide DPS fields
+  const [hasAlcohol, setHasAlcohol] = React.useState(false);
+
+  // Check on mount and when draft changes
+  React.useEffect(() => {
+    const activities = draft?.["LICENSABLE_ACTIVITIES"];
+    if (typeof activities === "string") {
+      const hasAlcoholActivity = activities.toLowerCase().includes("alcohol");
+      setHasAlcohol(hasAlcoholActivity);
     }
-  }
-  return normalized;
-}
+  }, [draft]);
 
-function getLabelForGroup(id: string): string {
-  return LICENSING_ACTIVITY_DEFINITIONS.find((definition) => definition.id === id)?.label ?? id;
-}
+  const deadlineManualRef = React.useRef(false);
+  const lastAutoDeadlineRef = React.useRef<string | null>(null);
 
-function buildGroup(definition: LicensingActivityDefinition, source?: ActivityGroup | null): ActivityGroup {
-  const normalizedHours = normalizeHours(source?.hours);
-  const enabled = source?.enabled ?? hasAnyHours(normalizedHours);
-  return {
-    id: definition.id,
-    label: source?.label ?? getLabelForGroup(definition.id),
-    enabled,
-    hours: normalizedHours,
-  };
-}
+  const getValue = React.useCallback(
+    (token: PlaceholderKey): string => {
+      const raw = draft?.[token];
+      if (typeof raw === "string") return raw;
+      if (typeof raw === "number") return String(raw);
+      return "";
+    },
+    [draft]
+  );
 
-function normalizeActivitiesRecord(record: unknown): Record<string, ActivityGroup> | null {
-  if (!record || typeof record !== 'object') return null;
-  const groups: Record<string, ActivityGroup> = {};
-  for (const definition of LICENSING_ACTIVITY_DEFINITIONS) {
-    const source = (record as Record<string, ActivityGroup | undefined>)[definition.id];
-    if (!source) continue;
-    groups[definition.id] = buildGroup(definition, source);
-  }
-  return Object.keys(groups).length ? groups : null;
-}
+  const setValue = React.useCallback(
+    (token: PlaceholderKey, value: string, options?: SetValueOptions) => {
+      if (token === "DEADLINE_DATE") {
+        if (options?.fromUser) {
+          deadlineManualRef.current = true;
+        } else if (options?.fromAuto) {
+          deadlineManualRef.current = false;
+          lastAutoDeadlineRef.current = value || null;
+        }
+      }
+      onChange([token], value);
+      const aliases = aliasMap.get(token);
+      if (aliases?.length) {
+        for (const alias of aliases) {
+          onChange([alias], value);
+        }
+      }
+    },
+    [aliasMap, onChange]
+  );
 
-function activitiesArrayToGroups(entries: unknown): Record<string, ActivityGroup> | null {
-  if (!Array.isArray(entries)) return null;
-  const groups: Record<string, ActivityGroup> = {};
-  for (const item of entries) {
-    if (!item || typeof item !== 'object') continue;
-    const code = (item as { code?: string }).code;
-    const groupId = code ? SCHEMA_CODE_TO_GROUP_ID[code] ?? code : undefined;
-    if (!groupId) continue;
-    const definition = LICENSING_ACTIVITY_DEFINITIONS.find((def) => def.id === groupId);
-    if (!definition) continue;
-    const hours = createEmptyHours();
-    const days = Array.isArray((item as { days?: unknown }).days)
-      ? ((item as { days?: unknown }).days as string[])
-      : [];
-    const start = typeof (item as { startTime?: string }).startTime === 'string' ? (item as { startTime?: string }).startTime || null : null;
-    const end = typeof (item as { endTime?: string }).endTime === 'string' ? (item as { endTime?: string }).endTime || null : null;
-    for (const day of days) {
-      if (!DAY_KEYS.includes(day as DayKey) || !start || !end) continue;
-      hours[day as DayKey] = {
-        open: start,
-        close: end,
-        lateIntoNextDay: crossesMidnight(start, end),
-      };
+  // Apply automatic values when they change or when draft is empty
+  React.useEffect(() => {
+    for (const { token, value } of blueprint.autoValues) {
+      const current = getValue(token);
+      if (current !== value) {
+        setValue(token, value);
+      }
     }
-    const labelForActivity =
-      typeof (item as { label?: string }).label === 'string'
-        ? ((item as { label?: string }).label as string)
-        : getLabelForGroup(groupId);
-    groups[groupId] = buildGroup(definition, {
-      id: groupId,
-      label: labelForActivity,
-      enabled: Boolean((item as { enabled?: boolean }).enabled ?? days.length > 0),
-      hours,
-    });
-  }
-  return Object.keys(groups).length ? groups : null;
-}
+  }, [blueprint.autoValues, getValue, setValue]);
 
-type LicensingActivityDraft = {
-  code: string;
-  label: string;
-  enabled: boolean;
-  days: string[];
-  startTime: string;
-  endTime: string;
-};
+  // Auto-compute deadlines when applicable
+  React.useEffect(() => {
+    const rule = blueprint.deadlineRule;
+    if (!rule) return;
+    const baseToken = rule.base;
+    const baseValue = getValue(baseToken);
+    if (!baseValue) {
+      if (!deadlineManualRef.current && getValue("DEADLINE_DATE")) {
+        setValue("DEADLINE_DATE", "", { fromAuto: true });
+      }
+      return;
+    }
+    const computed = computeDeadline(rule, baseValue);
+    if (!computed) return;
+    const current = getValue("DEADLINE_DATE");
+    if (!deadlineManualRef.current || current === lastAutoDeadlineRef.current) {
+      if (current !== computed) {
+        lastAutoDeadlineRef.current = computed;
+        setValue("DEADLINE_DATE", computed, { fromAuto: true });
+      }
+    }
+  }, [blueprint.deadlineRule, getValue, setValue]);
 
-function groupsToActivitiesArray(groups: Record<string, ActivityGroup>): LicensingActivityDraft[] {
-  return LICENSING_ACTIVITY_DEFINITIONS.map((definition) => {
-    const source = groups[definition.id] ?? buildGroup(definition);
-    const hours = normalizeHours(source.hours);
-    const activeDays = DAY_KEYS.filter((day) => Boolean(hours[day].open && hours[day].close));
-    const enabled = Boolean((source.enabled ?? hasAnyHours(hours)) && activeDays.length);
-    const firstDay = activeDays[0];
-    const firstRange = firstDay ? hours[firstDay] : undefined;
-    return {
-      code: GROUP_ID_TO_SCHEMA_CODE[definition.id] ?? definition.id,
-      label: source.label ?? getLabelForGroup(definition.id),
-      enabled,
-      days: enabled ? activeDays : [],
-      startTime: enabled && firstRange?.open ? firstRange.open : '',
-      endTime: enabled && firstRange?.close ? firstRange.close : '',
+  // Parse activities & hours data from draft
+  const activitiesHoursData = React.useMemo((): ActivitiesHoursData => {
+    const data: ActivitiesHoursData = {
+      openingHours: {
+        Mon: null,
+        Tue: null,
+        Wed: null,
+        Thu: null,
+        Fri: null,
+        Sat: null,
+        Sun: null,
+      },
+      activities: {},
+      dpsName: getValue("DPS_NAME"),
+      dpsLicensingAuthority: getValue("DPS_LICENSING_AUTHORITY"),
     };
-  });
-}
 
-function resolveActivitiesGroups(
-  record: unknown,
-  entries?: unknown
-): Record<string, ActivityGroup> {
-  const fromRecord = normalizeActivitiesRecord(record);
-  if (fromRecord) {
-    return LICENSING_ACTIVITY_DEFINITIONS.reduce<Record<string, ActivityGroup>>((acc, definition) => {
-      acc[definition.id] = buildGroup(definition, fromRecord[definition.id]);
-      return acc;
-    }, {} as Record<string, ActivityGroup>);
-  }
-  const fromArray = activitiesArrayToGroups(entries);
-  if (fromArray) {
-    return LICENSING_ACTIVITY_DEFINITIONS.reduce<Record<string, ActivityGroup>>((acc, definition) => {
-      acc[definition.id] = buildGroup(definition, fromArray[definition.id]);
-      return acc;
-    }, {} as Record<string, ActivityGroup>);
-  }
-  return LICENSING_ACTIVITY_DEFINITIONS.reduce<Record<string, ActivityGroup>>((acc, definition) => {
-    acc[definition.id] = buildGroup(definition);
-    return acc;
-  }, {} as Record<string, ActivityGroup>);
-}
+    // Parse stored JSON if exists
+    const storedData = draft?.["ACTIVITIES_HOURS_DATA"];
+    if (storedData && typeof storedData === "string") {
+      try {
+        const parsed = JSON.parse(storedData);
+        if (parsed && typeof parsed === "object") {
+          return { ...data, ...parsed };
+        }
+      } catch {
+        // Keep default
+      }
+    }
 
-function getString(draft: Record<string, unknown> | null, path: (string | number)[]): string {
-  const value = getNested(draft, path);
-  return typeof value === 'string' ? value : '';
-}
+    return data;
+  }, [draft, getValue]);
 
-function getNumber(draft: Record<string, unknown> | null, path: (string | number)[], fallback = 0): number {
-  const value = getNested(draft, path);
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string' && value.trim()) return Number(value);
-  return fallback;
-}
+  const updateActivitiesHoursData = React.useCallback(
+    (data: ActivitiesHoursData) => {
+      // Store as JSON in ACTIVITIES_HOURS_DATA field
+      onChange(["ACTIVITIES_HOURS_DATA"], JSON.stringify(data));
 
-function updateArrayField(
-  draft: Record<string, unknown> | null,
-  onChange: (path: (string | number)[], value: unknown) => void,
-  path: (string | number)[],
-  updater: (current: any[]) => any[]
-) {
-  const current = getNested<any[]>(draft, path) || [];
-  const next = updater(current);
-  onChange(path, next);
-}
+      // Also update individual fields for compatibility
+      setValue("DPS_NAME", data.dpsName || "", { fromUser: true });
+      setValue("DPS_LICENSING_AUTHORITY", data.dpsLicensingAuthority || "", { fromUser: true });
 
-export default function TemplateBuilderForm({ definition, draft, onChange }: TemplateBuilderFormProps) {
-  const category = definition.category;
+      // Check if alcohol is selected
+      const hasAlcoholSelected = Object.entries(data.activities).some(
+        ([key, schedule]) => schedule.enabled && key.startsWith("alcohol_")
+      );
+      setHasAlcohol(hasAlcoholSelected);
+    },
+    [onChange, setValue, setHasAlcohol]
+  );
+
+  const sectionElements = React.useMemo(() => {
+    const rendered: React.ReactNode[] = [];
+    for (const section of blueprint.sections) {
+      // Special handling for activities-hours section
+      if (section.id === "activities-hours") {
+        rendered.push(
+          <section key={section.id}>
+            <ActivitiesHoursSection
+              value={activitiesHoursData}
+              onChange={updateActivitiesHoursData}
+              showClubActivities={definition.id.includes("club")}
+              errors={{
+                dpsName: errors?.["DPS_NAME"],
+                dpsLicensingAuthority: errors?.["DPS_LICENSING_AUTHORITY"],
+              }}
+            />
+          </section>
+        );
+        continue;
+      }
+
+      const visibleFields = section.fields.filter((field) => {
+        // Apply showIf condition from blueprint if present
+        if (field.showIf && !field.showIf(context)) return false;
+
+        // Skip fields handled by ActivitiesHoursSection
+        if (field.token === "LICENSABLE_ACTIVITIES" ||
+            field.token === "ACTIVITY_SCHEDULE" ||
+            field.token === "OPENING_HOURS" ||
+            field.token === "DPS_NAME" ||
+            field.token === "DPS_LICENSING_AUTHORITY") {
+          return false;
+        }
+
+        return true;
+      });
+      if (!visibleFields.length) continue;
+      rendered.push(
+        <section key={section.id} className="space-y-5">
+          <div className="space-y-1">
+            <h3 className="text-[14px] font-semibold tracking-tight text-slate-900">{section.title}</h3>
+            {section.description ? (
+              <p className="text-[13px] leading-relaxed text-slate-500">{section.description}</p>
+            ) : null}
+          </div>
+          <div className="space-y-5">
+            {visibleFields.map((field) => (
+              <FieldInput
+                key={`${section.id}-${field.token}`}
+                field={field}
+                value={getValue(field.token)}
+                onChange={(value, options) => setValue(field.token, value, options)}
+                errors={errors?.[field.token]}
+                setValue={setValue}
+              />
+            ))}
+          </div>
+        </section>
+      );
+    }
+    return rendered;
+  }, [blueprint.sections, context, errors, getValue, setValue, definition.id, activitiesHoursData, updateActivitiesHoursData]);
+
+  const atLeastOneMessages = React.useMemo(() => {
+    if (!blueprint.atLeastOne?.length) return [];
+    return blueprint.atLeastOne
+      .map((rule) => {
+        const satisfied = rule.tokens.some((token) => isTruthy(draft?.[token]));
+        return satisfied ? null : (
+          <li key={rule.message} className="text-sm text-amber-600">
+            {rule.message}
+          </li>
+        );
+      })
+      .filter(Boolean);
+  }, [blueprint.atLeastOne, draft]);
 
   return (
-    <div className="space-y-6">
-      <Section title="Applicant details">
-        <div className="flex flex-wrap gap-3" data-grid-span={12}>
-          <label className="flex items-center gap-2 text-sm font-medium text-neutral-800">
-            <input
-              type="radio"
-              name="applicant-type"
-              value="individual"
-              checked={getString(draft, ['applicant', 'type']) === 'individual'}
-              onChange={() => onChange(['applicant', 'type'], 'individual')}
-            />
-            Individual
-          </label>
-          <label className="flex items-center gap-2 text-sm font-medium text-neutral-800">
-            <input
-              type="radio"
-              name="applicant-type"
-              value="company"
-              checked={getString(draft, ['applicant', 'type']) === 'company' || !getString(draft, ['applicant', 'type'])}
-              onChange={() => onChange(['applicant', 'type'], 'company')}
-            />
-            Company
-          </label>
+    <div className="space-y-8">
+      {/* Form title with subtle elegance */}
+      <div className="border-b border-slate-200/60 pb-4">
+        <h2 className="text-[15px] font-semibold tracking-tight text-slate-900">{definition.label}</h2>
+      </div>
+
+      {sectionElements.length ? (
+        <div className="space-y-6">
+          {sectionElements}
         </div>
-        {getString(draft, ['applicant', 'type']) === 'individual' ? (
-          <TextInput
-            label="Full name"
-            value={getString(draft, ['applicant', 'fullName'])}
-            onChange={(value) => onChange(['applicant', 'fullName'], value)}
-            required
-          />
-        ) : (
-          <>
-            <TextInput
-              label="Company name"
-              value={getString(draft, ['applicant', 'companyName'])}
-              onChange={(value) => onChange(['applicant', 'companyName'], value)}
-              required
-            />
-            <TextInput
-              label="Company number"
-              value={getString(draft, ['applicant', 'companyNumber'])}
-              onChange={(value) => onChange(['applicant', 'companyNumber'], value)}
-            />
-          </>
-        )}
-        <TextInput
-          label="Contact email"
-          type="email"
-          value={getString(draft, ['applicant', 'contactEmail'])}
-          onChange={(value) => onChange(['applicant', 'contactEmail'], value)}
-          required
-        />
-        <TextInput
-          label="Contact phone"
-          value={getString(draft, ['applicant', 'contactPhone'])}
-          onChange={(value) => onChange(['applicant', 'contactPhone'], value)}
-        />
-        <div className="space-y-3" data-grid-span={12}>
-          <label className="text-sm font-medium text-neutral-800">
-            Search service address or postcode (optional)
-          </label>
-          <AddressLookup
-            provider={mockProvider}
-            placeholder="Start typing an address or postcode"
-            onResolved={(address: AddressResult) => {
-              if (address.line1) onChange(['applicant', 'serviceAddress', 'line1'], address.line1);
-              if (address.line2) onChange(['applicant', 'serviceAddress', 'line2'], address.line2);
-              if (address.town) onChange(['applicant', 'serviceAddress', 'town'], address.town);
-              if (address.postcode) onChange(['applicant', 'serviceAddress', 'postcode'], address.postcode);
-            }}
-            className="w-full"
-          />
-          <p className="text-xs leading-5 text-neutral-500">
-            Search for the service address to auto-fill the fields below, or enter manually.
-          </p>
+      ) : (
+        <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-8 text-center">
+          <p className="text-[14px] text-slate-600">No structured fields are available for this template.</p>
         </div>
-        <TextInput
-          label="Service address line 1"
-          value={getString(draft, ['applicant', 'serviceAddress', 'line1'])}
-          onChange={(value) => onChange(['applicant', 'serviceAddress', 'line1'], value)}
-          required
-        />
-        <TextInput
-          label="Service address line 2"
-          value={getString(draft, ['applicant', 'serviceAddress', 'line2'])}
-          onChange={(value) => onChange(['applicant', 'serviceAddress', 'line2'], value)}
-        />
-        <TextInput
-          label="Service town / city"
-          value={getString(draft, ['applicant', 'serviceAddress', 'town'])}
-          onChange={(value) => onChange(['applicant', 'serviceAddress', 'town'], value)}
-          required
-        />
-        <TextInput
-          label="Service postcode"
-          value={getString(draft, ['applicant', 'serviceAddress', 'postcode'])}
-          onChange={(value) => onChange(['applicant', 'serviceAddress', 'postcode'], value.toUpperCase())}
-          required
-        />
-      </Section>
-
-      <Section title="Premises / site">
-        <TextInput
-          label="Premises or site name"
-          value={getString(draft, ['premises', 'name'])}
-          onChange={(value) => onChange(['premises', 'name'], value)}
-        />
-        <div className="space-y-3" data-grid-span={12}>
-          <label className="text-sm font-medium text-neutral-800">
-            Search premises address or postcode (optional)
-          </label>
-          <AddressLookup
-            provider={mockProvider}
-            placeholder="Start typing an address or postcode"
-            onResolved={(address: AddressResult) => {
-              if (address.line1) onChange(['premises', 'address', 'line1'], address.line1);
-              if (address.line2) onChange(['premises', 'address', 'line2'], address.line2);
-              if (address.town) onChange(['premises', 'address', 'town'], address.town);
-              if (address.postcode) onChange(['premises', 'address', 'postcode'], address.postcode);
-            }}
-            className="w-full"
-          />
-          <p className="text-xs leading-5 text-neutral-500">
-            Search for the premises address to auto-fill the fields below, or enter manually.
-          </p>
-        </div>
-        <TextInput
-          label="Address line 1"
-          value={getString(draft, ['premises', 'address', 'line1'])}
-          onChange={(value) => onChange(['premises', 'address', 'line1'], value)}
-          required
-        />
-        <TextInput
-          label="Address line 2"
-          value={getString(draft, ['premises', 'address', 'line2'])}
-          onChange={(value) => onChange(['premises', 'address', 'line2'], value)}
-        />
-        <TextInput
-          label="Town / city"
-          value={getString(draft, ['premises', 'address', 'town'])}
-          onChange={(value) => onChange(['premises', 'address', 'town'], value)}
-          required
-        />
-        <TextInput
-          label="Postcode"
-          value={getString(draft, ['premises', 'address', 'postcode'])}
-          onChange={(value) => onChange(['premises', 'address', 'postcode'], value.toUpperCase())}
-          required
-        />
-      </Section>
-
-      <Section title="Key dates">
-        <TextInput
-          label="Application date"
-          type="date"
-          value={getString(draft, ['consultation', 'applicationDate'])}
-          onChange={(value) => onChange(['consultation', 'applicationDate'], value)}
-          required
-        />
-        <TextInput
-          label="Representations deadline"
-          type="date"
-          value={getString(draft, ['consultation', 'repsDeadline'])}
-          onChange={(value) => onChange(['consultation', 'repsDeadline'], value)}
-          required
-        />
-      </Section>
-
-      <Section title="Publication plan">
-        <TextInput
-          label="Newspaper"
-          value={getString(draft, ['publication', 'newspaper'])}
-          onChange={(value) => onChange(['publication', 'newspaper'], value)}
-          required
-        />
-        <TextInput
-          label="Target publication date"
-          type="date"
-          value={getString(draft, ['publication', 'targetDate'])}
-          onChange={(value) => onChange(['publication', 'targetDate'], value)}
-          required
-        />
-        <TextInput
-          label="Estimated price (ex VAT)"
-          type="number"
-          value={String(getNested(draft, ['publication', 'priceExVat']) ?? '')}
-          onChange={(value) => onChange(['publication', 'priceExVat'], value ? Number(value) : undefined)}
-        />
-      </Section>
-
-      {category === 'licensing' && (
-        <LicensingSpecific definition={definition} draft={draft} onChange={onChange} />
       )}
-      {category === 'gambling' && <GamblingSpecific draft={draft} onChange={onChange} />}
-      {category === 'gvol' && <GvolSpecific draft={draft} onChange={onChange} />}
-      {category === 'planning' && <PlanningSpecific draft={draft} onChange={onChange} definition={definition} />}
-      {category === 'probate' && <ProbateSpecific draft={draft} onChange={onChange} />}
+
+      {atLeastOneMessages.length ? (
+        <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 px-4 py-3">
+          <ul className="space-y-1.5">
+            {atLeastOneMessages}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function LicensingSpecific({
-  definition,
-  draft,
-  onChange,
-}: {
-  definition: NoticeDefinition;
-  draft: Record<string, unknown> | null;
-  onChange: (path: (string | number)[], value: unknown) => void;
-}) {
-  const variant = definition.id;
-  const rawActivitiesRecord = getNested<Record<string, ActivityGroup> | null>(draft, ['activitiesHours']);
-  const rawActivitiesArray = getNested<any[]>(draft, ['activities']);
+type FieldInputProps = {
+  field: FieldBlueprint;
+  value: string;
+  onChange: (value: string, options?: SetValueOptions) => void;
+  errors?: string[];
+  onAlcoholChange?: (hasAlcohol: boolean) => void;
+  setValue?: (token: PlaceholderKey, value: string, options?: SetValueOptions) => void;
+};
 
-  const activitiesGroups = React.useMemo(
-    () => resolveActivitiesGroups(rawActivitiesRecord, rawActivitiesArray),
-    [rawActivitiesRecord, rawActivitiesArray]
+function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue }: FieldInputProps) {
+  const inputId = React.useId();
+  const helperId = field.hint ? `${inputId}-hint` : undefined;
+  const errorId = errors?.length ? `${inputId}-error` : undefined;
+
+  // Detect address fields by token name
+  const isAddressField = field.token.includes("ADDRESS") && field.type === "textarea";
+
+  const commonLabel = (
+    <label htmlFor={inputId} className="block text-[13px] font-medium text-slate-700">
+      {field.label}
+      {field.required ? <span className="ml-1 text-rose-500">*</span> : null}
+    </label>
   );
 
-  const handleActivitiesChange = React.useCallback(
-    (nextGroups: Record<string, ActivityGroup>) => {
-      const normalized = resolveActivitiesGroups(nextGroups, undefined);
-      onChange(['activitiesHours'], normalized);
-      onChange(['activities'], groupsToActivitiesArray(normalized));
-    },
-    [onChange]
-  );
+  // Handle AUTHORITY_NAME field with CouncilSelect
+  if (field.token === "AUTHORITY_NAME") {
+    const handleCouncilSelect = React.useCallback((council: Council) => {
+      onChange(council.name, { fromUser: true });
+      // Auto-populate related fields
+      if (setValue) {
+        if (council.email) {
+          setValue("AUTHORITY_EMAIL", council.email, { fromAuto: true });
+        }
+        if (council.address) {
+          setValue("AUTHORITY_ADDRESS", council.address, { fromAuto: true });
+        }
+      }
+    }, [onChange, setValue]);
 
-  const defaultActivityGroups = React.useMemo(
-    () => LICENSING_ACTIVITY_DEFINITIONS.map((definition) => buildGroup(definition)),
-    []
-  );
-
-  return (
-    <Section title="Licensing details">
-      <TextInput
-        label="Licensing authority name"
-        value={getString(draft, ['licensingAuthority', 'name'])}
-        onChange={(value) => onChange(['licensingAuthority', 'name'], value)}
-        required
-      />
-      <TextArea
-        label="Licensing authority address"
-        value={getString(draft, ['licensingAuthority', 'address'])}
-        onChange={(value) => onChange(['licensingAuthority', 'address'], value)}
-        rows={3}
-      />
-      <TextInput
-        label="Licensing authority email"
-        type="email"
-        value={getString(draft, ['licensingAuthority', 'email'])}
-        onChange={(value) => onChange(['licensingAuthority', 'email'], value)}
-      />
-      <TextInput
-        label="Inspection address or URL"
-        value={getString(draft, ['inspectionAddressOrURL'])}
-        onChange={(value) => onChange(['inspectionAddressOrURL'], value)}
-        required
-      />
-      <TextInput
-        label="Representations email"
-        type="email"
-        value={getString(draft, ['representations', 'email'])}
-        onChange={(value) => onChange(['representations', 'email'], value)}
-      />
-      <TextInput
-        label="Representations website"
-        value={getString(draft, ['representations', 'website'])}
-        onChange={(value) => onChange(['representations', 'website'], value)}
-      />
-      <TextArea
-        label="Representations postal address"
-        value={getString(draft, ['representations', 'postal'])}
-        onChange={(value) => onChange(['representations', 'postal'], value)}
-        rows={2}
-      />
-      <TextInput
-        label="Site notice displayed on"
-        type="date"
-        value={getString(draft, ['siteNoticeDate'])}
-        onChange={(value) => onChange(['siteNoticeDate'], value)}
-      />
-      <TextInput
-        label="Newspaper publication date"
-        type="date"
-        value={getString(draft, ['newspaperPublicationDate'])}
-        onChange={(value) => onChange(['newspaperPublicationDate'], value)}
-      />
-      <TextInput
-        label="Newspaper timing override reason"
-        value={getString(draft, ['newspaperOverrideReason'])}
-        onChange={(value) => onChange(['newspaperOverrideReason'], value)}
-      />
-      <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-neutral-800">Licensable activities</h4>
-        <ActivitiesHours
-          value={activitiesGroups}
-          defaultGroups={defaultActivityGroups}
-          onChange={handleActivitiesChange}
-        />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <TextInput
-          label="Alcohol service"
-          value={getString(draft, ['alcoholService'])}
-          onChange={(value) => onChange(['alcoholService'], value)}
-          helperText="Enter 'on', 'off', or 'both'."
-        />
-        <TextInput
-          label="DPS full name"
-          value={getString(draft, ['dps', 'fullName'])}
-          onChange={(value) => onChange(['dps', 'fullName'], value)}
-        />
-        <TextInput
-          label="DPS issuing authority"
-          value={getString(draft, ['dps', 'issuingAuthority'])}
-          onChange={(value) => onChange(['dps', 'issuingAuthority'], value)}
-        />
-        <TextInput
-          label="DPS licence number"
-          value={getString(draft, ['dps', 'licenceNumber'])}
-          onChange={(value) => onChange(['dps', 'licenceNumber'], value)}
-        />
-      </div>
-      {variant.includes('variation') && (
-        <TextArea
-          label="Variation summary"
-          value={getString(draft, ['variationSummary'])}
-          onChange={(value) => onChange(['variationSummary'], value)}
-          helperText="Describe the changes proposed."
-        />
-      )}
-      {variant.includes('review') && (
-        <TextArea
-          label="Review grounds"
-          value={getString(draft, ['reviewGrounds'])}
-          onChange={(value) => onChange(['reviewGrounds'], value)}
-          helperText="Outline the grounds for this review."
-        />
-      )}
-      {variant.includes('club') && (
-        <TextArea
-          label="Additional notes"
-          value={getString(draft, ['additionalNotes'])}
-          onChange={(value) => onChange(['additionalNotes'], value)}
-        />
-      )}
-    </Section>
-  );
-}
-
-function GamblingSpecific({ draft, onChange }: { draft: Record<string, unknown> | null; onChange: (path: (string | number)[], value: unknown) => void }) {
-  return (
-    <Section title="Gambling details">
-      <TextInput
-        label="Licensing authority name"
-        value={getString(draft, ['licensingAuthority', 'name'])}
-        onChange={(value) => onChange(['licensingAuthority', 'name'], value)}
-        required
-      />
-      <TextArea
-        label="Licensing authority address"
-        value={getString(draft, ['licensingAuthority', 'address'])}
-        onChange={(value) => onChange(['licensingAuthority', 'address'], value)}
-        rows={3}
-      />
-      <TextInput
-        label="Licensing authority email"
-        type="email"
-        value={getString(draft, ['licensingAuthority', 'email'])}
-        onChange={(value) => onChange(['licensingAuthority', 'email'], value)}
-      />
-      <TextArea
-        label="Activities (one per line)"
-        value={getNested<string[]>(draft, ['activities'])?.join('\n') ?? ''}
-        onChange={(value) => onChange(['activities'], value.split('\n').map((line) => line.trim()).filter(Boolean))}
-        rows={4}
-      />
-      <TextInput
-        label="Site notice displayed on"
-        type="date"
-        value={getString(draft, ['siteNoticeDate'])}
-        onChange={(value) => onChange(['siteNoticeDate'], value)}
-      />
-    </Section>
-  );
-}
-
-function GvolSpecific({ draft, onChange }: { draft: Record<string, unknown> | null; onChange: (path: (string | number)[], value: unknown) => void }) {
-  const selectedArea = getNested(draft, ['trafficAreaOverride', 'id']);
-  return (
-    <Section title="GVOL details">
-      <div className="space-y-3" data-grid-span={12}>
-        <label className="text-sm font-medium text-neutral-800">
-          Search operating centre address or postcode (optional)
+    return (
+      <div className="space-y-2">
+        <label htmlFor={inputId} className="block text-[13px] font-medium text-slate-700">
+          {field.label}
+          {field.required ? <span className="ml-1 text-rose-500">*</span> : null}
         </label>
-        <AddressLookup
-          provider={mockProvider}
-          placeholder="Start typing an address or postcode"
-          onResolved={(address: AddressResult) => {
-            if (address.line1) onChange(['operatingCentreAddress', 'line1'], address.line1);
-            if (address.town) onChange(['operatingCentreAddress', 'town'], address.town);
-            if (address.postcode) onChange(['operatingCentreAddress', 'postcode'], address.postcode);
-          }}
-          className="w-full"
+        <CouncilSelect
+          value={value}
+          onSelect={handleCouncilSelect}
+          onChangeText={(text) => onChange(text, { fromUser: true })}
+          id={inputId}
+          label=""
+          placeholder="Search for council..."
+          required={field.required}
+          error={errors?.[0]}
         />
-        <p className="text-xs leading-5 text-neutral-500">
-          Search for the operating centre address to auto-fill the fields below, or enter manually.
-        </p>
+        {errors && errors.length > 1 ? (
+          <ul id={errorId} className="space-y-1">
+            {errors.slice(1).map((error, index) => (
+              <li key={`${field.token}-error-${index + 1}`} className="text-[12px] leading-relaxed text-rose-600">
+                {error}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
-      <TextInput
-        label="Operating centre line 1"
-        value={getString(draft, ['operatingCentreAddress', 'line1'])}
-        onChange={(value) => onChange(['operatingCentreAddress', 'line1'], value)}
-        required
-      />
-      <TextInput
-        label="Operating centre town"
-        value={getString(draft, ['operatingCentreAddress', 'town'])}
-        onChange={(value) => onChange(['operatingCentreAddress', 'town'], value)}
-        required
-      />
-      <TextInput
-        label="Operating centre postcode"
-        value={getString(draft, ['operatingCentreAddress', 'postcode'])}
-        onChange={(value) => onChange(['operatingCentreAddress', 'postcode'], value.toUpperCase())}
-        required
-      />
-      <TextInput
-        label="Maximum vehicles"
-        type="number"
-        value={String(getNumber(draft, ['vehicles', 'maxVehicles'], 0) || '')}
-        onChange={(value) => onChange(['vehicles', 'maxVehicles'], value ? Number(value) : 0)}
-      />
-      <TextInput
-        label="Maximum trailers"
-        type="number"
-        value={String(getNumber(draft, ['vehicles', 'maxTrailers'], 0) || '')}
-        onChange={(value) => onChange(['vehicles', 'maxTrailers'], value ? Number(value) : 0)}
-      />
-      <label className="block space-y-1">
-        <span className="text-sm font-medium text-neutral-800">Override traffic area</span>
+    );
+  }
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const raw = event.target.value;
+    if (field.type === "number") {
+      const normalised = raw.replace(/[^\d]/g, "");
+      onChange(normalised, { fromUser: true });
+      return;
+    }
+    onChange(raw, { fromUser: true });
+  };
+
+  const handleAddressResolved = React.useCallback((address: AddressResult) => {
+    const parts = [];
+    if (address.line1) parts.push(address.line1);
+    if (address.line2) parts.push(address.line2);
+    if (address.line3) parts.push(address.line3);
+    if (address.town) parts.push(address.town);
+    if (address.county) parts.push(address.county);
+    if (address.postcode) parts.push(address.postcode);
+    if (address.country && address.country !== 'UK') parts.push(address.country);
+    onChange(parts.join(", "), { fromUser: true });
+  }, [onChange]);
+
+  const baseInputClasses = "w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10";
+  const errorInputClasses = "border-rose-300 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500/10";
+
+  // These fields are now handled by ActivitiesHoursSection - don't render them individually
+  if (field.token === "LICENSABLE_ACTIVITIES" ||
+      field.token === "ACTIVITY_SCHEDULE" ||
+      field.token === "OPENING_HOURS" ||
+      field.token === "DPS_NAME" ||
+      field.token === "DPS_LICENSING_AUTHORITY") {
+    return null;
+  }
+
+  let control: React.ReactNode = null;
+
+  switch (field.type) {
+    case "textarea":
+      control = (
+        <textarea
+          id={inputId}
+          value={value}
+          rows={field.rows ?? 4}
+          className={`${errors?.length ? errorInputClasses : baseInputClasses} min-h-[100px] resize-y`}
+          aria-required={field.required ? "true" : undefined}
+          aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
+          onChange={handleChange}
+          maxLength={field.maxLength}
+        />
+      );
+      break;
+    case "email":
+    case "date":
+    case "tel":
+    case "url":
+    case "number":
+      control = (
+        <input
+          id={inputId}
+          type={field.type === "number" ? "text" : field.type}
+          value={value}
+          className={errors?.length ? errorInputClasses : baseInputClasses}
+          aria-required={field.required ? "true" : undefined}
+          aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
+          onChange={handleChange}
+          maxLength={field.maxLength}
+        />
+      );
+      break;
+    case "select":
+      control = (
         <select
-          className={`${UI.input}`}
-          value={selectedArea ? String(selectedArea) : ''}
-          onChange={(event) => {
-            const id = event.target.value;
-            if (!id) {
-              onChange(['trafficAreaOverride'], undefined);
-              return;
-            }
-            const area = TRAFFIC_AREAS.find((item) => item.id === id);
-            if (area) {
-              onChange(['trafficAreaOverride'], { id: area.id, name: area.name, address: area.address });
-            }
-          }}
+          id={inputId}
+          value={value}
+          className={errors?.length ? errorInputClasses : baseInputClasses}
+          aria-required={field.required ? "true" : undefined}
+          aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
+          onChange={handleChange}
         >
-          <option value="">Auto (by postcode)</option>
-          {TRAFFIC_AREAS.map((area) => (
-            <option key={area.id} value={area.id}>
-              {area.name}
+          <option value="">Select an option</option>
+          {(field.options ?? []).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
-      </label>
-    </Section>
-  );
-}
-
-function PlanningSpecific({ draft, onChange, definition }: { draft: Record<string, unknown> | null; onChange: (path: (string | number)[], value: unknown) => void; definition: NoticeDefinition }) {
-  const triggerOptions = [
-    'Major development',
-    'EIA development',
-    'Listed building',
-    'Conservation area',
-    'Public right of way',
-    'Departure from development plan',
-  ];
-  const currentTriggers = new Set(getNested<string[]>(draft, ['triggers']) || []);
+      );
+      break;
+    default:
+      control = (
+        <input
+          id={inputId}
+          type="text"
+          value={value}
+          className={errors?.length ? errorInputClasses : baseInputClasses}
+          aria-required={field.required ? "true" : undefined}
+          aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
+          onChange={handleChange}
+          maxLength={field.maxLength}
+        />
+      );
+      break;
+  }
 
   return (
-    <Section title="Planning details">
-      <TextInput
-        label="Local planning authority"
-        value={getString(draft, ['planningAuthority', 'name'])}
-        onChange={(value) => onChange(['planningAuthority', 'name'], value)}
-        required
-      />
-      <TextArea
-        label="Authority address"
-        value={getString(draft, ['planningAuthority', 'address'])}
-        onChange={(value) => onChange(['planningAuthority', 'address'], value)}
-        rows={3}
-      />
-      <TextInput
-        label="Authority email"
-        type="email"
-        value={getString(draft, ['planningAuthority', 'contactEmail'])}
-        onChange={(value) => onChange(['planningAuthority', 'contactEmail'], value)}
-      />
-      <TextInput
-        label="Authority portal URL"
-        value={getString(draft, ['planningAuthority', 'portalUrl'])}
-        onChange={(value) => onChange(['planningAuthority', 'portalUrl'], value)}
-        required
-      />
-      <TextInput
-        label="Inspection address or URL"
-        value={getString(draft, ['planningAuthority', 'inspectionAddressOrURL'])}
-        onChange={(value) => onChange(['planningAuthority', 'inspectionAddressOrURL'], value)}
-        required
-      />
-      <TextInput
-        label="Application reference"
-        value={getString(draft, ['applicationReference'])}
-        onChange={(value) => onChange(['applicationReference'], value)}
-        required
-      />
-      <TextArea
-        label="Proposal"
-        value={getString(draft, ['proposal'])}
-        onChange={(value) => onChange(['proposal'], value)}
-        rows={4}
-        required
-      />
-      <div className="space-y-2">
-        <span className="text-sm font-semibold text-neutral-800">Reasons for press notice</span>
-        <div className="grid gap-2 md:grid-cols-2">
-          {triggerOptions.map((option) => (
-            <label key={option} className="flex items-center gap-2 text-sm text-neutral-700">
-              <input
-                type="checkbox"
-                checked={currentTriggers.has(option)}
-                onChange={(event) => {
-                  const next = new Set(currentTriggers);
-                  if (event.target.checked) next.add(option);
-                  else next.delete(option);
-                  onChange(['triggers'], Array.from(next));
-                }}
-              />
-              {option}
-            </label>
-          ))}
+    <div className="space-y-2">
+      {commonLabel}
+
+      {isAddressField && (
+        <div className="space-y-2">
+          <AddressLookup
+            provider={mockProvider}
+            placeholder="Search for address or postcode"
+            onResolved={handleAddressResolved}
+            className="w-full"
+          />
+          <p className="text-[12px] text-slate-500">
+            Search above to auto-fill, or type directly into the field below
+          </p>
         </div>
-      </div>
-    </Section>
-  );
-}
+      )}
 
-function ProbateSpecific({ draft, onChange }: { draft: Record<string, unknown> | null; onChange: (path: (string | number)[], value: unknown) => void }) {
-  return (
-    <Section title="Probate details">
-      <TextInput
-        label="Deceased full name"
-        value={getString(draft, ['deceased', 'fullName'])}
-        onChange={(value) => onChange(['deceased', 'fullName'], value)}
-        required
-      />
-      <div className="space-y-3" data-grid-span={12}>
-        <label className="text-sm font-medium text-neutral-800">
-          Search deceased's address or postcode (optional)
-        </label>
-        <AddressLookup
-          provider={mockProvider}
-          placeholder="Start typing an address or postcode"
-          onResolved={(address: AddressResult) => {
-            if (address.line1) onChange(['deceased', 'lastAddress', 'line1'], address.line1);
-            if (address.town) onChange(['deceased', 'lastAddress', 'town'], address.town);
-            if (address.postcode) onChange(['deceased', 'lastAddress', 'postcode'], address.postcode);
-          }}
-          className="w-full"
-        />
-        <p className="text-xs leading-5 text-neutral-500">
-          Search for the deceased's last address to auto-fill the fields below, or enter manually.
+      {control}
+
+      {field.hint ? (
+        <p id={helperId} className="text-[12px] leading-relaxed text-slate-500">
+          {field.hint}
         </p>
-      </div>
-      <TextInput
-        label="Deceased address line 1"
-        value={getString(draft, ['deceased', 'lastAddress', 'line1'])}
-        onChange={(value) => onChange(['deceased', 'lastAddress', 'line1'], value)}
-        required
-      />
-      <TextInput
-        label="Deceased town"
-        value={getString(draft, ['deceased', 'lastAddress', 'town'])}
-        onChange={(value) => onChange(['deceased', 'lastAddress', 'town'], value)}
-        required
-      />
-      <TextInput
-        label="Deceased postcode"
-        value={getString(draft, ['deceased', 'lastAddress', 'postcode'])}
-        onChange={(value) => onChange(['deceased', 'lastAddress', 'postcode'], value.toUpperCase())}
-        required
-      />
-      <TextInput
-        label="Date of death"
-        type="date"
-        value={getString(draft, ['deceased', 'dateOfDeath'])}
-        onChange={(value) => onChange(['deceased', 'dateOfDeath'], value)}
-        required
-      />
-      <TextInput
-        label="Solicitor / PR name"
-        value={getString(draft, ['solicitorOrPR', 'name'])}
-        onChange={(value) => onChange(['solicitorOrPR', 'name'], value)}
-        required
-      />
-      <div className="space-y-3" data-grid-span={12}>
-        <label className="text-sm font-medium text-neutral-800">
-          Search solicitor/PR address or postcode (optional)
-        </label>
-        <AddressLookup
-          provider={mockProvider}
-          placeholder="Start typing an address or postcode"
-          onResolved={(address: AddressResult) => {
-            if (address.line1) onChange(['solicitorOrPR', 'address', 'line1'], address.line1);
-            if (address.town) onChange(['solicitorOrPR', 'address', 'town'], address.town);
-            if (address.postcode) onChange(['solicitorOrPR', 'address', 'postcode'], address.postcode);
-          }}
-          className="w-full"
-        />
-        <p className="text-xs leading-5 text-neutral-500">
-          Search for the solicitor or personal representative address to auto-fill the fields below, or enter manually.
-        </p>
-      </div>
-      <TextInput
-        label="Solicitor / PR address line 1"
-        value={getString(draft, ['solicitorOrPR', 'address', 'line1'])}
-        onChange={(value) => onChange(['solicitorOrPR', 'address', 'line1'], value)}
-        required
-      />
-      <TextInput
-        label="Solicitor / PR town"
-        value={getString(draft, ['solicitorOrPR', 'address', 'town'])}
-        onChange={(value) => onChange(['solicitorOrPR', 'address', 'town'], value)}
-        required
-      />
-      <TextInput
-        label="Solicitor / PR postcode"
-        value={getString(draft, ['solicitorOrPR', 'address', 'postcode'])}
-        onChange={(value) => onChange(['solicitorOrPR', 'address', 'postcode'], value.toUpperCase())}
-        required
-      />
-      <TextInput
-        label="Claims deadline"
-        type="date"
-        value={getString(draft, ['claimsDeadline'])}
-        onChange={(value) => onChange(['claimsDeadline'], value)}
-        required
-      />
-    </Section>
+      ) : null}
+
+      {errors?.length ? (
+        <ul id={errorId} className="space-y-1">
+          {errors.map((error, index) => (
+            <li key={`${field.token}-error-${index}`} className="text-[12px] leading-relaxed text-rose-600">
+              {error}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }

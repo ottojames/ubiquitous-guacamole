@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import PublishPage from '@/pages/PublishPage';
 import { vi } from 'vitest';
@@ -44,17 +45,18 @@ vi.mock('react-router-dom', async () => {
 
 describe('Publish layout', () => {
   it('shows upload flow by default and switches to template builder', async () => {
+    const user = userEvent.setup();
     render(<PublishPage />);
-    expect(screen.getByRole('heading', { name: /confirm your notice type/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /what kind of notice are you publishing\?/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('notice-option-licensing-premises-new'));
-    fireEvent.click(screen.getByTestId('notice-step-continue'));
+    await user.click(screen.getByTestId('notice-option-licensing-premises-new'));
+    await user.click(screen.getByTestId('notice-step-continue'));
 
-    await screen.findByRole('heading', { name: /upload your notice/i });
+    await screen.findByTestId('upload-method-step');
+    const templateButton = await screen.findByRole('button', { name: /structured template/i });
+    await user.click(templateButton);
     const templatePanel = await screen.findByTestId('upload-template-panel');
-    const templateSummary = templatePanel.querySelector('summary');
-    if (!templateSummary) throw new Error('Structured fields summary not found');
-    fireEvent.click(templateSummary);
-    await screen.findByLabelText(/Company name/i);
+    expect(templatePanel).toBeInTheDocument();
+    await screen.findByLabelText(/Applicant name/i);
   });
 });

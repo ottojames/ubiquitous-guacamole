@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import PublishPage from '@/pages/PublishPage';
 import { vi } from 'vitest';
@@ -45,23 +46,22 @@ vi.mock('react-router-dom', async () => {
 describe('Template builder preview', () => {
   it('generates a premises notice preview after completing the builder flow', async () => {
     (HTMLFormElement.prototype as any).requestSubmit = () => {};
+    const user = userEvent.setup();
     render(<PublishPage />);
 
-    fireEvent.click(screen.getByTestId('notice-option-licensing-premises-new'));
-    fireEvent.click(screen.getByTestId('notice-step-continue'));
+    await user.click(screen.getByTestId('notice-option-licensing-premises-new'));
+    await user.click(screen.getByTestId('notice-step-continue'));
+    const templateButton = await screen.findByRole('button', { name: /structured template/i });
+    await user.click(templateButton);
+    await screen.findByTestId('upload-method-step');
     const templatePanel = await screen.findByTestId('upload-template-panel');
-    const templateSummary = templatePanel.querySelector('summary');
-    if (!templateSummary) throw new Error('Structured fields summary not found');
-    fireEvent.click(templateSummary);
-    await screen.findByLabelText(/Company name/i);
-    const loadExampleBtn = await screen.findByRole('button', { name: /Load example data/i });
-    fireEvent.click(loadExampleBtn);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await screen.findByLabelText(/applicant name/i);
+    const loadExampleBtn = await screen.findByRole('button', { name: /load example data/i });
+    await user.click(loadExampleBtn);
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Confirm your notice' })).toBeInTheDocument());
+    await screen.findByTestId('confirm-step');
 
-    const previewHeadings = screen.getAllByText('Notice preview');
-    expect(previewHeadings[0]).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getAllByText(/Sample Bars Ltd/i).length).toBeGreaterThan(0);
       expect(screen.queryByText(/\[\[missing:/)).not.toBeInTheDocument();

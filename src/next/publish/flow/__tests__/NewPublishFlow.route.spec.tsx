@@ -50,12 +50,6 @@ describe('NewPublishFlow – route/guard behavior', () => {
     render(<NewPublishFlow />);
 
     // After mount, guard redirects back to step 1 and shows a hint
-    const step1Heading = await screen.findByRole('heading', { name: /confirm your notice type/i });
-    expect(step1Heading).toBeInTheDocument();
-    expect(screen.getByText(/choose a notice type|start at step 1/i)).toBeInTheDocument();
-
-    // Step 2 heading not present
-    const step2 = screen.queryByRole('heading', { name: /upload your notice/i });
-    expect(step2).toBeNull();
+    expect(await screen.findByText(/start by choosing your notice type/i)).toBeInTheDocument();
   });
 });

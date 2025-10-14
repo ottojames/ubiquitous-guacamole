@@ -1,78 +1,101 @@
-import type { NoticeBase } from '@/types/notice';
-import { formatAddressInline, formatDateLong, formatBulletList } from './utils';
+import type { NoticeBase } from "@/types/notice";
+import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
 
 type PlanningExtras = {
-  category: 'planning';
+  category: "planning";
   variant: string;
-  planningAuthority: {
-    name: string;
-    address: string;
-    contactEmail?: string;
-    portalUrl: string;
-    inspectionAddressOrURL: string;
-  };
-  applicationReference: string;
-  proposal: string;
-  triggers: string[];
-  overrideReason?: string | null;
+  tokens?: Record<string, string>;
 };
 
-function getExtras(notice: NoticeBase): PlanningExtras {
-  const extras = notice.extras as Partial<PlanningExtras>;
-  if (!extras || extras.category !== 'planning') {
-    throw new Error('Planning template requires planning extras');
+type PlanningVariant =
+  | "planning-major"
+  | "planning-eia"
+  | "planning-listed"
+  | "planning-conservation"
+  | "planning-prow"
+  | "planning-departure";
+
+function buildCommentDestinations(tokens: Record<string, string>): string {
+  const destinations = [tokens.REPRESENTATION_ADDRESS, tokens.COMMENT_EMAIL, tokens.COMMENT_URL]
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter((value) => value.length);
+
+  if (!destinations.length) {
+    return "[[missing:COMMENT_DESTINATIONS]]";
   }
-  return extras as PlanningExtras;
+  return `at ${destinations.join(" / ")}`;
+}
+
+const TEMPLATES: Record<PlanningVariant, string> = {
+  "planning-major": `TOWN AND COUNTRY PLANNING ACT 1990
+APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — MAJOR DEVELOPMENT
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
+
+Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
+
+  "planning-eia": `TOWN AND COUNTRY PLANNING (ENVIRONMENTAL IMPACT ASSESSMENT) REGULATIONS
+APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — EIA DEVELOPMENT
+
+An application accompanied by an Environmental Statement has been made by {{APPLICANT_NAME}} to {{AUTHORITY_NAME}} at {{SITE_ADDRESS}}: {{PROPOSAL_DESCRIPTION}}.
+
+The Environmental Statement and application documents may be inspected at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Any representations must be submitted {{COMMENT_METHOD}} by {{DEADLINE_DATE}}.`,
+
+  "planning-listed": `PLANNING (LISTED BUILDINGS AND CONSERVATION AREAS) ACT 1990
+APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — LISTED BUILDING
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
+
+Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
+
+  "planning-conservation": `PLANNING (LISTED BUILDINGS AND CONSERVATION AREAS) ACT 1990
+APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — CONSERVATION AREA
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
+
+Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
+
+  "planning-prow": `TOWN AND COUNTRY PLANNING ACT 1990
+APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — PUBLIC RIGHT OF WAY
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
+
+Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
+
+  "planning-departure": `TOWN AND COUNTRY PLANNING ACT 1990
+APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — DEPARTURE
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
+
+Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
+};
+
+function getPlanningContext(notice: NoticeBase): { variant: PlanningVariant; tokens: Record<string, string> } {
+  const extras = (notice.extras ?? {}) as PlanningExtras;
+  if (extras.category !== "planning") {
+    throw new Error("Planning template requires planning extras");
+  }
+  const variant = extras.variant as PlanningVariant;
+  if (!variant || !(variant in TEMPLATES)) {
+    throw new Error(`Unsupported planning variant: ${extras.variant}`);
+  }
+  const tokens = extras.tokens ?? {};
+  return { variant, tokens };
 }
 
 export function renderPlanningText(notice: NoticeBase): string {
-  const extras = getExtras(notice);
-  const authority = extras.planningAuthority;
-  const applicationRef = extras.applicationReference;
-  const site = formatAddressInline(notice.premises?.address);
-  const proposal = extras.proposal;
-  const triggers = formatBulletList(extras.triggers);
-  const repsDeadline = formatDateLong(notice.consultation.repsDeadline);
-  const applicationDate = formatDateLong(notice.consultation.applicationDate);
-  const lines = [
-    'TOWN AND COUNTRY PLANNING ACTS',
-    '',
-    `${authority.name} has received the following application:`,
-    `Reference: ${applicationRef}. Site: ${site}.`,
-    `Proposal: ${proposal}.`,
-    `Reason for press notice:`,
-    triggers,
-    '',
-    `The application and plans may be inspected at ${authority.inspectionAddressOrURL} during normal office hours.`,
-    `Representations must be submitted by ${repsDeadline} via ${authority.portalUrl} or in writing to ${authority.address}.`,
-    '',
-    `Dated: ${applicationDate}.`,
-  ];
-  return lines.join('\n');
+  const { variant, tokens } = getPlanningContext(notice);
+  const enrichedTokens = {
+    ...tokens,
+    COMMENT_DESTINATIONS: buildCommentDestinations(tokens),
+  };
+  return renderNoticeTemplate(TEMPLATES[variant], enrichedTokens);
 }
 
 export function renderPlanningHtml(notice: NoticeBase): string {
-  const text = renderPlanningText(notice).split(/\n+/);
-  const parts: string[] = [];
-  for (const line of text) {
-    if (!line.trim()) continue;
-    if (line === 'TOWN AND COUNTRY PLANNING ACTS') {
-      parts.push(`<h1>${line}</h1>`);
-      continue;
-    }
-    if (line.startsWith('•')) {
-      const items = line
-        .split(/\n+/)
-        .map((item) => item.replace(/^•\s*/, '').trim())
-        .filter(Boolean);
-      parts.push(`<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>`);
-      continue;
-    }
-    parts.push(`<p>${line}</p>`);
-  }
-  return parts.join('\n');
+  return renderHtmlFromText(renderPlanningText(notice));
 }
 
-export async function renderPlanningPdf(_notice: NoticeBase): Promise<Uint8Array> {
-  throw new Error('PDF rendering is server-only. TODO: move planning PDF generation to an API endpoint.');
+export async function renderPlanningPdf(): Promise<Uint8Array> {
+  throw new Error("PDF rendering is server-only. TODO: move planning PDF generation to an API endpoint.");
 }

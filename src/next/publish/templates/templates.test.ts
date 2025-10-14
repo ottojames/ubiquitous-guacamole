@@ -16,6 +16,7 @@ describe('Notice template renderers', () => {
 
   for (const definition of NOTICE_DEFINITIONS) {
     it(`renders ${definition.id}`, () => {
+      console.info(`[templates:test] rendering ${definition.id}`);
       const builder = getNoticeBuilder(definition.id);
       expect(builder).not.toBeNull();
       const sample = buildSampleDraft(definition.id);

@@ -148,19 +148,19 @@ export default function UploadMethodStep({
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="rounded-xl border border-slate-200 bg-white p-6">
-                  <div className="mb-4 space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <div className="space-y-6" data-testid="upload-template-panel">
+                <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:p-8">
+                  <div className="mb-6 space-y-1.5">
+                    <p className="text-[13px] font-semibold uppercase tracking-wide text-slate-500">
                       Structured fields
                     </p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-[13px] leading-relaxed text-slate-600">
                       Tailored questions keep you compliant. Switch back to OCR at any point—your inputs are preserved.
                     </p>
                   </div>
                   {templateContent}
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-[12px] leading-relaxed text-slate-500">
                   Already have a signed notice? Choose Upload & OCR to extract the text automatically.
                 </p>
               </div>

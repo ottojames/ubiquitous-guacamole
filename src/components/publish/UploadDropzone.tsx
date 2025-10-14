@@ -162,16 +162,16 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
   };
 
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-white/95 p-8 shadow-[0_24px_72px_rgba(15,23,42,0.12)] md:p-10">
+    <section className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:p-8">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(140%_120%_at_10%_-20%,rgba(37,99,235,0.10)_0%,rgba(37,99,235,0)_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_100%_at_50%_0%,rgba(37,99,235,0.02)_0%,rgba(37,99,235,0)_50%)]"
       />
-      <div className="relative space-y-8">
+      <div className="relative space-y-6">
         {(heading || description) && (
-          <div className="space-y-2">
-            {heading ? <h3 className="text-lg font-semibold text-slate-900">{heading}</h3> : null}
-            {description ? <p className="max-w-xl text-sm leading-6 text-slate-600">{description}</p> : null}
+          <div className="space-y-1.5">
+            {heading ? <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">{heading}</h3> : null}
+            {description ? <p className="text-[13px] leading-relaxed text-slate-600">{description}</p> : null}
           </div>
         )}
 
@@ -187,10 +187,11 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
             }
           }}
           ref={rootRef}
-          className={`relative flex flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed px-8 py-12 text-center transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer ${
+          data-testid="upload-dropzone"
+          className={`relative flex flex-col items-center justify-center gap-5 rounded-xl border-2 border-dashed px-8 py-10 text-center transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer ${
             isDragActive
-              ? "border-blue-400 bg-blue-50/80 shadow-[0_20px_48px_rgba(37,99,235,0.20)]"
-              : "border-slate-300/80 bg-slate-50/70 hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-[0_16px_40px_rgba(37,99,235,0.12)]"
+              ? "border-blue-400 bg-blue-50/50 shadow-sm"
+              : "border-slate-300 bg-slate-50/40 hover:border-slate-400 hover:bg-slate-50/60"
           }`}
         >
           <input
@@ -201,16 +202,13 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
             aria-live="polite"
             style={{ display: 'none' }}
           />
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600">
-            <UploadCloud className="h-7 w-7" aria-hidden />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+            <UploadCloud className="h-6 w-6" aria-hidden />
           </div>
-          <div className="space-y-2">
-            <p className="text-base font-semibold text-slate-900">Drag your notice or browse files</p>
-            <p className="text-sm text-slate-500">
-              We'll extract the text, highlight matches, and stage the details for review.
-            </p>
-            <p className="text-xs text-slate-400 mt-1">
-              You can edit your text in the next step
+          <div className="space-y-1.5">
+            <p className="text-[14px] font-semibold text-slate-900">Drag your notice or browse files</p>
+            <p className="text-[13px] leading-relaxed text-slate-600">
+              We'll extract the text and stage the details for review
             </p>
           </div>
           <div className="sr-only" aria-live="polite">
@@ -218,51 +216,54 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200/60 bg-white/70 px-4 py-3 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200/60 bg-slate-50/40 px-3.5 py-2.5 text-[12px] text-slate-600">
           <span id="upload-help">PDF, DOC, DOCX, Pages, RTF, PNG, JPG, TIFF • up to 25MB</span>
-          <span className="hidden h-4 w-px bg-slate-200 sm:block" aria-hidden />
-          <div className="flex items-center gap-2 text-slate-500">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-            Encrypted in transit
+          <span className="hidden h-3.5 w-px bg-slate-300 sm:block" aria-hidden />
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+            <span>Encrypted</span>
           </div>
-          <div className="flex items-center gap-2 text-slate-500">
-            <Clock3 className="h-3.5 w-3.5 text-blue-500" aria-hidden />
-            OCR completes in seconds
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <Clock3 className="h-3.5 w-3.5 text-blue-600" aria-hidden />
+            <span>Completes in seconds</span>
           </div>
         </div>
 
         {activeFile && (
-          <div className="space-y-4 rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 text-sm text-slate-700">
+          <div className="space-y-3 rounded-xl border border-slate-200/70 bg-white p-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <span className="truncate font-medium text-slate-900">{activeFile.name}</span>
-                <span className="text-xs text-slate-500">{statusLabel}</span>
+                <span className="truncate text-[13px] font-medium text-slate-900">{activeFile.name}</span>
+                <span className="shrink-0 text-[12px] text-slate-500">{statusLabel}</span>
               </div>
-              <span className="text-xs text-slate-500">
+              <span className="text-[12px] text-slate-500">
                 {(activeFile.type && activeFile.type !== "") ? activeFile.type : "Unknown type"} · {prettyBytes(activeFile.size)}
               </span>
             </div>
 
             {(status === "uploading" || status === "ocr") && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-slate-500">
+                <div className="flex items-center justify-between text-[12px] text-slate-600">
                   <span>{status === "uploading" ? "Uploading…" : "Running OCR…"}</span>
                 </div>
-                <div className="relative h-2 overflow-hidden rounded-full bg-slate-200/80">
-                  <div className="absolute inset-0 animate-[pulse-band_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-blue-400/70 to-transparent" />
+                <div className="relative h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <div className="absolute inset-0 animate-[pulse-band_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
                 </div>
               </div>
             )}
 
             {status === "ready" && (
-              <span className="text-xs font-medium text-emerald-600">Text extracted. Review the detected fields below.</span>
+              <p className="flex items-center gap-2 text-[12px] font-medium text-emerald-600">
+                <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Text extracted successfully
+              </p>
             )}
 
             {status === "error" && (
-              <span className="text-xs font-medium text-amber-600">{error}</span>
+              <p className="text-[12px] font-medium text-rose-600">{error}</p>
             )}
 
-            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
+            <div className="flex flex-wrap items-center gap-3 text-[12px] font-medium text-slate-600">
               {(status === "uploading" || status === "ocr") && (
                 <button type="button" className="transition hover:text-slate-900" onClick={handleCancel}>
                   Cancel
@@ -278,16 +279,9 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
           </div>
         )}
 
-        {status === "ready" && (
-          <p className="flex items-center gap-2 text-xs font-medium text-emerald-600">
-            <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-            Ready to review
-          </p>
-        )}
-
         {error && status !== "ready" && (
-          <div className="rounded-2xl border border-amber-200/80 bg-amber-50/80 p-3 text-sm text-amber-800" role="status" aria-live="polite">
-            {error}
+          <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 px-4 py-3" role="status" aria-live="polite">
+            <p className="text-[13px] leading-relaxed text-amber-900">{error}</p>
           </div>
         )}
       </div>

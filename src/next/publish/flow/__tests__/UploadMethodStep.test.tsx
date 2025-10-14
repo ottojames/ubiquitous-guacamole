@@ -21,27 +21,17 @@ describe('UploadMethodStep', () => {
         onContinue={noop}
         continueDisabled={true}
         uploadPaneProps={{
+          definition: { id: 'licensing-premises-new', label: 'Test notice type' } as any,
           uploadComponentProps: {
             onText: noop,
             onMeta: noop,
             onStatusChange: noop,
           },
           showRequiredDetails: false,
-          details: legalDetails,
-          meta: {},
-          statuses: [],
-          errors: {},
-          recommendedWarnings: [],
-          selectedCouncil: null,
+          templateDraft: {},
           onChange: noop,
-          onCouncilSelect: noop,
-          onCouncilInput: noop,
+          errors: {},
           onSwitchToTemplate: noop,
-          onFieldFocus: noop,
-          onHighlightRequest: noop,
-          focusRequest: null,
-          ocrHighlights: [],
-          missingCount: 0,
         }}
         templateContent={<div>Template panel</div>}
       />
@@ -49,7 +39,7 @@ describe('UploadMethodStep', () => {
 
     const uploadButton = screen.getByRole('button', { name: /upload & ocr/i });
     await user.click(uploadButton);
-    expect(screen.getByText(/drag a file or click to upload/i)).toBeInTheDocument();
+    expect(screen.getByTestId('upload-dropzone')).toBeInTheDocument();
 
     const templateButton = screen.getByRole('button', { name: /structured template/i });
     await user.click(templateButton);

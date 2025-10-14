@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 import PublishPage from '@/pages/PublishPage';
 import { vi } from 'vitest';
@@ -43,23 +44,42 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('PublishPage wizard', () => {
-  it('enables continue after uploading a notice', async () => {
-    render(<PublishPage />);
+  it('prompts for manual details after uploading a notice', async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (url.includes('/api/ai-summary')) {
+          return Promise.resolve(
+            new Response(JSON.stringify({ summary: '' }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
+        }
+        return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+      });
 
-    fireEvent.click(screen.getByTestId('notice-option-licensing-premises-new'));
-    fireEvent.click(screen.getByTestId('notice-step-continue'));
+    try {
+      render(<PublishPage />);
 
-    const continueBtn = await screen.findByTestId('upload-step-continue');
-    expect(continueBtn).toBeDisabled();
+      await user.click(screen.getByTestId('notice-option-licensing-premises-new'));
+      await user.click(screen.getByTestId('notice-step-continue'));
 
-    const ocrPanel = screen.getByTestId('upload-ocr-panel');
-    const summary = ocrPanel.querySelector('summary');
-    if (!summary) throw new Error('Upload & OCR summary not found');
-    fireEvent.click(summary);
-    const fileInput = await screen.findByLabelText(/drop pdf/i);
-    const file = new File(['sample'], 'test.pdf', { type: 'application/pdf' });
-    fireEvent.change(fileInput, { target: { files: [file] } });
+      const continueBtn = await screen.findByTestId('upload-step-continue');
+      expect(continueBtn).toBeDisabled();
 
-    await waitFor(() => expect(continueBtn).not.toBeDisabled());
+      const dropzone = await screen.findByTestId('upload-dropzone');
+      const fileInput = dropzone.querySelector('input[type="file"]') as HTMLInputElement | null;
+      if (!fileInput) throw new Error('Upload file input not found');
+      const file = new File(['sample'], 'test.pdf', { type: 'application/pdf' });
+      await user.upload(fileInput, file);
+
+      await screen.findByText(/complete the required details/i);
+      expect(continueBtn).toBeDisabled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });

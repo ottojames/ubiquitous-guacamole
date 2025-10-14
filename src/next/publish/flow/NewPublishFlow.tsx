@@ -12,6 +12,7 @@ import { validateWindowRules, type WindowRuleIssue } from "@/next/publish/valida
 import { getNoticeTemplateRenderer } from "@/next/publish/templates";
 import { buildSampleDraft } from "@/next/publish/sampleData";
 import { getNested, setNested } from "@/next/publish/utils/object";
+import { getMandatoryFieldsForOCR } from "@/next/publish/config/formBlueprints";
 import type { UploadStatus } from "@/components/publish/UploadDropzone";
 import WizardStepper from "@/wizard/WizardStepper";
 import { wizardSteps } from "@/wizard/wizardSteps";
@@ -661,6 +662,12 @@ export default function NewPublishFlow() {
     return builder.schema.safeParse(templatePayload);
   }, [builder, templatePayload]);
 
+  const templateFieldErrors = React.useMemo(() => {
+    if (!templateParse || templateParse.success) return {} as Record<string, string[]>;
+    const flattened = templateParse.error.flatten();
+    return flattened.fieldErrors ?? {};
+  }, [templateParse]);
+
   const templateNotice: NoticeBase | null = useMemo(() => {
     if (!builder || !templateParse || !templateParse.success) return null;
     try {
@@ -716,50 +723,55 @@ export default function NewPublishFlow() {
 
   const uploadPaneProps = useMemo(
     () => ({
+      definition: definition ?? null,
       uploadComponentProps: {
         onText: handleOcrText,
         onMeta: handleOcrMeta,
         onStatusChange: handleUploadStatusChange,
       },
       showRequiredDetails: shouldShowRequiredDetails,
-      details: legalDetails,
-      meta: legalMeta,
-      statuses: legalValidation.statuses,
-      errors: legalValidation.errors,
-      recommendedWarnings: legalValidation.recommendedWarnings,
-      selectedCouncil,
-      onChange: handleDetailChange,
-      onCouncilSelect: handleCouncilSelect,
-      onCouncilInput: handleCouncilInput,
-      onSwitchToTemplate: () => {},
-      onFieldFocus: handleFieldFocus,
-      onHighlightRequest: handleHighlightRequest,
-      focusRequest,
-      ocrHighlights,
-      missingCount: legalValidation.missingCount,
+      templateDraft,
+      onChange: updateTemplateDraftPath,
+      errors: templateFieldErrors,
+      onSwitchToTemplate: () => handleMethodChange("template"),
     }),
     [
+      definition,
       handleOcrText,
       handleOcrMeta,
       handleUploadStatusChange,
       shouldShowRequiredDetails,
-      legalDetails,
-      legalMeta,
-      legalValidation,
-      selectedCouncil,
-      handleDetailChange,
-      handleCouncilSelect,
-      handleCouncilInput,
-      handleFieldFocus,
-      handleHighlightRequest,
-      focusRequest,
-      ocrHighlights,
+      templateDraft,
+      updateTemplateDraftPath,
+      templateFieldErrors,
+      handleMethodChange,
     ]
   );
 
+  // Calculate missing mandatory fields for blueprint-driven OCR form
+  const blueprintMissingCount = React.useMemo(() => {
+    if (uploadMethod !== "notice" || !definition) return 0;
+    const blueprint = getMandatoryFieldsForOCR(definition);
+    let count = 0;
+    for (const section of blueprint.sections) {
+      for (const field of section.fields) {
+        if (field.required) {
+          const raw = templateDraft?.[field.token];
+          const value = typeof raw === "string" ? raw : typeof raw === "number" ? String(raw) : "";
+          const fieldErrors = (templateFieldErrors as Record<string, string[] | undefined>)[field.token];
+          const hasError = fieldErrors && fieldErrors.length > 0;
+          if (!value || hasError) {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
+  }, [uploadMethod, definition, templateDraft, templateFieldErrors]);
+
   const continueDisabledStep2 =
     uploadMethod === "notice"
-      ? !hasNoticeUpload || legalValidation.missingCount > 0 || !hasDraft || uploadStatus !== 'ready'
+      ? !hasNoticeUpload || blueprintMissingCount > 0 || !hasDraft || uploadStatus !== 'ready'
       : uploadMethod === "template"
       ? !hasDraft
       : true;
@@ -781,7 +793,12 @@ export default function NewPublishFlow() {
         }
       >
         {/* definition guaranteed non-null here because builder exists */}
-        <LazyTemplateBuilderForm definition={definition!} draft={templateDraft} onChange={updateTemplateDraftPath} />
+        <LazyTemplateBuilderForm
+          definition={definition!}
+          draft={templateDraft}
+          onChange={updateTemplateDraftPath}
+          errors={templateFieldErrors}
+        />
       </React.Suspense>
       {sampleTemplateDraft && (
         <button

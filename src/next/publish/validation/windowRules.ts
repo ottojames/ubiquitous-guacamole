@@ -56,49 +56,64 @@ function addMonths(date: Date, months: number): Date {
 
 export function validateWindowRules(notice: NoticeBase): WindowRuleIssue[] {
   const issues: WindowRuleIssue[] = [];
-  const applicationDate = parseDate(notice.consultation?.applicationDate);
-  const repsDeadline = parseDate(notice.consultation?.repsDeadline);
-  const publicationDate = parseDate(notice.publication?.targetDate);
   const extras = notice.extras ?? {};
+  const category = typeof extras === 'object' && extras ? (extras as { category?: string }).category : undefined;
+  const tokens =
+    typeof extras === 'object' && extras && (extras as { tokens?: Record<string, string> }).tokens
+      ? ((extras as { tokens?: Record<string, string> }).tokens as Record<string, string>)
+      : {};
 
-  switch (extras.category) {
+  const tokenString = (key: string): string => (typeof tokens[key] === 'string' ? tokens[key].trim() : '');
+  const tokenDate = (key: string): Date | null => parseDate(tokenString(key));
+
+  const applicationDate = tokenDate('APPLICATION_DATE') ?? parseDate(notice.consultation?.applicationDate);
+  const repsDeadline = tokenDate('DEADLINE_DATE') ?? parseDate(notice.consultation?.repsDeadline);
+  const publicationDate = tokenDate('PUBLICATION_DATE') ?? parseDate(notice.publication?.targetDate);
+  const representationAddress = tokenString('REPRESENTATION_ADDRESS');
+  const representationEmail = tokenString('REPRESENTATION_EMAIL');
+  const representationMethod = tokenString('REPRESENTATION_METHOD');
+
+  switch (category) {
     case 'licensing': {
-      const siteNoticeDate = parseDate(extras.siteNoticeDate ?? applicationDate);
-      const newspaperDate = parseDate(extras.newspaperPublicationDate ?? notice.publication?.targetDate);
-      if (siteNoticeDate && repsDeadline) {
-        const diff = calendarDaysBetween(siteNoticeDate, repsDeadline);
+      if (applicationDate && repsDeadline) {
+        const diff = calendarDaysBetween(applicationDate, repsDeadline);
         if (diff < 28) {
           issues.push({
             code: 'LICENSING_SITE_NOTICE',
-            message: 'Representations deadline must be at least 28 days after the site notice was displayed.',
+            message: 'Representations deadline must be at least 28 days after the application date.',
           });
         }
       }
-      if (applicationDate && newspaperDate) {
-        const workingDays = businessDaysBetween(applicationDate, newspaperDate);
-        if (workingDays > 10 && !extras.newspaperOverrideReason) {
+      if (applicationDate && publicationDate) {
+        const workingDays = businessDaysBetween(applicationDate, publicationDate);
+        if (workingDays > 10) {
           issues.push({
             code: 'LICENSING_NEWS_WINDOW',
-            message: 'Newspaper publication must be within 10 working days of the application date or record an override reason.',
+            message: 'Newspaper publication should be within 10 working days of the application date.',
           });
         }
       }
-      if (!extras.representations) {
+      if (!representationAddress && !representationEmail) {
         issues.push({
           code: 'LICENSING_REPS_CONTACT',
           message: 'Provide contact details for representations.',
         });
       }
+      if (!representationMethod) {
+        issues.push({
+          code: 'LICENSING_REPS_METHOD',
+          message: 'Specify the method for making representations.',
+        });
+      }
       break;
     }
     case 'gambling': {
-      const siteNoticeDate = parseDate(extras.siteNoticeDate ?? applicationDate);
-      if (siteNoticeDate && repsDeadline) {
-        const diff = calendarDaysBetween(siteNoticeDate, repsDeadline);
+      if (applicationDate && repsDeadline) {
+        const diff = calendarDaysBetween(applicationDate, repsDeadline);
         if (diff < 28) {
           issues.push({
             code: 'GAMBLING_SITE_NOTICE',
-            message: 'Representations deadline must be at least 28 days after the site notice was displayed.',
+            message: 'Representations deadline must be at least 28 days after the application date.',
           });
         }
       }
@@ -108,15 +123,21 @@ export function validateWindowRules(notice: NoticeBase): WindowRuleIssue[] {
           message: 'Provide a publication date for the newspaper notice.',
         });
       }
+      if (!representationAddress && !representationEmail) {
+        issues.push({
+          code: 'GAMBLING_REPS_CONTACT',
+          message: 'Provide contact details for representations.',
+        });
+      }
       break;
     }
     case 'gvol': {
-      if (applicationDate && publicationDate) {
-        const diff = calendarDaysBetween(applicationDate, publicationDate);
-        if (diff > 21 || diff < -21) {
+      if (publicationDate && repsDeadline) {
+        const diff = calendarDaysBetween(publicationDate, repsDeadline);
+        if (diff !== 21) {
           issues.push({
             code: 'GVOL_PUBLICATION_WINDOW',
-            message: 'Newspaper publication must be within 21 days before or after the application date.',
+            message: 'Objection deadline should be exactly 21 days after publication.',
           });
         }
       }
@@ -125,18 +146,19 @@ export function validateWindowRules(notice: NoticeBase): WindowRuleIssue[] {
     case 'planning': {
       if (applicationDate && repsDeadline) {
         const diff = calendarDaysBetween(applicationDate, repsDeadline);
-        if (diff < 21 && !extras.overrideReason) {
+        const minimum = extras && typeof (extras as { variant?: string }).variant === 'string' && (extras as { variant?: string }).variant === 'planning-eia' ? 30 : 21;
+        if (diff < minimum) {
           issues.push({
             code: 'PLANNING_CONSULTATION_WINDOW',
-            message: 'Representations period must be at least 21 days unless an override reason is recorded.',
+            message: `Representations period must be at least ${minimum} days from the application date.`,
           });
         }
       }
       break;
     }
     case 'probate': {
-      if (publicationDate && extras.claimsDeadline) {
-        const claimsDeadline = parseDate(extras.claimsDeadline);
+      if (publicationDate && repsDeadline) {
+        const claimsDeadline = repsDeadline;
         if (claimsDeadline) {
           const minimum = addMonths(publicationDate, 2);
           if (claimsDeadline < minimum) {

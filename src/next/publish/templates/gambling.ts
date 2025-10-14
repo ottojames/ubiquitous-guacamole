@@ -1,106 +1,147 @@
-import type { NoticeBase } from '@/types/notice';
-import { formatAddressInline, formatDateLong, formatBulletList } from './utils';
+import type { NoticeBase } from "@/types/notice";
+import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
 
 type GamblingExtras = {
-  category: 'gambling';
+  category: "gambling";
   variant: string;
-  authority: { name: string; address: string; email?: string };
-  activities: string[];
-  representations: { email?: string; website?: string; postal?: string };
-  siteNoticeDate?: string;
-  premisesType: string;
-  applicationVariant: string;
+  tokens?: Record<string, string>;
 };
 
-function getExtras(notice: NoticeBase): GamblingExtras {
-  const extras = notice.extras as Partial<GamblingExtras>;
-  if (!extras || extras.category !== 'gambling') {
-    throw new Error('Gambling template requires gambling extras');
+const TEMPLATES: Record<string, string> = {
+  "gambling-betting-new": `GAMBLING ACT 2005
+APPLICATION FOR A NEW BETTING PREMISES LICENCE
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a betting premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}. Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
+
+  "gambling-betting-variation": `GAMBLING ACT 2005
+APPLICATION TO VARY A BETTING PREMISES LICENCE
+
+{{APPLICANT_NAME}} seeks to vary the betting premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}.{{#if OPENING_HOURS}} Hours/arrangements after variation: {{OPENING_HOURS}}.{{/if}}
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-betting-review": `GAMBLING ACT 2005
+APPLICATION FOR REVIEW OF A BETTING PREMISES LICENCE
+
+{{REVIEW_APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a review of the betting premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-betting-transfer": `GAMBLING ACT 2005
+APPLICATION TO TRANSFER A BETTING PREMISES LICENCE
+
+Application has been made to {{AUTHORITY_NAME}} to transfer the betting premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}} from {{TRANSFER_FROM_NAME}} to {{TRANSFER_TO_NAME}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-bingo-new": `GAMBLING ACT 2005
+APPLICATION FOR A NEW BINGO PREMISES LICENCE
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a bingo premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}. Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
+
+  "gambling-bingo-variation": `GAMBLING ACT 2005
+APPLICATION TO VARY A BINGO PREMISES LICENCE
+
+{{APPLICANT_NAME}} seeks to vary the bingo premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}.{{#if OPENING_HOURS}} Hours/arrangements after variation: {{OPENING_HOURS}}.{{/if}}
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-bingo-review": `GAMBLING ACT 2005
+APPLICATION FOR REVIEW OF A BINGO PREMISES LICENCE
+
+{{REVIEW_APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a review of the bingo premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-bingo-transfer": `GAMBLING ACT 2005
+APPLICATION TO TRANSFER A BINGO PREMISES LICENCE
+
+Application has been made to {{AUTHORITY_NAME}} to transfer the bingo premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}} from {{TRANSFER_FROM_NAME}} to {{TRANSFER_TO_NAME}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-agc-new": `GAMBLING ACT 2005
+APPLICATION FOR A NEW ADULT GAMING CENTRE PREMISES LICENCE
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for an Adult Gaming Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}. Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
+
+  "gambling-agc-variation": `GAMBLING ACT 2005
+APPLICATION TO VARY AN ADULT GAMING CENTRE PREMISES LICENCE
+
+{{APPLICANT_NAME}} seeks to vary the Adult Gaming Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}.{{#if OPENING_HOURS}} Hours/arrangements after variation: {{OPENING_HOURS}}.{{/if}}
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-agc-review": `GAMBLING ACT 2005
+APPLICATION FOR REVIEW OF AN ADULT GAMING CENTRE PREMISES LICENCE
+
+{{REVIEW_APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a review of the Adult Gaming Centre premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-agc-transfer": `GAMBLING ACT 2005
+APPLICATION TO TRANSFER AN ADULT GAMING CENTRE PREMISES LICENCE
+
+Application has been made to {{AUTHORITY_NAME}} to transfer the Adult Gaming Centre premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}} from {{TRANSFER_FROM_NAME}} to {{TRANSFER_TO_NAME}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-fec-new": `GAMBLING ACT 2005
+APPLICATION FOR A NEW FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
+
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a Family Entertainment Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}. Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
+
+  "gambling-fec-variation": `GAMBLING ACT 2005
+APPLICATION TO VARY A FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
+
+{{APPLICANT_NAME}} seeks to vary the Family Entertainment Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}.{{#if OPENING_HOURS}} Hours/arrangements after variation: {{OPENING_HOURS}}.{{/if}}
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-fec-review": `GAMBLING ACT 2005
+APPLICATION FOR REVIEW OF A FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
+
+{{REVIEW_APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a review of the Family Entertainment Centre premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+
+  "gambling-fec-transfer": `GAMBLING ACT 2005
+APPLICATION TO TRANSFER A FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
+
+Application has been made to {{AUTHORITY_NAME}} to transfer the Family Entertainment Centre premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}} from {{TRANSFER_FROM_NAME}} to {{TRANSFER_TO_NAME}}.
+
+Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
+};
+
+function getGamblingContext(notice: NoticeBase): { variant: string; tokens: Record<string, string> } {
+  const extras = (notice.extras ?? {}) as GamblingExtras;
+  if (extras.category !== "gambling") {
+    throw new Error("Gambling template requires gambling extras");
   }
-  return extras as GamblingExtras;
-}
-
-function applicantDisplayName(notice: NoticeBase): string {
-  if (notice.applicant.type === 'company') return notice.applicant.companyName ?? '';
-  return notice.applicant.fullName ?? '';
-}
-
-function applicantAddress(notice: NoticeBase): string {
-  return formatAddressInline(notice.applicant.serviceAddress || notice.applicant.registeredOffice || notice.premises?.address);
-}
-
-function buildRepresentations(authority: GamblingExtras['authority'], reps: GamblingExtras['representations'], deadline: string): string {
-  const fragments: string[] = [];
-  if (reps.postal) {
-    fragments.push(`the Licensing Authority at ${reps.postal}`);
-  } else {
-    fragments.push(`the Licensing Authority at ${authority.address}`);
+  const template = TEMPLATES[extras.variant];
+  if (!template) {
+    throw new Error(`Unsupported gambling variant: ${extras.variant}`);
   }
-  if (reps.email) {
-    fragments.push(`or by email to ${reps.email}`);
-  }
-  if (reps.website) {
-    fragments.push(`or via ${reps.website}`);
-  }
-  const deadlineText = formatDateLong(deadline);
-  return `${fragments.join(' ')} no later than ${deadlineText}.`;
-}
-
-function content(notice: NoticeBase) {
-  const extras = getExtras(notice);
-  const authority = extras.authority;
-  const applicantName = applicantDisplayName(notice);
-  const applicantAddr = applicantAddress(notice);
-  const premisesName = notice.premises?.name || 'the premises';
-  const premisesAddress = formatAddressInline(notice.premises?.address);
-  const activities = extras.activities.length ? formatBulletList(extras.activities) : 'No activities provided.';
-  const repsLine = buildRepresentations(authority, extras.representations, notice.consultation.repsDeadline);
-  const applicationDate = formatDateLong(notice.consultation.applicationDate);
-  const variant = extras.applicationVariant.toLowerCase();
-  const premisesType = extras.premisesType.toLowerCase();
-
-  const lines = [
-    `${applicantName} of ${applicantAddr} has applied to ${authority.name} for a ${variant} of a ${premisesType} premises licence at ${premisesName}, ${premisesAddress}.`,
-    '',
-    'The application seeks authorisation for the following:',
-    activities,
-    '',
-    `Representations may be made in writing to ${repsLine}`,
-    'The application may be inspected at the offices of the Licensing Authority during normal working hours.',
-    '',
-    `Dated: ${applicationDate}.`,
-  ];
-
-  return {
-    heading: 'GAMBLING ACT 2005',
-    subheading: 'Notice of Application for a Premises Licence',
-    lines,
-  };
+  return { variant: extras.variant, tokens: extras.tokens ?? {} };
 }
 
 export function renderGamblingText(notice: NoticeBase): string {
-  const ctx = content(notice);
-  return [ctx.heading, ctx.subheading, '', ...ctx.lines].join('\n');
+  const { variant, tokens } = getGamblingContext(notice);
+  return renderNoticeTemplate(TEMPLATES[variant], tokens);
 }
 
 export function renderGamblingHtml(notice: NoticeBase): string {
-  const ctx = content(notice);
-  const lines = ['', ...ctx.lines];
-  const parts: string[] = [`<h1>${ctx.heading}</h1>`, `<h2>${ctx.subheading}</h2>`];
-  for (const line of lines) {
-    if (!line || !line.trim()) continue;
-    if (line.includes('•')) {
-      const items = line.split(/\n+/).map((item) => item.replace(/^•\s*/, '').trim()).filter(Boolean);
-      if (items.length) {
-        parts.push(`<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>`);
-      }
-    } else {
-      parts.push(`<p>${line}</p>`);
-    }
-  }
-  return parts.join('\n');
+  return renderHtmlFromText(renderGamblingText(notice));
 }
 
-export async function renderGamblingPdf(_notice: NoticeBase): Promise<Uint8Array> {
-  throw new Error('PDF rendering is server-only. TODO: move gambling PDF generation to an API endpoint.');
+export async function renderGamblingPdf(): Promise<Uint8Array> {
+  throw new Error("PDF rendering is server-only. TODO: move gambling PDF generation to an API endpoint.");
 }
