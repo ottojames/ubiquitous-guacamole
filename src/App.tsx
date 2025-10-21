@@ -25,6 +25,7 @@ import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
 import Submissions from "@/pages/council/Submissions";
 import SubmissionReviewer from "@/pages/council/SubmissionReviewer";
+import Publications from "@/pages/council/Publications";
 import CouncilNotices from "@/pages/council/Notices";
 import NoticeEditor from "@/pages/council/NoticeEditor";
 import Team from "@/pages/council/Team";
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="dashboard" element={<CouncilDashboard />} />
           <Route path="submissions" element={<Submissions />} />
           <Route path="submissions/:submissionId" element={<SubmissionReviewer />} />
+          <Route path="publications" element={<Publications />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeEditor />} />
