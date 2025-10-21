@@ -17,11 +17,13 @@ import NoticeDetailPage from "@/pages/NoticeDetailPage";
 import SubmitRepresentation from "@/pages/SubmitRepresentation";
 import AddressLookupDebug from "@/pages/debug/AddressLookupDebug";
 import SignIn from "@/pages/auth/SignIn";
+import DevSignIn from "@/pages/auth/DevSignIn";
 import Callback from "@/pages/auth/Callback";
 import SwitchContext from "@/pages/auth/SwitchContext";
 import CreateOrganization from "@/pages/onboarding/CreateOrganization";
 import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
+import Submissions from "@/pages/council/Submissions";
 import CouncilNotices from "@/pages/council/Notices";
 import NoticeEditor from "@/pages/council/NoticeEditor";
 import Team from "@/pages/council/Team";
@@ -48,6 +50,7 @@ export default function App() {
 
         {/* Auth & Onboarding Routes */}
         <Route path="/auth/sign-in" element={<SignIn />} />
+        <Route path="/auth/dev" element={<DevSignIn />} />
         <Route path="/auth/callback" element={<Callback />} />
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
@@ -55,6 +58,7 @@ export default function App() {
         {/* Council Portal Routes */}
         <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
           <Route path="dashboard" element={<CouncilDashboard />} />
+          <Route path="submissions" element={<Submissions />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeEditor />} />
