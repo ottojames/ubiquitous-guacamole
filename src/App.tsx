@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { NEW_PUBLISH_FLOW } from "@/env";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import PublishLayout from "@/routes/next/publish/PublishLayout";
 import StepType from "@/routes/next/publish/StepType";
 import StepUpload from "@/routes/next/publish/StepUpload";
@@ -52,8 +53,9 @@ import ManageUsers from "@/pages/admin/ManageUsers";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notices" element={<NoticesPage />} />
@@ -129,7 +131,8 @@ export default function App() {
           </Route>
         )}
         <Route path="*" element={<Home />} />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
