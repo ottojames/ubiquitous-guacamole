@@ -45,6 +45,10 @@ import SubmissionDetail from "@/pages/firm/SubmissionDetail";
 import PublicHome from "@/pages/public/PublicHome";
 import PublicNotices from "@/pages/public/PublicNotices";
 import PublicNoticeDetail from "@/pages/public/PublicNoticeDetail";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import ManageOrganizations from "@/pages/admin/ManageOrganizations";
+import ManageUsers from "@/pages/admin/ManageUsers";
 
 export default function App() {
   return (
@@ -104,6 +108,16 @@ export default function App() {
         <Route path="/public" element={<PublicHome />} />
         <Route path="/public/notices" element={<PublicNotices />} />
         <Route path="/public/notices/:noticeId" element={<PublicNoticeDetail />} />
+
+        {/* Admin Portal Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="organizations" element={<ManageOrganizations />} />
+          <Route path="users" element={<ManageUsers />} />
+          <Route path="submissions" element={<AdminDashboard />} />
+          <Route path="analytics" element={<AdminDashboard />} />
+          <Route path="settings" element={<AdminDashboard />} />
+        </Route>
 
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish" element={<PublishLayout />}>
