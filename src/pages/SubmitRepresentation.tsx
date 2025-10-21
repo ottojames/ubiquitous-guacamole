@@ -242,7 +242,7 @@ Submitted: ${new Date().toLocaleString('en-GB')}
           ) : (
             <div className="space-y-8">
               {/* Notice Info Card */}
-              <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+              <div className="rounded-3xl border border-white/70 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3 mb-6">
                   <FileText className="h-6 w-6 text-blue-600" />
                   <h2 className="text-2xl font-bold text-slate-900">Notice Details</h2>
