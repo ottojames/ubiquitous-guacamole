@@ -33,6 +33,11 @@ import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
 import AuditLog from "@/pages/council/AuditLog";
+import FirmLayout from "@/pages/firm/FirmLayout";
+import FirmDashboard from "@/pages/firm/FirmDashboard";
+import FirmSubmissions from "@/pages/firm/FirmSubmissions";
+import NewSubmission from "@/pages/firm/NewSubmission";
+import SubmissionDetail from "@/pages/firm/SubmissionDetail";
 
 export default function App() {
   return (
@@ -72,6 +77,16 @@ export default function App() {
           <Route path="templates" element={<Templates />} />
           <Route path="settings" element={<Settings />} />
           <Route path="audit" element={<AuditLog />} />
+        </Route>
+
+        {/* Firm Portal Routes */}
+        <Route path="/f/:orgSlug" element={<FirmLayout />}>
+          <Route path="dashboard" element={<FirmDashboard />} />
+          <Route path="submissions" element={<FirmSubmissions />} />
+          <Route path="submissions/:submissionId" element={<SubmissionDetail />} />
+          <Route path="new-submission" element={<NewSubmission />} />
+          <Route path="team" element={<Team />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {NEW_PUBLISH_FLOW && (
