@@ -123,12 +123,17 @@ export default function CreateOrganization() {
           domain: orgData.domain,
           contact_email: orgData.contactEmail,
           registration_number: orgData.registrationNumber || null,
-          status: 'pending_approval'
+          status: 'pending_approval',
+          created_by: session.user.id
         })
         .select()
         .single();
 
       if (orgError) throw orgError;
+
+      // Organization membership will be auto-created by trigger
+      // Wait a moment for trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Create departments (for councils)
       if (orgData.type === 'council' && orgData.departments.length > 0) {
@@ -138,7 +143,8 @@ export default function CreateOrganization() {
           slug: dept.slug,
           type: dept.type,
           email: dept.email,
-          description: dept.description || null
+          description: dept.description || null,
+          created_by: session.user.id
         }));
 
         const { error: deptError } = await supabase
@@ -147,10 +153,6 @@ export default function CreateOrganization() {
 
         if (deptError) throw deptError;
       }
-
-      // Organization membership will be auto-created by trigger
-      // Wait a moment for trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Navigate based on org type
       if (orgData.type === 'firm') {
