@@ -20,6 +20,8 @@ import SignIn from "@/pages/auth/SignIn";
 import Callback from "@/pages/auth/Callback";
 import SwitchContext from "@/pages/auth/SwitchContext";
 import CreateOrganization from "@/pages/onboarding/CreateOrganization";
+import CouncilLayout from "@/pages/council/CouncilLayout";
+import CouncilDashboard from "@/pages/council/Dashboard";
 
 export default function App() {
   return (
@@ -43,6 +45,11 @@ export default function App() {
         <Route path="/auth/callback" element={<Callback />} />
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
+
+        {/* Council Portal Routes */}
+        <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
+          <Route path="dashboard" element={<CouncilDashboard />} />
+        </Route>
 
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish" element={<PublishLayout />}>
