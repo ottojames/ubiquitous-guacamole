@@ -33,6 +33,10 @@ import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
 import AuditLog from "@/pages/council/AuditLog";
+import Compliance from "@/pages/council/Compliance";
+import Analytics from "@/pages/council/Analytics";
+import BulkActions from "@/pages/council/BulkActions";
+import Exports from "@/pages/council/Exports";
 import FirmLayout from "@/pages/firm/FirmLayout";
 import FirmDashboard from "@/pages/firm/FirmDashboard";
 import FirmSubmissions from "@/pages/firm/FirmSubmissions";
@@ -70,6 +74,10 @@ export default function App() {
           <Route path="submissions/:submissionId" element={<SubmissionReviewer />} />
           <Route path="publications" element={<Publications />} />
           <Route path="representations" element={<Representations />} />
+          <Route path="compliance" element={<Compliance />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="bulk-actions" element={<BulkActions />} />
+          <Route path="exports" element={<Exports />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeEditor />} />
