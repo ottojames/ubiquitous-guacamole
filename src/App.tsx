@@ -24,6 +24,7 @@ import CreateOrganization from "@/pages/onboarding/CreateOrganization";
 import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
 import Submissions from "@/pages/council/Submissions";
+import SubmissionReviewer from "@/pages/council/SubmissionReviewer";
 import CouncilNotices from "@/pages/council/Notices";
 import NoticeEditor from "@/pages/council/NoticeEditor";
 import Team from "@/pages/council/Team";
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
           <Route path="dashboard" element={<CouncilDashboard />} />
           <Route path="submissions" element={<Submissions />} />
+          <Route path="submissions/:submissionId" element={<SubmissionReviewer />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeEditor />} />
