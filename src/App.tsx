@@ -42,6 +42,9 @@ import FirmDashboard from "@/pages/firm/FirmDashboard";
 import FirmSubmissions from "@/pages/firm/FirmSubmissions";
 import NewSubmission from "@/pages/firm/NewSubmission";
 import SubmissionDetail from "@/pages/firm/SubmissionDetail";
+import PublicHome from "@/pages/public/PublicHome";
+import PublicNotices from "@/pages/public/PublicNotices";
+import PublicNoticeDetail from "@/pages/public/PublicNoticeDetail";
 
 export default function App() {
   return (
@@ -96,6 +99,11 @@ export default function App() {
           <Route path="team" element={<Team />} />
           <Route path="settings" element={<Settings />} />
         </Route>
+
+        {/* Public Portal Routes */}
+        <Route path="/public" element={<PublicHome />} />
+        <Route path="/public/notices" element={<PublicNotices />} />
+        <Route path="/public/notices/:noticeId" element={<PublicNoticeDetail />} />
 
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish" element={<PublishLayout />}>
