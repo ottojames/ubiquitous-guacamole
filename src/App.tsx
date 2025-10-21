@@ -25,6 +25,8 @@ import CouncilDashboard from "@/pages/council/Dashboard";
 import CouncilNotices from "@/pages/council/Notices";
 import NoticeEditor from "@/pages/council/NoticeEditor";
 import Team from "@/pages/council/Team";
+import Templates from "@/pages/council/Templates";
+import Settings from "@/pages/council/Settings";
 
 export default function App() {
   return (
@@ -56,6 +58,8 @@ export default function App() {
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeEditor />} />
           <Route path="team" element={<Team />} />
+          <Route path="templates" element={<Templates />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {NEW_PUBLISH_FLOW && (
