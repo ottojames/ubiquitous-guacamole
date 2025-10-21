@@ -16,6 +16,10 @@ import NoticesPage from "@/pages/Notices";
 import NoticeDetailPage from "@/pages/NoticeDetailPage";
 import SubmitRepresentation from "@/pages/SubmitRepresentation";
 import AddressLookupDebug from "@/pages/debug/AddressLookupDebug";
+import SignIn from "@/pages/auth/SignIn";
+import Callback from "@/pages/auth/Callback";
+import SwitchContext from "@/pages/auth/SwitchContext";
+import CreateOrganization from "@/pages/onboarding/CreateOrganization";
 
 export default function App() {
   return (
@@ -33,6 +37,13 @@ export default function App() {
         <Route path="/success" element={<Success />} />
         <Route path="/details" element={<DetailsPage />} />
         <Route path="/debug/address" element={<AddressLookupDebug />} />
+
+        {/* Auth & Onboarding Routes */}
+        <Route path="/auth/sign-in" element={<SignIn />} />
+        <Route path="/auth/callback" element={<Callback />} />
+        <Route path="/switch-context" element={<SwitchContext />} />
+        <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
+
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish" element={<PublishLayout />}>
             <Route index element={<Navigate to="type" replace />} />
