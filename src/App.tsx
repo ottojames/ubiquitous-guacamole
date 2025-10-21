@@ -27,6 +27,7 @@ import NoticeEditor from "@/pages/council/NoticeEditor";
 import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
+import AuditLog from "@/pages/council/AuditLog";
 
 export default function App() {
   return (
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="team" element={<Team />} />
           <Route path="templates" element={<Templates />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="audit" element={<AuditLog />} />
         </Route>
 
         {NEW_PUBLISH_FLOW && (
