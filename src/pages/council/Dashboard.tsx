@@ -19,19 +19,21 @@ interface ContextType {
 }
 
 interface Stats {
-  total: number;
-  published: number;
-  draft: number;
-  pending_approval: number;
-  expired: number;
+  pending_submissions: number;
+  in_review: number;
+  active_publications: number;
+  new_representations: number;
+  total_submissions: number;
 }
 
-interface RecentNotice {
+interface RecentActivity {
   id: string;
+  type: 'submission' | 'representation' | 'publication';
   title: string;
-  status: string;
-  created_at: string;
-  published_at: string | null;
+  status?: string;
+  submitted_at?: string;
+  published_at?: string;
+  respondent_name?: string;
 }
 
 export default function Dashboard() {
@@ -40,13 +42,13 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats>({
-    total: 0,
-    published: 0,
-    draft: 0,
-    pending_approval: 0,
-    expired: 0
+    pending_submissions: 0,
+    in_review: 0,
+    active_publications: 0,
+    new_representations: 0,
+    total_submissions: 0
   });
-  const [recentNotices, setRecentNotices] = useState<RecentNotice[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -54,35 +56,84 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load stats
-      const { data: notices, error: noticesError } = await supabase
+      // Load submission stats
+      const { data: submissions, error: submissionsError } = await supabase
+        .from('submissions')
+        .select('id, status, submitted_at, title')
+        .eq('receiving_department_id', department.id);
+
+      if (submissionsError) throw submissionsError;
+
+      // Load publication stats
+      const { data: publications, error: publicationsError } = await supabase
         .from('notices')
-        .select('id, status')
+        .select('id, status, published_at, title')
+        .eq('department_id', department.id)
+        .eq('status', 'published');
+
+      if (publicationsError) throw publicationsError;
+
+      // Load representation stats
+      const { data: representations, error: repsError } = await supabase
+        .from('representations')
+        .select('id, status, submitted_at, respondent_name, notice_id')
         .eq('department_id', department.id);
 
-      if (noticesError) throw noticesError;
+      if (repsError) throw repsError;
 
       const statsData = {
-        total: notices?.length || 0,
-        published: notices?.filter(n => n.status === 'published').length || 0,
-        draft: notices?.filter(n => n.status === 'draft').length || 0,
-        pending_approval: notices?.filter(n => n.status === 'pending_approval').length || 0,
-        expired: notices?.filter(n => n.status === 'expired').length || 0
+        pending_submissions: submissions?.filter(s => s.status === 'new').length || 0,
+        in_review: submissions?.filter(s => s.status === 'in_review').length || 0,
+        active_publications: publications?.length || 0,
+        new_representations: representations?.filter(r => r.status === 'new').length || 0,
+        total_submissions: submissions?.length || 0
       };
 
       setStats(statsData);
 
-      // Load recent notices
-      const { data: recent, error: recentError } = await supabase
-        .from('notices')
-        .select('id, title, status, created_at, published_at')
-        .eq('department_id', department.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Build recent activity feed
+      const activity: RecentActivity[] = [];
 
-      if (recentError) throw recentError;
+      // Add recent submissions
+      submissions?.slice(0, 3).forEach(sub => {
+        activity.push({
+          id: sub.id,
+          type: 'submission',
+          title: sub.title,
+          status: sub.status,
+          submitted_at: sub.submitted_at
+        });
+      });
 
-      setRecentNotices(recent || []);
+      // Add recent publications
+      publications?.slice(0, 2).forEach(pub => {
+        activity.push({
+          id: pub.id,
+          type: 'publication',
+          title: pub.title,
+          published_at: pub.published_at
+        });
+      });
+
+      // Add recent representations
+      representations?.slice(0, 2).forEach(rep => {
+        activity.push({
+          id: rep.id,
+          type: 'representation',
+          title: `New response from ${rep.respondent_name}`,
+          submitted_at: rep.submitted_at,
+          respondent_name: rep.respondent_name
+        });
+      });
+
+      // Sort by date and take top 5
+      activity.sort((a, b) => {
+        const dateA = new Date(a.submitted_at || a.published_at || '');
+        const dateB = new Date(b.submitted_at || b.published_at || '');
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      setRecentActivity(activity.slice(0, 5));
       setLoading(false);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
@@ -117,8 +168,6 @@ export default function Dashboard() {
     });
   };
 
-  const canCreateNotice = ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -134,28 +183,111 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Licensing Officer Dashboard</h1>
           <p className="text-gray-600 mt-1">
-            Welcome to {department.name}
+            {department.name} - Overview of submissions, publications, and representations
           </p>
         </div>
-        {canCreateNotice && (
-          <Link
-            to={`${basePath}/notices/new`}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-          >
-            + Create Notice
-          </Link>
-        )}
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+        <Link
+          to={`${basePath}/submissions`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Total Notices</h3>
+            <h3 className="text-sm font-medium text-gray-600">Pending Submissions</h3>
             <svg
               className="w-8 h-8 text-blue-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+          </div>
+          <p className="text-3xl font-bold text-gray-900">{stats.pending_submissions}</p>
+          <p className="text-xs text-gray-500 mt-1">New submissions awaiting review</p>
+        </Link>
+
+        <Link
+          to={`${basePath}/submissions`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">In Review</h3>
+            <svg
+              className="w-8 h-8 text-yellow-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </div>
+          <p className="text-3xl font-bold text-gray-900">{stats.in_review}</p>
+          <p className="text-xs text-gray-500 mt-1">Currently being reviewed</p>
+        </Link>
+
+        <Link
+          to={`${basePath}/publications`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Active Publications</h3>
+            <svg
+              className="w-8 h-8 text-green-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <p className="text-3xl font-bold text-gray-900">{stats.active_publications}</p>
+          <p className="text-xs text-gray-500 mt-1">Currently live notices</p>
+        </Link>
+
+        <Link
+          to={`${basePath}/representations`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">New Responses</h3>
+            <svg
+              className="w-8 h-8 text-purple-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </div>
+          <p className="text-3xl font-bold text-gray-900">{stats.new_representations}</p>
+          <p className="text-xs text-gray-500 mt-1">Public responses to review</p>
+        </Link>
+
+        <Link
+          to={`${basePath}/submissions`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Total Submissions</h3>
+            <svg
+              className="w-8 h-8 text-gray-600"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -166,95 +298,16 @@ export default function Dashboard() {
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Published</h3>
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.published}</p>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Drafts</h3>
-            <svg
-              className="w-8 h-8 text-gray-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.draft}</p>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Pending</h3>
-            <svg
-              className="w-8 h-8 text-yellow-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.pending_approval}</p>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Expired</h3>
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.expired}</p>
-        </div>
+          <p className="text-3xl font-bold text-gray-900">{stats.total_submissions}</p>
+          <p className="text-xs text-gray-500 mt-1">All time submissions</p>
+        </Link>
       </div>
 
-      {/* Recent Notices */}
+      {/* Recent Activity */}
       <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Notices</h2>
-          <Link
-            to={`${basePath}/notices`}
-            className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
-          >
-            View All →
-          </Link>
-        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
 
-        {recentNotices.length === 0 ? (
+        {recentActivity.length === 0 ? (
           <div className="text-center py-12">
             <svg
               className="w-16 h-16 text-gray-300 mx-auto mb-4"
@@ -265,75 +318,73 @@ export default function Dashboard() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-gray-600 mb-4">No notices yet</p>
-            {canCreateNotice && (
-              <Link
-                to={`${basePath}/notices/new`}
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Create Your First Notice
-              </Link>
-            )}
+            <p className="text-gray-600">No recent activity</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {recentNotices.map((notice) => (
-              <Link
-                key={notice.id}
-                to={`${basePath}/notices/${notice.id}`}
-                className="block p-4 border border-gray-200 rounded-xl hover:shadow-lg hover:border-blue-300 transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">
-                      {notice.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Created {formatDate(notice.created_at)}
-                      {notice.published_at && ` • Published ${formatDate(notice.published_at)}`}
-                    </p>
+            {recentActivity.map((activity) => {
+              const getActivityIcon = () => {
+                if (activity.type === 'submission') {
+                  return (
+                    <svg className="w-5 h-5 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                  );
+                } else if (activity.type === 'publication') {
+                  return (
+                    <svg className="w-5 h-5 text-green-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  );
+                } else {
+                  return (
+                    <svg className="w-5 h-5 text-purple-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                  );
+                }
+              };
+
+              const getActivityBg = () => {
+                if (activity.type === 'submission') return 'bg-blue-50';
+                if (activity.type === 'publication') return 'bg-green-50';
+                return 'bg-purple-50';
+              };
+
+              return (
+                <div key={activity.id} className="p-4 border border-gray-200 rounded-xl hover:shadow-lg transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-xl ${getActivityBg()} flex items-center justify-center flex-shrink-0`}>
+                      {getActivityIcon()}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        {activity.title}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {activity.type === 'submission' && activity.status && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold mr-2 ${getStatusColor(activity.status)}`}>
+                            {formatStatus(activity.status)}
+                          </span>
+                        )}
+                        {activity.submitted_at && formatDate(activity.submitted_at)}
+                        {activity.published_at && formatDate(activity.published_at)}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(notice.status)}`}>
-                    {formatStatus(notice.status)}
-                  </span>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Link
-          to={`${basePath}/templates`}
-          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
-        >
-          <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-4">
-            <svg
-              className="w-6 h-6 text-purple-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Templates
-          </h3>
-          <p className="text-sm text-gray-600">
-            Create and manage notice templates
-          </p>
-        </Link>
-
-        <Link
-          to={`${basePath}/team`}
+          to={`${basePath}/submissions`}
           className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
         >
           <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
@@ -346,19 +397,19 @@ export default function Dashboard() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Team Members
+            Review Submissions
           </h3>
           <p className="text-sm text-gray-600">
-            Manage department team and permissions
+            Approve or reject incoming applications
           </p>
         </Link>
 
         <Link
-          to={`${basePath}/settings`}
+          to={`${basePath}/publications`}
           className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
         >
           <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
@@ -371,14 +422,64 @@ export default function Dashboard() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Settings
+            Manage Publications
           </h3>
           <p className="text-sm text-gray-600">
-            Configure department preferences
+            View and manage live notices
+          </p>
+        </Link>
+
+        <Link
+          to={`${basePath}/representations`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg
+              className="w-6 h-6 text-purple-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Public Responses
+          </h3>
+          <p className="text-sm text-gray-600">
+            Review community representations
+          </p>
+        </Link>
+
+        <Link
+          to={`${basePath}/team`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg
+              className="w-6 h-6 text-orange-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Team Management
+          </h3>
+          <p className="text-sm text-gray-600">
+            Manage licensing officers
           </p>
         </Link>
       </div>
