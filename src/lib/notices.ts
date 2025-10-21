@@ -122,3 +122,35 @@ export async function createDraftNotice(payload: DraftNoticeInput) {
 
   return res.json() as Promise<{ id: string }>;
 }
+
+export type SubmitNoticePayload = {
+  id?: string;
+  notice_type: string;
+  status?: string;
+  applicant: Record<string, unknown>;
+  premises?: Record<string, unknown>;
+  consultation?: Record<string, unknown>;
+  publication?: Record<string, unknown>;
+  extras?: Record<string, unknown>;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+export async function submitNotice(payload: SubmitNoticePayload) {
+  const target = `${API_BASE}/api/notices/submit`;
+  const res = await fetch(target, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Submit notice failed ${res.status}`);
+  }
+
+  return res.json() as Promise<{ id: string; success: boolean }>;
+}

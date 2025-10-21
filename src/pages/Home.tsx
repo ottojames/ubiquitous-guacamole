@@ -164,7 +164,8 @@ export default function Home() {
       const params = new URLSearchParams();
       params.set('query', rawInput);
       if (resolvedPostcode) params.set('postcode', resolvedPostcode);
-      if (councilId) params.set('council', councilId);
+      // Don't auto-filter by council since notices may not have council_id set
+      // if (councilId) params.set('council', councilId);
       if (filters.type) params.set('type', filters.type);
       if (filters.status) params.set('status', filters.status);
       if (filters.start) params.set('start', filters.start);

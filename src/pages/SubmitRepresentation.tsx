@@ -1,0 +1,466 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Send, Mail, FileText, AlertCircle, CheckCircle, User, Building2 } from 'lucide-react';
+import * as UI from '@/styles/ui';
+
+const NAV_LINKS = [
+  { href: '/#notices', label: 'Find notices' },
+  { href: '/#for-councils', label: 'For councils' },
+  { href: '/pricing', label: 'Pricing' },
+] as const;
+
+type NoticeDetail = {
+  id: string;
+  noticeType: string;
+  premisesName: string;
+  premisesAddress: string;
+  repsDeadline: string | null;
+  publicationDate: string;
+  applicantName: string | null;
+  rawData?: {
+    extras?: {
+      tokens?: {
+        AUTHORITY_NAME?: string;
+        AUTHORITY_EMAIL?: string;
+        REPRESENTATION_EMAIL?: string;
+        REPRESENTATION_ADDRESS?: string;
+      };
+    };
+  };
+};
+
+export default function SubmitRepresentation() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [notice, setNotice] = useState<NoticeDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    address: '',
+    representationType: 'objection' as 'objection' | 'support',
+    comments: '',
+  });
+
+  useEffect(() => {
+    if (!id) return;
+
+    fetch(`/api/notices/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setNotice(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load notice:', err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    // Get licensing authority email
+    const authorityEmail = notice?.rawData?.extras?.tokens?.REPRESENTATION_EMAIL
+      || notice?.rawData?.extras?.tokens?.AUTHORITY_EMAIL
+      || 'licensing@council.gov.uk';
+
+    const subject = `Representation: ${notice?.noticeType} - ${notice?.premisesName}`;
+    const body = `
+Representation ${formData.representationType === 'objection' ? 'in Objection to' : 'in Support of'} Notice
+
+Notice Details:
+- Notice ID: ${notice?.id}
+- Notice Type: ${notice?.noticeType}
+- Premises: ${notice?.premisesName}
+- Address: ${notice?.premisesAddress}
+- Applicant: ${notice?.applicantName || 'N/A'}
+
+Representation From:
+- Name: ${formData.fullName}
+- Email: ${formData.email}
+- Address: ${formData.address}
+
+Type of Representation: ${formData.representationType === 'objection' ? 'OBJECTION' : 'SUPPORT'}
+
+Comments:
+${formData.comments}
+
+---
+This representation was submitted via CivicNotices (civicnotices.com)
+Submitted: ${new Date().toLocaleString('en-GB')}
+    `.trim();
+
+    // Open mailto link
+    const mailtoLink = `mailto:${authorityEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+
+    // Show success message after a brief delay
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+    }, 1000);
+  };
+
+  if (loading) {
+    return (
+      <div className={`${UI.pageWrap} min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50`}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+            <p className="text-base text-slate-600">Loading notice details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!notice) {
+    return (
+      <div className={`${UI.pageWrap} min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50`}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center max-w-md">
+            <AlertCircle className="mx-auto h-16 w-16 text-slate-400 mb-4" />
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Notice Not Found</h2>
+            <p className="text-slate-600 mb-6">Unable to load notice details.</p>
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const authorityName = notice?.rawData?.extras?.tokens?.AUTHORITY_NAME || 'the Licensing Authority';
+  const authorityEmail = notice?.rawData?.extras?.tokens?.REPRESENTATION_EMAIL
+    || notice?.rawData?.extras?.tokens?.AUTHORITY_EMAIL
+    || 'licensing@council.gov.uk';
+  const representationAddress = notice?.rawData?.extras?.tokens?.REPRESENTATION_ADDRESS;
+
+  return (
+    <div className={`${UI.pageWrap} min-h-screen bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400`}>
+      {/* Gradient Decorations */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg" style={{ height: 'var(--headerH)' }}>
+        <div className={`${UI.container} h-full`}>
+          <div className="flex h-full items-center justify-between">
+            <div className="flex items-center gap-6">
+              <a href="/" className="text-xl font-extrabold tracking-tight text-slate-900" style={{ letterSpacing: '-0.5px' }}>
+                CivicNotices
+              </a>
+              <nav className="hidden items-center gap-6 md:flex">
+                {NAV_LINKS.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Notice
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">
+        <div className={`${UI.container} relative z-10`}>
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-6xl">
+              Submit Representation
+            </h1>
+            <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl">
+              Make your voice heard on this licensing application
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <main className={`${UI.container} pb-24 relative z-10 ${submitted ? '' : '-mt-8'}`}>
+        <div className="mx-auto max-w-4xl">
+          {submitted ? (
+            /* Success State */
+            <div className="rounded-3xl border border-white/70 bg-white p-12 shadow-[0_2px_12px_rgba(0,0,0,0.04)] text-center">
+                <CheckCircle className="mx-auto h-20 w-20 text-green-600 mb-6" />
+                <h2 className="text-3xl font-bold text-slate-900 mb-4">Email Client Opened</h2>
+                <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+                  Your email client should have opened with a pre-filled representation.
+                  Please review and send the email to submit your representation to {authorityName}.
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => navigate(`/notices/${id}`)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                    Back to Notice
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSubmitted(false);
+                      setFormData({
+                        fullName: '',
+                        email: '',
+                        address: '',
+                        representationType: 'objection',
+                        comments: '',
+                      });
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700"
+                  >
+                    Submit Another
+                  </button>
+                </div>
+              </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Notice Info Card */}
+              <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-3 mb-6">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-2xl font-bold text-slate-900">Notice Details</h2>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Notice Type</p>
+                    <p className="text-lg text-slate-900">{notice.noticeType}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Premises</p>
+                    <p className="text-lg text-slate-900">{notice.premisesName}</p>
+                    <p className="text-sm text-slate-600">{notice.premisesAddress}</p>
+                  </div>
+                  {notice.applicantName && (
+                    <div>
+                      <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Applicant</p>
+                      <p className="text-lg text-slate-900">{notice.applicantName}</p>
+                    </div>
+                  )}
+                  {notice.repsDeadline && (
+                    <div>
+                      <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Deadline</p>
+                      <p className="text-lg text-slate-900">
+                        {new Date(notice.repsDeadline).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Authority Contact Info */}
+              <div className="rounded-3xl border border-white/70 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-3 mb-6">
+                  <Building2 className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-2xl font-bold text-slate-900">Send Representation To</h2>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Licensing Authority</p>
+                    <p className="text-lg text-slate-900">{authorityName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Email</p>
+                    <a href={`mailto:${authorityEmail}`} className="text-lg text-blue-600 hover:text-blue-700 transition">
+                      {authorityEmail}
+                    </a>
+                  </div>
+                  {representationAddress && (
+                    <div>
+                      <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Postal Address</p>
+                      <p className="text-sm text-slate-600 whitespace-pre-line">{representationAddress}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Representation Form */}
+              <div className="rounded-3xl border border-white/70 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-3 mb-6">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-2xl font-bold text-slate-900">Your Representation</h2>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-semibold text-slate-700 mb-2">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="fullName"
+                      required
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-semibold text-slate-700 mb-2">
+                      Your Address *
+                    </label>
+                    <textarea
+                      id="address"
+                      required
+                      rows={3}
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      placeholder="Your full postal address"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
+                      Type of Representation *
+                    </label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, representationType: 'objection' })}
+                        className={`rounded-xl border-2 p-4 text-left transition ${
+                          formData.representationType === 'objection'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <p className="font-bold text-slate-900">Objection</p>
+                        <p className="text-sm text-slate-600">I object to this application</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, representationType: 'support' })}
+                        className={`rounded-xl border-2 p-4 text-left transition ${
+                          formData.representationType === 'support'
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <p className="font-bold text-slate-900">Support</p>
+                        <p className="text-sm text-slate-600">I support this application</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="comments" className="block text-sm font-semibold text-slate-700 mb-2">
+                      Your Comments *
+                    </label>
+                    <textarea
+                      id="comments"
+                      required
+                      rows={8}
+                      value={formData.comments}
+                      onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      placeholder="Explain your representation in detail. Include any relevant concerns or reasons for your position."
+                    />
+                  </div>
+
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 mb-2">How This Works</p>
+                        <p className="text-sm text-blue-800">
+                          When you submit this form, your email client will open with a pre-filled email to {authorityName}.
+                          Review the email and click send to submit your representation. Make sure to send it before the deadline.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-4">
+                    <button
+                      type="button"
+                      onClick={() => navigate(-1)}
+                      className="rounded-xl border border-slate-200 bg-white px-6 py-3 font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? (
+                        <>
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Opening Email...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-5 w-5" />
+                          Open Email to Submit
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200/60 bg-slate-50 py-12">
+        <div className={UI.container}>
+          <div className="text-center text-sm text-slate-600">
+            <p className="mb-2">© 2025 CivicNotices. Making local democracy transparent.</p>
+            <p className="text-xs text-slate-500">
+              Representations must be received by the licensing authority before the stated deadline.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

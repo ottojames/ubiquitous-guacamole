@@ -16,13 +16,17 @@ const isType = {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     /\.docx$/i.test(n),
   rtf: (m: string, n: string) =>
-    m === "application/rtf" || /\.rtf$/i.test(n),
+    m === "application/rtf" || m === "text/rtf" || /\.rtf$/i.test(n),
   txt: (m: string, n: string) =>
     m === "text/plain" || /\.txt$/i.test(n),
   image: (m: string, n: string) =>
     /^image\/(png|jpe?g|tiff?)$/i.test(m) || /\.(png|jpe?g|tiff?)$/i.test(n),
   legacyDoc: (m: string, n: string) =>
     m === "application/msword" || /\.doc$/i.test(n),
+  pages: (m: string, n: string) =>
+    m === "application/vnd.apple.pages" ||
+    m === "application/x-iwork-pages-sffpages" ||
+    /\.pages$/i.test(n),
 };
 
 function rtfToText(buf: Buffer): string {
@@ -121,6 +125,23 @@ export async function extractTextFromBuffer(
       return { text: (text || "").trim(), meta: { engine: "textract" } };
     } catch (err: any) {
       err.status = 415;
+      throw err;
+    }
+  }
+
+  if (isType.pages(mimetype, filename)) {
+    try {
+      const textract = await import("textract").then((m) => m.default || (m as any));
+      const text: string = await new Promise((resolve, reject) => {
+        textract.fromBufferWithMime("application/vnd.apple.pages", buffer, (err: any, t: string) => {
+          if (err) reject(err);
+          else resolve(t);
+        });
+      });
+      return { text: (text || "").trim(), meta: { engine: "textract" } };
+    } catch (err: any) {
+      err.status = 415;
+      err.message = "Unable to extract text from Pages file. Please export as PDF or DOCX instead.";
       throw err;
     }
   }

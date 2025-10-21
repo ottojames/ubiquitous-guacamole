@@ -69,8 +69,8 @@ export default function NoticeTypeStep({
     const initial: OpenGroupsState = {};
     NOTICE_CATEGORY_TREE.forEach((category) => {
       const stored = readStoredState(category.id);
-      // Start with the first category open by default, or the selected one
-      const open = stored ?? (selectedCategoryId === category.id ? true : category.id === NOTICE_CATEGORY_TREE[0]?.id);
+      // All categories open by default for better accessibility
+      const open = stored ?? true;
       initial[category.id] = !!open;
     });
     setOpenGroups(initial);

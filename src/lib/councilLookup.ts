@@ -9,5 +9,6 @@ export function lookupCouncilByPostcode(postcode: string) {
     councilName: pack.name,
     councilEmail: pack.representation.email || '',
     councilAddress: pack.representation.postal || '',
+    councilWebsite: pack.representation.portal || '',
   };
 }

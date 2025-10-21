@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AddressAutocomplete, { type AddressOption } from '@/components/AddressAutocomplete';
+import AddressFields from '@/components/AddressFields';
 import UploadDropzone from '@/components/publish/UploadDropzone';
 import ActivitiesHours, {
   type ActivityGroup,
@@ -74,11 +75,18 @@ export default function PremisesForm({
   const [form, setForm] = useState<any>({
     applicantName: '',
     applicantAddress: '',
+    applicantAddressLine1: '',
+    applicantAddressLine2: '',
     applicantCity: '',
     applicantPostcode: '',
     applicantUprn: undefined as string | undefined,
     councilPack: '',
     councilEmail: '',
+    councilWebsite: '',
+    councilAddressLine1: '',
+    councilAddressLine2: '',
+    councilCity: '',
+    councilPostcode: '',
     premisesName: '',
     premisesAddress: '',
     city: '',
@@ -175,7 +183,9 @@ export default function PremisesForm({
   function onApplicantAddressSelect(a: AddressWithUPRN) {
     const next = {
       ...form,
-      applicantAddress: a.line1 || '',
+      applicantAddress: a.label || a.line1 || '',
+      applicantAddressLine1: a.line1 || '',
+      applicantAddressLine2: a.line2 || '',
       applicantCity: a.city || a.town || '',
       applicantPostcode: a.postcode || '',
       applicantUprn: a.uprn,
@@ -221,7 +231,7 @@ export default function PremisesForm({
       <section className={UI.section}>
         <h2 className="text-lg font-medium">Applicant &amp; Council</h2>
         <div className="grid grid-cols-2 gap-4">
-          <div>
+          <div className="col-span-2">
             <label htmlFor="applicantName" className={UI.label}>
               Applicant name
             </label>
@@ -230,11 +240,45 @@ export default function PremisesForm({
               ref={autoFocusRef as any}
               value={form.applicantName || ''}
               onChange={(e) => setField('applicantName', e.target.value)}
-              className={inputClass}
+              className={inputClass + ' w-full'}
             />
           </div>
           <div className="col-span-2" id="applicantAddressLine1">
-            <AddressAutocomplete label="Applicant address" onSelect={onApplicantAddressSelect} />
+            <div className="space-y-4">
+              <AddressAutocomplete
+                label="Applicant address"
+                onSelect={onApplicantAddressSelect}
+                inputTestId="input-applicant-address-lookup"
+              />
+              <AddressFields
+                label=""
+                namePrefix="applicant"
+                testIdPrefix="applicant"
+                required={false}
+                value={{
+                  addressLine1: form.applicantAddressLine1 || '',
+                  addressLine2: form.applicantAddressLine2,
+                  city: form.applicantCity || '',
+                  postcode: form.applicantPostcode || '',
+                }}
+                onChange={(address) => {
+                  setForm((f: any) => ({
+                    ...f,
+                    applicantAddressLine1: address.addressLine1,
+                    applicantAddressLine2: address.addressLine2,
+                    applicantCity: address.city,
+                    applicantPostcode: address.postcode,
+                  }));
+                  onChange({
+                    ...form,
+                    applicantAddressLine1: address.addressLine1,
+                    applicantAddressLine2: address.addressLine2,
+                    applicantCity: address.city,
+                    applicantPostcode: address.postcode,
+                  });
+                }}
+              />
+            </div>
           </div>
           <div>
             <label htmlFor="councilName" className={UI.label}>
@@ -322,6 +366,69 @@ export default function PremisesForm({
               );
             })()}
             {/* CN:STEP2-COMPLIANCE-UPGRADE-END */}
+          </div>
+          <div className="col-span-2">
+            <div className="space-y-4">
+              <AddressAutocomplete
+                label="Council address"
+                onSelect={(a: AddressWithUPRN) => {
+                  const next = {
+                    ...form,
+                    councilAddressLine1: a.line1 || '',
+                    councilAddressLine2: a.line2 || '',
+                    councilCity: a.city || a.town || '',
+                    councilPostcode: a.postcode || '',
+                  };
+                  setForm(next);
+                  onChange(next);
+                }}
+                inputTestId="input-council-address-lookup"
+              />
+              <AddressFields
+                label=""
+                namePrefix="council"
+                testIdPrefix="council"
+                required={true}
+                value={{
+                  addressLine1: form.councilAddressLine1 || '',
+                  addressLine2: form.councilAddressLine2,
+                  city: form.councilCity || '',
+                  postcode: form.councilPostcode || '',
+                }}
+                onChange={(address) => {
+                  setForm((f: any) => ({
+                    ...f,
+                    councilAddressLine1: address.addressLine1,
+                    councilAddressLine2: address.addressLine2,
+                    councilCity: address.city,
+                    councilPostcode: address.postcode,
+                  }));
+                  onChange({
+                    ...form,
+                    councilAddressLine1: address.addressLine1,
+                    councilAddressLine2: address.addressLine2,
+                    councilCity: address.city,
+                    councilPostcode: address.postcode,
+                  });
+                }}
+              />
+            </div>
+          </div>
+          <div className="col-span-2">
+            <label htmlFor="councilWebsite" className={UI.label}>
+              Council website (optional)
+            </label>
+            <input
+              id="councilWebsite"
+              type="url"
+              value={form.councilWebsite || ''}
+              onChange={(e) => setField('councilWebsite', e.target.value)}
+              className={inputClass + ' w-full'}
+              placeholder="https://www.example.gov.uk/licensing"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Where applicants can view their application online
+            </p>
           </div>
         </div>
       </section>

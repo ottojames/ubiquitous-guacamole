@@ -18,6 +18,7 @@ function normaliseSortColumn(raw: string): string {
   if (!raw) return DEFAULT_SORT.column;
   if (raw === 'createdAt') return 'created_at';
   if (raw === 'updatedAt') return 'updated_at';
+  if (raw === 'distance') return 'distance'; // For distance-based sorting
   return raw;
 }
 
@@ -48,7 +49,7 @@ function parseSort(sortParam: string | undefined): { column: string; direction: 
   if (sortParam) {
     const [rawColumn, rawDir] = sortParam.split('.');
     const column = normaliseSortColumn(rawColumn);
-    if (column === 'created_at' || column === 'updated_at') {
+    if (column === 'created_at' || column === 'updated_at' || column === 'distance') {
       const direction: SortDirection = rawDir === 'asc' || rawDir === 'desc' ? rawDir : 'desc';
       return { column, direction };
     }
@@ -281,6 +282,96 @@ function getCreatedTimestamp(row: any): number {
   return firstFiniteTimestamp(row?.created_at, row?.published_at, row?.published_date);
 }
 
+// Generate formatted notice text from raw data
+function generateNoticeText(row: any): string {
+  const extras = row?.extras && typeof row.extras === 'object' ? row.extras : {};
+  const tokens = extras.tokens || {};
+
+  // Try to use detailed tokens if available, otherwise fall back to extracted values
+  const noticeType = tokens.NOTICE_TYPE || row?.notice_type || 'Notice';
+  const premisesName = tokens.PREMISES_NAME || extractPremisesName(row);
+  const premisesAddress = tokens.PREMISES_ADDRESS || extractPremisesAddress(row);
+  const applicantName = tokens.APPLICANT_NAME || firstNonEmptyString(
+    row?.applicant?.name,
+    row?.consultation?.applicantName,
+    row?.licensing?.applicantName
+  );
+  const applicantAddress = tokens.APPLICANT_ADDRESS || row?.applicant?.address || row?.consultation?.applicantAddress;
+  const licensableActivities = tokens.LICENSABLE_ACTIVITIES;
+  const openingHours = tokens.OPENING_HOURS || row?.licensing?.hours;
+  const repsDeadline = extractRepsDeadline(row);
+  const authorityName = tokens.AUTHORITY_NAME;
+  const authorityAddress = tokens.AUTHORITY_ADDRESS || tokens.REPRESENTATION_ADDRESS;
+  const newspaper = tokens.PUBLICATION_NEWSPAPER || row?.publication?.newspaper;
+
+  // Build the formatted notice text similar to official gazette notices
+  let text = `NOTICE OF APPLICATION\n\n`;
+  text += `${noticeType}\n\n`;
+
+  if (premisesName || premisesAddress) {
+    text += `PREMISES\n`;
+    if (premisesName) text += `${premisesName}\n`;
+    if (premisesAddress) text += `${premisesAddress}\n`;
+    text += `\n`;
+  }
+
+  if (applicantName) {
+    text += `APPLICANT\n`;
+    text += `${applicantName}\n`;
+    if (applicantAddress) text += `${applicantAddress}\n`;
+    text += `\n`;
+  }
+
+  if (licensableActivities) {
+    text += `LICENSABLE ACTIVITIES\n`;
+    const activityList = licensableActivities.split(/[;,]/).map((a: string) => a.trim()).filter(Boolean);
+    activityList.forEach((activity: string) => {
+      text += `• ${activity}\n`;
+    });
+    text += `\n`;
+  }
+
+  if (openingHours) {
+    text += `OPENING HOURS\n`;
+    text += `${openingHours}\n\n`;
+  }
+
+  if (repsDeadline) {
+    text += `REPRESENTATIONS\n`;
+    text += `Representations concerning this application must be made in writing to the licensing authority by ${formatDateForNotice(repsDeadline)}.\n`;
+    if (authorityAddress) {
+      text += `\nRepresentations should be sent to:\n${authorityAddress}\n`;
+    }
+    text += `\n`;
+  }
+
+  text += `The register and application records may be inspected at the licensing authority during normal office hours.`;
+
+  if (authorityName) {
+    text += `\n\nLicensing Authority: ${authorityName}`;
+  }
+
+  if (newspaper) {
+    text += `\n\nPublished in ${newspaper}`;
+  }
+
+  return text.trim();
+}
+
+function formatDateForNotice(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch {
+    return dateString;
+  }
+}
+
 const router = Router();
 
 type DraftNoticeAddress = {
@@ -381,6 +472,76 @@ router.post('/notices/draft', async (req, res) => {
   }
 });
 
+router.post('/notices/submit', async (req, res) => {
+  try {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      return res.status(500).json({ error: 'Supabase configuration missing' });
+    }
+
+    const client = createClient(url, key);
+    const payload = req.body;
+
+    if (!payload || typeof payload !== 'object') {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
+
+    // If we have a draft ID, try to update the existing draft
+    if (payload.id) {
+      // First check if the draft exists
+      const { data: existing } = await client
+        .from('notices')
+        .select('id')
+        .eq('id', payload.id)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing draft
+        const { data, error } = await client
+          .from('notices')
+          .update({
+            ...payload,
+            status: 'submitted',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payload.id)
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('[notice-submit] Supabase update failed', error);
+          return res.status(500).json({ error: 'Failed to submit notice' });
+        }
+
+        return res.status(200).json({ id: data.id, success: true });
+      }
+      // If draft doesn't exist, fall through to create new
+    }
+
+    // Create new notice (either no ID provided or ID doesn't exist)
+    const { id, ...payloadWithoutId } = payload;
+    const { data, error } = await client
+      .from('notices')
+      .insert({
+        ...payloadWithoutId,
+        status: 'submitted',
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('[notice-submit] Supabase insert failed', error);
+      return res.status(500).json({ error: 'Failed to submit notice', details: error.message });
+    }
+
+    return res.status(201).json({ id: data.id, success: true });
+  } catch (error: any) {
+    console.error('❌ [notice-submit] Unexpected server error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.get('/notices/search', async (req, res) => {
   try {
     console.log('[notice-search] Incoming query params:', req.query);
@@ -437,7 +598,8 @@ router.get('/notices/search', async (req, res) => {
 
       if (effectivePostcode) {
         const outwardPattern = `${effectivePostcode.outward}%`;
-        qb = qb.filter(POSTCODE_JSON_EXPRESSION, 'ilike', outwardPattern);
+        // Search in both possible postcode locations
+        qb = qb.or(`premises->>postcode.ilike.${outwardPattern},premises_address->>postcode.ilike.${outwardPattern}`);
       }
 
       if (typeParam) {
@@ -599,7 +761,40 @@ router.get('/notices/search', async (req, res) => {
     });
 
     let sortedRows: any[];
-    if (bbox) {
+
+    // Distance-based sorting when user requests it and coordinates are available
+    if (sortColumn === 'distance' && radiusCoordinates) {
+      sortedRows = [...filteredRows].sort((a, b) => {
+        const aLat = extractLatitude(a);
+        const aLon = extractLongitude(a);
+        const bLat = extractLatitude(b);
+        const bLon = extractLongitude(b);
+
+        // Calculate distance using Haversine formula
+        const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+          const R = 6371; // Earth's radius in km
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                   Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                   Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return R * c;
+        };
+
+        const aHasCoords = typeof aLat === 'number' && typeof aLon === 'number';
+        const bHasCoords = typeof bLat === 'number' && typeof bLon === 'number';
+
+        if (!aHasCoords && !bHasCoords) return 0;
+        if (!aHasCoords) return 1; // Push items without coords to end
+        if (!bHasCoords) return -1;
+
+        const aDist = calculateDistance(radiusCoordinates.latitude, radiusCoordinates.longitude, aLat, aLon);
+        const bDist = calculateDistance(radiusCoordinates.latitude, radiusCoordinates.longitude, bLat, bLon);
+
+        return direction === 'asc' ? aDist - bDist : bDist - aDist;
+      });
+    } else if (bbox) {
       sortedRows = [...filteredRows].sort((a, b) => {
         const aPublished = getPublishedTimestamp(a);
         const bPublished = getPublishedTimestamp(b);
@@ -676,6 +871,88 @@ router.get('/notices/search', async (req, res) => {
     });
   } catch (error: any) {
     console.error('❌ [notice-search] Unexpected server error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /notices/:id - Get a single notice by ID
+router.get('/notices/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ error: 'Invalid notice ID' });
+  }
+
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  try {
+    const { data, error } = await supabase
+      .from('notices')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('[notice-get] Supabase error:', error);
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Notice not found' });
+      }
+      return res.status(500).json({ error: 'Failed to fetch notice' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    const row = data;
+    const premises = row?.premises && typeof row.premises === 'object' ? row.premises : {};
+    const consultation = row?.consultation && typeof row.consultation === 'object' ? row.consultation : {};
+    const publication = row?.publication && typeof row.publication === 'object' ? row.publication : {};
+    const extras = row?.extras && typeof row.extras === 'object' ? row.extras : {};
+    const applicant = row?.applicant && typeof row.applicant === 'object' ? row.applicant : {};
+    const licensing = row?.licensing && typeof row.licensing === 'object' ? row.licensing : {};
+
+    const latitude = extractLatitude(row);
+    const longitude = extractLongitude(row);
+
+    const notice = {
+      id: row.id,
+      noticeType: row.notice_type,
+      status: row.status,
+      premisesName: extractPremisesName(row),
+      premisesAddress: extractPremisesAddress(row),
+      premisesPostcode: extractPostcode(row),
+      repsDeadline: extractRepsDeadline(row),
+      applicationDate: extractDateLike(consultation.applicationDate, row?.application_date),
+      publicationDate: extractPublicationDate(row),
+      newspaper: firstNonEmptyString(publication.newspaper, row?.newspaper),
+      viewUrl: firstNonEmptyString(extras.viewUrl, row?.view_url),
+      latitude,
+      longitude,
+      // Additional detailed fields
+      applicantName: firstNonEmptyString(applicant.name, consultation.applicantName, licensing.applicantName),
+      applicantAddress: applicant.address || consultation.applicantAddress || null,
+      licensingActivities: licensing.activities || [],
+      openingHours: licensing.hours || null,
+      description: row.description || generateNoticeText(row),
+      rawData: {
+        premises,
+        consultation,
+        publication,
+        extras,
+        applicant,
+        licensing,
+      },
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+
+    return res.json(notice);
+  } catch (error: any) {
+    console.error('[notice-get] Unexpected error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

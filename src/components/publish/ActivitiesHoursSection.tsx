@@ -622,8 +622,9 @@ function DayHoursEditor({
 
         return (
           <div key={day} className="flex items-center gap-3">
-            <div className="w-10 text-[13px] font-medium text-slate-700">{day}</div>
+            <label htmlFor={`${day}-start`} className="w-10 text-[13px] font-medium text-slate-700">{day}</label>
             <input
+              id={`${day}-start`}
               type="time"
               value={dayHours?.start || ""}
               onChange={(e) =>
@@ -634,7 +635,9 @@ function DayHoursEditor({
               aria-label={`${day} start time`}
             />
             <span className="text-[13px] text-slate-400">–</span>
+            <label htmlFor={`${day}-end`} className="sr-only">{day} end time</label>
             <input
+              id={`${day}-end`}
               type="time"
               value={dayHours?.end || ""}
               onChange={(e) =>

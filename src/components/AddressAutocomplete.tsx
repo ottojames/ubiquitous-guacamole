@@ -55,7 +55,10 @@ function toOption(item: AddressItem): AddressOption {
     .map((segment) => segment.trim())
     .filter(Boolean);
   const lines = baseLines.length ? baseLines : fallbackLines;
-  const postcode = (item.postcode ?? '').trim() || normalizeUKPostcode(item.label) || '';
+
+  // Only use item.postcode if it exists - don't try to extract from label
+  // as normalizeUKPostcode just formats, it doesn't extract
+  const postcode = (item.postcode ?? '').trim() || '';
 
   return mapAddress({
     id: item.id,
@@ -88,10 +91,55 @@ export default function AddressAutocomplete({
   }, []);
 
   const handlePick = React.useCallback(
-    (item: AddressItem) => {
-      const option = toOption(item);
-      setSelected(option);
-      onSelect(option);
+    async (item: AddressItem) => {
+      console.log('[AddressAutocomplete] handlePick called with item:', item);
+
+      // If we have a postcode already, use the item directly
+      if (item.postcode) {
+        console.log('[AddressAutocomplete] Item has postcode, using directly');
+        const option = toOption(item);
+        console.log('[AddressAutocomplete] Created option:', option);
+        setSelected(option);
+        onSelect(option);
+        return;
+      }
+
+      // Otherwise, fetch full address details to get the postcode
+      console.log('[AddressAutocomplete] No postcode, fetching details for ID:', item.id);
+      try {
+        const { fetchAddressDetail, mapDetail } = await import('@/lib/addressLookup');
+        const detailJson = await fetchAddressDetail(item.id);
+        console.log('[AddressAutocomplete] Fetched detail JSON:', detailJson);
+        const detail = mapDetail(detailJson);
+        console.log('[AddressAutocomplete] Mapped detail:', detail);
+
+        // Create an enhanced option with the full details including postcode
+        const enhancedOption = toOption({
+          ...item,
+          postcode: detail.postcode || '',
+          line1: detail.line1 || item.line1,
+          line2: detail.line2 || item.line2,
+          town: detail.town || item.town,
+        });
+
+        console.log('[AddressAutocomplete] Enhanced option:', enhancedOption);
+        setSelected(enhancedOption);
+        onSelect(enhancedOption);
+      } catch (error) {
+        console.error('[AddressAutocomplete] Failed to fetch address details:', error);
+        // Fallback: Try to extract postcode from label if available
+        const { extractUKPostcode } = await import('@/lib/ukPostcode');
+        const extractedPostcode = extractUKPostcode(item.label || '');
+        console.log('[AddressAutocomplete] Extracted postcode from label:', extractedPostcode);
+
+        const option = toOption({
+          ...item,
+          postcode: extractedPostcode || '',
+        });
+        console.log('[AddressAutocomplete] Fallback option (with extraction):', option);
+        setSelected(option);
+        onSelect(option);
+      }
     },
     [onSelect]
   );

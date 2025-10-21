@@ -13,11 +13,16 @@ const upload = (multer as any)({
       "application/pdf",
       "image/png",
       "image/jpeg",
+      "image/jpg",
       "image/tiff",
+      "image/tif",
       "text/plain",
       "application/rtf",
-      "application/msword", // .doc (we’ll 415 later in extractor)
+      "text/rtf",
+      "application/msword", // .doc (we'll 415 later in extractor)
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/vnd.apple.pages", // .pages
+      "application/x-iwork-pages-sffpages", // .pages (alternate MIME)
     ];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else {
@@ -90,7 +95,7 @@ export async function handleUploadCore(
             code: "UNSUPPORTED_TYPE",
             message:
               err?.message ||
-              "Unsupported file. Upload PDF, DOCX, RTF, TXT, or an image (PNG/JPG/TIFF).",
+              "Unsupported file. Upload PDF, DOC, DOCX, Pages, RTF, TXT, or an image (PNG/JPG/TIFF).",
           },
         };
       }
@@ -232,7 +237,7 @@ router.post("/", (req, res) => {
         ok: false,
         code: "UNSUPPORTED_TYPE",
         message:
-          "Unsupported file. Upload PDF, DOCX, RTF, TXT, or an image (PNG/JPG/TIFF).",
+          "Unsupported file. Upload PDF, DOC, DOCX, Pages, RTF, TXT, or an image (PNG/JPG/TIFF).",
       });
     }
 

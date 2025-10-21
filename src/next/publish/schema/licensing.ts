@@ -89,7 +89,7 @@ const licensingBaseSchema = z
       isoDateField("Publication date").optional()
     ),
     DEADLINE_DATE: isoDateField("Representation deadline"),
-    INSPECTION_LOCATION: requiredString("Inspection location"),
+    INSPECTION_LOCATION: optionalString(),
     INSPECTION_TIMES: requiredString("Inspection times"),
     REPRESENTATION_METHOD: requiredString("Representation method"),
     REPRESENTATION_ADDRESS: optionalString(),

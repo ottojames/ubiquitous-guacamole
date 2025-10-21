@@ -9,6 +9,8 @@ import {
 } from "@/next/publish/config/formBlueprints";
 import { addDays, addMonths, toISODate } from "@/next/publish/utils/date";
 import AddressLookup, { mockProvider, type AddressResult } from "@/components/AddressLookup";
+import AddressAutocomplete, { type AddressOption } from "@/components/AddressAutocomplete";
+import AddressFields from "@/components/AddressFields";
 import ActivitiesHoursSection, { type ActivitiesHoursData } from "@/components/publish/ActivitiesHoursSection";
 import CouncilSelect, { type Council } from "@/components/CouncilSelect";
 
@@ -204,6 +206,68 @@ export default function TemplateBuilderForm({
       setValue("DPS_NAME", data.dpsName || "", { fromUser: true });
       setValue("DPS_LICENSING_AUTHORITY", data.dpsLicensingAuthority || "", { fromUser: true });
 
+      // Generate LICENSABLE_ACTIVITIES summary from selected activities
+      const selectedActivities = Object.entries(data.activities)
+        .filter(([_, schedule]) => schedule.enabled)
+        .map(([key, _]) => {
+          // Convert key to readable label
+          const labels: Record<string, string> = {
+            alcohol_on: "Sale of alcohol (on premises)",
+            alcohol_off: "Sale of alcohol (off premises)",
+            alcohol_on_off: "Sale of alcohol (on & off premises)",
+            live_music: "Live music",
+            recorded_music: "Recorded music",
+            dance: "Dance performances",
+            films: "Exhibition of films",
+            indoor_sport: "Indoor sporting events",
+            boxing_wrestling: "Boxing or wrestling",
+            late_night_refreshment: "Late night refreshment",
+            club_supply_members: "Club supply to members",
+            club_supply_guests: "Club supply to guests",
+          };
+          return labels[key] || key;
+        });
+
+      setValue("LICENSABLE_ACTIVITIES", selectedActivities.join(", "), { fromUser: true });
+
+      // Generate ACTIVITY_SCHEDULE summary
+      const activitySchedule = Object.entries(data.activities)
+        .filter(([_, schedule]) => schedule.enabled)
+        .map(([key, schedule]) => {
+          const label = {
+            alcohol_on: "Sale of alcohol (on)",
+            alcohol_off: "Sale of alcohol (off)",
+            alcohol_on_off: "Sale of alcohol (on/off)",
+            live_music: "Live music",
+            recorded_music: "Recorded music",
+            dance: "Dance",
+            films: "Films",
+            indoor_sport: "Indoor sport",
+            boxing_wrestling: "Boxing/wrestling",
+            late_night_refreshment: "Late night refreshment",
+            club_supply_members: "Club supply (members)",
+            club_supply_guests: "Club supply (guests)",
+          }[key] || key;
+
+          // Format hours summary
+          const hours = schedule.hours;
+          const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+          const filled = days.filter(d => hours[d] !== null);
+
+          if (filled.length === 0) return `${label}: No hours set`;
+          if (filled.length === 7 && filled.every(d => {
+            const h = hours[d];
+            return h && h.start === hours[filled[0]]?.start && h.end === hours[filled[0]]?.end;
+          })) {
+            const h = hours[filled[0]];
+            return `${label}: Mon–Sun ${h?.start}–${h?.end}`;
+          }
+
+          return `${label}: Various hours`;
+        });
+
+      setValue("ACTIVITY_SCHEDULE", activitySchedule.join("\n"), { fromUser: true });
+
       // Check if alcohol is selected
       const hasAlcoholSelected = Object.entries(data.activities).some(
         ([key, schedule]) => schedule.enabled && key.startsWith("alcohol_")
@@ -290,12 +354,51 @@ export default function TemplateBuilderForm({
       .filter(Boolean);
   }, [blueprint.atLeastOne, draft]);
 
+  // Calculate missing required fields for progress indicator
+  const missingCount = React.useMemo(() => {
+    let count = 0;
+    for (const section of blueprint.sections) {
+      for (const field of section.fields) {
+        if (field.required) {
+          const value = getValue(field.token);
+          const hasError = errors?.[field.token]?.length;
+          if (!value || hasError) {
+            count++;
+          }
+        }
+      }
+    }
+    return count;
+  }, [blueprint.sections, getValue, errors]);
+
   return (
     <div className="space-y-8">
       {/* Form title with subtle elegance */}
       <div className="border-b border-slate-200/60 pb-4">
         <h2 className="text-[15px] font-semibold tracking-tight text-slate-900">{definition.label}</h2>
       </div>
+
+      {/* Form fields heading */}
+      <div className="space-y-2">
+        <h3 className="text-[16px] font-semibold leading-tight tracking-tight text-slate-900">
+          Complete the required details
+        </h3>
+        <p className="text-[13px] leading-relaxed text-slate-600">
+          Fill in all the required fields below to create your notice.
+        </p>
+      </div>
+
+      {/* Progress indicator */}
+      {missingCount > 0 && (
+        <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-blue-900">
+            {missingCount} required {missingCount === 1 ? "field" : "fields"} remaining
+          </p>
+          <p className="mt-0.5 text-[12px] leading-relaxed text-blue-700">
+            Please fill in all mandatory fields marked with an asterisk (*).
+          </p>
+        </div>
+      )}
 
       {sectionElements.length ? (
         <div className="space-y-6">
@@ -368,6 +471,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
           onSelect={handleCouncilSelect}
           onChangeText={(text) => onChange(text, { fromUser: true })}
           id={inputId}
+          name="authorityname"
           label=""
           placeholder="Search for council..."
           required={field.required}
@@ -409,7 +513,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
   }, [onChange]);
 
   const baseInputClasses = "w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10";
-  const errorInputClasses = "border-rose-300 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500/10";
+  const errorInputClasses = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 focus:outline-none focus:ring-4 border-rose-300 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500/10";
 
   // These fields are now handled by ActivitiesHoursSection - don't render them individually
   if (field.token === "LICENSABLE_ACTIVITIES" ||
@@ -423,19 +527,119 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
   let control: React.ReactNode = null;
 
   switch (field.type) {
-    case "textarea":
+    case "text":
       control = (
-        <textarea
+        <input
           id={inputId}
+          name={field.token.toLowerCase().replace(/_/g, '')}
+          type="text"
           value={value}
-          rows={field.rows ?? 4}
-          className={`${errors?.length ? errorInputClasses : baseInputClasses} min-h-[100px] resize-y`}
+          className={errors?.length ? errorInputClasses : baseInputClasses}
           aria-required={field.required ? "true" : undefined}
           aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
           onChange={handleChange}
           maxLength={field.maxLength}
         />
       );
+      break;
+    case "textarea":
+      // Render AddressAutocomplete + AddressFields for address-related fields
+      if (isAddressField) {
+        // Parse existing value into address components
+        const parseAddress = (addressString: string) => {
+          if (!addressString) {
+            return {
+              addressLine1: '',
+              addressLine2: '',
+              city: '',
+              postcode: '',
+            };
+          }
+
+          const parts = addressString.split(',').map(p => p.trim()).filter(Boolean);
+          const postcodeRegex = /([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})$/i;
+          const postcodeMatch = addressString.match(postcodeRegex);
+          const postcode = postcodeMatch ? postcodeMatch[1] : '';
+
+          // Remove postcode from parts if found
+          const addressParts = postcode
+            ? addressString.replace(postcodeRegex, '').split(',').map(p => p.trim()).filter(Boolean)
+            : parts;
+
+          // Logic: first part is line1, last part is city, middle parts are line2
+          const line1 = addressParts[0] || '';
+          const city = addressParts.length > 1 ? addressParts[addressParts.length - 1] : '';
+          const line2 = addressParts.length > 2 ? addressParts.slice(1, -1).join(', ') : (addressParts[1] || '');
+
+          return {
+            addressLine1: line1,
+            addressLine2: line2,
+            city: city,
+            postcode: postcode,
+          };
+        };
+
+        const addressValue = parseAddress(value);
+
+        const handleAddressSelect = React.useCallback(
+          (option: AddressOption) => {
+            // Map AddressOption to the format expected by onChange (comma-separated string)
+            // IMPORTANT: Put postcode at the END so parseAddress can find it with regex
+            const parts = [
+              option.line1,
+              option.line2,
+              option.line3,
+              option.city || option.town,
+              option.postcode,
+            ].filter(Boolean);
+            const joined = parts.join(', ');
+            console.log('[TemplateBuilderForm] Address selected:', { option, joined });
+            onChange(joined, { fromUser: true });
+          },
+          [onChange]
+        );
+
+        control = (
+          <div className="space-y-4">
+            <AddressAutocomplete
+              label={field.label}
+              onSelect={handleAddressSelect}
+              inputTestId={`${field.token.toLowerCase()}-lookup`}
+            />
+            <AddressFields
+              label=""
+              namePrefix={field.token.toLowerCase()}
+              testIdPrefix={field.token.toLowerCase()}
+              required={field.required}
+              value={addressValue}
+              onChange={(address) => {
+                // Convert back to comma-separated string for storage
+                const parts = [
+                  address.addressLine1,
+                  address.addressLine2,
+                  address.city,
+                  address.postcode,
+                ].filter(Boolean);
+                onChange(parts.join(', '), { fromUser: true });
+              }}
+            />
+          </div>
+        );
+      } else {
+        control = (
+          <textarea
+            id={inputId}
+            name={field.token.toLowerCase().replace(/_/g, '')}
+            value={value}
+            rows={field.rows ?? 4}
+            className={`${errors?.length ? errorInputClasses : baseInputClasses} min-h-[100px] resize-y`}
+            aria-required={field.required ? "true" : undefined}
+            aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
+            onChange={handleChange}
+            maxLength={field.maxLength}
+          />
+        );
+      }
       break;
     case "email":
     case "date":
@@ -445,6 +649,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
       control = (
         <input
           id={inputId}
+          name={field.token.toLowerCase().includes('_date') ? field.token.toLowerCase() : field.token.toLowerCase().replace(/_/g, '')}
           type={field.type === "number" ? "text" : field.type}
           value={value}
           className={errors?.length ? errorInputClasses : baseInputClasses}
@@ -459,6 +664,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
       control = (
         <select
           id={inputId}
+          name={field.token.toLowerCase().replace(/_/g, '')}
           value={value}
           className={errors?.length ? errorInputClasses : baseInputClasses}
           aria-required={field.required ? "true" : undefined}
@@ -478,6 +684,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
       control = (
         <input
           id={inputId}
+          name={field.token.toLowerCase().replace(/_/g, '')}
           type="text"
           value={value}
           className={errors?.length ? errorInputClasses : baseInputClasses}
@@ -492,25 +699,12 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
 
   return (
     <div className="space-y-2">
-      {commonLabel}
-
-      {isAddressField && (
-        <div className="space-y-2">
-          <AddressLookup
-            provider={mockProvider}
-            placeholder="Search for address or postcode"
-            onResolved={handleAddressResolved}
-            className="w-full"
-          />
-          <p className="text-[12px] text-slate-500">
-            Search above to auto-fill, or type directly into the field below
-          </p>
-        </div>
-      )}
+      {/* Don't show label for address fields as AddressAutocomplete has its own label */}
+      {!isAddressField && commonLabel}
 
       {control}
 
-      {field.hint ? (
+      {field.hint && !isAddressField ? (
         <p id={helperId} className="text-[12px] leading-relaxed text-slate-500">
           {field.hint}
         </p>

@@ -297,6 +297,18 @@ export default function NewPublishFlow() {
   );
   const shouldShowRequiredDetails = hasNoticeUpload || hasMeaningfulManualDetails;
 
+  // Debug logging for upload flow
+  useEffect(() => {
+    console.log('[NewPublishFlow] Upload flow state:', {
+      hasNoticeUpload,
+      hasMeaningfulManualDetails,
+      shouldShowRequiredDetails,
+      uploadStatus,
+      ocrTextLength: ocrText.length,
+      uploadMethod,
+    });
+  }, [hasNoticeUpload, hasMeaningfulManualDetails, shouldShowRequiredDetails, uploadStatus, ocrText.length, uploadMethod]);
+
   useEffect(() => {
     if (!definition) {
       setUploadMethod((prev) => (prev ? null : prev));
@@ -383,6 +395,7 @@ export default function NewPublishFlow() {
 
   const handleOcrText = React.useCallback(
     async (text: string) => {
+      console.log('[NewPublishFlow] handleOcrText called:', { textLength: text.length, hasText: Boolean(text.trim()) });
       setTemplateDraft((prev) => ({ ...(prev ?? {}), ocrText: text }));
       setUploadMethod((prev) => prev ?? "notice");
       setPreviewSource("ocr");
@@ -659,7 +672,15 @@ export default function NewPublishFlow() {
 
   const templateParse = useMemo(() => {
     if (!builder || !templatePayload) return null;
-    return builder.schema.safeParse(templatePayload);
+    const result = builder.schema.safeParse(templatePayload);
+    if (!result.success) {
+      console.log('[NewPublishFlow] Template parse FAILED');
+      console.log('Errors:', JSON.stringify(result.error.flatten(), null, 2));
+      console.log('Payload:', JSON.stringify(templatePayload, null, 2));
+    } else {
+      console.log('[NewPublishFlow] Template parse SUCCESS');
+    }
+    return result;
   }, [builder, templatePayload]);
 
   const templateFieldErrors = React.useMemo(() => {
@@ -718,6 +739,7 @@ export default function NewPublishFlow() {
   );
 
   const handleUploadStatusChange = React.useCallback((status: UploadStatus) => {
+    console.log('[NewPublishFlow] Upload status changed:', status);
     setUploadStatus(status);
   }, []);
 
@@ -748,9 +770,9 @@ export default function NewPublishFlow() {
     ]
   );
 
-  // Calculate missing mandatory fields for blueprint-driven OCR form
+  // Calculate missing mandatory fields for blueprint-driven forms (both notice and template)
   const blueprintMissingCount = React.useMemo(() => {
-    if (uploadMethod !== "notice" || !definition) return 0;
+    if (!uploadMethod || !definition) return 0;
     const blueprint = getMandatoryFieldsForOCR(definition);
     let count = 0;
     for (const section of blueprint.sections) {
@@ -771,9 +793,9 @@ export default function NewPublishFlow() {
 
   const continueDisabledStep2 =
     uploadMethod === "notice"
-      ? !hasNoticeUpload || blueprintMissingCount > 0 || !hasDraft || uploadStatus !== 'ready'
+      ? blueprintMissingCount > 0 || !hasDraft
       : uploadMethod === "template"
-      ? !hasDraft
+      ? blueprintMissingCount > 0 || !hasDraft
       : true;
 
   const formatRelativeTimestamp = (timestamp: number) => {
@@ -1002,7 +1024,75 @@ export default function NewPublishFlow() {
   ]);
 
   const { run: handleSubmit, pending: paymentPending } = useSafeTransition(async () => {
-    console.info("Submit notice", uploadMethod === "template" ? templateNotice : null);
+    try {
+      const { submitNotice } = await import("@/lib/notices");
+
+      let payload: any;
+
+      if (uploadMethod === "template" && templateNotice) {
+        // Submitting from template builder
+        payload = {
+          id: draftId || undefined,
+          notice_type: definition?.id || "unknown",
+          applicant: templateNotice.applicant || {},
+          premises: templateNotice.premises || {},
+          consultation: templateNotice.consultation || {},
+          publication: templateNotice.publication || {},
+          extras: templateNotice.extras || {},
+          latitude: templateNotice.premises?.coordinates?.latitude || null,
+          longitude: templateNotice.premises?.coordinates?.longitude || null,
+        };
+      } else if (uploadMethod === "notice") {
+        // Submitting from OCR upload
+        payload = {
+          id: draftId || undefined,
+          notice_type: definition?.id || "unknown",
+          applicant: {
+            name: legalDetails.applicantName || "",
+            email: legalDetails.applicantEmail || "",
+          },
+          premises: {
+            name: legalDetails.premisesName || "",
+            address: legalDetails.premisesAddress || "",
+            postcode: legalDetails.premisesPostcode || "",
+          },
+          consultation: {
+            applicationDate: legalDetails.applicationDate || null,
+            repsDeadline: legalDetails.representationDeadline || null,
+          },
+          publication: {
+            targetDate: legalDetails.publicationDate || null,
+          },
+          extras: {
+            ocrText: ocrText || "",
+            applicationType: legalDetails.applicationType || null,
+          },
+          latitude: null,
+          longitude: null,
+        };
+      } else {
+        toast("Please complete the form before submitting");
+        return;
+      }
+
+      console.log("[NewPublishFlow] Submitting notice with payload:", payload);
+
+      const result = await submitNotice(payload);
+
+      if (result.success) {
+        toast("✓ Notice submitted successfully!");
+        console.info("✓ Notice submitted with ID:", result.id);
+
+        // Navigate to success page after short delay
+        setTimeout(() => {
+          navigate("/success?noticeId=" + result.id);
+        }, 1500);
+      }
+    } catch (error: any) {
+      console.error("✗ Failed to submit notice:", error);
+      const errorMsg = error.message || "Failed to submit notice. Please try again.";
+      toast("✗ " + errorMsg);
+    }
   });
 
   const boundaryContextKey = useMemo(

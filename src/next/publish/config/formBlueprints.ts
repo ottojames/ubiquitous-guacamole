@@ -195,9 +195,13 @@ function premisesSection(title: string, nameLabel: string, addressToken: Placeho
 /**
  * Get only mandatory fields for OCR confirmation form
  * This filters the full blueprint to show only required fields
+ * Special exceptions: AUTHORITY_ADDRESS and REPRESENTATION_ADDRESS are included for address lookup
  */
 export function getMandatoryFieldsForOCR(definition: NoticeDefinition): FormBlueprint {
   const fullBlueprint = getFormBlueprint(definition);
+
+  // Fields that should always appear in OCR form even if not required
+  const alwaysInclude: PlaceholderKey[] = ["APPLICANT_NAME", "PREMISES_NAME"];
 
   // Filter sections to include only required fields
   const mandatorySections = fullBlueprint.sections.map(section => {
@@ -205,13 +209,15 @@ export function getMandatoryFieldsForOCR(definition: NoticeDefinition): FormBlue
       // Exclude ACTIVITY_SCHEDULE from OCR route - hours are already on the uploaded document
       if (field.token === "ACTIVITY_SCHEDULE") return false;
 
-      // Check if field is marked as required
-      if (!field.required) return false;
-
       // Apply showIf condition if present
       if (field.showIf && !field.showIf({ definition })) return false;
 
-      return true;
+      // Include if field is required OR if it's in the alwaysInclude list
+      if (field.required || alwaysInclude.includes(field.token)) {
+        return true;
+      }
+
+      return false;
     });
 
     // Only return section if it has mandatory fields
@@ -424,17 +430,20 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               rows: 3,
               required: false,
               span: 12,
+              showIf: () => false,
             }),
             field("REPRESENTATION_ADDRESS", {
               label: "Representation address",
               type: "textarea",
               rows: 3,
               span: 12,
+              showIf: () => !isPremises,
             }),
             field("REPRESENTATION_EMAIL", {
               label: "Representation email",
               type: "email",
               span: 12,
+              showIf: () => !isPremises,
             }),
           ],
         },
@@ -449,7 +458,8 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         ],
         aliasTokens: [{ source: "PREMISES_NAME", targets: ["SITE_NAME", "CENTRE_NAME"] }],
         deadlineRule: { base: "APPLICATION_DATE", offsetDays: 28 },
-        atLeastOne: [
+        // Only require representation contact for non-premises licences
+        atLeastOne: isPremises ? undefined : [
           {
             tokens: ["REPRESENTATION_ADDRESS", "REPRESENTATION_EMAIL"],
             message: "Provide a postal or email contact for representations.",
@@ -571,6 +581,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               rows: 3,
               required: false,
               span: 12,
+              showIf: () => false,
             }),
             field("REPRESENTATION_ADDRESS", {
               label: "Representation address",
@@ -813,6 +824,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "textarea",
               rows: 3,
               span: 12,
+              showIf: () => false,
             }),
             field("ONLINE_REGISTER_URL", {
               label: "Online register URL",

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import AddressSearchBar, { type AddressSearchSubmitPayload } from '@/components/search/AddressSearchBar';
 import SearchResults from '@/components/home/SearchResults';
 import NoticesMapView from '@/components/search/NoticesMapView';
+import Pagination from '@/components/ui/Pagination';
 import Header from '@/components/layout/Header';
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
@@ -13,7 +14,9 @@ import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
 
 const TYPE_OPTIONS = ['Premises Licence', 'Traffic Order', 'Planning'];
-const STATUS_OPTIONS = ['Open', 'Closed'];
+// Database status values are: 'draft', 'submitted', 'published'
+// For now, just show published notices (no status filter UI)
+const STATUS_OPTIONS: string[] = [];
 
 function formatPostcodeForDisplay(compact?: string | null) {
   if (!compact) return null;
@@ -57,9 +60,12 @@ export default function NoticesPage() {
   const startFilter = (searchParams.get('start') ?? '').trim();
   const endFilter = (searchParams.get('end') ?? '').trim();
   const viewParam = (searchParams.get('view') ?? '').trim();
+  const sortParam = (searchParams.get('sort') ?? '').trim() || 'created_at.desc';
   const radiusParam = searchParams.get('radius_km');
   const bboxParamRaw = (searchParams.get('bbox') ?? '').trim();
   const zoomParamRaw = (searchParams.get('zoom') ?? '').trim();
+  const pageParam = searchParams.get('page');
+  const itemsPerPageParam = searchParams.get('per_page');
 
   const radiusValue = (() => {
     const numeric = Number(radiusParam);
@@ -67,6 +73,20 @@ export default function NoticesPage() {
       return Math.min(Math.max(Math.round(numeric), 1), 50);
     }
     return 5;
+  })();
+
+  // Pagination values
+  const currentPage = (() => {
+    const parsed = Number(pageParam);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  })();
+
+  const itemsPerPage = (() => {
+    const parsed = Number(itemsPerPageParam);
+    if (Number.isFinite(parsed) && [10, 25, 50, 100].includes(parsed)) {
+      return parsed;
+    }
+    return 25; // Default to 25 items per page
   })();
 
   const mapBoundingBox = useMemo(() => parseBoundingBoxParam(bboxParamRaw), [bboxParamRaw]);
@@ -78,6 +98,7 @@ export default function NoticesPage() {
   const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null);
   const [hoveredNoticeId, setHoveredNoticeId] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showAllMapResults, setShowAllMapResults] = useState(false);
 
   const mapView = viewParam === 'map';
 
@@ -112,29 +133,24 @@ export default function NoticesPage() {
     status: statusFilter || undefined,
     start: startFilter || undefined,
     end: endFilter || undefined,
+    sort: sortParam,
     radiusKm: radiusValue,
     bbox: mapBoundingBox ?? undefined,
     zoom: mapZoom,
     cluster: mapView,
   });
 
+  // API already filters by type, status, and dates - no need for client-side filtering
   const filteredResults = useMemo(() => {
-    return notices.filter((item) => {
-      if (typeFilter && item.noticeType !== typeFilter) return false;
-      if (statusFilter && item.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
-      if (startFilter) {
-        const from = new Date(startFilter);
-        const published = item.publicationDate ? new Date(item.publicationDate) : null;
-        if (!Number.isNaN(from.getTime()) && published && published < from) return false;
-      }
-      if (endFilter) {
-        const to = new Date(endFilter);
-        const published = item.publicationDate ? new Date(item.publicationDate) : null;
-        if (!Number.isNaN(to.getTime()) && published && published > to) return false;
-      }
-      return true;
-    });
-  }, [notices, typeFilter, statusFilter, startFilter, endFilter]);
+    return notices;
+  }, [notices]);
+
+  // Calculate paginated results for list view
+  const paginatedResults = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredResults.slice(startIndex, endIndex);
+  }, [filteredResults, currentPage, itemsPerPage]);
 
   useEffect(() => {
     if (activeNoticeId && !filteredResults.some((item) => item.id === activeNoticeId)) {
@@ -159,6 +175,16 @@ export default function NoticesPage() {
     },
     [searchParams, setSearchParams]
   );
+
+  // Reset to page 1 when filters change and current page exceeds total pages
+  useEffect(() => {
+    if (currentPage > 1) {
+      const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+      if (currentPage > totalPages) {
+        updateParams((params) => params.delete('page'), true);
+      }
+    }
+  }, [filteredResults.length, itemsPerPage, currentPage, updateParams]);
 
   const handleMapBoundsChange = useCallback(
     (bbox: NoticeBoundingBox, zoom: number) => {
@@ -206,8 +232,10 @@ export default function NoticesPage() {
         params.set('query', raw);
         if (resolvedPostcode) params.set('postcode', resolvedPostcode);
         else params.delete('postcode');
-        if (councilId) params.set('council', councilId);
-        else params.delete('council');
+        // Don't auto-filter by council since notices may not have council_id set
+        // if (councilId) params.set('council', councilId);
+        // else params.delete('council');
+        params.delete('council'); // Remove any existing council filter
         params.delete('radius_km');
       });
 
@@ -258,6 +286,19 @@ export default function NoticesPage() {
     [updateParams]
   );
 
+  const setSort = useCallback(
+    (sort: string) => {
+      updateParams((params) => {
+        if (sort === 'created_at.desc') {
+          params.delete('sort'); // Default, no need to set
+        } else {
+          params.set('sort', sort);
+        }
+      }, true);
+    },
+    [updateParams]
+  );
+
   const clearFilters = useCallback(() => {
     updateParams((params) => {
       params.delete('type');
@@ -280,6 +321,31 @@ export default function NoticesPage() {
   const retryFetch = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      updateParams((params) => {
+        if (page === 1) {
+          params.delete('page');
+        } else {
+          params.set('page', String(page));
+        }
+      }, true);
+      // Scroll to top of results
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [updateParams]
+  );
+
+  const handleItemsPerPageChange = useCallback(
+    (newItemsPerPage: number) => {
+      updateParams((params) => {
+        params.set('per_page', String(newItemsPerPage));
+        params.delete('page'); // Reset to first page when changing items per page
+      }, true);
+    },
+    [updateParams]
+  );
 
   const FilterControls = ({
     layout = 'row',
@@ -422,6 +488,18 @@ export default function NoticesPage() {
                 >
                   Filters
                 </button>
+
+                {/* Sort dropdown */}
+                <select
+                  value={sortParam}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="rounded-full border border-slate-200/60 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                >
+                  <option value="created_at.desc">Most Recent</option>
+                  {postcodeParam && <option value="distance.asc">Nearest</option>}
+                  <option value="created_at.asc">Oldest</option>
+                </select>
+
                 <div className="flex rounded-full bg-slate-100/90 p-1 shadow-inner transition">
                   <button
                     type="button"
@@ -564,6 +642,10 @@ export default function NoticesPage() {
                         activeNoticeId={activeNoticeId}
                         onSelectNotice={handleListSelectNotice}
                         onHoverNotice={setHoveredNoticeId}
+                        layout="list"
+                        maxResults={showAllMapResults ? undefined : 10}
+                        showMoreButton={!showAllMapResults}
+                        onShowMore={() => setShowAllMapResults(true)}
                       />
                     </div>
                   </aside>
@@ -599,7 +681,7 @@ export default function NoticesPage() {
                   </div>
                   <div className="px-6 py-6">
                     <SearchResults
-                      results={filteredResults}
+                      results={paginatedResults}
                       query={searchLabel}
                       loading={loading}
                       loadingMessage="Loading notices…"
@@ -607,6 +689,15 @@ export default function NoticesPage() {
                       onSelectNotice={handleListSelectNotice}
                       onHoverNotice={setHoveredNoticeId}
                     />
+                    {!loading && filteredResults.length > 0 && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredResults.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                      />
+                    )}
                   </div>
                 </div>
               </motion.div>

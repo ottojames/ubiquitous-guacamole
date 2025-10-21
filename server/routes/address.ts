@@ -78,7 +78,10 @@ router.get('/addresses', async (req, res) => {
   const key = resolveKey();
   if (!key) return res.json({ items: [], source: 'missing-key' });
 
-  const cacheKey = q.toLowerCase();
+  // Normalize postcode to uppercase if it looks like a postcode
+  const normalizedQuery = normPC(q) || q;
+
+  const cacheKey = normalizedQuery.toLowerCase();
   const now = Date.now();
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > now) {
@@ -86,7 +89,7 @@ router.get('/addresses', async (req, res) => {
   }
 
   try {
-    const payload = await fetchJson(GET_SUGGEST_URL(q, key));
+    const payload = await fetchJson(GET_SUGGEST_URL(normalizedQuery, key));
     const parsed = suggestSchema.safeParse(payload);
     if (!parsed.success) throw new Error('Invalid provider response');
     const items: AddressItem[] = parsed.data.suggestions.map((suggestion, index) => ({

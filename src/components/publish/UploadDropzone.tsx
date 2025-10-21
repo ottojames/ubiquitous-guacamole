@@ -79,15 +79,23 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
       const data = await response.json();
       const text = data?.text || "";
 
+      console.log('[UploadDropzone] OCR complete:', { textLength: text.length, hasText: Boolean(text.trim()), text: text.substring(0, 100) });
+      console.log('[UploadDropzone] Calling onText callback with text');
+
       setLocalText(text);
       onText(text);
+      console.log('[UploadDropzone] onText callback called');
+
       onMeta?.(data?.meta || {});
 
       if (data?.error === "OCR_EMPTY") {
         setError("We couldn't read this file. Build from details instead.");
+        setStatus("ready"); // Still set to ready so form can be filled manually
+      } else {
+        setStatus("ready");
       }
 
-      setStatus("ready");
+      console.log('[UploadDropzone] Status set to ready');
     } catch (err) {
       if ((err as DOMException)?.name === "AbortError") {
         return;
@@ -279,9 +287,30 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
           </div>
         )}
 
-        {error && status !== "ready" && (
+        {error && status === "error" && (
+          <div className="rounded-xl border border-rose-200/70 bg-rose-50/50 px-4 py-3 space-y-3" role="alert" aria-live="assertive">
+            <div>
+              <p className="text-[13px] font-medium text-rose-900">Upload failed</p>
+              <p className="mt-1 text-[12px] text-rose-700">{error}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (currentFile) {
+                  startUpload(currentFile);
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-rose-700"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {error && status === "ready" && (
           <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 px-4 py-3" role="status" aria-live="polite">
-            <p className="text-[13px] leading-relaxed text-amber-900">{error}</p>
+            <p className="text-[13px] font-medium text-amber-900">⚠️ Limited text extraction</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-amber-700">{error}</p>
           </div>
         )}
       </div>

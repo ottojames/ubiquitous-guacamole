@@ -29,6 +29,10 @@ export type NoticeDraft = {
   applicantName: string;
   applicantEmail: string;
   applicantPhone?: string;
+  applicantAddressLine1?: string;
+  applicantAddressLine2?: string;
+  applicantCity?: string;
+  applicantPostcode?: string;
   /* CN:STEP2-START */
   urn?: string;
   /* CN:STEP2-END */
@@ -45,6 +49,11 @@ export type NoticeDraft = {
   councilName: string;
   councilEmail: string;
   councilAddress: string;
+  councilAddressLine1?: string;
+  councilAddressLine2?: string;
+  councilCity?: string;
+  councilPostcode?: string;
+  councilWebsite?: string;
   isCouncilEmailLocked?: boolean;
   consultationStart?: string; // yyyy-mm-dd
   consultationEnd?: string;   // yyyy-mm-dd
