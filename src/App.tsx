@@ -6,7 +6,7 @@ import StepUpload from "@/routes/next/publish/StepUpload";
 import StepConfirm from "@/routes/next/publish/StepConfirm";
 import StepPay from "@/routes/next/publish/StepPay";
 import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
+import CouncilDashboard from "./pages/CouncilDashboard";
 import PublishPage from "@/pages/PublishPage";
 import Success from "./pages/Success";
 import DetailsPage from "./pages/DetailsPage";
@@ -18,7 +18,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<CouncilDashboard />} />
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/publish" element={<PublishPage />} />
         <Route path="/notices/upload/template" element={<PublishPage />} />
