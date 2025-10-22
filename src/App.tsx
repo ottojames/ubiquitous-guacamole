@@ -50,6 +50,11 @@ import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import ManageOrganizations from "@/pages/admin/ManageOrganizations";
 import ManageUsers from "@/pages/admin/ManageUsers";
+import ApplicantSignIn from "@/pages/applicant/ApplicantSignIn";
+import ApplicantDashboard from "@/pages/applicant/ApplicantDashboard";
+import ApplicantSubmissionDetail from "@/pages/applicant/ApplicantSubmissionDetail";
+import ApplyPage from "@/pages/ApplyPage";
+import ApplySuccessPage from "@/pages/ApplySuccessPage";
 
 export default function App() {
   return (
@@ -75,6 +80,13 @@ export default function App() {
         <Route path="/auth/callback" element={<Callback />} />
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
+
+        {/* Applicant Portal Routes (Passwordless Magic Link) */}
+        <Route path="/apply" element={<ApplyPage />} />
+        <Route path="/apply/success" element={<ApplySuccessPage />} />
+        <Route path="/applicant/sign-in" element={<ApplicantSignIn />} />
+        <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
+        <Route path="/applicant/submissions/:submissionId" element={<ApplicantSubmissionDetail />} />
 
         {/* Council Portal Routes */}
         <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>

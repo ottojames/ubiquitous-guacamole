@@ -222,27 +222,30 @@ export default function Home() {
               </nav>
             </div>
 
-            {/* Right: ghost + primary */}
+            {/* Right: track + sign in + primary */}
             <div className="hidden md:flex items-center gap-3">
-              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+              <a href="/applicant/sign-in" className="text-sm text-slate-600 transition hover:text-slate-900 font-medium">Track application</a>
+              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Council Login</a>
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
                 className={`${UI.btnPrimary} h-11 py-0 text-sm`}
+                title="For licensing applications (premises, events, etc.)"
               >
-                Get started
+                Apply for a Licence
               </a>
             </div>
 
-            {/* Mobile: Publish stays visible + hamburger for sheet */}
+            {/* Mobile: Apply button stays visible + hamburger for sheet */}
             <div className="md:hidden flex items-center gap-2">
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
                 className={`${UI.btnPrimary} h-10 py-0 text-sm`}
-                aria-label="Publish a notice"
+                aria-label="Apply for a Licence"
+                title="For licensing applications"
               >
-                <FileText className="w-4 h-4 mr-1" aria-hidden="true" /> Publish
+                <FileText className="w-4 h-4 mr-1" aria-hidden="true" /> Apply
               </a>
               <button
                 aria-label="Open menu"
@@ -281,15 +284,23 @@ export default function Home() {
                     {link.label}
                   </a>
                 ))}
+                <a
+                  href="/applicant/sign-in"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-base text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded px-1 py-1"
+                >
+                  Track application
+                </a>
               </nav>
-              <div className="mt-auto flex items-center gap-3">
-                <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+              <div className="mt-auto flex flex-col gap-3">
+                <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Council Login</a>
                 <a
                   href="/publish"
                   onClick={() => { setMobileOpen(false); track("publish_started", { audience: "public" }); }}
                   className={`${UI.btnPrimary} h-11 py-0 text-sm`}
+                  title="For licensing applications (premises, events, etc.)"
                 >
-                  Publish a notice
+                  Apply for a Licence
                 </a>
               </div>
             </div>
@@ -392,21 +403,26 @@ export default function Home() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="mt-16 md:mt-20 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="/publish"
-                onClick={() => track("publish_started", { audience: "public" })}
-                className={`${UI.btnPrimary} inline-flex items-center gap-2 px-8 py-4 text-base`}
-              >
-                Publish a notice
-                <ArrowRight className="h-5 w-5" />
-              </a>
-              <a
-                href="#notices"
-                className={`${UI.btnSecondary} px-8 py-4 text-base`}
-              >
-                Browse notices
-              </a>
+            <div className="mt-16 md:mt-20 flex flex-col items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <a
+                  href="/publish"
+                  onClick={() => track("publish_started", { audience: "public" })}
+                  className={`${UI.btnPrimary} inline-flex items-center gap-2 px-8 py-4 text-base`}
+                >
+                  Apply for a Licence
+                  <ArrowRight className="h-5 w-5" />
+                </a>
+                <a
+                  href="#notices"
+                  className={`${UI.btnSecondary} px-8 py-4 text-base`}
+                >
+                  Browse notices
+                </a>
+              </div>
+              <p className="text-sm text-slate-500 text-center">
+                For licensing applications: premises licences, events, variations, etc.
+              </p>
             </div>
 
             <p className="mt-8 text-sm text-slate-500">

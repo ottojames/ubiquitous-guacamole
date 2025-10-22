@@ -16,6 +16,10 @@ export type ConfirmStepProps = {
   continuePending?: boolean;
   ocrText?: string;
   onOcrTextChange?: (text: string) => void;
+  // Context-aware copy
+  continueButtonText?: string;
+  readyText?: string;
+  readyDescription?: string;
 };
 
 export default function ConfirmStep({
@@ -30,6 +34,9 @@ export default function ConfirmStep({
   continuePending,
   ocrText,
   onOcrTextChange,
+  continueButtonText = "Continue to payment",
+  readyText = "Ready to publish",
+  readyDescription = "Proceed to payment to publish your notice.",
 }: ConfirmStepProps) {
   return (
     <section
@@ -129,12 +136,12 @@ export default function ConfirmStep({
             <div className="flex flex-1 items-center justify-end gap-6">
               <div className="text-right">
                 <p className="text-lg font-bold text-slate-900">
-                  {continueDisabled ? "Review required" : "Ready to publish"}
+                  {continueDisabled ? "Review required" : readyText}
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   {continueDisabled
                     ? "Please verify all details are correct."
-                    : "Proceed to payment to publish your notice."}
+                    : readyDescription}
                 </p>
               </div>
               <button
@@ -158,7 +165,7 @@ export default function ConfirmStep({
                   </>
                 ) : (
                   <>
-                    Continue to payment
+                    {continueButtonText}
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

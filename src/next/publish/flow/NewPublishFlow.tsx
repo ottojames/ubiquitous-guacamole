@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import * as UI from "@/styles/ui";
 import { getDefinitionById, type NoticeDefinition } from "@/next/publish/config/noticeTypes";
+import { getNoticePermissions, canSubmitNoticeType, getWorkflowDescription } from "@/next/publish/config/noticePermissions";
 import type { NoticeBase } from "@/types/notice";
 import NoticeTypeStep from "@/next/publish/flow/steps/NoticeTypeStep";
 import UploadMethodStep, { type UploadMethod } from "@/next/publish/flow/steps/UploadMethodStep";
@@ -155,10 +157,109 @@ class WizardBoundary extends React.Component<WizardBoundaryProps, WizardBoundary
   }
 }
 
+/** Department selector for applicants submitting to councils */
+function DepartmentSelector({
+  value,
+  onChange
+}: {
+  value: string;
+  onChange: (id: string, name: string) => void
+}) {
+  const [loading, setLoading] = useState(true);
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string; orgName: string }>>([]);
+
+  useEffect(() => {
+    loadDepartments();
+  }, []);
+
+  const loadDepartments = async () => {
+    try {
+      // Load departments and organizations separately to avoid RLS recursion
+      const [deptsResult, orgsResult] = await Promise.all([
+        supabase.from('departments').select('id, name, organization_id').eq('type', 'licensing').eq('status', 'active'),
+        supabase.from('organizations').select('id, name, type').eq('type', 'council').eq('status', 'active')
+      ]);
+
+      if (deptsResult.error) throw deptsResult.error;
+      if (orgsResult.error) throw orgsResult.error;
+
+      // Create organization lookup map
+      const orgMap = new Map(orgsResult.data?.map(org => [org.id, org]) || []);
+
+      // Join departments with their organizations
+      const mapped = (deptsResult.data || [])
+        .map(dept => {
+          const org = orgMap.get(dept.organization_id);
+          if (!org) return null; // Filter out departments without matching council org
+          return {
+            id: dept.id,
+            name: dept.name,
+            orgName: org.name
+          };
+        })
+        .filter(Boolean as any) as Array<{ id: string; name: string; orgName: string }>;
+
+      // Sort by organization name
+      mapped.sort((a, b) => a.orgName.localeCompare(b.orgName));
+
+      setDepartments(mapped);
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to load departments:', err);
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4">
+        <div className="animate-pulse h-10 bg-white/20 rounded-xl"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4">
+      <label className="block text-sm font-semibold text-white mb-2">
+        Select Council <span className="text-yellow-300">*</span>
+      </label>
+      <select
+        value={value}
+        onChange={(e) => {
+          const selectedId = e.target.value;
+          const selectedDept = departments.find(d => d.id === selectedId);
+          const displayName = selectedDept ? `${selectedDept.orgName} - ${selectedDept.name}` : '';
+          onChange(selectedId, displayName);
+        }}
+        required
+        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+      >
+        <option value="">-- Choose a council --</option>
+        {departments.map((dept) => (
+          <option key={dept.id} value={dept.id}>
+            {dept.orgName} - {dept.name}
+          </option>
+        ))}
+      </select>
+      <p className="text-xs text-white/80 mt-2">
+        The council that will review your application
+      </p>
+    </div>
+  );
+}
+
 export default function NewPublishFlow() {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const currentStep = stepFromPath(pathname);
+
+  // User context detection
+  const [userType, setUserType] = useState<'council' | 'law_firm' | 'applicant' | 'loading'>('loading');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [targetDepartmentId, setTargetDepartmentId] = useState<string | null>(null);
+  const [selectedCouncilName, setSelectedCouncilName] = useState<string>('');
+  const [councilSelectorLocked, setCouncilSelectorLocked] = useState(false); // Lock after first selection
+
   const [definitionId, setDefinitionId] = useState<string | null>(null);
   const [draftId, setDraftIdState] = useState<string | null>(() => {
     const params = new URLSearchParams(search);
@@ -173,6 +274,56 @@ export default function NewPublishFlow() {
     setDraftIdState(normalized);
     persistDraftId(normalized);
   }, [search, draftId]);
+
+  // Detect user type on mount
+  useEffect(() => {
+    detectUserContext();
+  }, []);
+
+  const detectUserContext = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        // Unauthenticated user → applicant
+        setUserType('applicant');
+        return;
+      }
+
+      setUserEmail(session.user.email || null);
+
+      // Check user memberships
+      const { data: memberships } = await supabase
+        .from('memberships')
+        .select(`
+          organization_id,
+          department_id,
+          role,
+          organization:organizations!inner (type)
+        `)
+        .eq('user_id', session.user.id);
+
+      const councilMembership = memberships?.find((m: any) => m.organization?.type === 'council');
+      const lawFirmMembership = memberships?.find((m: any) => m.organization?.type === 'law_firm');
+
+      if (councilMembership) {
+        // User is council member → can publish regulatory notices
+        setUserType('council');
+        setTargetDepartmentId(councilMembership.department_id);
+      } else if (lawFirmMembership) {
+        // User is law firm member → can publish probate notices
+        setUserType('law_firm');
+        // Law firms don't need targetDepartmentId (they publish directly)
+      } else {
+        // User is authenticated but no org membership → individual applicant
+        setUserType('applicant');
+      }
+    } catch (error) {
+      console.error('Failed to detect user context:', error);
+      // Default to applicant on error
+      setUserType('applicant');
+    }
+  };
 
   const buildStepUrl = React.useCallback(
     (target: Step, overrideDraft?: string | null) => {
@@ -629,9 +780,18 @@ export default function NewPublishFlow() {
 
   const handleBackToStep1 = React.useCallback(() => goToStep(1), [goToStep]);
   const handleBackToStep2 = React.useCallback(() => goToStep(2), [goToStep]);
-  const { run: handleContinueToPayment, pending: step3Pending } = useSafeTransition(async () => {
-    const id = await ensureDraftId();
-    goToStep(4, { draftOverride: id });
+
+  // For applicants: skip payment and submit directly
+  // For councils/law firms: proceed to payment step
+  const { run: handleContinueFromStep3, pending: step3Pending } = useSafeTransition(async () => {
+    if (userType === 'applicant') {
+      // Skip payment step - submit application directly
+      await handleSubmit();
+    } else {
+      // Proceed to payment step for councils/law firms
+      const id = await ensureDraftId();
+      goToStep(4, { draftOverride: id });
+    }
   });
 
   const stepGuards = useMemo(
@@ -775,6 +935,7 @@ export default function NewPublishFlow() {
     if (!uploadMethod || !definition) return 0;
     const blueprint = getMandatoryFieldsForOCR(definition);
     let count = 0;
+    const missingFields: string[] = [];
     for (const section of blueprint.sections) {
       for (const field of section.fields) {
         if (field.required) {
@@ -784,12 +945,25 @@ export default function NewPublishFlow() {
           const hasError = fieldErrors && fieldErrors.length > 0;
           if (!value || hasError) {
             count++;
+            missingFields.push(`${field.label} (${field.token})${hasError ? ' [has errors]' : ''}`);
           }
         }
       }
     }
+
+    // Debug logging for applicants to see what's blocking Step 3
+    if (count > 0 && userType === 'applicant') {
+      console.log('[Step 2→3 Debug] Missing required fields:', {
+        count,
+        hasDraft,
+        continueDisabled: count > 0 || !hasDraft,
+      });
+      console.log('Missing field details:');
+      missingFields.forEach(field => console.log('  ❌', field));
+    }
+
     return count;
-  }, [uploadMethod, definition, templateDraft, templateFieldErrors]);
+  }, [uploadMethod, definition, templateDraft, templateFieldErrors, userType, hasDraft]);
 
   const continueDisabledStep2 =
     uploadMethod === "notice"
@@ -1025,72 +1199,145 @@ export default function NewPublishFlow() {
 
   const { run: handleSubmit, pending: paymentPending } = useSafeTransition(async () => {
     try {
-      const { submitNotice } = await import("@/lib/notices");
+      if (userType === 'council') {
+        // Council → Publish directly (existing flow)
+        const { submitNotice } = await import("@/lib/notices");
 
-      let payload: any;
+        let payload: any;
 
-      if (uploadMethod === "template" && templateNotice) {
-        // Submitting from template builder
-        payload = {
-          id: draftId || undefined,
-          notice_type: definition?.id || "unknown",
-          applicant: templateNotice.applicant || {},
-          premises: templateNotice.premises || {},
-          consultation: templateNotice.consultation || {},
-          publication: templateNotice.publication || {},
-          extras: templateNotice.extras || {},
-          latitude: templateNotice.premises?.coordinates?.latitude || null,
-          longitude: templateNotice.premises?.coordinates?.longitude || null,
-        };
-      } else if (uploadMethod === "notice") {
-        // Submitting from OCR upload
-        payload = {
-          id: draftId || undefined,
-          notice_type: definition?.id || "unknown",
-          applicant: {
-            name: legalDetails.applicantName || "",
-            email: legalDetails.applicantEmail || "",
-          },
-          premises: {
-            name: legalDetails.premisesName || "",
-            address: legalDetails.premisesAddress || "",
-            postcode: legalDetails.premisesPostcode || "",
-          },
-          consultation: {
-            applicationDate: legalDetails.applicationDate || null,
-            repsDeadline: legalDetails.representationDeadline || null,
-          },
-          publication: {
-            targetDate: legalDetails.publicationDate || null,
-          },
-          extras: {
-            ocrText: ocrText || "",
-            applicationType: legalDetails.applicationType || null,
-          },
-          latitude: null,
-          longitude: null,
-        };
+        if (uploadMethod === "template" && templateNotice) {
+          // Submitting from template builder
+          payload = {
+            id: draftId || undefined,
+            notice_type: definition?.id || "unknown",
+            applicant: templateNotice.applicant || {},
+            premises: templateNotice.premises || {},
+            consultation: templateNotice.consultation || {},
+            publication: templateNotice.publication || {},
+            extras: templateNotice.extras || {},
+            latitude: templateNotice.premises?.coordinates?.latitude || null,
+            longitude: templateNotice.premises?.coordinates?.longitude || null,
+          };
+        } else if (uploadMethod === "notice") {
+          // Submitting from OCR upload
+          payload = {
+            id: draftId || undefined,
+            notice_type: definition?.id || "unknown",
+            applicant: {
+              name: legalDetails.applicantName || "",
+              email: legalDetails.applicantEmail || "",
+            },
+            premises: {
+              name: legalDetails.premisesName || "",
+              address: legalDetails.premisesAddress || "",
+              postcode: legalDetails.premisesPostcode || "",
+            },
+            consultation: {
+              applicationDate: legalDetails.applicationDate || null,
+              repsDeadline: legalDetails.representationDeadline || null,
+            },
+            publication: {
+              targetDate: legalDetails.publicationDate || null,
+            },
+            extras: {
+              ocrText: ocrText || "",
+              applicationType: legalDetails.applicationType || null,
+            },
+            latitude: null,
+            longitude: null,
+          };
+        } else {
+          toast("Please complete the form before submitting");
+          return;
+        }
+
+        console.log("[NewPublishFlow] Publishing notice (council) with payload:", payload);
+
+        const result = await submitNotice(payload);
+
+        if (result.success) {
+          toast("✓ Notice published successfully!");
+          console.info("✓ Notice published with ID:", result.id);
+
+          // Navigate to success page after short delay
+          setTimeout(() => {
+            navigate("/success?noticeId=" + result.id);
+          }, 1500);
+        }
       } else {
-        toast("Please complete the form before submitting");
-        return;
-      }
+        // Applicant → Create submission
+        if (!targetDepartmentId) {
+          toast("Please select a council to submit to");
+          return;
+        }
 
-      console.log("[NewPublishFlow] Submitting notice with payload:", payload);
+        // Generate unique reference number
+        const referenceNumber = `SUB-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-      const result = await submitNotice(payload);
+        const submissionData: any = {
+          // Required: Target council department
+          target_department_id: targetDepartmentId,
 
-      if (result.success) {
-        toast("✓ Notice submitted successfully!");
-        console.info("✓ Notice submitted with ID:", result.id);
+          // NULL for anonymous applicants, organization ID for authenticated firms
+          source_organization_id: null,
 
-        // Navigate to success page after short delay
+          // Required: Reference number
+          reference_number: referenceNumber,
+
+          // Required: Notice type
+          notice_type: definition?.id || "unknown",
+
+          // Required: Complete notice data as JSONB
+          notice_data: {
+            ...templateNotice,
+            metadata: {
+              submittedViaPublicForm: true,
+              uploadMethod,
+              ocrText: uploadMethod === "notice" ? ocrText : undefined
+            }
+          },
+
+          // Optional: Message to council
+          firm_message: legalDetails.applicationSummary || "Application submitted via public form",
+
+          // NULL for anonymous submissions
+          submitted_by: null,
+
+          // Status defaults to 'new'
+          status: 'new'
+        };
+
+        console.log("[NewPublishFlow] Creating submission (applicant) with data:", submissionData);
+
+        const { data, error } = await supabase
+          .from('submissions')
+          .insert(submissionData)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Send magic link if unauthenticated
+        if (!userEmail && submissionData.applicant_email) {
+          await supabase.auth.signInWithOtp({
+            email: submissionData.applicant_email,
+            options: {
+              emailRedirectTo: `${window.location.origin}/applicant/dashboard`,
+            },
+          });
+        }
+
+        toast("✓ Application submitted successfully!");
+        console.info("✓ Submission created with ID:", data.id);
+
+        // Navigate to success page
         setTimeout(() => {
-          navigate("/success?noticeId=" + result.id);
+          navigate("/apply/success");
         }, 1500);
       }
     } catch (error: any) {
-      console.error("✗ Failed to submit notice:", error);
-      const errorMsg = error.message || "Failed to submit notice. Please try again.";
+      console.error("✗ Failed to submit:", error);
+      const errorMsg = error.message || "Failed to submit. Please try again.";
       toast("✗ " + errorMsg);
     }
   });
@@ -1116,13 +1363,53 @@ export default function NewPublishFlow() {
           <div className={`${UI.container} relative z-10`}>
             <div className="mx-auto max-w-4xl text-center">
               <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl lg:text-6xl">
-                Publish with calm,
-                <br />
-                compliant confidence
+                {userType === 'council' ? 'Publish with calm,' : 'Submit your application'}
+                {userType === 'council' && <br />}
+                {userType === 'council' && 'compliant confidence'}
               </h1>
               <p className="mt-6 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-lg">
-                Start by choosing your notice type. We'll tailor everything automatically.
+                {userType === 'council'
+                  ? "Start by choosing your notice type. We'll tailor everything automatically."
+                  : "Select your council and complete the licensing application. We'll send you a link to track your progress."}
               </p>
+
+              {/* Department Selector for Applicants - Only show at Step 1 */}
+              {userType === 'applicant' && currentStep === 1 && !councilSelectorLocked && (
+                <div className="mt-8 mx-auto max-w-md">
+                  <DepartmentSelector
+                    value={targetDepartmentId || ''}
+                    onChange={(id, name) => {
+                      setTargetDepartmentId(id);
+                      setSelectedCouncilName(name);
+                      setCouncilSelectorLocked(true); // Lock after first selection
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Read-only badge showing selected council on steps 2-4 */}
+              {userType === 'applicant' && currentStep && currentStep > 1 && councilSelectorLocked && targetDepartmentId && (
+                <div className="mt-8 mx-auto max-w-md">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">Submitting to</span>
+                      <p className="text-sm font-semibold text-blue-900 mt-0.5">
+                        {selectedCouncilName || 'Council selected'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCouncilSelectorLocked(false);
+                        goToStep(1);
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Integrated Lightweight Stepper */}
               <div className="mt-12 flex justify-center">
@@ -1155,6 +1442,7 @@ export default function NewPublishFlow() {
               continuePending={step1Pending}
               guardMessage={guardMessage}
               onClearGuard={() => setGuardMessage(null)}
+              userType={userType === 'loading' ? undefined : userType}
             />
             </div>
           )}
@@ -1173,6 +1461,7 @@ export default function NewPublishFlow() {
                   uploadPaneProps={uploadPaneProps}
                   templateContent={templateFormContent}
                   rightRail={rightRail}
+                  userType={userType === 'loading' ? undefined : userType}
                 />
               </div>
               {uploadMethod === "notice" && shouldShowRequiredDetails && (
@@ -1192,11 +1481,18 @@ export default function NewPublishFlow() {
               notice={uploadMethod === "template" ? templateNotice : null}
               uploadMethod={uploadMethod}
               onBack={handleBackToStep2}
-              onContinue={handleContinueToPayment}
+              onContinue={handleContinueFromStep3}
               continueDisabled={(uploadMethod === "template" && !templateNotice) || !hasDraft}
               continuePending={step3Pending}
               ocrText={uploadMethod === "notice" ? ocrText : undefined}
               onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
+              continueButtonText={userType === 'applicant' ? 'Send to Council' : 'Continue to payment'}
+              readyText={userType === 'applicant' ? 'Ready to submit' : 'Ready to publish'}
+              readyDescription={
+                userType === 'applicant'
+                  ? 'Your application will be submitted to the council for review.'
+                  : 'Proceed to payment to publish your notice.'
+              }
               preview={
                 <div className="rounded-xl border border-slate-200 p-3">
                   <React.Suspense
@@ -1237,6 +1533,12 @@ export default function NewPublishFlow() {
               onBack={() => goToStep(3)}
               onSubmit={handleSubmit}
               submitting={paymentPending}
+              submitButtonText={userType === 'council' ? 'Publish notice' : 'Submit application'}
+              submitDescription={
+                userType === 'council'
+                  ? 'Your notice will be published after successful payment.'
+                  : 'Your application will be submitted to the council for review.'
+              }
             />
             </div>
           )}

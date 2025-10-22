@@ -9,9 +9,19 @@ export type PaymentStepProps = {
   onBack: () => void;
   onSubmit: () => void;
   submitting?: boolean;
+  submitButtonText?: string;
+  submitDescription?: string;
 };
 
-export default function PaymentStep({ definition, notice, onBack, onSubmit, submitting }: PaymentStepProps) {
+export default function PaymentStep({
+  definition,
+  notice,
+  onBack,
+  onSubmit,
+  submitting,
+  submitButtonText = "Submit notice",
+  submitDescription = "Your notice will be published after successful payment."
+}: PaymentStepProps) {
   return (
     <section
       className="mx-auto max-w-6xl space-y-10"
@@ -92,10 +102,10 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
               <div className="flex flex-1 items-center justify-end gap-6">
                 <div className="text-right">
                   <p className="text-lg font-bold text-slate-900">
-                    {submitting ? "Processing payment..." : "Ready to submit"}
+                    {submitting ? "Processing..." : "Ready to submit"}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    Your notice will be published after successful payment.
+                    {submitDescription}
                   </p>
                 </div>
                 <button
@@ -119,7 +129,7 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
                     </>
                   ) : (
                     <>
-                      Submit notice
+                      {submitButtonText}
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>

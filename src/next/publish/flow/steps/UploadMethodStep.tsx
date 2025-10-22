@@ -18,6 +18,7 @@ type Props = {
   uploadPaneProps: UploadOcrPaneProps;
   templateContent: React.ReactNode;
   rightRail?: React.ReactNode;
+  userType?: 'council' | 'law_firm' | 'applicant';
 };
 
 export default function UploadMethodStep({
@@ -31,10 +32,18 @@ export default function UploadMethodStep({
   uploadPaneProps,
   templateContent,
   rightRail,
+  userType,
 }: Props) {
+  // Applicants only see the template option (OCR hidden)
+  const showOcrOption = userType !== 'applicant';
+
   const inferredDefaultMethod = React.useMemo<UploadMethod>(
-    () => (definition?.id?.includes("premises") ? "notice" : "template"),
-    [definition?.id]
+    () => {
+      // Force template for applicants
+      if (!showOcrOption) return "template";
+      return definition?.id?.includes("premises") ? "notice" : "template";
+    },
+    [definition?.id, showOcrOption]
   );
   const [active, setActive] = React.useState<UploadMethod>(method ?? inferredDefaultMethod);
   const methodRef = React.useRef<UploadMethod | null>(method ?? null);
@@ -54,6 +63,15 @@ export default function UploadMethodStep({
       setActive(inferredDefaultMethod);
     }
   }, [method, inferredDefaultMethod]);
+
+  // Auto-select template method for applicants when step loads
+  React.useEffect(() => {
+    if (!showOcrOption && !method) {
+      // Applicant has no choice - automatically select template
+      console.log('[UploadMethodStep] Auto-selecting template for applicant');
+      chooseMethod("template");
+    }
+  }, [showOcrOption, method, chooseMethod]);
 
   const toggle = (key: UploadMethod) => {
     setActive(key);
@@ -75,42 +93,46 @@ export default function UploadMethodStep({
         <div className="space-y-8">
           <div className="space-y-4 text-center">
             <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
-              Upload your notice
+              {userType === 'applicant' ? 'Complete your application' : 'Upload your notice'}
             </h2>
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600">
-              You can upload a signed notice or build from our structured template. We'll extract your text automatically.
+              {userType === 'applicant'
+                ? 'Fill in the structured form with your licensing application details.'
+                : 'You can upload a signed notice or build from our structured template. We\'ll extract your text automatically.'}
             </p>
           </div>
 
-          {/* Premium Segmented Control */}
-          <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
-              <button
-                type="button"
-                onClick={() => toggle("notice")}
-                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
-                  active === "notice"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-                aria-pressed={active === "notice"}
-              >
-                Upload & OCR
-              </button>
-              <button
-                type="button"
-                onClick={() => toggle("template")}
-                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
-                  active === "template"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-                aria-pressed={active === "template"}
-              >
-                Structured template
-              </button>
+          {/* Premium Segmented Control - Only show if user can choose between options */}
+          {showOcrOption && (
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
+                <button
+                  type="button"
+                  onClick={() => toggle("notice")}
+                  className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                    active === "notice"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                  aria-pressed={active === "notice"}
+                >
+                  Upload & OCR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggle("template")}
+                  className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                    active === "template"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                  aria-pressed={active === "template"}
+                >
+                  Structured template
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </header>
 

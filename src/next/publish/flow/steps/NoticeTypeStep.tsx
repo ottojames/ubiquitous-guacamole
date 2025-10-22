@@ -2,6 +2,7 @@ import React from "react";
 import { Check } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { NOTICE_CATEGORY_TREE, type NoticeDefinition } from "@/next/publish/config/noticeTypes";
+import { canSubmitNoticeType } from "@/next/publish/config/noticePermissions";
 import DisclosureSection from "@/next/publish/flow/components/DisclosureSection";
 
 const STORAGE_PREFIX = "pn:notice-group:";
@@ -13,6 +14,7 @@ export type NoticeTypeStepProps = {
   continuePending?: boolean;
   guardMessage?: string | null;
   onClearGuard?: () => void;
+  userType?: 'council' | 'law_firm' | 'applicant';
 };
 
 type OpenGroupsState = Record<string, boolean>;
@@ -45,6 +47,7 @@ export default function NoticeTypeStep({
   continuePending,
   guardMessage,
   onClearGuard,
+  userType,
 }: NoticeTypeStepProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showGuidance, setShowGuidance] = React.useState(false);
@@ -98,24 +101,34 @@ export default function NoticeTypeStep({
     });
   }, []);
 
-  // Filter variants based on search
+  // Filter variants based on search and user type permissions
   const filteredTree = React.useMemo(() => {
-    if (!searchQuery.trim()) return NOTICE_CATEGORY_TREE;
+    const query = searchQuery.toLowerCase().trim();
 
-    const query = searchQuery.toLowerCase();
     return NOTICE_CATEGORY_TREE.map((category) => ({
       ...category,
       groups: category.groups.map((group) => ({
         ...group,
-        variants: group.variants.filter(
-          (variant) =>
-            variant.label.toLowerCase().includes(query) ||
-            category.label.toLowerCase().includes(query) ||
-            variant.variant.toLowerCase().includes(query)
-        ),
+        variants: group.variants.filter((variant) => {
+          // Permission check: applicants can only see notice types they can submit
+          if (userType === 'applicant' && !canSubmitNoticeType(variant.id)) {
+            return false;
+          }
+
+          // Search filter (if query exists)
+          if (query) {
+            return (
+              variant.label.toLowerCase().includes(query) ||
+              category.label.toLowerCase().includes(query) ||
+              variant.variant.toLowerCase().includes(query)
+            );
+          }
+
+          return true;
+        }),
       })).filter((group) => group.variants.length > 0),
     })).filter((category) => category.groups.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, userType]);
 
   // Auto-expand all categories when searching
   React.useEffect(() => {
@@ -162,10 +175,14 @@ export default function NoticeTypeStep({
         <div className="space-y-8">
           <div className="space-y-4 text-center">
             <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
-              What kind of notice are you publishing?
+              {userType === 'applicant'
+                ? 'What kind of licence are you applying for?'
+                : 'What kind of notice are you publishing?'}
             </h2>
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600">
-              Choose your notice type below. We'll prepare the right template and guidance.
+              {userType === 'applicant'
+                ? 'Select the type of licensing application you need to submit.'
+                : 'Choose your notice type below. We\'ll prepare the right template and guidance.'}
             </p>
           </div>
 
