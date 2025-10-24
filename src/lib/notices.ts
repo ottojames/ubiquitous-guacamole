@@ -154,3 +154,64 @@ export async function submitNotice(payload: SubmitNoticePayload) {
 
   return res.json() as Promise<{ id: string; success: boolean }>;
 }
+
+/**
+ * Phase 5: Direct Publishing Flow
+ * Publishes a notice that goes live immediately (no approval required)
+ */
+export type PublishNoticePayload = {
+  target_council_id: string;
+  target_department_id: string;
+  notice_data: {
+    description?: string;
+    premises?: Record<string, unknown>;
+    applicant?: Record<string, unknown>;
+    consultation?: Record<string, unknown>;
+    licensing?: Record<string, unknown>;
+    extras?: Record<string, unknown>;
+  };
+  notice_type: string;
+  title: string;
+  client_id?: string;
+  billing_amount?: number;
+};
+
+export type PublishNoticeResponse = {
+  notice: {
+    id: string;
+    title: string;
+    notice_type: string;
+    status: string;
+    published_at: string;
+    representation_deadline: string;
+    expires_at: string;
+    council_name: string;
+    billing_amount: number;
+    billing_status: string;
+  };
+  magicLink: string;
+  message: string;
+};
+
+export async function publishNotice(
+  payload: PublishNoticePayload,
+  authToken: string
+): Promise<PublishNoticeResponse> {
+  const target = `${API_BASE}/api/notices/publish`;
+  const res = await fetch(target, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Publish notice failed ${res.status}`);
+  }
+
+  return res.json() as Promise<PublishNoticeResponse>;
+}

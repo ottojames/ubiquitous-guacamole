@@ -18,6 +18,8 @@ type Props = {
   uploadPaneProps: UploadOcrPaneProps;
   templateContent: React.ReactNode;
   rightRail?: React.ReactNode;
+  email: string;
+  onEmailChange: (email: string) => void;
 };
 
 export default function UploadMethodStep({
@@ -31,7 +33,24 @@ export default function UploadMethodStep({
   uploadPaneProps,
   templateContent,
   rightRail,
+  email,
+  onEmailChange,
 }: Props) {
+  const [emailError, setEmailError] = React.useState("");
+
+  const validateEmail = (value: string) => {
+    if (!value) {
+      setEmailError("Email is required for confirmation");
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+  console.log('[UploadMethodStep] rightRail:', rightRail ? 'EXISTS' : 'NULL', 'method:', method);
   const inferredDefaultMethod = React.useMemo<UploadMethod>(
     () => (definition?.id?.includes("premises") ? "notice" : "template"),
     [definition?.id]
@@ -54,6 +73,14 @@ export default function UploadMethodStep({
       setActive(inferredDefaultMethod);
     }
   }, [method, inferredDefaultMethod]);
+
+  // Auto-trigger method change on initial load if no method is set
+  React.useEffect(() => {
+    if (!method && inferredDefaultMethod && definition) {
+      console.log('[UploadMethodStep] Auto-triggering initial method:', inferredDefaultMethod);
+      chooseMethod(inferredDefaultMethod);
+    }
+  }, []);  // Only run once on mount
 
   const toggle = (key: UploadMethod) => {
     setActive(key);
@@ -113,6 +140,42 @@ export default function UploadMethodStep({
           </div>
         </div>
       </header>
+
+      {/* Contact Email Card */}
+      <div className="rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+        <h3 className="mb-3 text-lg font-bold text-slate-900">Confirmation email</h3>
+        <p className="mb-6 text-sm text-slate-600">
+          We'll send your confirmation and receipt to this email address.
+        </p>
+        <div className="max-w-md">
+          <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+            Email address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => {
+              onEmailChange(e.target.value);
+              if (emailError) validateEmail(e.target.value);
+            }}
+            onBlur={() => validateEmail(email)}
+            placeholder="your.email@example.com"
+            className={`w-full rounded-xl border ${
+              emailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
+            } px-4 py-3 text-base text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+            disabled={continuePending}
+          />
+          {emailError && (
+            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {emailError}
+            </p>
+          )}
+        </div>
+      </div>
 
       <StickyRailLayout
         left={

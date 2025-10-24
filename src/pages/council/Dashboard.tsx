@@ -54,13 +54,72 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load stats
-      const { data: notices, error: noticesError } = await supabase
-        .from('notices')
-        .select('id, status')
-        .eq('department_id', department.id);
+      // Check if we're in demo mode
+      const isDemoSampleBorough = department.id === 'demo-sample-borough-id';
+      const isDemoWestminster = department.id === 'demo-westminster-id';
+      const isDemoMode = isDemoSampleBorough || isDemoWestminster;
 
-      if (noticesError) throw noticesError;
+      let notices: any[] = [];
+      let recent: any[] = [];
+
+      if (isDemoMode) {
+        // For demo mode, fetch all notices via API and filter by council email
+        const demoEmail = isDemoSampleBorough ? 'licensing@sample.gov.uk' : 'demo@council.gov.uk';
+
+        console.log(`[Dashboard] Demo mode: fetching notices for ${demoEmail}`);
+
+        // Fetch all notices from API (it doesn't have contact_email filter yet, so we'll get all and filter)
+        const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
+        if (!response.ok) {
+          throw new Error('Failed to fetch notices from API');
+        }
+
+        const responseData = await response.json();
+        const allNotices = responseData.items || [];
+        console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
+
+        // Filter notices by contact_email
+        // Note: The API returns contact_email in the notice object
+        const filteredNotices = allNotices.filter((n: any) => n.contact_email === demoEmail);
+        console.log(`[Dashboard] Filtered to ${filteredNotices.length} notices for ${demoEmail}`);
+
+        notices = filteredNotices.map((n: any) => ({
+          id: n.id,
+          status: n.status || 'published',
+        }));
+
+        recent = filteredNotices.slice(0, 5).map((n: any) => ({
+          id: n.id,
+          title: n.title || n.premisesName || 'Untitled Notice',
+          status: n.status || 'published',
+          created_at: n.created_at || new Date().toISOString(),
+          published_at: n.publicationDate || n.published_at || null,
+        }));
+
+        console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
+      } else {
+        // Normal mode - query by department_id
+        const { data: noticesData, error: noticesError } = await supabase
+          .from('notices')
+          .select('id, status')
+          .eq('department_id', department.id);
+
+        if (noticesError) throw noticesError;
+
+        notices = noticesData || [];
+
+        // Load recent notices
+        const { data: recentData, error: recentError } = await supabase
+          .from('notices')
+          .select('id, title, status, created_at, published_at')
+          .eq('department_id', department.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (recentError) throw recentError;
+
+        recent = recentData || [];
+      }
 
       const statsData = {
         total: notices?.length || 0,
@@ -71,17 +130,6 @@ export default function Dashboard() {
       };
 
       setStats(statsData);
-
-      // Load recent notices
-      const { data: recent, error: recentError } = await supabase
-        .from('notices')
-        .select('id, title, status, created_at, published_at')
-        .eq('department_id', department.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (recentError) throw recentError;
-
       setRecentNotices(recent || []);
       setLoading(false);
     } catch (err) {

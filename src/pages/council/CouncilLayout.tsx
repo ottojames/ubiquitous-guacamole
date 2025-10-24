@@ -34,6 +34,30 @@ export default function CouncilLayout() {
 
   const loadDepartmentData = async () => {
     try {
+      // Check for demo mode first
+      const isDemoSampleBorough = orgSlug === 'sample-borough' && deptSlug === 'licensing';
+      const isDemoWestminster = orgSlug === 'westminster' && deptSlug === 'licensing';
+
+      if (isDemoSampleBorough || isDemoWestminster) {
+        // Set mock department data for demo
+        const mockDepartment = {
+          id: isDemoSampleBorough ? 'demo-sample-borough-id' : 'demo-westminster-id',
+          name: isDemoSampleBorough ? 'Licensing Department' : 'Westminster Licensing',
+          slug: deptSlug!,
+          type: 'licensing',
+          organization: {
+            id: isDemoSampleBorough ? 'sample-borough-org-id' : 'westminster-org-id',
+            name: isDemoSampleBorough ? 'Sample Borough Council' : 'Westminster Council',
+            slug: orgSlug
+          }
+        };
+
+        setDepartment(mockDepartment as Department);
+        setUserRole('org_admin');
+        setLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth/sign-in');

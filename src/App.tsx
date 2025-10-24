@@ -14,6 +14,7 @@ import Success from "./pages/Success";
 import DetailsPage from "./pages/DetailsPage";
 import NoticesPage from "@/pages/Notices";
 import NoticeDetailPage from "@/pages/NoticeDetailPage";
+import PublishConfirmationPage from "@/pages/PublishConfirmationPage";
 import SubmitRepresentation from "@/pages/SubmitRepresentation";
 import AddressLookupDebug from "@/pages/debug/AddressLookupDebug";
 import SignIn from "@/pages/auth/SignIn";
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/notices/:id" element={<NoticeDetailPage />} />
+        <Route path="/notices/:id/confirmation" element={<PublishConfirmationPage />} />
         <Route path="/notices/:id/respond" element={<SubmitRepresentation />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/login" element={<Login />} />

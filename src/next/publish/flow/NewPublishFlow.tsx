@@ -37,6 +37,9 @@ const LazyNoticePreview = React.lazy(() => import("./NoticePreview"));
 import ReviewCard from "./components/ReviewCard";
 import ProgressBar from "./components/ProgressBar";
 import StickyRailLayout from "./components/StickyRailLayout";
+import PublishSuccessModal from "@/components/publish/PublishSuccessModal";
+import { supabase } from "@/lib/supabase";
+import type { PublishNoticeResponse } from "@/lib/notices";
 
 type Step = (typeof wizardSteps)[number]["id"];
 type TemplateDraft = Record<string, unknown> | null;
@@ -249,7 +252,10 @@ export default function NewPublishFlow() {
   const [ocrHighlights, setOcrHighlights] = useState<OCRHighlight[]>([]);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
   const [selectedCouncil, setSelectedCouncil] = useState<Council | null>(null);
+  const [contactEmail, setContactEmail] = useState<string>("");
   const [activeHighlightKey, setActiveHighlightKey] = useState<string | null>(null);
+  const [publishResult, setPublishResult] = useState<PublishNoticeResponse | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const focusNonceRef = useRef(0);
   const [focusRequest, setFocusRequest] = useState<{ key: string | null; nonce: number } | null>(null);
   const missingDraftRedirectedRef = useRef(false);
@@ -619,12 +625,12 @@ export default function NewPublishFlow() {
   const handleMethodChange = React.useCallback(
     (method: UploadMethod) => {
       setUploadMethod(method);
-      if (method === "template") setTemplateDraft((prev) => prev ?? {});
+      // Don't auto-load sample data - let users fill it themselves or click "Load example data"
       if (method === "notice") setPreviewSource("ocr");
       if (method === "template") setPreviewSource("structured");
       if (method === "template") syncLegalDetailsToTemplate();
     },
-    [syncLegalDetailsToTemplate]
+    [syncLegalDetailsToTemplate, definition]
   );
 
   const handleBackToStep1 = React.useCallback(() => goToStep(1), [goToStep]);
@@ -690,13 +696,32 @@ export default function NewPublishFlow() {
   }, [templateParse]);
 
   const templateNotice: NoticeBase | null = useMemo(() => {
-    if (!builder || !templateParse || !templateParse.success) return null;
-    try {
-      return builder.mapToNoticeBase(templateParse.data);
-    } catch {
+    if (!builder || !templateDraft) {
+      console.log('[NewPublishFlow] templateNotice=null: missing builder or draft', { hasBuilder: !!builder, hasDraft: !!templateDraft });
       return null;
     }
-  }, [builder, templateParse]);
+    try {
+      // Ensure variant is always set
+      const draftWithVariant = { ...templateDraft, variant: definition?.id || 'licensing-premises-new' };
+
+      // Try to parse, but if it fails, still try to map with partial data
+      const parseResult = builder.schema.safeParse(draftWithVariant);
+      if (parseResult.success) {
+        console.log('[NewPublishFlow] templateNotice: validation SUCCESS');
+        return builder.mapToNoticeBase(parseResult.data);
+      } else {
+        console.log('[NewPublishFlow] templateNotice: validation FAILED, errors:', parseResult.error.errors);
+        console.log('[NewPublishFlow] Draft data:', draftWithVariant);
+
+        // Validation failed - this means required fields are missing
+        // Return null so the Continue button stays disabled until fields are filled
+        return null;
+      }
+    } catch (err) {
+      console.error('[NewPublishFlow] templateNotice: unexpected error', err);
+      return null;
+    }
+  }, [builder, templateDraft, definition?.id]);
 
   const templateText = useMemo(() => {
     if (!templateRenderer || !templateNotice) return "";
@@ -775,27 +800,35 @@ export default function NewPublishFlow() {
     if (!uploadMethod || !definition) return 0;
     const blueprint = getMandatoryFieldsForOCR(definition);
     let count = 0;
-    for (const section of blueprint.sections) {
-      for (const field of section.fields) {
-        if (field.required) {
-          const raw = templateDraft?.[field.token];
-          const value = typeof raw === "string" ? raw : typeof raw === "number" ? String(raw) : "";
-          const fieldErrors = (templateFieldErrors as Record<string, string[] | undefined>)[field.token];
-          const hasError = fieldErrors && fieldErrors.length > 0;
-          if (!value || hasError) {
-            count++;
-          }
+
+    // Flatten all fields from all sections
+    const allFields = blueprint.sections?.flatMap(section => section.fields) || [];
+
+    for (const field of allFields) {
+      if (field.required) {
+        const raw = templateDraft?.[field.token];
+        const value = typeof raw === "string" ? raw : typeof raw === "number" ? String(raw) : "";
+        const fieldErrors = (templateFieldErrors as Record<string, string[] | undefined>)[field.token];
+        const hasError = fieldErrors && fieldErrors.length > 0;
+        if (!value || hasError) {
+          count++;
         }
       }
     }
+
+    console.log('[NewPublishFlow] blueprintMissingCount:', count, 'for', definition.id);
     return count;
   }, [uploadMethod, definition, templateDraft, templateFieldErrors]);
 
+  const isValidEmail = (email: string) => {
+    return email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const continueDisabledStep2 =
     uploadMethod === "notice"
-      ? blueprintMissingCount > 0 || !hasDraft
+      ? blueprintMissingCount > 0 || !hasDraft || !isValidEmail(contactEmail)
       : uploadMethod === "template"
-      ? blueprintMissingCount > 0 || !hasDraft
+      ? blueprintMissingCount > 0 || !isValidEmail(contactEmail) || !templateNotice  // Enable only when schema validation passes and email is valid
       : true;
 
   const formatRelativeTimestamp = (timestamp: number) => {
@@ -840,7 +873,11 @@ export default function NewPublishFlow() {
 
   // Right rail content for Step 2 (only when a definition exists)
   const rightRail = useMemo(() => {
-    if (!definition) return null;
+    console.log('[NewPublishFlow] UPDATED - rightRail - definition:', definition?.id, 'uploadMethod:', uploadMethod);
+    if (!definition) {
+      console.log('[NewPublishFlow] rightRail returning null - no definition');
+      return null;
+    }
 
     const applicationTypeLabel =
       APPLICATION_TYPE_OPTIONS.find((option) => option.value === legalDetails.applicationType)?.label ??
@@ -964,12 +1001,14 @@ export default function NewPublishFlow() {
       },
     ];
 
-    // Transform compliance items for ReviewCard
-    const reviewComplianceItems = legalValidation.statuses.map((status) => ({
-      key: status.key,
-      label: status.label,
-      status: status.status,
-    }));
+    // Transform compliance items for ReviewCard (OCR mode only)
+    const reviewComplianceItems = uploadMethod === "notice"
+      ? legalValidation.statuses.map((status) => ({
+          key: status.key,
+          label: status.label,
+          status: status.status,
+        }))
+      : [];
 
     // Transform key dates for ReviewCard
     const reviewKeyDates = keyDates.map((date) => ({
@@ -998,13 +1037,95 @@ export default function NewPublishFlow() {
           </div>
         </section>
 
-        <ReviewCard
-          complianceItems={reviewComplianceItems}
-          keyDates={reviewKeyDates}
-          detections={reviewDetections}
-          onItemClick={(key) => focusField(key as RequiredFieldKey | RecommendedFieldKey)}
-          recommendedWarnings={legalValidation.recommendedWarnings}
-        />
+        {uploadMethod === "notice" ? (
+          <ReviewCard
+            complianceItems={reviewComplianceItems}
+            keyDates={reviewKeyDates}
+            detections={reviewDetections}
+            onItemClick={(key) => focusField(key as RequiredFieldKey | RecommendedFieldKey)}
+            recommendedWarnings={legalValidation.recommendedWarnings}
+          />
+        ) : uploadMethod === "template" && definition ? (
+          (() => {
+            console.log('[NewPublishFlow] RENDERING CHECKLIST - uploadMethod:', uploadMethod, 'definition:', definition?.id);
+            return (
+          <section className="rounded-2xl border border-slate-200/40 bg-white/50 p-4 shadow-none backdrop-blur-sm md:p-5">
+            <div className="mb-3">
+              <h3 className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Template Fields</h3>
+            </div>
+            <div className="space-y-2">
+              {(() => {
+                const blueprint = getMandatoryFieldsForOCR(definition);
+                // Flatten all fields from all sections
+                const fields = blueprint?.sections?.flatMap(section => section.fields) || [];
+                console.log('[NewPublishFlow] Rendering template checklist - fields:', fields.length, 'definition:', definition.id);
+
+                // Create array with contact email as first item, then all template fields
+                const allItems = [
+                  // Contact email field (always first)
+                  {
+                    isEmail: true,
+                    label: 'Confirmation email',
+                    required: true,
+                    hasValue: isValidEmail(contactEmail),
+                    hasError: false,
+                  },
+                  // Then all template fields
+                  ...fields.map(field => ({
+                    isEmail: false,
+                    field,
+                    label: field.label,
+                    required: field.required,
+                    hasValue: (() => {
+                      const value = templateDraft?.[field.token];
+                      return value && String(value).trim().length > 0;
+                    })(),
+                    hasError: (() => {
+                      const fieldErrors = (templateFieldErrors as Record<string, string[] | undefined>)[field.token];
+                      return fieldErrors && fieldErrors.length > 0;
+                    })(),
+                  }))
+                ];
+
+                return allItems.map((item, idx) => {
+                  const { hasValue, hasError, label, required } = item;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-2 rounded-lg border p-2 text-xs transition-colors ${
+                        hasValue && !hasError
+                          ? 'border-emerald-200 bg-emerald-50/50'
+                          : 'border-red-200 bg-red-50/50'
+                      }`}
+                    >
+                      {hasValue && !hasError ? (
+                        <svg className="h-4 w-4 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="h-4 w-4 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                      <span className={hasValue && !hasError ? 'text-emerald-800 font-medium' : 'text-red-800'}>
+                        {label}
+                        {required && <span className="ml-1 text-red-500">*</span>}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </section>
+            );
+          })()
+        ) : (
+          (() => {
+            console.log('[NewPublishFlow] NOT RENDERING CHECKLIST - uploadMethod:', uploadMethod, 'definition:', definition?.id);
+            return null;
+          })()
+        )}
       </>
     );
   }, [
@@ -1021,76 +1142,128 @@ export default function NewPublishFlow() {
     focusField,
     legalValidation,
     templateNotice,
+    templateParse,
+    templateFieldErrors,
+    contactEmail,
   ]);
 
   const { run: handleSubmit, pending: paymentPending } = useSafeTransition(async () => {
     try {
-      const { submitNotice } = await import("@/lib/notices");
+      // Check if user is authenticated (for Phase 5 firm publishing)
+      const { data: { session } } = await supabase.auth.getSession();
 
-      let payload: any;
+      // Use new Phase 5 publish endpoint if authenticated, otherwise fall back to old flow
+      const usePhase5Flow = !!session;
+
+      let noticeData: any;
 
       if (uploadMethod === "template" && templateNotice) {
-        // Submitting from template builder
-        payload = {
-          id: draftId || undefined,
-          notice_type: definition?.id || "unknown",
-          applicant: templateNotice.applicant || {},
+        // Publishing from template builder
+        // IMPORTANT: Pass raw template draft as extras.tokens so generateNoticeText() can use it
+        noticeData = {
           premises: templateNotice.premises || {},
+          applicant: templateNotice.applicant || {},
           consultation: templateNotice.consultation || {},
-          publication: templateNotice.publication || {},
-          extras: templateNotice.extras || {},
-          latitude: templateNotice.premises?.coordinates?.latitude || null,
-          longitude: templateNotice.premises?.coordinates?.longitude || null,
+          extras: {
+            ...(templateNotice.extras || {}),
+            tokens: templateDraft || {}, // Raw template fields (PREMISES_NAME, APPLICANT_NAME, etc.)
+          },
         };
       } else if (uploadMethod === "notice") {
-        // Submitting from OCR upload
-        payload = {
-          id: draftId || undefined,
-          notice_type: definition?.id || "unknown",
-          applicant: {
-            name: legalDetails.applicantName || "",
-            email: legalDetails.applicantEmail || "",
-          },
+        // Publishing from OCR upload
+        const fullAddress = [
+          legalDetails.premisesLine1,
+          legalDetails.premisesLine2,
+          legalDetails.premisesCity,
+          legalDetails.premisesPostcode
+        ].filter(Boolean).join(", ");
+
+        noticeData = {
           premises: {
             name: legalDetails.premisesName || "",
-            address: legalDetails.premisesAddress || "",
-            postcode: legalDetails.premisesPostcode || "",
+            address: fullAddress,
+          },
+          applicant: {
+            name: legalDetails.applicantName || "",
+            email: legalDetails.contactEmail || "",
           },
           consultation: {
-            applicationDate: legalDetails.applicationDate || null,
             repsDeadline: legalDetails.representationDeadline || null,
-          },
-          publication: {
-            targetDate: legalDetails.publicationDate || null,
           },
           extras: {
             ocrText: ocrText || "",
             applicationType: legalDetails.applicationType || null,
+            activities: legalDetails.activities || [],
           },
-          latitude: null,
-          longitude: null,
         };
       } else {
         toast("Please complete the form before submitting");
         return;
       }
 
-      console.log("[NewPublishFlow] Submitting notice with payload:", payload);
+      if (usePhase5Flow && session) {
+        // Phase 5: Authenticated firm publishing (goes live immediately with billing)
+        const { publishNotice } = await import("@/lib/notices");
 
-      const result = await submitNotice(payload);
+        // TODO: Add council/department selection to wizard
+        // For now, using placeholder UUIDs - these should come from form selection
+        const councilId = "00000000-0000-0000-0000-000000000001"; // Placeholder council UUID
+        const departmentId = "00000000-0000-0000-0000-000000000002"; // Placeholder department UUID
 
-      if (result.success) {
-        toast("✓ Notice submitted successfully!");
+        console.log("[NewPublishFlow] Publishing via Phase 5 authenticated endpoint...");
+
+        const result = await publishNotice(
+          {
+            target_council_id: councilId,
+            target_department_id: departmentId,
+            notice_data: noticeData,
+            notice_type: definition?.id || "premises-licence",
+            title: legalDetails.premisesName || "Licensing Application",
+            billing_amount: 150.00,
+          },
+          session.access_token
+        );
+
+        console.info("✓ Notice published with ID:", result.notice.id);
+
+        // Show Phase 5 success modal
+        setPublishResult(result);
+        setShowSuccessModal(true);
+      } else {
+        // Legacy flow: Direct database insert (for testing/councils)
+        const { submitNotice } = await import("@/lib/notices");
+
+        console.log("[NewPublishFlow] Publishing via legacy endpoint (no auth)...");
+
+        // Transform data to match submitNotice payload
+        const payload = {
+          notice_type: definition?.id || "premises-licence",
+          status: "published",
+          contact_email: contactEmail, // Email for confirmation (from Step 2)
+          applicant: noticeData.applicant || {},
+          premises: noticeData.premises || {},
+          consultation: noticeData.consultation || {},
+          extras: noticeData.extras || {},
+        };
+
+        const result = await submitNotice(payload);
+
         console.info("✓ Notice submitted with ID:", result.id);
 
-        // Navigate to success page after short delay
-        setTimeout(() => {
-          navigate("/success?noticeId=" + result.id);
-        }, 1500);
+        // Show simple success message (no magic link or billing for legacy flow)
+        toast("✓ Notice published successfully!");
+
+        // Navigate to confirmation page
+        if (result.id) {
+          navigate(`/notices/${result.id}/confirmation?published=true`);
+        } else {
+          navigate("/dashboard");
+        }
       }
+
     } catch (error: any) {
-      console.error("✗ Failed to submit notice:", error);
-      const errorMsg = error.message || "Failed to submit notice. Please try again.";
+      console.error("✗ Failed to publish notice:", error);
+      const errorMsg = error.message || "Failed to publish notice. Please try again.";
       toast("✗ " + errorMsg);
     }
   });
@@ -1173,12 +1346,14 @@ export default function NewPublishFlow() {
                   uploadPaneProps={uploadPaneProps}
                   templateContent={templateFormContent}
                   rightRail={rightRail}
+                  email={contactEmail}
+                  onEmailChange={setContactEmail}
                 />
               </div>
               {uploadMethod === "notice" && shouldShowRequiredDetails && (
                 <ProgressBar
                   completed={legalValidation.statuses.filter((s) => s.status === 'found').length}
-                  total={legalValidation.statuses.filter((s) => s.key !== 'representationContact' && s.key !== 'viewingInformation').length}
+                  total={legalValidation.statuses.length}
                   isComplete={legalValidation.missingCount === 0}
                 />
               )}
@@ -1243,6 +1418,18 @@ export default function NewPublishFlow() {
           </div>
         </div>
       </div>
+
+      {/* Phase 5: Success Modal */}
+      {showSuccessModal && publishResult && (
+        <PublishSuccessModal
+          notice={publishResult.notice}
+          magicLink={publishResult.magicLink}
+          onClose={() => {
+            setShowSuccessModal(false);
+            navigate("/dashboard");
+          }}
+        />
+      )}
     </WizardBoundary>
   );
 }

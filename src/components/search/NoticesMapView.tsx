@@ -834,10 +834,8 @@ function NoticesMapViewComponent({
                   )}
                 </div>
                 <a
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700"
-                  href={activeNotice.viewUrl ?? `/notices/${activeNotice.id}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 cursor-pointer"
+                  href={`/notices/${activeNotice.id}`}
                 >
                   View notice
                   <span aria-hidden="true">→</span>

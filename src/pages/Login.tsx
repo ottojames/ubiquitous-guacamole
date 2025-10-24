@@ -19,15 +19,29 @@ export default function Login() {
     setError(null);
     setLoading(true);
 
-    // Simulate API call
+    // Demo login - check for council credentials
     setTimeout(() => {
-      if (email && password) {
-        console.log("Login attempt:", { email, password });
-        // Handle login logic here
-      } else {
+      if (!email || !password) {
         setError("Please enter both email and password");
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      // Demo council logins
+      // Option 1: Sample Borough Council (for test notices)
+      // Option 2: Westminster Council (demo)
+      if (email === "licensing@sample.gov.uk" && password === "sample123") {
+        console.log("Sample Council login successful!");
+        // Redirect to Sample Borough Council dashboard
+        window.location.href = "/c/sample-borough/licensing";
+      } else if (email === "demo@council.gov.uk" && password === "demo123") {
+        console.log("Westminster Council login successful!");
+        // Redirect to Westminster council dashboard
+        window.location.href = "/c/westminster/licensing";
+      } else {
+        setError("Invalid credentials. Try: licensing@sample.gov.uk / sample123");
+        setLoading(false);
+      }
     }, 1000);
   };
 
@@ -92,6 +106,32 @@ export default function Login() {
         <div className={UI.container}>
           <div className="mx-auto max-w-md">
             <div className="rounded-xl bg-white border border-slate-200/60 p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+              {/* Demo Credentials Banner */}
+              <div className="mb-6 rounded-xl bg-blue-50 border border-blue-200 p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-blue-900 mb-2">Demo Council Logins</p>
+                    <div className="space-y-2">
+                      <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Sample Borough Council</p>
+                        <p className="text-xs text-blue-700">
+                          <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">licensing@sample.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">sample123</code>
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Westminster Council</p>
+                        <p className="text-xs text-blue-700">
+                          <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo@council.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo123</code>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-7">
                 {/* Email Field */}
                 <div>

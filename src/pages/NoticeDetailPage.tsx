@@ -453,19 +453,73 @@ export default function NoticeDetailPage() {
               </div>
             )}
 
-            {/* Quick Actions */}
-            <div className="rounded-3xl border border-white/70 bg-gradient-to-br from-blue-50 to-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-              <h3 className="font-bold text-slate-900 mb-4">Need to Respond?</h3>
-              <p className="text-sm text-slate-600 mb-4">
-                If you have concerns or support for this notice, you can submit representations before the deadline.
-              </p>
-              <button
-                onClick={() => navigate(`/notices/${notice.id}/respond`)}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700"
-              >
-                Submit Representation
-              </button>
-            </div>
+            {/* RESIDENT ACTION CARD - THIS IS FOR RESIDENTS! */}
+            {notice.repsDeadline && getDaysRemaining(notice.repsDeadline) && (
+              <div className="sticky top-24 rounded-3xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100/50 p-8 shadow-2xl">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="rounded-full bg-blue-600 p-3">
+                    <FileText className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-900">Have Your Say</h3>
+                    <p className="mt-1 text-sm text-slate-600">Residents can submit their views</p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const remaining = getDaysRemaining(notice.repsDeadline);
+                  const isUrgent = remaining && remaining.urgent;
+                  const daysLeft = remaining?.days ?? 0;
+
+                  return (
+                    <div className={`mb-6 rounded-xl border-2 p-4 ${
+                      isUrgent
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-emerald-300 bg-emerald-50'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className={`h-5 w-5 ${isUrgent ? 'text-red-600' : 'text-emerald-600'}`} />
+                        <p className={`font-bold ${isUrgent ? 'text-red-900' : 'text-emerald-900'}`}>
+                          {daysLeft > 0 ? `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left to respond` : 'Deadline today'}
+                        </p>
+                      </div>
+                      <p className="text-sm text-slate-700">
+                        <span className="font-semibold">Deadline:</span> {formatDate(notice.repsDeadline)}
+                      </p>
+                    </div>
+                  );
+                })()}
+
+                <div className="space-y-3 mb-6 text-sm text-slate-700">
+                  <p className="font-medium">You can submit a representation if:</p>
+                  <ul className="space-y-2 ml-4">
+                    <li className="flex gap-2">
+                      <span className="text-blue-600">•</span>
+                      <span>You live near the premises</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600">•</span>
+                      <span>Your business is affected</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-blue-600">•</span>
+                      <span>You represent a community group</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => navigate(`/notices/${id}/respond`)}
+                  className="w-full rounded-xl bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Submit Your Representation
+                </button>
+
+                <p className="mt-4 text-xs text-center text-slate-500">
+                  Your submission will be considered by the licensing authority
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>

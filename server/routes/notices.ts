@@ -473,6 +473,8 @@ router.post('/notices/draft', async (req, res) => {
 });
 
 router.post('/notices/submit', async (req, res) => {
+  console.log('========== [notice-submit] NEW SUBMISSION REQUEST ==========');
+  console.log('[notice-submit] Body:', JSON.stringify(req.body, null, 2));
   try {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -485,6 +487,59 @@ router.post('/notices/submit', async (req, res) => {
 
     if (!payload || typeof payload !== 'object') {
       return res.status(400).json({ error: 'Invalid payload' });
+    }
+
+    // Extract postcode from premises address for geocoding
+    let postcode: string | null = null;
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    if (payload.premises?.address) {
+      const addressStr = typeof payload.premises.address === 'string'
+        ? payload.premises.address
+        : payload.premises.address.line1 || '';
+
+      // Extract UK postcode (basic regex)
+      const postcodeMatch = addressStr.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})/i);
+      if (postcodeMatch) {
+        postcode = postcodeMatch[1].replace(/\s/g, '');
+
+        // Geocode the postcode
+        try {
+          const geoResponse = await fetch(`https://api.postcodes.io/postcodes/${postcode}`);
+          if (geoResponse.ok) {
+            const geoData = await geoResponse.json();
+            if (geoData.result) {
+              latitude = geoData.result.latitude;
+              longitude = geoData.result.longitude;
+              console.log(`[notice-submit] Geocoded ${postcode}: ${latitude}, ${longitude}`);
+            }
+          }
+        } catch (geoError) {
+          console.warn('[notice-submit] Geocoding failed:', geoError);
+        }
+      }
+    }
+
+    // Prepare data with geocoding
+    const noticeData = {
+      ...payload,
+      status: 'published', // Auto-publish instead of 'submitted'
+      published_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      latitude,
+      longitude,
+      location: latitude && longitude
+        ? `POINT(${longitude} ${latitude})`
+        : null,
+    };
+
+    // Add postcode to premises if extracted
+    if (postcode && noticeData.premises) {
+      noticeData.premises = {
+        ...noticeData.premises,
+        postcode: postcode.replace(/^(.+?)(\d[A-Z]{2})$/, '$1 $2'), // Format with space
+      };
     }
 
     // If we have a draft ID, try to update the existing draft
@@ -500,11 +555,7 @@ router.post('/notices/submit', async (req, res) => {
         // Update existing draft
         const { data, error } = await client
           .from('notices')
-          .update({
-            ...payload,
-            status: 'submitted',
-            updated_at: new Date().toISOString(),
-          })
+          .update(noticeData)
           .eq('id', payload.id)
           .select('id')
           .single();
@@ -520,19 +571,65 @@ router.post('/notices/submit', async (req, res) => {
     }
 
     // Create new notice (either no ID provided or ID doesn't exist)
-    const { id, ...payloadWithoutId } = payload;
+    const { id, ...dataWithoutId } = noticeData;
     const { data, error } = await client
       .from('notices')
-      .insert({
-        ...payloadWithoutId,
-        status: 'submitted',
-      })
+      .insert(dataWithoutId)
       .select('id')
       .single();
 
     if (error) {
       console.error('[notice-submit] Supabase insert failed', error);
       return res.status(500).json({ error: 'Failed to submit notice', details: error.message });
+    }
+
+    // Send confirmation email if contact_email is provided
+    console.log('[notice-submit] Checking for contact_email:', noticeData.contact_email);
+    if (noticeData.contact_email) {
+      console.log('[notice-submit] Sending confirmation email to:', noticeData.contact_email);
+      try {
+        const { sendNoticeConfirmation } = await import('../services/email');
+
+        // Get notice type label
+        const noticeTypeLabels: Record<string, string> = {
+          'licensing-premises-new': 'Premises Licence - New Application',
+          'licensing-club-new': 'Club Premises Certificate - New',
+          'licensing-premises-variation': 'Premises Licence - Variation',
+          // Add more as needed
+        };
+        const noticeTypeLabel = noticeTypeLabels[noticeData.notice_type] || noticeData.notice_type;
+
+        // Generate view URL
+        const baseUrl = process.env.VITE_SUPABASE_URL?.replace('.supabase.co', '') || 'http://localhost:5173';
+        const viewUrl = `${baseUrl}/notices/${data.id}`;
+
+        // Format premises address as string
+        const formatAddress = (addr: any): string => {
+          if (!addr) return '';
+          if (typeof addr === 'string') return addr;
+          if (typeof addr === 'object') {
+            return [addr.line1, addr.line2, addr.town, addr.postcode]
+              .filter(Boolean)
+              .join(', ');
+          }
+          return String(addr);
+        };
+
+        await sendNoticeConfirmation(noticeData.contact_email, {
+          noticeId: data.id,
+          noticeType: noticeTypeLabel,
+          premisesName: noticeData.premises?.name,
+          premisesAddress: formatAddress(noticeData.premises?.address),
+          applicantName: noticeData.applicant?.name || noticeData.applicant?.fullName,
+          noticeText: '', // We'll generate PDF later
+          viewUrl,
+        });
+
+        console.log('[notice-submit] Confirmation email sent to:', noticeData.contact_email);
+      } catch (emailError) {
+        // Log error but don't fail the request if email fails
+        console.error('[notice-submit] Failed to send confirmation email:', emailError);
+      }
     }
 
     return res.status(201).json({ id: data.id, success: true });
@@ -595,10 +692,12 @@ router.get('/notices/search', async (req, res) => {
 
     const applyQueryFilters = (queryBuilder: any) => {
       let qb = queryBuilder;
+      console.log('[notice-search] applyQueryFilters called with q:', q, 'effectivePostcode:', effectivePostcode);
 
       if (effectivePostcode) {
         const outwardPattern = `${effectivePostcode.outward}%`;
         // Search in both possible postcode locations
+        console.log('[notice-search] Applying postcode filter:', outwardPattern);
         qb = qb.or(`premises->>postcode.ilike.${outwardPattern},premises_address->>postcode.ilike.${outwardPattern}`);
       }
 
@@ -622,15 +721,31 @@ router.get('/notices/search', async (req, res) => {
         qb = qb.lte('created_at', endParam);
       }
 
-      if (q && !postcodeFromQuery) {
+      // Text search: search across multiple fields if query provided
+      // This runs regardless of whether a postcode was also detected
+      if (q) {
+        // Search for the full query text across all fields
         const filters = [
           buildIlikeFilter('notice_type', q),
           buildIlikeFilter('premises->>name', q),
-          buildIlikeFilter('premises->>address', q),
+          buildIlikeFilter('premises->address->>line1', q),
+          buildIlikeFilter('premises->address->>line2', q),
+          buildIlikeFilter('premises->address->>town', q),
+          buildIlikeFilter('premises->address->>postcode', q),
+          buildIlikeFilter('premises_address->>line1', q),
+          buildIlikeFilter('premises_address->>line2', q),
+          buildIlikeFilter('premises_address->>town', q),
+          buildIlikeFilter('premises_address->>postcode', q),
           buildIlikeFilter('extras->>applicantDisplayName', q),
+          buildIlikeFilter('extras->tokens->>PREMISES_NAME', q),
+          buildIlikeFilter('extras->tokens->>PREMISES_ADDRESS', q),
+          buildIlikeFilter('extras->tokens->>APPLICANT_NAME', q),
+          buildIlikeFilter('applicant->>name', q),
+          buildIlikeFilter('applicant->>fullName', q),
         ].filter(Boolean) as string[];
 
         if (filters.length) {
+          console.log(`[notice-search] Applying text search with ${filters.length} fields for query: "${q}"`);
           qb = qb.or(filters.join(','));
         }
       }
@@ -839,6 +954,7 @@ router.get('/notices/search', async (req, res) => {
         id: row.id,
         noticeType: row.notice_type,
         status: row.status,
+        contact_email: row.contact_email,
         premisesName: extractPremisesName(row),
         premisesAddress: extractPremisesAddress(row),
         premisesPostcode: extractPostcode(row),
