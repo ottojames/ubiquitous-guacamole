@@ -403,13 +403,14 @@ function NoticesMapViewComponent({
   }, []);
 
   const resolveClusterMeta = useCallback(
-    (clusterId: number, longitude: number, latitude: number): HoveredClusterState | null => {
+    async (clusterId: number, longitude: number, latitude: number): Promise<HoveredClusterState | null> => {
       const source = getClusterSource();
       if (!source) return null;
 
       let leaves: maplibregl.MapboxGeoJSONFeature[] = [];
       try {
-        leaves = source.getClusterLeaves(clusterId, 25, 0);
+        // IMPORTANT: getClusterLeaves returns a Promise!
+        leaves = await source.getClusterLeaves(clusterId, 25, 0);
       } catch (error) {
         console.warn('[NoticesMapView] failed to inspect cluster leaves', error);
       }
@@ -447,25 +448,86 @@ function NoticesMapViewComponent({
   );
 
   const handleClick = useCallback(
-    (event: MapLayerMouseEvent) => {
+    async (event: MapLayerMouseEvent) => {
+      console.log('[NoticesMapView] Click event triggered', {
+        featuresCount: event.features?.length,
+        lngLat: event.lngLat
+      });
+
       const features = event.features ?? [];
-      if (!mapRef.current) return;
+      if (!mapRef.current) {
+        console.warn('[NoticesMapView] No map ref');
+        return;
+      }
 
       const clusterFeature = features.find((feature) => feature.layer.id === CLUSTER_LAYER_ID);
+      console.log('[NoticesMapView] Cluster feature found:', !!clusterFeature);
+
       if (clusterFeature) {
+        console.log('[NoticesMapView] Cluster feature details:', {
+          layerId: clusterFeature.layer.id,
+          properties: clusterFeature.properties,
+          geometry: clusterFeature.geometry
+        });
+
         const source = getClusterSource();
-        if (!source) return;
+        if (!source) {
+          console.error('[NoticesMapView] ❌ Cluster source not found');
+          return;
+        }
+        console.log('[NoticesMapView] ✓ Cluster source found');
+
         const clusterId = clusterFeature.properties?.cluster_id;
-        if (typeof clusterId !== 'number') return;
+        if (typeof clusterId !== 'number') {
+          console.error('[NoticesMapView] ❌ Invalid cluster ID', clusterFeature.properties);
+          return;
+        }
+        console.log('[NoticesMapView] ✓ Valid cluster ID:', clusterId);
+
+        // Validate coordinates before using them
+        const rawCoords = clusterFeature.geometry?.coordinates;
+        if (!Array.isArray(rawCoords) || rawCoords.length < 2) {
+          console.error('[NoticesMapView] ❌ Invalid cluster coordinates:', rawCoords);
+          return;
+        }
+
+        const [lng, lat] = rawCoords;
+        if (typeof lng !== 'number' || typeof lat !== 'number' || !Number.isFinite(lng) || !Number.isFinite(lat)) {
+          console.error('[NoticesMapView] ❌ Cluster has NaN coordinates:', { lng, lat });
+          return;
+        }
+
+        if (lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+          console.error('[NoticesMapView] ❌ Cluster coordinates out of bounds:', { lng, lat });
+          return;
+        }
+        console.log('[NoticesMapView] ✓ Valid coordinates:', { lng, lat });
+
         try {
-          const expansionZoom = Math.min(source.getClusterExpansionZoom(clusterId), 18);
-          mapRef.current.flyTo({
-            center: clusterFeature.geometry.coordinates as [number, number],
-            zoom: expansionZoom,
-            duration: 600,
+          // IMPORTANT: getClusterExpansionZoom returns a Promise!
+          const expansionZoom = await source.getClusterExpansionZoom(clusterId);
+          const currentZoom = mapRef.current.getZoom();
+          const targetZoom = Math.min(Math.max(expansionZoom, currentZoom + 2), 18);
+
+          console.log('[NoticesMapView] 🎯 About to zoom:', {
+            clusterId,
+            coordinates: [lng, lat],
+            currentZoom,
+            expansionZoom,
+            targetZoom,
           });
+
+          // Use flyTo with validated coordinates
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: targetZoom,
+            duration: 1000,
+            essential: true,
+          });
+
+          console.log('[NoticesMapView] ✅ flyTo called successfully');
         } catch (error) {
-          console.warn('[NoticesMapView] unable to expand cluster', error);
+          console.error('[NoticesMapView] ❌ Error during zoom:', error);
         }
         return;
       }
@@ -490,9 +552,30 @@ function NoticesMapViewComponent({
       if (clusterFeature) {
         const clusterId = clusterFeature.properties?.cluster_id;
         if (typeof clusterId === 'number') {
-          const [longitude, latitude] = clusterFeature.geometry.coordinates as [number, number];
-          const meta = resolveClusterMeta(clusterId, longitude, latitude);
-          setHoveredCluster(meta);
+          const rawCoords = clusterFeature.geometry?.coordinates;
+          if (Array.isArray(rawCoords) && rawCoords.length >= 2) {
+            const [longitude, latitude] = rawCoords as [number, number];
+            // Validate coordinates before using them
+            if (
+              typeof longitude === 'number' &&
+              typeof latitude === 'number' &&
+              Number.isFinite(longitude) &&
+              Number.isFinite(latitude) &&
+              longitude >= -180 &&
+              longitude <= 180 &&
+              latitude >= -90 &&
+              latitude <= 90
+            ) {
+              // Don't await - just let it resolve in the background
+              resolveClusterMeta(clusterId, longitude, latitude).then(meta => {
+                if (meta) setHoveredCluster(meta);
+              }).catch(err => {
+                console.warn('[NoticesMapView] Error resolving cluster meta on hover:', err);
+              });
+            } else {
+              console.warn('[NoticesMapView] Invalid cluster coordinates on hover:', { longitude, latitude });
+            }
+          }
         }
         if (canvas) canvas.style.cursor = 'pointer';
         return;

@@ -11,6 +11,7 @@ import addressRouter from './routes/address';
 import noticesRouter from './routes/notices';
 import aiSummaryRouter from './routes/ai-summary';
 import publishRouter from './routes/publish';
+import representationsRouter from './routes/representations';
 
 export const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api', addressRouter);
 app.use('/api', noticesRouter);
 app.use('/api/ai-summary', aiSummaryRouter);
 app.use('/api', publishRouter);
+app.use('/api', representationsRouter);
 
 const PORT = Number(process.env.PORT || 5174);
 
