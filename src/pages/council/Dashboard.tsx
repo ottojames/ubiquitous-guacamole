@@ -3,6 +3,8 @@ import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom
 import { supabase } from '@/lib/supabase';
 import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {
   id: string;
@@ -41,6 +43,7 @@ export default function Dashboard() {
   const { department, userRole } = useOutletContext<ContextType>();
   const { orgSlug, deptSlug } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats>({
     total: 0,
@@ -185,7 +188,8 @@ export default function Dashboard() {
 
   // Get department-specific configuration
   const deptConfig = getDepartmentConfig(department.type);
-  const canCreateNotice = deptConfig.canPublish && ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
+  // Check if user has permission to create notices using RBAC system
+  const canCreateNotice = deptConfig.canPublish && hasPermission(PERMISSIONS.NOTICES_CREATE);
 
   if (loading) {
     return (

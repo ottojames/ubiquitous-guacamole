@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {
   id: string;
@@ -23,6 +25,7 @@ interface ContextType {
 
 export default function Settings() {
   const { department: initialDepartment, userRole } = useOutletContext<ContextType>();
+  const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +70,8 @@ export default function Settings() {
     }
   };
 
-  const canManageSettings = ['owner', 'org_admin', 'department_admin'].includes(userRole);
+  // Check if user has permission to update settings using RBAC system
+  const canManageSettings = hasPermission(PERMISSIONS.SETTINGS_UPDATE);
 
   const noticeTypes = [
     { value: 'premises-licence', label: 'Premises Licence' },

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {
   id: string;
@@ -29,6 +31,7 @@ interface TeamMember {
 export default function Team() {
   const { department, userRole } = useOutletContext<ContextType>();
   const { orgSlug, deptSlug } = useParams();
+  const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -174,7 +177,8 @@ export default function Team() {
     });
   };
 
-  const canManageTeam = ['owner', 'org_admin', 'department_admin'].includes(userRole);
+  // Check if user has permission to manage team members using RBAC system
+  const canManageTeam = hasPermission(PERMISSIONS.TEAM_MANAGE);
 
   const roles = [
     { value: 'department_admin', label: 'Department Admin', description: 'Full access to department management' },

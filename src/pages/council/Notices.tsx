@@ -3,6 +3,8 @@ import { useOutletContext, useNavigate, useParams, Link, useSearchParams } from 
 import { supabase } from '@/lib/supabase';
 import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {
   id: string;
@@ -39,6 +41,7 @@ export default function Notices() {
   const { orgSlug, deptSlug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [filteredNotices, setFilteredNotices] = useState<Notice[]>([]);
@@ -167,7 +170,8 @@ export default function Notices() {
 
   // Get department-specific configuration
   const deptConfig = getDepartmentConfig(department.type);
-  const canCreateNotice = deptConfig.canPublish && ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
+  // Check if user has permission to create notices using RBAC system
+  const canCreateNotice = deptConfig.canPublish && hasPermission(PERMISSIONS.NOTICES_CREATE);
 
   const basePath = `/c/${orgSlug}/${deptSlug}`;
 

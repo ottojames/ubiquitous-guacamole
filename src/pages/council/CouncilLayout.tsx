@@ -24,7 +24,7 @@ export default function CouncilLayout() {
   const { orgSlug, deptSlug } = useParams<{ orgSlug: string; deptSlug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut: authSignOut } = useAuth();
+  const { signOut: authSignOut, loadPermissions } = useAuth();
   const [loading, setLoading] = useState(true);
   const [department, setDepartment] = useState<Department | null>(null);
   const [userRole, setUserRole] = useState<string>('');
@@ -56,6 +56,10 @@ export default function CouncilLayout() {
 
         setDepartment(mockDepartment as Department);
         setUserRole('org_admin');
+
+        // Load permissions for demo user
+        await loadPermissions(mockDepartment.id);
+
         setLoading(false);
         return;
       }
@@ -113,6 +117,10 @@ export default function CouncilLayout() {
 
       setDepartment(deptData as Department);
       setUserRole(role);
+
+      // Load permissions for authenticated user
+      await loadPermissions(deptData.id);
+
       setLoading(false);
 
       // Update last accessed
