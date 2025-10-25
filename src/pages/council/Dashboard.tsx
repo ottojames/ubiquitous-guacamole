@@ -82,6 +82,7 @@ export default function Dashboard() {
         const responseData = await response.json();
         const allNotices = responseData.items || [];
         console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
+        console.log(`[Dashboard] Sample notice data:`, allNotices[0]);
 
         // In production, this would filter by council_id or similar
         // For demo, we're showing all notices as if they're all for this council
@@ -93,14 +94,19 @@ export default function Dashboard() {
           status: n.status || 'published',
         }));
 
-        recent = filteredNotices.slice(0, 5).map((n: any) => ({
-          id: n.id,
-          title: n.title || n.premisesName || 'Untitled Notice',
-          status: n.status || 'published',
-          created_at: n.created_at || new Date().toISOString(),
-          published_at: n.publicationDate || n.published_at || null,
-          proof_pdf_url: n.proof_pdf_url || null,
-        }));
+        recent = filteredNotices.slice(0, 5).map((n: any) => {
+          // Build title from available data
+          const title = n.premisesName || n.premisesAddress || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
+
+          return {
+            id: n.id,
+            title: title,
+            status: n.status || 'published',
+            created_at: n.publicationDate || new Date().toISOString(),
+            published_at: n.publicationDate || null,
+            proof_pdf_url: null,
+          };
+        });
 
         console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
       } else {
