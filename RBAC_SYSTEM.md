@@ -272,6 +272,62 @@ This migration:
 3. **Log permission checks** - Track who accesses what for audit purposes
 4. **Secure RPC functions** - Use `SECURITY DEFINER` carefully
 
+## Implementation Roadmap
+
+### Phase 1: Database & Infrastructure ✅ COMPLETE
+- [x] Create RBAC database schema (roles, permissions, role_permissions)
+- [x] Seed default roles (org_admin, dept_admin, officer, viewer)
+- [x] Seed 21 granular permissions
+- [x] Create PostgreSQL helper functions (user_has_permission, get_user_permissions, get_user_role)
+- [x] Set up Row Level Security policies
+- [x] Migration: `20251025000003_rbac_permissions.sql`
+
+### Phase 2: Backend Implementation ✅ COMPLETE
+- [x] Create authentication middleware (requireAuth, optionalAuth)
+- [x] Create permission middleware (requirePermission, hasAnyPermission, hasAllPermissions)
+- [x] Create role middleware (requireRole)
+- [x] Add TypeScript types for permissions
+- [x] Location: `server/middleware/auth.ts`, `src/types/permissions.ts`
+
+### Phase 3: Frontend Integration ✅ COMPLETE
+- [x] Update AuthContext with permission methods (loadPermissions, hasPermission)
+- [x] Load permissions in CouncilLayout for all users
+- [x] Add permission checks to Dashboard page (Create Notice button)
+- [x] Add permission checks to Notices page (Create Notice button)
+- [x] Add permission checks to Team page (Invite/Manage features)
+- [x] Add permission checks to Settings page (Update settings)
+- [x] Commit: `a19e3cd` - "Integrate RBAC permissions into council dashboard pages"
+
+### Phase 4: Testing & Validation 🔄 IN PROGRESS
+- [ ] Test permission loading for demo users (org_admin role)
+- [ ] Verify "Create Notice" buttons appear correctly
+- [ ] Check browser console for permission-related errors
+- [ ] Create test users with different roles (viewer, officer, dept_admin)
+- [ ] Test permission restrictions work correctly for each role
+- [ ] Verify RLS policies prevent unauthorized data access
+
+### Phase 5: Backend Route Protection ⏳ PENDING
+- [ ] Add permission middleware to notice CRUD endpoints
+- [ ] Add permission middleware to team management endpoints
+- [ ] Add permission middleware to settings endpoints
+- [ ] Add permission middleware to template endpoints
+- [ ] Add permission middleware to representation endpoints
+- [ ] Test backend returns 403 for unauthorized actions
+
+### Phase 6: Enhanced UI Controls ⏳ PENDING
+- [ ] Add permission checks to individual notice Edit/Delete buttons
+- [ ] Add permission checks to Publish/Unpublish actions
+- [ ] Add permission checks to Export functionality
+- [ ] Add tooltips explaining why features are disabled
+- [ ] Show permission-based disabled states
+
+### Phase 7: Documentation & Deployment ⏳ PENDING
+- [ ] Complete user documentation for roles
+- [ ] Create admin guide for role assignment
+- [ ] Add permission management UI for admins
+- [ ] Production deployment checklist
+- [ ] Security audit
+
 ## Future Enhancements
 
 Potential additions to the RBAC system:
