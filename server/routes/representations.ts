@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -30,9 +30,9 @@ function getSupabase() {
  * GET /api/notices/:noticeId/representations
  * Get all representations for a specific notice
  * Query params: userId (optional) - to check read status for specific user
- * Protected: Requires authentication
+ * Protected: Optional authentication (works for demo users too)
  */
-router.get('/notices/:noticeId/representations', requireAuth, async (req: Request, res: Response) => {
+router.get('/notices/:noticeId/representations', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { noticeId } = req.params;
     const { userId } = req.query;
@@ -83,9 +83,9 @@ router.get('/notices/:noticeId/representations', requireAuth, async (req: Reques
  * GET /api/notices/:noticeId/representations/counts
  * Get representation counts for a notice (total and unread)
  * Query params: userId (required)
- * Protected: Requires authentication
+ * Protected: Optional authentication (works for demo users too)
  */
-router.get('/notices/:noticeId/representations/counts', requireAuth, async (req: Request, res: Response) => {
+router.get('/notices/:noticeId/representations/counts', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { noticeId } = req.params;
     const { userId } = req.query;
