@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false }
 });
 
-// Extend Express Request type to include user
+// Extend Express Request type to include user and permissions
 declare global {
   namespace Express {
     interface Request {
@@ -17,6 +17,8 @@ declare global {
         id: string;
         email?: string;
         role?: string;
+        departmentId?: string;
+        permissions?: string[];
       };
     }
   }
@@ -131,6 +133,175 @@ export function requireRole(...allowedRoles: string[]) {
       res.status(403).json({
         error: 'Forbidden',
         message: `Access denied. Required role: ${allowedRoles.join(' or ')}`
+      });
+      return;
+    }
+
+    next();
+  };
+}
+
+/**
+ * Permission-based access control middleware
+ * Requires user to have specific permission for a department
+ * Department ID should be in req.params.deptId or req.query.departmentId
+ */
+export function requirePermission(permissionName: string) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required'
+        });
+        return;
+      }
+
+      // Extract department ID from params or query
+      const departmentId = req.params.deptId || req.query.departmentId as string;
+
+      if (!departmentId) {
+        res.status(400).json({
+          error: 'Bad Request',
+          message: 'Department ID required for permission check'
+        });
+        return;
+      }
+
+      // Check if user has the required permission
+      const { data, error } = await supabaseAdmin.rpc('user_has_permission', {
+        p_user_id: req.user.id,
+        p_department_id: departmentId,
+        p_permission_name: permissionName
+      });
+
+      if (error) {
+        console.error('[Permission Middleware] Error checking permission:', error);
+        res.status(500).json({
+          error: 'Internal Server Error',
+          message: 'Failed to verify permissions'
+        });
+        return;
+      }
+
+      if (!data) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: `Permission denied. Required permission: ${permissionName}`
+        });
+        return;
+      }
+
+      next();
+    } catch (error) {
+      console.error('[Permission Middleware] Error in permission check:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to verify permissions'
+      });
+    }
+  };
+}
+
+/**
+ * Middleware to load user permissions for a department
+ * Populates req.user.permissions with array of permission names
+ * Department ID should be in req.params.deptId or req.query.departmentId
+ */
+export async function loadUserPermissions(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    if (!req.user) {
+      next();
+      return;
+    }
+
+    // Extract department ID from params or query
+    const departmentId = req.params.deptId || req.query.departmentId as string;
+
+    if (!departmentId) {
+      next();
+      return;
+    }
+
+    // Load all permissions for user in this department
+    const { data: permissions, error } = await supabaseAdmin.rpc('get_user_permissions', {
+      p_user_id: req.user.id,
+      p_department_id: departmentId
+    });
+
+    if (error) {
+      console.error('[Permission Middleware] Error loading permissions:', error);
+      next();
+      return;
+    }
+
+    // Attach permissions to user object
+    req.user.permissions = permissions?.map((p: any) => p.permission_name) || [];
+    req.user.departmentId = departmentId;
+
+    next();
+  } catch (error) {
+    console.error('[Permission Middleware] Error loading permissions:', error);
+    next();
+  }
+}
+
+/**
+ * Helper function to check if user has any of the specified permissions
+ * Use after loadUserPermissions middleware
+ */
+export function hasAnyPermission(...requiredPermissions: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user || !req.user.permissions) {
+      res.status(403).json({
+        error: 'Forbidden',
+        message: 'Permissions not loaded or user not authenticated'
+      });
+      return;
+    }
+
+    const hasPermission = requiredPermissions.some(perm =>
+      req.user!.permissions!.includes(perm)
+    );
+
+    if (!hasPermission) {
+      res.status(403).json({
+        error: 'Forbidden',
+        message: `Permission denied. Required one of: ${requiredPermissions.join(', ')}`
+      });
+      return;
+    }
+
+    next();
+  };
+}
+
+/**
+ * Helper function to check if user has all of the specified permissions
+ * Use after loadUserPermissions middleware
+ */
+export function hasAllPermissions(...requiredPermissions: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user || !req.user.permissions) {
+      res.status(403).json({
+        error: 'Forbidden',
+        message: 'Permissions not loaded or user not authenticated'
+      });
+      return;
+    }
+
+    const hasAllPerms = requiredPermissions.every(perm =>
+      req.user!.permissions!.includes(perm)
+    );
+
+    if (!hasAllPerms) {
+      res.status(403).json({
+        error: 'Forbidden',
+        message: `Permission denied. Required all of: ${requiredPermissions.join(', ')}`
       });
       return;
     }
