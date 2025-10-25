@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { getDepartmentConfig } from '@/config/departmentConfig';
+import { isClosingSoon } from '@/lib/dateUtils';
 
 interface Department {
   id: string;
@@ -32,6 +34,7 @@ interface RecentNotice {
   status: string;
   created_at: string;
   published_at: string | null;
+  proof_pdf_url?: string | null;
 }
 
 export default function Dashboard() {
@@ -63,12 +66,14 @@ export default function Dashboard() {
       let recent: any[] = [];
 
       if (isDemoMode) {
-        // For demo mode, fetch all notices via API and filter by council email
-        const demoEmail = isDemoSampleBorough ? 'licensing@sample.gov.uk' : 'demo@council.gov.uk';
+        // For demo mode, fetch all notices via API
+        // In a real system, notices would have a council_id field to filter by
+        // For demo purposes, we show ALL notices as if they're all for this council
+        const demoCouncilName = isDemoSampleBorough ? 'Sample Borough' : 'Westminster';
 
-        console.log(`[Dashboard] Demo mode: fetching notices for ${demoEmail}`);
+        console.log(`[Dashboard] Demo mode: fetching notices for ${demoCouncilName} Council`);
 
-        // Fetch all notices from API (it doesn't have contact_email filter yet, so we'll get all and filter)
+        // Fetch all notices from API (simulating all notices are for this council)
         const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
         if (!response.ok) {
           throw new Error('Failed to fetch notices from API');
@@ -78,10 +83,10 @@ export default function Dashboard() {
         const allNotices = responseData.items || [];
         console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
 
-        // Filter notices by contact_email
-        // Note: The API returns contact_email in the notice object
-        const filteredNotices = allNotices.filter((n: any) => n.contact_email === demoEmail);
-        console.log(`[Dashboard] Filtered to ${filteredNotices.length} notices for ${demoEmail}`);
+        // In production, this would filter by council_id or similar
+        // For demo, we're showing all notices as if they're all for this council
+        const filteredNotices = allNotices;
+        console.log(`[Dashboard] Showing ${filteredNotices.length} notices for ${demoCouncilName} Council`);
 
         notices = filteredNotices.map((n: any) => ({
           id: n.id,
@@ -94,6 +99,7 @@ export default function Dashboard() {
           status: n.status || 'published',
           created_at: n.created_at || new Date().toISOString(),
           published_at: n.publicationDate || n.published_at || null,
+          proof_pdf_url: n.proof_pdf_url || null,
         }));
 
         console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
@@ -111,7 +117,7 @@ export default function Dashboard() {
         // Load recent notices
         const { data: recentData, error: recentError } = await supabase
           .from('notices')
-          .select('id, title, status, created_at, published_at')
+          .select('id, title, status, created_at, published_at, proof_pdf_url')
           .eq('department_id', department.id)
           .order('created_at', { ascending: false })
           .limit(5);
@@ -121,11 +127,17 @@ export default function Dashboard() {
         recent = recentData || [];
       }
 
+      // Calculate stats based on requirements:
+      // Total: All notices (any status)
+      // Published: Currently live and within representation window (status = published & not expired)
+      // Drafts: Never published (status = draft)
+      // Pending: Awaiting verification or scheduled (status = pending or pending_approval)
+      // Expired: Consultation window closed (status = expired)
       const statsData = {
         total: notices?.length || 0,
         published: notices?.filter(n => n.status === 'published').length || 0,
         draft: notices?.filter(n => n.status === 'draft').length || 0,
-        pending_approval: notices?.filter(n => n.status === 'pending_approval').length || 0,
+        pending_approval: notices?.filter(n => n.status === 'pending_approval' || n.status === 'pending').length || 0,
         expired: notices?.filter(n => n.status === 'expired').length || 0
       };
 
@@ -165,7 +177,9 @@ export default function Dashboard() {
     });
   };
 
-  const canCreateNotice = ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
+  // Get department-specific configuration
+  const deptConfig = getDepartmentConfig(department.type);
+  const canCreateNotice = deptConfig.canPublish && ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
 
   if (loading) {
     return (
@@ -192,14 +206,18 @@ export default function Dashboard() {
             to={`${basePath}/notices/new`}
             className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
           >
-            + Create Notice
+            {deptConfig.publishButtonLabel}
           </Link>
         )}
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${deptConfig.showDraftsCard ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+        <Link
+          to={`${basePath}/notices`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+          title="All notices for this department (any status)."
+        >
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-600">Total Notices</h3>
             <svg
@@ -215,9 +233,13 @@ export default function Dashboard() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+        <Link
+          to={`${basePath}/notices?status=published`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+          title={`Currently live and open for ${deptConfig.repLabelPlural}.`}
+        >
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-600">Published</h3>
             <svg
@@ -233,27 +255,37 @@ export default function Dashboard() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-gray-900">{stats.published}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Drafts</h3>
-            <svg
-              className="w-8 h-8 text-gray-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.draft}</p>
-        </div>
+        {deptConfig.showDraftsCard && (
+          <Link
+            to={`${basePath}/notices?status=draft`}
+            className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+            title="Notices saved but not yet published."
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-600">Drafts</h3>
+              <svg
+                className="w-8 h-8 text-gray-600"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{stats.draft}</p>
+          </Link>
+        )}
 
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+        <Link
+          to={`${basePath}/notices?status=pending`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+          title="Scheduled for publication or awaiting proof verification."
+        >
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-600">Pending</h3>
             <svg
@@ -269,9 +301,13 @@ export default function Dashboard() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-gray-900">{stats.pending_approval}</p>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+        <Link
+          to={`${basePath}/notices?status=expired`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+          title="Consultation window has closed."
+        >
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-600">Expired</h3>
             <svg
@@ -287,11 +323,11 @@ export default function Dashboard() {
             </svg>
           </div>
           <p className="text-3xl font-bold text-gray-900">{stats.expired}</p>
-        </div>
+        </Link>
       </div>
 
       {/* Recent Notices */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
+      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 mb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Recent Notices</h2>
           <Link
@@ -315,40 +351,86 @@ export default function Dashboard() {
             >
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-gray-600 mb-4">No notices yet</p>
+            <p className="text-gray-600 mb-4">
+              {deptConfig.emptyStateMessage}
+            </p>
             {canCreateNotice && (
               <Link
                 to={`${basePath}/notices/new`}
                 className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
               >
-                Create Your First Notice
+                {deptConfig.publishButtonLabel}
               </Link>
             )}
           </div>
         ) : (
           <div className="space-y-3">
-            {recentNotices.map((notice) => (
-              <Link
-                key={notice.id}
-                to={`${basePath}/notices/${notice.id}`}
-                className="block p-4 border border-gray-200 rounded-xl hover:shadow-lg hover:border-blue-300 transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">
-                      {notice.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Created {formatDate(notice.created_at)}
-                      {notice.published_at && ` • Published ${formatDate(notice.published_at)}`}
-                    </p>
+            {recentNotices.map((notice) => {
+              const noticeTypeLabel = notice.notice_type || notice.noticeType || 'Notice';
+              const repsDeadline = notice.reps_deadline || notice.repsDeadline;
+              const publishedDate = notice.published_at || notice.publicationDate;
+              const repsCount = notice.representations_count || 0;
+
+              return (
+                <Link
+                  key={notice.id}
+                  to={`${basePath}/notices/${notice.id}`}
+                  className="block p-4 border border-gray-200 rounded-xl hover:shadow-lg hover:border-blue-300 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900">
+                          {notice.title || notice.premises_name || notice.premisesName || 'Untitled Notice'}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(notice.status)}`}>
+                          {formatStatus(notice.status)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span className="font-medium">{noticeTypeLabel}</span>
+                        {publishedDate && (
+                          <>
+                            <span>•</span>
+                            <span>Published {formatDate(publishedDate)}</span>
+                          </>
+                        )}
+                        {repsDeadline && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1.5">
+                              Closes {formatDate(repsDeadline)}
+                              {isClosingSoon(repsDeadline) && notice.status !== 'expired' && (
+                                <span className="inline-block w-2 h-2 bg-amber-500 rounded-full" title="Closing within 48 hours"></span>
+                              )}
+                            </span>
+                          </>
+                        )}
+                        {repsCount > 0 && (
+                          <>
+                            <span>•</span>
+                            <span
+                              className="font-semibold text-blue-600"
+                              title={`This notice has ${repsCount} ${repsCount === 1 ? deptConfig.repLabel.toLowerCase() : deptConfig.repLabelPlural.toLowerCase()}`}
+                            >
+                              {deptConfig.repLabelPlural}: {repsCount}
+                            </span>
+                          </>
+                        )}
+                        {!notice.proof_pdf_url && (notice.status === 'published' || notice.status === 'pending' || notice.status === 'pending_approval') && (
+                          <>
+                            <span>•</span>
+                            <span className="text-amber-600 font-medium" title="Proof not yet available">
+                              Awaiting proof.
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(notice.status)}`}>
-                    {formatStatus(notice.status)}
-                  </span>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
@@ -376,7 +458,7 @@ export default function Dashboard() {
             Templates
           </h3>
           <p className="text-sm text-gray-600">
-            Create and manage notice templates
+            Configure notice formats, deadlines & fields per notice type.
           </p>
         </Link>
 
@@ -401,7 +483,7 @@ export default function Dashboard() {
             Team Members
           </h3>
           <p className="text-sm text-gray-600">
-            Manage department team and permissions
+            Manage officers and permissions within this department.
           </p>
         </Link>
 
@@ -426,7 +508,7 @@ export default function Dashboard() {
             Settings
           </h3>
           <p className="text-sm text-gray-600">
-            Configure department preferences
+            Set department defaults, notifications & exports.
           </p>
         </Link>
       </div>

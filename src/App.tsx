@@ -25,10 +25,16 @@ import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
 import CouncilNotices from "@/pages/council/Notices";
 import NoticeEditor from "@/pages/council/NoticeEditor";
+import NoticeDetail from "@/pages/council/NoticeDetail";
 import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
 import AuditLog from "@/pages/council/AuditLog";
+import Privacy from "@/pages/legal/Privacy";
+import Terms from "@/pages/legal/Terms";
+import Accessibility from "@/pages/legal/Accessibility";
+import Contact from "@/pages/Contact";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function App() {
   return (
@@ -48,18 +54,24 @@ export default function App() {
         <Route path="/details" element={<DetailsPage />} />
         <Route path="/debug/address" element={<AddressLookupDebug />} />
 
+        {/* Legal & Contact Pages */}
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/accessibility" element={<Accessibility />} />
+        <Route path="/contact" element={<Contact />} />
+
         {/* Auth & Onboarding Routes */}
         <Route path="/auth/sign-in" element={<SignIn />} />
         <Route path="/auth/callback" element={<Callback />} />
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
 
-        {/* Council Portal Routes */}
-        <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
+        {/* Council Portal Routes - Protected */}
+        <Route path="/c/:orgSlug/:deptSlug" element={<ProtectedRoute><CouncilLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<CouncilDashboard />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
-          <Route path="notices/:noticeId" element={<NoticeEditor />} />
+          <Route path="notices/:noticeId" element={<NoticeDetail />} />
           <Route path="team" element={<Team />} />
           <Route path="templates" element={<Templates />} />
           <Route path="settings" element={<Settings />} />

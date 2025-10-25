@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom';
+import { useOutletContext, useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { getDepartmentConfig } from '@/config/departmentConfig';
+import { isClosingSoon } from '@/lib/dateUtils';
 
 interface Department {
   id: string;
@@ -27,6 +29,7 @@ interface Notice {
   published_at: string | null;
   expires_at: string | null;
   representation_deadline: string | null;
+  proof_pdf_url?: string | null;
 }
 
 type FilterStatus = 'all' | 'draft' | 'pending_approval' | 'published' | 'expired';
@@ -34,12 +37,25 @@ type FilterStatus = 'all' | 'draft' | 'pending_approval' | 'published' | 'expire
 export default function Notices() {
   const { department, userRole } = useOutletContext<ContextType>();
   const { orgSlug, deptSlug } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [filteredNotices, setFilteredNotices] = useState<Notice[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check if we're in demo mode
+  const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster';
+  const isDemoSampleBorough = orgSlug === 'sample-borough';
+
+  // Read status from URL on mount
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam && ['draft', 'pending', 'published', 'expired'].includes(statusParam)) {
+      setFilterStatus(statusParam === 'pending' ? 'pending_approval' : statusParam as FilterStatus);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadNotices();
@@ -51,16 +67,44 @@ export default function Notices() {
 
   const loadNotices = async () => {
     try {
-      const { data, error } = await supabase
-        .from('notices')
-        .select('id, title, notice_type, status, created_at, published_at, expires_at, representation_deadline')
-        .eq('department_id', department.id)
-        .order('created_at', { ascending: false });
+      if (isDemoMode) {
+        // For demo mode, fetch all notices via API
+        const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
+        if (!response.ok) {
+          throw new Error('Failed to fetch notices from API');
+        }
 
-      if (error) throw error;
+        const responseData = await response.json();
+        const allNotices = responseData.items || [];
 
-      setNotices(data || []);
-      setLoading(false);
+        // Transform API response to match Notice interface
+        const transformedNotices = allNotices.map((n: any) => ({
+          id: n.id,
+          title: n.premisesName || n.title || 'Untitled Notice',
+          notice_type: n.noticeType || 'Unknown',
+          status: n.status || 'published',
+          created_at: n.publicationDate || n.created_at,
+          published_at: n.publicationDate || n.published_at,
+          expires_at: null,
+          representation_deadline: n.repsDeadline || null,
+          proof_pdf_url: n.proof_pdf_url || null
+        }));
+
+        setNotices(transformedNotices);
+        setLoading(false);
+      } else {
+        // Production mode: filter by department_id
+        const { data, error } = await supabase
+          .from('notices')
+          .select('id, title, notice_type, status, created_at, published_at, expires_at, representation_deadline, proof_pdf_url')
+          .eq('department_id', department.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        setNotices(data || []);
+        setLoading(false);
+      }
     } catch (err) {
       console.error('Failed to load notices:', err);
       setLoading(false);
@@ -121,7 +165,9 @@ export default function Notices() {
     });
   };
 
-  const canCreateNotice = ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
+  // Get department-specific configuration
+  const deptConfig = getDepartmentConfig(department.type);
+  const canCreateNotice = deptConfig.canPublish && ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
 
   const basePath = `/c/${orgSlug}/${deptSlug}`;
 
@@ -132,6 +178,11 @@ export default function Notices() {
     published: notices.filter(n => n.status === 'published').length,
     expired: notices.filter(n => n.status === 'expired').length
   };
+
+  // Filter out draft status for non-publishing departments
+  const availableStatuses: FilterStatus[] = deptConfig.showDraftsCard
+    ? ['all', 'draft', 'pending_approval', 'published', 'expired']
+    : ['all', 'pending_approval', 'published', 'expired'];
 
   if (loading) {
     return (
@@ -177,7 +228,7 @@ export default function Notices() {
 
           {/* Status Filter */}
           <div className="flex gap-2 flex-wrap">
-            {(['all', 'draft', 'pending_approval', 'published', 'expired'] as FilterStatus[]).map(status => (
+            {availableStatuses.map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
@@ -291,7 +342,22 @@ export default function Notices() {
                         >
                           <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Deadline: {formatDate(notice.representation_deadline)}
+                        <span className="flex items-center gap-1.5">
+                          Deadline: {formatDate(notice.representation_deadline)}
+                          {isClosingSoon(notice.representation_deadline) && notice.status !== 'expired' && (
+                            <span className="inline-block w-2 h-2 bg-amber-500 rounded-full"
+                                  title="Closing within 48 hours"></span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {!notice.proof_pdf_url && (notice.status === 'published' || notice.status === 'pending' || notice.status === 'pending_approval') && (
+                      <div className="flex items-center gap-1">
+                        <span>•</span>
+                        <span className="text-amber-600 font-medium" title="Proof not yet available">
+                          Awaiting proof.
+                        </span>
                       </div>
                     )}
                   </div>

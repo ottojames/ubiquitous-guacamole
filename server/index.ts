@@ -5,6 +5,8 @@ dotenv.config({ path: '.env.local', override: true });
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import { initSentry, sentryErrorHandler } from './lib/sentry';
+import { startAllEmailJobs } from './jobs/emailJobs';
 
 import uploadRouter from './routes/upload';
 import addressRouter from './routes/address';
@@ -14,6 +16,14 @@ import publishRouter from './routes/publish';
 import representationsRouter from './routes/representations';
 
 export const app = express();
+
+// Initialize Sentry BEFORE other middleware
+initSentry(app);
+
+// Start email cron jobs in production
+if (process.env.NODE_ENV === 'production') {
+  startAllEmailJobs();
+}
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
@@ -27,6 +37,9 @@ app.use('/api', noticesRouter);
 app.use('/api/ai-summary', aiSummaryRouter);
 app.use('/api', publishRouter);
 app.use('/api', representationsRouter);
+
+// Sentry error handler MUST be after routes but BEFORE other error handlers
+app.use(sentryErrorHandler());
 
 const PORT = Number(process.env.PORT || 5174);
 

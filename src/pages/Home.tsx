@@ -15,6 +15,7 @@ import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import useNoticeSearch from '@/hooks/useNoticeSearch';
 import { toast, useToastController } from '@/lib/ui/toast';
+import Footer from '@/components/Footer';
 
 // -------- analytics stub (intentional - replace with actual analytics service) --------
 function track(event: string, payload: Record<string, unknown> = {}) {
@@ -858,30 +859,7 @@ export default function Home() {
       </section>
 
       {/* -------- FOOTER -------- */}
-      <footer className="border-t border-slate-200 py-12">
-        <div className={`${UI.container} text-center`}>
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
-            <a href="/about" className="transition hover:text-slate-900">
-              About
-            </a>
-            <a href="/docs" className="transition hover:text-slate-900">
-              Docs
-            </a>
-            <a href="/privacy" className="transition hover:text-slate-900">
-              Privacy
-            </a>
-            <a href="/terms" className="transition hover:text-slate-900">
-              Terms
-            </a>
-            <a href="/contact" className="transition hover:text-slate-900">
-              Contact
-            </a>
-          </div>
-          <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} CivicNotices. Modernising statutory notices for the digital age.
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       {showExplainer && (
         <div

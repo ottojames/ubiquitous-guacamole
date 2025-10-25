@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Department {
   id: string;
@@ -23,6 +24,7 @@ export default function CouncilLayout() {
   const { orgSlug, deptSlug } = useParams<{ orgSlug: string; deptSlug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut: authSignOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [department, setDepartment] = useState<Department | null>(null);
   const [userRole, setUserRole] = useState<string>('');
@@ -128,7 +130,7 @@ export default function CouncilLayout() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authSignOut();
     navigate('/auth/sign-in');
   };
 

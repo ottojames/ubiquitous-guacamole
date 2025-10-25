@@ -896,33 +896,49 @@ function NoticesMapViewComponent({
             maxWidth="300px"
           >
             <div className="space-y-3 rounded-xl bg-white/95 p-4 text-sm shadow-lg ring-1 ring-black/5">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-wide text-slate-400">
+              <div className="space-y-1.5">
+                <p className="text-xs uppercase tracking-wide text-slate-400 font-semibold">
                   {activeNotice.noticeType}
                 </p>
-                <h3 className="text-base font-semibold text-slate-900">
-                  {activeNotice.premisesName || activeNotice.noticeType}
+                <h3 className="text-base font-semibold text-slate-900 leading-tight">
+                  {activeNotice.premisesName || 'Notice'}
                 </h3>
-                <p className="text-xs text-slate-500">{formatAddress(activeNotice.premisesAddress)}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{formatAddress(activeNotice.premisesAddress)}</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-slate-500">
-                  {formatShortDate(activeNotice.publicationDate) ? (
-                    <>
-                      <span className="font-medium text-slate-600">Published </span>
-                      {formatShortDate(activeNotice.publicationDate)}
-                    </>
-                  ) : (
-                    <span className="font-medium text-slate-600">Publication date</span>
-                  )}
+
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <div className="flex items-start justify-between text-xs">
+                  <span className="text-slate-500">Published:</span>
+                  <span className="font-medium text-slate-700">
+                    {formatShortDate(activeNotice.publicationDate) || '—'}
+                  </span>
                 </div>
+                {activeNotice.repsDeadline && (
+                  <div className="flex items-start justify-between text-xs">
+                    <span className="text-slate-500">Deadline:</span>
+                    <span className="font-medium text-slate-700">
+                      {formatShortDate(activeNotice.repsDeadline)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
                 <a
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 cursor-pointer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors cursor-pointer"
                   href={`/notices/${activeNotice.id}`}
                 >
-                  View notice
+                  View Notice
                   <span aria-hidden="true">→</span>
                 </a>
+                {activeNotice.repsDeadline && (
+                  <a
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+                    href={`/notices/${activeNotice.id}#representations`}
+                  >
+                    Make Representation
+                  </a>
+                )}
               </div>
             </div>
           </Popup>

@@ -7,6 +7,7 @@ import SearchResults from '@/components/home/SearchResults';
 import NoticesMapView from '@/components/search/NoticesMapView';
 import Pagination from '@/components/ui/Pagination';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/Footer';
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import { useNoticeSearch } from '@/hooks/useNoticeSearch';
@@ -768,6 +769,8 @@ export default function NoticesPage() {
           {toastMessage}
         </div>
       )}
+
+      <Footer />
     </div>
   );
 }

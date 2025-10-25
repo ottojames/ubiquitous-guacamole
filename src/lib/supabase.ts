@@ -11,4 +11,11 @@ if (!key) {
   throw new Error("Missing VITE_SUPABASE_ANON_KEY");
 }
 
-export const supabase = createClient(url, key, { auth: { persistSession: false } });
+export const supabase = createClient(url, key, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage,
+  }
+});

@@ -1,0 +1,328 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - link "CivicNotices" [ref=e8] [cursor=pointer]:
+          - /url: "#top"
+          - generic [ref=e9] [cursor=pointer]: CivicNotices
+        - navigation [ref=e10]:
+          - link "Find notices" [ref=e11] [cursor=pointer]:
+            - /url: "#notices"
+          - link "For councils" [ref=e12] [cursor=pointer]:
+            - /url: "#for-councils"
+          - link "Pricing" [ref=e13] [cursor=pointer]:
+            - /url: /pricing
+      - generic [ref=e14]:
+        - link "Sign in" [ref=e15] [cursor=pointer]:
+          - /url: /login
+        - link "Get started" [ref=e16] [cursor=pointer]:
+          - /url: /publish
+  - generic [ref=e22]:
+    - heading "Search, publish, and verify statutory notices" [level=1] [ref=e23]
+    - paragraph [ref=e24]: Instantly create legally compliant public notices with a full audit trail. Give residents a voice. Keep licensing transparent and accountable.
+    - button "What is a statutory notice?" [ref=e25] [cursor=pointer]
+    - generic [ref=e31]:
+      - search "Search statutory notices by address" [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - generic [ref=e35]: Enter an address or postcode
+            - textbox "Enter an address or postcode" [ref=e36]
+          - button "Search" [ref=e37] [cursor=pointer]
+        - paragraph [ref=e38]: Pick an address to view statutory notices nearby.
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: Type
+          - combobox "Type" [ref=e43]:
+            - option "All" [selected]
+            - option "Premises"
+            - option "Planning"
+            - option "Traffic"
+            - option "Other"
+        - generic [ref=e44]:
+          - generic [ref=e45]: Status
+          - combobox "Status" [ref=e46]:
+            - option "All" [selected]
+            - option "Open"
+            - option "Closed"
+        - generic [ref=e47]:
+          - generic [ref=e48]: Start
+          - textbox "Start" [ref=e49]
+        - generic [ref=e50]:
+          - generic [ref=e51]: End
+          - textbox "End" [ref=e52]
+        - generic [ref=e53]:
+          - generic [ref=e54]: Authority
+          - textbox "Authority" [ref=e55]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]: 1,842+
+          - generic [ref=e59]: notices
+        - generic [ref=e60]:
+          - generic [ref=e61]: 12,455+
+          - generic [ref=e62]: comments
+        - generic [ref=e63]:
+          - generic [ref=e64]: 40+
+          - generic [ref=e65]: councils
+    - generic [ref=e66]:
+      - link "Publish a notice" [ref=e67] [cursor=pointer]:
+        - /url: /publish
+        - text: Publish a notice
+        - img [ref=e68] [cursor=pointer]
+      - link "Browse notices" [ref=e70] [cursor=pointer]:
+        - /url: "#notices"
+    - paragraph [ref=e71]: No sign-up needed · Trusted by 40+ councils · Save up to 85% vs newspapers
+  - generic [ref=e76]:
+    - button "Previous testimonial" [ref=e77] [cursor=pointer]:
+      - img [ref=e78] [cursor=pointer]
+    - button "Next testimonial" [ref=e80] [cursor=pointer]:
+      - img [ref=e81] [cursor=pointer]
+    - generic [ref=e83]:
+      - img [ref=e84]
+      - text: Trusted by 40+ UK councils
+    - generic [ref=e88]:
+      - blockquote [ref=e89]: "\"Instant publication, easy exports, and our legal team love the audit trail.\""
+      - generic [ref=e90]:
+        - generic [ref=e91]: David J, Legal Officer
+        - generic [ref=e92]: ·
+        - generic [ref=e93]: Leeds City Council
+    - tablist "Testimonial navigation" [ref=e94]:
+      - tab "View testimonial 1" [selected] [ref=e95] [cursor=pointer]
+      - tab "View testimonial 2" [ref=e96] [cursor=pointer]
+      - tab "View testimonial 3" [ref=e97] [cursor=pointer]
+    - generic [ref=e98]:
+      - img "Leeds City Council" [ref=e99]
+      - img "City of Westminster" [ref=e100]
+      - img "Manchester City Council" [ref=e101]
+  - generic [ref=e103]:
+    - generic [ref=e104]:
+      - generic [ref=e105]: Live feed
+      - heading "Latest public notices across the UK" [level=2] [ref=e107]
+      - paragraph [ref=e108]: Real-time statutory notices from councils nationwide. Every notice is timestamped, verified, and fully searchable.
+    - generic [ref=e113]:
+      - article [ref=e114] [cursor=pointer]:
+        - generic [ref=e116] [cursor=pointer]:
+          - generic [ref=e117] [cursor=pointer]: licensing-premises-new
+          - heading "Sample Venue" [level=3] [ref=e118] [cursor=pointer]
+          - paragraph [ref=e119] [cursor=pointer]: Address not provided
+          - generic [ref=e120] [cursor=pointer]:
+            - generic [ref=e121] [cursor=pointer]:
+              - generic [ref=e122] [cursor=pointer]: Published
+              - generic [ref=e123] [cursor=pointer]: Oct 24, 2025
+            - generic [ref=e124] [cursor=pointer]:
+              - generic [ref=e125] [cursor=pointer]: Deadline
+              - generic [ref=e126] [cursor=pointer]: Nov 21, 2025
+            - generic [ref=e127] [cursor=pointer]:
+              - generic [ref=e128] [cursor=pointer]: Status
+              - generic [ref=e129] [cursor=pointer]: published
+          - button "View full notice" [ref=e131] [cursor=pointer]:
+            - text: View full notice
+            - img [ref=e132] [cursor=pointer]
+      - article [ref=e134] [cursor=pointer]:
+        - generic [ref=e136] [cursor=pointer]:
+          - generic [ref=e137] [cursor=pointer]: licensing-premises-new
+          - heading "Sample Venue" [level=3] [ref=e138] [cursor=pointer]
+          - paragraph [ref=e139] [cursor=pointer]: Address not provided
+          - generic [ref=e140] [cursor=pointer]:
+            - generic [ref=e141] [cursor=pointer]:
+              - generic [ref=e142] [cursor=pointer]: Published
+              - generic [ref=e143] [cursor=pointer]: Oct 24, 2025
+            - generic [ref=e144] [cursor=pointer]:
+              - generic [ref=e145] [cursor=pointer]: Deadline
+              - generic [ref=e146] [cursor=pointer]: Nov 21, 2025
+            - generic [ref=e147] [cursor=pointer]:
+              - generic [ref=e148] [cursor=pointer]: Status
+              - generic [ref=e149] [cursor=pointer]: published
+          - button "View full notice" [ref=e151] [cursor=pointer]:
+            - text: View full notice
+            - img [ref=e152] [cursor=pointer]
+      - article [ref=e154] [cursor=pointer]:
+        - generic [ref=e156] [cursor=pointer]:
+          - generic [ref=e157] [cursor=pointer]: licensing-premises-new
+          - heading "Sample Venue" [level=3] [ref=e158] [cursor=pointer]
+          - paragraph [ref=e159] [cursor=pointer]: Address not provided
+          - generic [ref=e160] [cursor=pointer]:
+            - generic [ref=e161] [cursor=pointer]:
+              - generic [ref=e162] [cursor=pointer]: Published
+              - generic [ref=e163] [cursor=pointer]: Oct 24, 2025
+            - generic [ref=e164] [cursor=pointer]:
+              - generic [ref=e165] [cursor=pointer]: Deadline
+              - generic [ref=e166] [cursor=pointer]: Nov 21, 2025
+            - generic [ref=e167] [cursor=pointer]:
+              - generic [ref=e168] [cursor=pointer]: Status
+              - generic [ref=e169] [cursor=pointer]: published
+          - button "View full notice" [ref=e171] [cursor=pointer]:
+            - text: View full notice
+            - img [ref=e172] [cursor=pointer]
+      - article [ref=e174] [cursor=pointer]:
+        - generic [ref=e176] [cursor=pointer]:
+          - generic [ref=e177] [cursor=pointer]: licensing-premises-new
+          - heading "Sample Venue" [level=3] [ref=e178] [cursor=pointer]
+          - paragraph [ref=e179] [cursor=pointer]: Address not provided
+          - generic [ref=e180] [cursor=pointer]:
+            - generic [ref=e181] [cursor=pointer]:
+              - generic [ref=e182] [cursor=pointer]: Published
+              - generic [ref=e183] [cursor=pointer]: Oct 24, 2025
+            - generic [ref=e184] [cursor=pointer]:
+              - generic [ref=e185] [cursor=pointer]: Deadline
+              - generic [ref=e186] [cursor=pointer]: Nov 21, 2025
+            - generic [ref=e187] [cursor=pointer]:
+              - generic [ref=e188] [cursor=pointer]: Status
+              - generic [ref=e189] [cursor=pointer]: published
+          - button "View full notice" [ref=e191] [cursor=pointer]:
+            - text: View full notice
+            - img [ref=e192] [cursor=pointer]
+      - article [ref=e194] [cursor=pointer]:
+        - generic [ref=e196] [cursor=pointer]:
+          - generic [ref=e197] [cursor=pointer]: gambling-betting-new
+          - heading "Sample Betting Shop" [level=3] [ref=e198] [cursor=pointer]
+          - paragraph [ref=e199] [cursor=pointer]: Address not provided
+          - generic [ref=e200] [cursor=pointer]:
+            - generic [ref=e201] [cursor=pointer]:
+              - generic [ref=e202] [cursor=pointer]: Published
+              - generic [ref=e203] [cursor=pointer]: Oct 24, 2025
+            - generic [ref=e204] [cursor=pointer]:
+              - generic [ref=e205] [cursor=pointer]: Deadline
+              - generic [ref=e206] [cursor=pointer]: Nov 21, 2025
+            - generic [ref=e207] [cursor=pointer]:
+              - generic [ref=e208] [cursor=pointer]: Status
+              - generic [ref=e209] [cursor=pointer]: published
+          - button "View full notice" [ref=e211] [cursor=pointer]:
+            - text: View full notice
+            - img [ref=e212] [cursor=pointer]
+    - generic [ref=e214]:
+      - link "Browse all notices" [ref=e215] [cursor=pointer]:
+        - /url: /notices
+        - text: Browse all notices
+        - img [ref=e216] [cursor=pointer]
+      - paragraph [ref=e218]: Explore over 1,842+ statutory notices with advanced filters
+  - generic [ref=e221]:
+    - generic [ref=e222]:
+      - generic [ref=e223]:
+        - img [ref=e224]
+        - text: Legally compliant
+      - heading "Publish in minutes, not weeks" [level=2] [ref=e227]
+      - paragraph [ref=e228]: Traditional newspaper notices take 5-10 days. With CivicNotices, you're live instantly with a complete audit trail.
+    - generic [ref=e230]:
+      - generic [ref=e233]:
+        - generic [ref=e234]:
+          - img [ref=e236]
+          - generic [ref=e240]: "1"
+        - heading "Fill the form" [level=3] [ref=e241]
+        - paragraph [ref=e242]: Smart interface guides you through every required field. Real-time validation ensures compliance before you publish.
+      - generic [ref=e245]:
+        - generic [ref=e246]:
+          - img [ref=e248]
+          - generic [ref=e252]: "2"
+        - heading "Choose coverage" [level=3] [ref=e253]
+        - paragraph [ref=e254]: Target by postcode, ward, or go UK-wide. Interactive map shows exactly who will see your notice.
+      - generic [ref=e257]:
+        - generic [ref=e258]:
+          - img [ref=e260]
+          - generic [ref=e264]: "3"
+        - heading "Get instant proof" [level=3] [ref=e265]
+        - paragraph [ref=e266]: Download timestamped certificates with cryptographic verification. Court-ready evidence at your fingertips.
+    - generic [ref=e267]:
+      - link "Start publishing now" [ref=e268] [cursor=pointer]:
+        - /url: /publish
+        - text: Start publishing now
+        - img [ref=e269] [cursor=pointer]
+      - paragraph [ref=e271]:
+        - generic [ref=e272]: £49.99 per notice
+        - text: · No subscription · Instant activation
+      - generic [ref=e273]:
+        - generic [ref=e274]:
+          - img [ref=e275]
+          - text: Automatic validation
+        - generic [ref=e278]:
+          - img [ref=e279]
+          - text: Cryptographic proof
+        - generic [ref=e282]:
+          - img [ref=e283]
+          - text: Full audit trail
+  - generic [ref=e288]:
+    - generic [ref=e289]:
+      - generic [ref=e290]:
+        - img [ref=e291]
+        - text: Enterprise ready
+      - heading "Built for councils, designed for scale" [level=2] [ref=e294]
+      - paragraph [ref=e295]: From parish councils to metropolitan authorities — 40+ UK councils trust CivicNotices for their statutory publishing.
+    - generic [ref=e296]:
+      - img "Leeds City Council" [ref=e297]
+      - img "City of Westminster" [ref=e298]
+      - img "Manchester City Council" [ref=e299]
+    - generic [ref=e301]:
+      - generic [ref=e304]:
+        - img [ref=e306]
+        - heading "Digital submission" [level=3] [ref=e309]
+        - paragraph [ref=e310]: Upload PDFs, bulk import from Excel, or connect your case management system via API. Smart validation catches errors before publication.
+        - link "View API docs" [ref=e311] [cursor=pointer]:
+          - /url: /api-info
+          - text: View API docs
+          - img [ref=e312] [cursor=pointer]
+      - generic [ref=e316]:
+        - img [ref=e318]
+        - heading "Instant publication" [level=3] [ref=e321]
+        - paragraph [ref=e322]: Go live in seconds with cryptographic timestamping. Full-text search, resident comments, and real-time engagement analytics.
+      - generic [ref=e325]:
+        - img [ref=e327]
+        - heading "Compliance exports" [level=3] [ref=e330]
+        - paragraph [ref=e331]: One-click FOI packs with audit trails. Generate court-ready evidence bundles with tamper-proof certificates and blockchain verification.
+    - generic [ref=e335]:
+      - heading "Enterprise features included" [level=3] [ref=e336]
+      - generic [ref=e337]:
+        - generic [ref=e338]:
+          - generic [ref=e339]: 🔌
+          - generic [ref=e340]: RESTful API & webhooks
+        - generic [ref=e341]:
+          - generic [ref=e342]: 🔐
+          - generic [ref=e343]: Single sign-on (SSO)
+        - generic [ref=e344]:
+          - generic [ref=e345]: 👥
+          - generic [ref=e346]: Role-based permissions
+        - generic [ref=e347]:
+          - generic [ref=e348]: 📋
+          - generic [ref=e349]: Custom retention policies
+        - generic [ref=e350]:
+          - generic [ref=e351]: 📊
+          - generic [ref=e352]: Usage analytics & quotas
+        - generic [ref=e353]:
+          - generic [ref=e354]: 🔒
+          - generic [ref=e355]: Immutable audit logs
+      - generic [ref=e356]:
+        - link "View council pricing" [ref=e357] [cursor=pointer]:
+          - /url: /pricing
+          - text: View council pricing
+          - img [ref=e358] [cursor=pointer]
+        - paragraph [ref=e360]:
+          - text: From
+          - generic [ref=e361]: £299/month
+          - text: · Unlimited notices · 14-day free trial
+  - generic [ref=e367]:
+    - heading "Ready to modernise your statutory notices?" [level=2] [ref=e368]
+    - paragraph [ref=e369]: Join 40+ UK councils already saving time and money with CivicNotices
+    - generic [ref=e370]:
+      - link "Publish your first notice" [ref=e371] [cursor=pointer]:
+        - /url: /publish
+        - text: Publish your first notice
+        - img [ref=e372] [cursor=pointer]
+      - link "View pricing" [ref=e374] [cursor=pointer]:
+        - /url: /pricing
+    - paragraph [ref=e375]: No credit card required · Save up to 85% vs traditional methods
+  - contentinfo [ref=e376]:
+    - generic [ref=e377]:
+      - generic [ref=e378]:
+        - link "About" [ref=e379] [cursor=pointer]:
+          - /url: /about
+        - link "Docs" [ref=e380] [cursor=pointer]:
+          - /url: /docs
+        - link "Privacy" [ref=e381] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms" [ref=e382] [cursor=pointer]:
+          - /url: /terms
+        - link "Contact" [ref=e383] [cursor=pointer]:
+          - /url: /contact
+      - paragraph [ref=e384]: © 2025 CivicNotices. Modernising statutory notices for the digital age.
+```

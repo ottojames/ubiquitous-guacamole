@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -29,8 +30,9 @@ function getSupabase() {
  * GET /api/notices/:noticeId/representations
  * Get all representations for a specific notice
  * Query params: userId (optional) - to check read status for specific user
+ * Protected: Requires authentication
  */
-router.get('/notices/:noticeId/representations', async (req: Request, res: Response) => {
+router.get('/notices/:noticeId/representations', requireAuth, async (req: Request, res: Response) => {
   try {
     const { noticeId } = req.params;
     const { userId } = req.query;
@@ -81,8 +83,9 @@ router.get('/notices/:noticeId/representations', async (req: Request, res: Respo
  * GET /api/notices/:noticeId/representations/counts
  * Get representation counts for a notice (total and unread)
  * Query params: userId (required)
+ * Protected: Requires authentication
  */
-router.get('/notices/:noticeId/representations/counts', async (req: Request, res: Response) => {
+router.get('/notices/:noticeId/representations/counts', requireAuth, async (req: Request, res: Response) => {
   try {
     const { noticeId } = req.params;
     const { userId } = req.query;
@@ -120,8 +123,9 @@ router.get('/notices/:noticeId/representations/counts', async (req: Request, res
  * POST /api/representations/counts/bulk
  * Bulk fetch representation counts for multiple notices
  * Body: { noticeIds: string[], userId: string }
+ * Protected: Requires authentication
  */
-router.post('/representations/counts/bulk', async (req: Request, res: Response) => {
+router.post('/representations/counts/bulk', requireAuth, async (req: Request, res: Response) => {
   try {
     const { noticeIds, userId } = req.body;
 
@@ -169,8 +173,9 @@ router.post('/representations/counts/bulk', async (req: Request, res: Response) 
  * POST /api/representations/:representationId/mark-read
  * Mark a representation as read by a user (idempotent)
  * Body: { userId: string }
+ * Protected: Requires authentication
  */
-router.post('/representations/:representationId/mark-read', async (req: Request, res: Response) => {
+router.post('/representations/:representationId/mark-read', requireAuth, async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId } = req.body;
@@ -256,8 +261,9 @@ router.get('/representations/:representationId', async (req: Request, res: Respo
  * POST /api/representations/:representationId/comment
  * Add an internal comment to a representation (officer-to-officer discussion)
  * Body: { userId: string, userName: string, comment: string }
+ * Protected: Requires authentication
  */
-router.post('/representations/:representationId/comment', async (req: Request, res: Response) => {
+router.post('/representations/:representationId/comment', requireAuth, async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId, userName, comment } = req.body;
@@ -336,8 +342,9 @@ router.post('/representations/:representationId/comment', async (req: Request, r
  * Query params:
  *   - noticeId (required): filter by notice
  *   - format (optional): 'csv' or 'json' (default: 'csv')
+ * Protected: Requires authentication
  */
-router.get('/representations/export', async (req: Request, res: Response) => {
+router.get('/representations/export', requireAuth, async (req: Request, res: Response) => {
   try {
     const { noticeId, format = 'csv' } = req.query;
 
