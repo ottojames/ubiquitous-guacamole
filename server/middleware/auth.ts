@@ -1,13 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Lazy initialization - only create Supabase client when actually needed
+let supabaseAdmin: SupabaseClient | null = null;
 
-// Create Supabase admin client for JWT verification
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { persistSession: false }
-});
+function getSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdmin) {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase environment variables (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) are required');
+    }
+
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    });
+  }
+  return supabaseAdmin;
+}
 
 // Extend Express Request type to include user and permissions
 declare global {
@@ -49,7 +60,7 @@ export async function requireAuth(
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify the JWT token using Supabase
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error } = await getSupabaseAdmin().auth.getUser(token);
 
     if (error || !user) {
       res.status(401).json({
@@ -95,7 +106,7 @@ export async function optionalAuth(
     }
 
     const token = authHeader.substring(7);
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error } = await getSupabaseAdmin().auth.getUser(token);
 
     if (!error && user) {
       req.user = {
@@ -169,7 +180,7 @@ export function requirePermission(permissionName: string) {
       }
 
       // Check if user has the required permission
-      const { data, error } = await supabaseAdmin.rpc('user_has_permission', {
+      const { data, error } = await getSupabaseAdmin().rpc('user_has_permission', {
         p_user_id: req.user.id,
         p_department_id: departmentId,
         p_permission_name: permissionName
@@ -228,7 +239,7 @@ export async function loadUserPermissions(
     }
 
     // Load all permissions for user in this department
-    const { data: permissions, error } = await supabaseAdmin.rpc('get_user_permissions', {
+    const { data: permissions, error } = await getSupabaseAdmin().rpc('get_user_permissions', {
       p_user_id: req.user.id,
       p_department_id: departmentId
     });

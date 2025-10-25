@@ -1,6 +1,17 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization - only create Resend client when actually sending emails
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export interface NoticeConfirmationData {
   noticeId: string;
@@ -271,7 +282,7 @@ The CivicNotices Team
 
     console.log('[Email] Sending confirmation to:', to);
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: 'CivicNotices <onboarding@resend.dev>',
       to: [to],
       subject,
@@ -519,7 +530,7 @@ The CivicNotices Team
 
     console.log('[Email] Sending representation confirmation to:', data.submitterEmail);
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: 'CivicNotices <onboarding@resend.dev>',
       to: [data.submitterEmail],
       subject,
@@ -728,7 +739,7 @@ The CivicNotices Team
 
     console.log('[Email] Sending deadline reminder to:', data.recipientEmail);
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: 'CivicNotices <onboarding@resend.dev>',
       to: [data.recipientEmail],
       subject,
@@ -940,7 +951,7 @@ The CivicNotices Team
 
     console.log('[Email] Sending daily summary to:', to);
 
-    const result = await resend.emails.send({
+    const result = await getResendClient().emails.send({
       from: 'CivicNotices <onboarding@resend.dev>',
       to: [to],
       subject,
