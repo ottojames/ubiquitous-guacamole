@@ -36,9 +36,12 @@ export default function CouncilLayout() {
 
   const loadDepartmentData = async () => {
     try {
-      // Check for demo mode first
-      const isDemoSampleBorough = orgSlug === 'sample-borough' && deptSlug === 'licensing';
-      const isDemoWestminster = orgSlug === 'westminster' && deptSlug === 'licensing';
+      // Check if user has a real session first
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Only use demo mode if there's NO real session
+      const isDemoSampleBorough = !session && orgSlug === 'sample-borough' && deptSlug === 'licensing';
+      const isDemoWestminster = !session && orgSlug === 'westminster' && deptSlug === 'licensing';
 
       if (isDemoSampleBorough || isDemoWestminster) {
         // Set mock department data for demo
@@ -57,18 +60,22 @@ export default function CouncilLayout() {
         setDepartment(mockDepartment as Department);
         setUserRole('org_admin');
 
-        // Load permissions for demo user
-        await loadPermissions(mockDepartment.id);
+        // Load permissions for demo user (bypass database, use role-based permissions)
+        await loadPermissions(mockDepartment.id, 'org_admin');
 
         setLoading(false);
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // Real authenticated user flow
       if (!session) {
         navigate('/auth/sign-in');
         return;
       }
+
+      // TEMPORARY FIX: Hardcode the Licensing Department ID since orgs don't have slugs
+      // In production, we'd need to add a slug column to organizations table
+      const hardcodedDeptId = '00000000-0000-0000-0001-000000000001';
 
       // Query department with organization data
       const { data: deptData, error: deptError } = await supabase
@@ -83,7 +90,7 @@ export default function CouncilLayout() {
             name
           )
         `)
-        .eq('slug', deptSlug)
+        .eq('id', hardcodedDeptId)
         .single();
 
       if (deptError) throw deptError;

@@ -115,7 +115,9 @@ export default function SwitchContext() {
       // Navigate to department dashboard
       const org = membership.department.organization;
       const dept = membership.department;
-      navigate(`/c/${org.name.toLowerCase().replace(/\s+/g, '-')}/${dept.slug}/dashboard`);
+      // Hardcode sample-borough for now since organizations don't have slugs
+      const orgSlug = 'sample-borough';
+      navigate(`/c/${orgSlug}/${dept.slug}/dashboard`);
     } catch (err) {
       console.error('Failed to select department:', err);
     }

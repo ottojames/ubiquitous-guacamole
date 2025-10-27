@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { requireAuth, optionalAuth } from '../middleware/auth';
+import { requireAuth, optionalAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
 
 const router = Router();
 
@@ -32,7 +32,7 @@ function getSupabase() {
  * Query params: userId (optional) - to check read status for specific user
  * Protected: Optional authentication (works for demo users too)
  */
-router.get('/notices/:noticeId/representations', optionalAuth, async (req: Request, res: Response) => {
+router.get('/notices/:noticeId/representations', requireAuth, loadUserPermissions, requirePermission('representations.read'), async (req: Request, res: Response) => {
   try {
     const { noticeId } = req.params;
     const { userId } = req.query;
@@ -85,7 +85,7 @@ router.get('/notices/:noticeId/representations', optionalAuth, async (req: Reque
  * Query params: userId (required)
  * Protected: Optional authentication (works for demo users too)
  */
-router.get('/notices/:noticeId/representations/counts', optionalAuth, async (req: Request, res: Response) => {
+router.get('/notices/:noticeId/representations/counts', requireAuth, loadUserPermissions, requirePermission('representations.read'), async (req: Request, res: Response) => {
   try {
     const { noticeId } = req.params;
     const { userId } = req.query;
@@ -125,7 +125,7 @@ router.get('/notices/:noticeId/representations/counts', optionalAuth, async (req
  * Body: { noticeIds: string[], userId: string }
  * Protected: Requires authentication
  */
-router.post('/representations/counts/bulk', requireAuth, async (req: Request, res: Response) => {
+router.post('/representations/counts/bulk', requireAuth, loadUserPermissions, requirePermission('representations.read'), async (req: Request, res: Response) => {
   try {
     const { noticeIds, userId } = req.body;
 
@@ -175,7 +175,7 @@ router.post('/representations/counts/bulk', requireAuth, async (req: Request, re
  * Body: { userId: string }
  * Protected: Requires authentication
  */
-router.post('/representations/:representationId/mark-read', requireAuth, async (req: Request, res: Response) => {
+router.post('/representations/:representationId/mark-read', requireAuth, loadUserPermissions, requirePermission('representations.update'), async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId } = req.body;
@@ -213,7 +213,7 @@ router.post('/representations/:representationId/mark-read', requireAuth, async (
  * Get details of a single representation
  * Query params: userId (optional) - to check if user has read it
  */
-router.get('/representations/:representationId', async (req: Request, res: Response) => {
+router.get('/representations/:representationId', requireAuth, loadUserPermissions, requirePermission('representations.read'), async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId } = req.query;
@@ -263,7 +263,7 @@ router.get('/representations/:representationId', async (req: Request, res: Respo
  * Body: { userId: string, userName: string, comment: string }
  * Protected: Requires authentication
  */
-router.post('/representations/:representationId/comment', requireAuth, async (req: Request, res: Response) => {
+router.post('/representations/:representationId/comment', requireAuth, loadUserPermissions, requirePermission('representations.comment'), async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId, userName, comment } = req.body;
@@ -344,7 +344,7 @@ router.post('/representations/:representationId/comment', requireAuth, async (re
  *   - format (optional): 'csv' or 'json' (default: 'csv')
  * Protected: Requires authentication
  */
-router.get('/representations/export', requireAuth, async (req: Request, res: Response) => {
+router.get('/representations/export', requireAuth, loadUserPermissions, requirePermission('representations.export'), async (req: Request, res: Response) => {
   try {
     const { noticeId, format = 'csv' } = req.query;
 

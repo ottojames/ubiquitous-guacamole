@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 
 import { ensurePostcodeCoordinates, normalisePostcode as geocodeNormalisePostcode } from '../lib/geocode';
+import { requireAuth, loadUserPermissions, requirePermission, optionalAuth } from '../middleware/auth';
 
 const POSTCODE_RE = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/i;
 
@@ -411,7 +412,7 @@ function buildPremises(address: DraftNoticeAddress | undefined, postcode: string
   };
 }
 
-router.post('/notices/draft', async (req, res) => {
+router.post('/notices/draft', requireAuth, loadUserPermissions, requirePermission('notices.create'), async (req, res) => {
   try {
     const body = (req.body ?? {}) as DraftNoticePayload;
     const postcodeInput = body.postcode || body.address?.postcode;
@@ -472,7 +473,7 @@ router.post('/notices/draft', async (req, res) => {
   }
 });
 
-router.post('/notices/submit', async (req, res) => {
+router.post('/notices/submit', requireAuth, loadUserPermissions, requirePermission('notices.create'), async (req, res) => {
   console.log('========== [notice-submit] NEW SUBMISSION REQUEST ==========');
   console.log('[notice-submit] Body:', JSON.stringify(req.body, null, 2));
   try {
@@ -639,7 +640,7 @@ router.post('/notices/submit', async (req, res) => {
   }
 });
 
-router.get('/notices/search', async (req, res) => {
+router.get('/notices/search', optionalAuth, async (req, res) => {
   try {
     console.log('[notice-search] Incoming query params:', req.query);
 
@@ -992,7 +993,7 @@ router.get('/notices/search', async (req, res) => {
 });
 
 // GET /notices/:id - Get a single notice by ID
-router.get('/notices/:id', async (req, res) => {
+router.get('/notices/:id', optionalAuth, async (req, res) => {
   const { id } = req.params;
 
   if (!id || typeof id !== 'string') {

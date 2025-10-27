@@ -178,7 +178,8 @@ export default function Team() {
   };
 
   // Check if user has permission to manage team members using RBAC system
-  const canManageTeam = hasPermission(PERMISSIONS.TEAM_MANAGE);
+  // User needs team.invite permission to see the invite form
+  const canManageTeam = hasPermission(PERMISSIONS.TEAM_INVITE);
 
   const roles = [
     { value: 'department_admin', label: 'Department Admin', description: 'Full access to department management' },

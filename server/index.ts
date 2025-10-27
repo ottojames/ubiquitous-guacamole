@@ -14,6 +14,9 @@ import noticesRouter from './routes/notices';
 import aiSummaryRouter from './routes/ai-summary';
 import publishRouter from './routes/publish';
 import representationsRouter from './routes/representations';
+import teamRouter from './routes/team';
+import settingsRouter from './routes/settings';
+import templatesRouter from './routes/templates';
 
 export const app = express();
 
@@ -37,6 +40,9 @@ app.use('/api', noticesRouter);
 app.use('/api/ai-summary', aiSummaryRouter);
 app.use('/api', publishRouter);
 app.use('/api', representationsRouter);
+app.use('/api', teamRouter);
+app.use('/api', settingsRouter);
+app.use('/api', templatesRouter);
 
 // Sentry error handler MUST be after routes but BEFORE other error handlers
 app.use(sentryErrorHandler());

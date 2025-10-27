@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
 import * as UI from "@/styles/ui";
+import { supabase } from "@/lib/supabase";
 
 const NAV_LINKS = [
   { href: "/#notices", label: "Find notices" },
@@ -19,30 +20,65 @@ export default function Login() {
     setError(null);
     setLoading(true);
 
-    // Demo login - check for council credentials
-    setTimeout(() => {
-      if (!email || !password) {
-        setError("Please enter both email and password");
-        setLoading(false);
-        return;
-      }
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      setLoading(false);
+      return;
+    }
 
-      // Demo council logins
-      // Option 1: Sample Borough Council (for test notices)
-      // Option 2: Westminster Council (demo)
-      if (email === "licensing@sample.gov.uk" && password === "sample123") {
-        console.log("Sample Council login successful!");
-        // Redirect to Sample Borough Council dashboard
-        window.location.href = "/c/sample-borough/licensing";
-      } else if (email === "demo@council.gov.uk" && password === "demo123") {
-        console.log("Westminster Council login successful!");
-        // Redirect to Westminster council dashboard
-        window.location.href = "/c/westminster/licensing";
-      } else {
-        setError("Invalid credentials. Try: licensing@sample.gov.uk / sample123");
-        setLoading(false);
+    // Demo council logins (no password validation required)
+    if (email === "licensing@sample.gov.uk" && password === "sample123") {
+      console.log("Sample Council login successful!");
+      window.location.href = "/c/sample-borough/licensing";
+      return;
+    } else if (email === "demo@council.gov.uk" && password === "demo123") {
+      console.log("Westminster Council login successful!");
+      window.location.href = "/c/westminster/licensing";
+      return;
+    }
+
+    // Real Supabase authentication for test users
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      if (data.user) {
+        console.log("User authenticated:", data.user.email);
+
+        // Get user's department membership to redirect to correct dashboard
+        const { data: membership, error: membershipError } = await supabase
+          .from('department_memberships')
+          .select(`
+            department:departments (
+              id,
+              slug
+            )
+          `)
+          .eq('user_id', data.user.id)
+          .limit(1)
+          .single();
+
+        if (membershipError || !membership) {
+          console.error("No department membership found:", membershipError);
+          // Fallback to sample-borough for demo
+          window.location.href = "/c/sample-borough/licensing";
+          return;
+        }
+
+        // Redirect to user's department dashboard
+        const deptSlug = (membership as any).department.slug;
+        window.location.href = `/c/sample-borough/${deptSlug}/dashboard`;
       }
-    }, 1000);
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Invalid credentials. Try: licensing@sample.gov.uk / sample123");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,19 +149,28 @@ export default function Login() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-900 mb-2">Demo Council Logins</p>
-                    <div className="space-y-2">
+                    <p className="text-sm font-semibold text-blue-900 mb-2">Test Accounts</p>
+                    <div className="space-y-2 mb-3">
                       <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Sample Borough Council</p>
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Sample Borough Council (Demo)</p>
                         <p className="text-xs text-blue-700">
                           <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">licensing@sample.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">sample123</code>
                         </p>
                       </div>
                       <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Westminster Council</p>
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Westminster Council (Demo)</p>
                         <p className="text-xs text-blue-700">
                           <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo@council.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo123</code>
                         </p>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-blue-200 space-y-1.5">
+                      <p className="text-xs font-semibold text-blue-900">RBAC Test Users:</p>
+                      <div className="grid grid-cols-1 gap-1.5 text-xs text-blue-700">
+                        <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">viewer@test.civicnotices.co.uk</code> - Read-only (4 permissions)</p>
+                        <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">officer@test.civicnotices.co.uk</code> - Officer (12 permissions)</p>
+                        <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">admin@test.civicnotices.co.uk</code> - Admin (21 permissions)</p>
+                        <p className="text-blue-600 mt-1">Password: <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">TestPassword123!</code></p>
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { PermissionName, RoleName } from '@/types/permissions';
+import { PERMISSIONS, ROLES } from '@/types/permissions';
 
 interface AuthContextType {
   user: User | null;
@@ -11,7 +12,7 @@ interface AuthContextType {
   role: RoleName | null;
   departmentId: string | null;
   signOut: () => Promise<void>;
-  loadPermissions: (departmentId: string) => Promise<void>;
+  loadPermissions: (departmentId: string, demoRole?: RoleName) => Promise<void>;
   hasPermission: (permission: PermissionName) => boolean;
   hasAnyPermission: (...permissions: PermissionName[]) => boolean;
   hasAllPermissions: (...permissions: PermissionName[]) => boolean;
@@ -47,13 +48,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadPermissions = async (deptId: string) => {
-    if (!user) {
-      console.warn('[AuthContext] Cannot load permissions without user');
-      return;
-    }
-
+  const loadPermissions = async (deptId: string, demoRole?: RoleName) => {
     try {
+      // If a demoRole is provided, bypass database and use mock permissions
+      if (demoRole) {
+        console.log('[AuthContext] Loading demo permissions for role:', demoRole);
+
+        // Set role
+        setRole(demoRole);
+
+        // Get all permissions for this role
+        let permissionNames: PermissionName[];
+
+        if (demoRole === ROLES.ORG_ADMIN || demoRole === ROLES.DEPT_ADMIN) {
+          // Admins get all permissions
+          permissionNames = Object.values(PERMISSIONS);
+        } else if (demoRole === ROLES.OFFICER) {
+          permissionNames = [
+            PERMISSIONS.NOTICES_CREATE,
+            PERMISSIONS.NOTICES_READ,
+            PERMISSIONS.NOTICES_UPDATE,
+            PERMISSIONS.NOTICES_PUBLISH,
+            PERMISSIONS.NOTICES_EXPORT,
+            PERMISSIONS.REPRESENTATIONS_READ,
+            PERMISSIONS.REPRESENTATIONS_UPDATE,
+            PERMISSIONS.REPRESENTATIONS_COMMENT,
+            PERMISSIONS.REPRESENTATIONS_EXPORT,
+            PERMISSIONS.TEAM_READ,
+            PERMISSIONS.TEMPLATES_READ,
+            PERMISSIONS.SETTINGS_READ,
+          ];
+        } else {
+          // Viewer gets read-only permissions
+          permissionNames = [
+            PERMISSIONS.NOTICES_READ,
+            PERMISSIONS.REPRESENTATIONS_READ,
+            PERMISSIONS.TEAM_READ,
+            PERMISSIONS.TEMPLATES_READ,
+          ];
+        }
+
+        setPermissions(permissionNames);
+        setDepartmentId(deptId);
+
+        console.log('[AuthContext] Loaded demo permissions:', permissionNames);
+        return;
+      }
+
+      // Normal authenticated user flow - load from database
+      if (!user) {
+        console.warn('[AuthContext] Cannot load permissions without user');
+        return;
+      }
+
       // Load user's role for this department
       const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
         p_user_id: user.id,

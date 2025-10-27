@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { requireAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
 
 const router = Router();
 
@@ -47,9 +48,9 @@ function generateSecureToken(): string {
  * POST /api/notices/publish
  * Direct publishing endpoint for firms - publishes notice that goes live immediately
  */
-router.post('/notices/publish', async (req, res) => {
+router.post('/notices/publish', requireAuth, async (req, res) => {
   try {
-    const user = await getCurrentUser(req.headers.authorization);
+    const user = req.user;
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -195,9 +196,9 @@ router.post('/notices/publish', async (req, res) => {
  * GET /api/billing/account
  * Get account balance and recent transactions for authenticated firm
  */
-router.get('/billing/account', async (req, res) => {
+router.get('/billing/account', requireAuth, async (req, res) => {
   try {
-    const user = await getCurrentUser(req.headers.authorization);
+    const user = req.user;
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -248,9 +249,9 @@ router.get('/billing/account', async (req, res) => {
  * POST /api/billing/pay
  * Process payment for firm account (Stripe integration placeholder)
  */
-router.post('/billing/pay', async (req, res) => {
+router.post('/billing/pay', requireAuth, async (req, res) => {
   try {
-    const user = await getCurrentUser(req.headers.authorization);
+    const user = req.user;
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -335,9 +336,9 @@ router.post('/billing/pay', async (req, res) => {
  * GET /api/representations/:noticeId
  * Get all representations for a notice (accessible by firm that published or council)
  */
-router.get('/representations/:noticeId', async (req, res) => {
+router.get('/representations/:noticeId', requireAuth, async (req, res) => {
   try {
-    const user = await getCurrentUser(req.headers.authorization);
+    const user = req.user;
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
