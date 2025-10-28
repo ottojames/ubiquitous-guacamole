@@ -73,7 +73,8 @@ export default function Callback() {
           organization:organizations (
             id,
             name,
-            type
+            type,
+            slug
           )
         `)
         .eq('user_id', userId);
@@ -92,12 +93,12 @@ export default function Callback() {
         // Check if org is a firm (firms don't have departments)
         const org = orgMemberships[0].organization;
         if (org.type === 'firm') {
-          navigate(`/f/${org.id}/dashboard`);
+          navigate(`/f/${org.slug}/dashboard`);
           return;
         }
 
         // Council with no departments - show org overview
-        navigate(`/c/${org.id}/all-departments/dashboard`);
+        navigate(`/c/${org.slug}/all-departments/dashboard`);
         return;
       }
 

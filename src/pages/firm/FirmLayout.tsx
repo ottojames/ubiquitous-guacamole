@@ -3,157 +3,112 @@ import { Outlet, useNavigate, useParams, Link, useLocation } from 'react-router-
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface Department {
+interface Organization {
   id: string;
   name: string;
   slug: string;
   type: string;
-  organization: {
-    id: string;
-    name: string;
-    slug?: string;
-  };
 }
 
 interface UserMembership {
   role: string;
-  department_id: string;
+  organization_id: string;
 }
 
-export default function CouncilLayout() {
-  const { orgSlug, deptSlug } = useParams<{ orgSlug: string; deptSlug: string }>();
+export default function FirmLayout() {
+  const { firmSlug } = useParams<{ firmSlug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut: authSignOut, loadPermissions } = useAuth();
+  const { signOut: authSignOut } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [department, setDepartment] = useState<Department | null>(null);
+  const [firm, setFirm] = useState<Organization | null>(null);
   const [userRole, setUserRole] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    loadDepartmentData();
-  }, [orgSlug, deptSlug]);
+    loadFirmData();
+  }, [firmSlug]);
 
-  const loadDepartmentData = async () => {
+  const loadFirmData = async () => {
     try {
-      // Check if user has a real session first
-      const { data: { session } } = await supabase.auth.getSession();
+      // Demo mode for wilson-partners (bypass auth check)
+      if (firmSlug === 'wilson-partners') {
+        console.log('[FirmLayout] Demo mode: Loading wilson-partners without auth');
+        const { data: firmData, error: firmError } = await supabase
+          .from('organizations')
+          .select('id, name, slug, type')
+          .eq('slug', 'wilson-partners')
+          .eq('type', 'firm')
+          .single();
 
-      // Only use demo mode if there's NO real session
-      const isDemoSampleBorough = !session && orgSlug === 'sample-borough' && deptSlug === 'licensing';
-      const isDemoWestminster = !session && orgSlug === 'westminster' && deptSlug === 'licensing';
+        console.log('[FirmLayout] Demo mode query result:', { firmData, firmError });
 
-      if (isDemoSampleBorough || isDemoWestminster) {
-        // Set mock department data for demo
-        const mockDepartment = {
-          id: isDemoSampleBorough ? 'demo-sample-borough-id' : 'demo-westminster-id',
-          name: isDemoSampleBorough ? 'Licensing Department' : 'Westminster Licensing',
-          slug: deptSlug!,
-          type: 'licensing',
-          organization: {
-            id: isDemoSampleBorough ? 'sample-borough-org-id' : 'westminster-org-id',
-            name: isDemoSampleBorough ? 'Sample Borough Council' : 'Westminster Council',
-            slug: orgSlug
-          }
-        };
+        if (firmData) {
+          console.log('[FirmLayout] Demo mode: Successfully loaded firm, setting state');
+          setFirm(firmData as Organization);
+          setUserRole('owner');
+          setLoading(false);
 
-        setDepartment(mockDepartment as Department);
-        setUserRole('org_admin');
-
-        // Load permissions for demo user (bypass database, use role-based permissions)
-        await loadPermissions(mockDepartment.id, 'org_admin');
-
-        setLoading(false);
-        return;
+          // Save firm context for publish flow
+          sessionStorage.setItem('lastAccessedFirm', JSON.stringify({ slug: firmData.slug }));
+          return;
+        } else {
+          console.warn('[FirmLayout] Demo mode: No firm data found, falling through to auth check');
+        }
       }
 
-      // Real authenticated user flow
+      const { data: { session } } = await supabase.auth.getSession();
+
       if (!session) {
         navigate('/auth/sign-in');
         return;
       }
 
-      // First, look up organization by slug
-      const { data: orgData, error: orgError } = await supabase
+      // Look up firm by slug
+      const { data: firmData, error: firmError } = await supabase
         .from('organizations')
-        .select('id, name, slug')
-        .eq('slug', orgSlug)
+        .select('id, name, slug, type')
+        .eq('slug', firmSlug)
+        .eq('type', 'firm')
         .single();
 
-      if (orgError || !orgData) {
-        throw new Error(`Organization not found: ${orgSlug}`);
+      if (firmError || !firmData) {
+        throw new Error(`Firm not found: ${firmSlug}`);
       }
 
-      // Then look up department by organization ID + department slug
-      const { data: deptData, error: deptError } = await supabase
-        .from('departments')
-        .select(`
-          id,
-          name,
-          slug,
-          type
-        `)
-        .eq('organization_id', orgData.id)
-        .eq('slug', deptSlug)
-        .single();
-
-      if (deptError) throw deptError;
-      if (!deptData) throw new Error('Department not found');
-
-      // Combine the data
-      const fullDeptData = {
-        ...deptData,
-        organization: {
-          id: orgData.id,
-          name: orgData.name,
-          slug: orgData.slug
-        }
-      };
-
-      // Check user has access to this department
+      // Check user has access to this firm
       const { data: membership, error: membershipError } = await supabase
-        .from('department_memberships')
-        .select('role, department_id')
+        .from('organization_memberships')
+        .select('role, organization_id')
         .eq('user_id', session.user.id)
-        .eq('department_id', fullDeptData.id)
+        .eq('organization_id', firmData.id)
         .single();
 
       if (membershipError && membershipError.code !== 'PGRST116') {
         throw membershipError;
       }
 
-      // Also check org-level access
-      const { data: orgMembership } = await supabase
-        .from('organization_memberships')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .eq('organization_id', fullDeptData.organization.id)
-        .single();
-
-      if (!membership && !orgMembership) {
-        throw new Error('You do not have access to this department');
+      if (!membership) {
+        throw new Error('You do not have access to this firm');
       }
 
-      const role = orgMembership?.role || membership?.role || 'viewer';
+      const role = membership.role || 'viewer';
 
-      setDepartment(fullDeptData as Department);
+      setFirm(firmData as Organization);
       setUserRole(role);
-
-      // Load permissions for authenticated user
-      await loadPermissions(fullDeptData.id);
-
       setLoading(false);
 
+      // Save firm context for publish flow
+      sessionStorage.setItem('lastAccessedFirm', JSON.stringify({ slug: firmData.slug }));
+
       // Update last accessed
-      if (membership) {
-        await supabase
-          .from('department_memberships')
-          .update({ last_accessed_at: new Date().toISOString() })
-          .eq('user_id', session.user.id)
-          .eq('department_id', fullDeptData.id);
-      }
+      await supabase
+        .from('organization_memberships')
+        .update({ last_accessed_at: new Date().toISOString() })
+        .eq('user_id', session.user.id)
+        .eq('organization_id', firmData.id);
     } catch (err) {
-      console.error('Failed to load department:', err);
+      console.error('Failed to load firm:', err);
       navigate('/switch-context');
     }
   };
@@ -174,7 +129,7 @@ export default function CouncilLayout() {
   const navItems = [
     { path: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { path: 'notices', label: 'Notices', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-    { path: 'templates', label: 'Templates', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
+    { path: 'billing', label: 'Billing', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
     { path: 'team', label: 'Team', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
     { path: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' }
   ];
@@ -187,11 +142,11 @@ export default function CouncilLayout() {
     );
   }
 
-  if (!department) {
+  if (!firm) {
     return null;
   }
 
-  const basePath = `/c/${orgSlug}/${deptSlug}`;
+  const basePath = `/f/${firmSlug}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -206,20 +161,20 @@ export default function CouncilLayout() {
           {sidebarOpen ? (
             <div>
               <h2 className="text-lg font-bold text-gray-900 truncate">
-                {department.name}
+                {firm.name}
               </h2>
-              <p className="text-sm text-gray-600 truncate">
-                {department.organization.name}
+              <p className="text-sm text-gray-600 mt-1">
+                Law Firm Portal
               </p>
-              <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+              <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
                 {formatRoleName(userRole)}
               </span>
             </div>
           ) : (
             <div className="flex items-center justify-center">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-lg">
-                  {department.name.charAt(0)}
+                  {firm.name.charAt(0)}
                 </span>
               </div>
             </div>
@@ -238,7 +193,7 @@ export default function CouncilLayout() {
                 to={fullPath}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg'
+                    ? 'bg-purple-600 text-white shadow-lg'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -269,7 +224,7 @@ export default function CouncilLayout() {
                 to="/switch-context"
                 className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-xl text-center font-semibold"
               >
-                Switch Department
+                Switch Organization
               </Link>
               <button
                 onClick={handleSignOut}
@@ -283,7 +238,7 @@ export default function CouncilLayout() {
               <Link
                 to="/switch-context"
                 className="flex items-center justify-center p-2 text-gray-700 hover:bg-gray-100 rounded-xl"
-                title="Switch Department"
+                title="Switch Organization"
               >
                 <svg
                   className="w-5 h-5"
@@ -344,7 +299,7 @@ export default function CouncilLayout() {
         }`}
       >
         <div className="p-6">
-          <Outlet context={{ department, userRole }} />
+          <Outlet context={{ firm, userRole }} />
         </div>
       </main>
     </div>

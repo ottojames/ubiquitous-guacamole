@@ -30,43 +30,141 @@ const pricingPlans = {
     ctaHref: "/publish",
     popular: false,
   },
-  council: {
-    name: "Council",
-    description: "For local authorities publishing regular statutory notices",
-    priceMonthly: 299,
-    priceAnnual: 2999,
+  councilSmall: {
+    name: "Parish & Town",
+    description: "For small parish and town councils publishing occasional notices",
+    priceMonthly: 49,
+    priceAnnual: 490,
+    includedNotices: 10,
+    overageRate: 25,
     features: [
-      "Unlimited notices",
+      "10 notices included per month",
+      "Overage at £25 per notice",
+      "Receiving departments get free portals",
+      "Role-based permissions",
+      "Email support (24h response)",
+      "FOI-ready export packs",
+      "Basic templates & guidance",
+    ],
+    cta: "Get started",
+    ctaHref: "#contact",
+    popular: false,
+  },
+  councilMedium: {
+    name: "District Council",
+    description: "For district and borough councils with moderate publishing needs",
+    priceMonthly: 199,
+    priceAnnual: 1990,
+    includedNotices: 50,
+    overageRate: 15,
+    features: [
+      "50 notices included per month",
+      "Overage at £15 per notice",
+      "Receiving departments get free portals",
       "Bulk import & API access",
       "Single sign-on (SSO)",
       "Role-based permissions",
+      "Priority email & phone support",
+      "FOI-ready export packs",
+      "Custom templates",
+      "Training sessions",
+    ],
+    cta: "Request demo",
+    ctaHref: "#contact",
+    popular: true,
+  },
+  councilLarge: {
+    name: "Unitary & County",
+    description: "For large unitary, county councils, and combined authorities",
+    priceMonthly: 499,
+    priceAnnual: 4990,
+    includedNotices: null, // Unlimited
+    overageRate: null,
+    features: [
+      "Unlimited notice publications",
+      "Receiving departments get free portals",
+      "Bulk import & API access",
+      "Single sign-on (SSO)",
+      "Advanced role-based permissions",
       "Custom branding & domain",
       "Priority email & phone support",
       "Dedicated account manager",
       "FOI-ready export packs",
       "Retention & redaction tools",
       "SLA guarantee (99.9% uptime)",
+      "Onboarding & training",
     ],
-    cta: "Request demo",
+    cta: "Contact sales",
     ctaHref: "#contact",
+    popular: false,
+  },
+  professional: {
+    name: "Professional",
+    description: "For small law firms publishing 3-7 notices per month",
+    priceMonthly: 150,
+    priceAnnual: 1440,
+    includedNotices: 5,
+    overageRate: 45,
+    avgPerNotice: 30,
+    features: [
+      "5 notices included per month",
+      "Overage at £45 per notice",
+      "Average £30 per notice (40% savings)",
+      "Integrated firm portal & dashboard",
+      "Client tracking & management",
+      "Practice area filtering",
+      "Saved templates & addresses",
+      "Priority email support",
+      "Bulk publishing tools",
+      "Invoice generation",
+    ],
+    cta: "Start free trial",
+    ctaHref: "/auth/sign-in",
+    popular: false,
+  },
+  business: {
+    name: "Business",
+    description: "For mid-size firms publishing 10-20 notices per month",
+    priceMonthly: 400,
+    priceAnnual: 3840,
+    includedNotices: 15,
+    overageRate: 40,
+    avgPerNotice: 26.67,
+    features: [
+      "15 notices included per month",
+      "Overage at £40 per notice",
+      "Average £26.67 per notice (47% savings)",
+      "Everything in Professional, plus:",
+      "Advanced analytics & reporting",
+      "Client portal access",
+      "API access for integrations",
+      "Priority phone & email support",
+      "Dedicated onboarding",
+      "Custom notice templates",
+    ],
+    cta: "Start free trial",
+    ctaHref: "/auth/sign-in",
     popular: true,
   },
   enterprise: {
     name: "Enterprise",
-    description: "For law firms, consultancies, and high-volume publishers",
-    priceMonthly: 599,
-    priceAnnual: 5999,
+    description: "For large firms with dedicated licensing departments",
+    priceMonthly: 1200,
+    priceAnnual: 11520,
+    includedNotices: 50,
+    overageRate: 35,
+    avgPerNotice: 24,
     features: [
-      "Unlimited notices",
+      "50 notices included per month",
+      "Overage at £35 per notice",
+      "Average £24 per notice (52% savings)",
+      "Everything in Business, plus:",
+      "White-label branding options",
       "Advanced API & webhooks",
-      "Multi-tenant accounts",
-      "White-label solutions",
       "Custom integrations",
+      "Dedicated account manager",
       "24/7 priority support",
-      "Dedicated success team",
       "Custom SLA agreements",
-      "Security & compliance reviews",
-      "On-premise deployment option",
     ],
     cta: "Contact sales",
     ctaHref: "#contact",
@@ -78,30 +176,30 @@ const comparisonData = [
   {
     category: "Publishing",
     features: [
-      { name: "Number of notices", individual: "Pay per notice", council: "Unlimited", enterprise: "Unlimited" },
-      { name: "Instant publication", individual: true, council: true, enterprise: true },
-      { name: "Bulk import", individual: false, council: true, enterprise: true },
-      { name: "API access", individual: false, council: true, enterprise: true },
-      { name: "White-label", individual: false, council: false, enterprise: true },
+      { name: "Number of notices", individual: "Pay per notice", professional: "5/month", business: "15/month", councilSmall: "10/month", councilMedium: "50/month", councilLarge: "Unlimited", enterprise: "50/month" },
+      { name: "Instant publication", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "Bulk import", individual: false, professional: true, business: true, councilSmall: false, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "API access", individual: false, professional: false, business: true, councilSmall: false, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "White-label", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: false, enterprise: true },
     ],
   },
   {
     category: "Compliance & Legal",
     features: [
-      { name: "Cryptographic proof", individual: true, council: true, enterprise: true },
-      { name: "Audit trail", individual: true, council: true, enterprise: true },
-      { name: "PDF certificates", individual: true, council: true, enterprise: true },
-      { name: "FOI-ready exports", individual: false, council: true, enterprise: true },
-      { name: "Custom retention policies", individual: false, council: true, enterprise: true },
+      { name: "Cryptographic proof", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "Audit trail", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "PDF certificates", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "FOI-ready exports", individual: false, professional: false, business: false, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: false },
+      { name: "Custom retention policies", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: true, enterprise: false },
     ],
   },
   {
     category: "Support & Service",
     features: [
-      { name: "Email support", individual: "24h response", council: "4h response", enterprise: "1h response" },
-      { name: "Phone support", individual: false, council: true, enterprise: true },
-      { name: "Dedicated account manager", individual: false, council: true, enterprise: true },
-      { name: "SLA guarantee", individual: false, council: "99.9%", enterprise: "99.99%" },
+      { name: "Email support", individual: "24h response", professional: "12h response", business: "4h response", councilSmall: "24h response", councilMedium: "4h response", councilLarge: "4h response", enterprise: "1h response" },
+      { name: "Phone support", individual: false, professional: false, business: true, councilSmall: false, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "Dedicated account manager", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: true, enterprise: true },
+      { name: "SLA guarantee", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: "99.9%", enterprise: "99.99%" },
     ],
   },
 ];
@@ -310,16 +408,67 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Pricing Cards */}
+      {/* Individual/Direct Publishing */}
+      <section className="pb-8">
+        <div className={UI.container}>
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              For Individuals & One-Off Publishing
+            </h2>
+            <p className="mt-4 text-lg text-slate-600">Simple pay-as-you-go pricing with no commitment</p>
+          </div>
+
+          <div className="mx-auto max-w-lg">
+            <div className={`${UI.card} relative overflow-hidden p-8`}>
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900">{pricingPlans.individual.name}</h3>
+                <p className="mt-2 text-sm text-slate-600">{pricingPlans.individual.description}</p>
+              </div>
+
+              <div className="mt-6">
+                <span className="text-5xl font-extrabold tracking-tight text-slate-900">
+                  £{pricingPlans.individual.priceMonthly}
+                </span>
+                <span className="ml-2 text-lg text-slate-600">/notice</span>
+              </div>
+
+              <a
+                href={pricingPlans.individual.ctaHref}
+                className="mt-8 block w-full rounded-xl bg-slate-100 py-3 text-center text-base font-semibold text-slate-900 transition hover:bg-slate-200"
+              >
+                {pricingPlans.individual.cta}
+              </a>
+
+              <ul className="mt-8 space-y-3">
+                {pricingPlans.individual.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
+                    <span className="text-sm text-slate-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Law Firms */}
       <section className="pb-16 md:pb-24">
         <div className={UI.container}>
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              For Law Firms & Professional Services
+            </h2>
+            <p className="mt-4 text-lg text-slate-600">Volume-based pricing with professional tools and support</p>
+          </div>
+
           <div className="grid gap-8 lg:grid-cols-3">
-            {Object.entries(pricingPlans).map(([key, plan]) => {
+            {['professional', 'business', 'enterprise'].map((key) => {
+              const plan = pricingPlans[key as keyof typeof pricingPlans];
               const price =
                 plan.priceAnnual && billingCycle === "annual"
                   ? plan.priceAnnual
                   : plan.priceMonthly;
-              const isPayAsYouGo = key === "individual";
 
               return (
                 <div
@@ -343,26 +492,15 @@ export default function Pricing() {
                   </div>
 
                   <div className="mt-6">
-                    {isPayAsYouGo ? (
-                      <div>
-                        <span className="text-5xl font-extrabold tracking-tight text-slate-900">
-                          £{plan.priceMonthly}
-                        </span>
-                        <span className="ml-2 text-lg text-slate-600">/notice</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <span className="text-5xl font-extrabold tracking-tight text-slate-900">
-                          £{price}
-                        </span>
-                        <span className="ml-2 text-lg text-slate-600">
-                          /{billingCycle === "monthly" ? "month" : "year"}
-                        </span>
-                        {billingCycle === "annual" && (
-                          <div className="mt-2 text-sm text-emerald-600 font-medium">
-                            Save £{plan.priceMonthly! * 12 - plan.priceAnnual!} per year
-                          </div>
-                        )}
+                    <span className="text-5xl font-extrabold tracking-tight text-slate-900">
+                      £{price}
+                    </span>
+                    <span className="ml-2 text-lg text-slate-600">
+                      /{billingCycle === "monthly" ? "month" : "year"}
+                    </span>
+                    {billingCycle === "annual" && plan.priceAnnual && (
+                      <div className="mt-2 text-sm text-emerald-600 font-medium">
+                        Save £{plan.priceMonthly! * 12 - plan.priceAnnual} per year
                       </div>
                     )}
                   </div>
@@ -390,9 +528,124 @@ export default function Pricing() {
               );
             })}
           </div>
+        </div>
+      </section>
 
+      {/* Council - Premium Section */}
+      <section className="pb-16 md:pb-24">
+        <div className={UI.container}>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 p-12 md:p-16">
+            <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+
+            <div className="relative">
+              <div className="mb-12 text-center">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-sm font-semibold text-white backdrop-blur">
+                  <Shield className="h-4 w-4" />
+                  Government Solution
+                </div>
+                <h2 className="text-3xl font-bold text-white md:text-4xl">
+                  For Local Councils & Authorities
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
+                  Scalable pricing for councils of all sizes. For departments that publish notices (Planning, Traffic, Environmental Health). Departments that only receive notices (Licensing) get free access.
+                </p>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                {['councilSmall', 'councilMedium', 'councilLarge'].map((key) => {
+                  const plan = pricingPlans[key as keyof typeof pricingPlans];
+                  const price =
+                    plan.priceAnnual && billingCycle === "annual"
+                      ? plan.priceAnnual
+                      : plan.priceMonthly;
+
+                  return (
+                    <div
+                      key={key}
+                      className={`rounded-2xl border-2 bg-white/10 p-6 backdrop-blur-xl ${
+                        plan.popular
+                          ? "border-emerald-300 shadow-2xl"
+                          : "border-white/20"
+                      }`}
+                    >
+                      {plan.popular && (
+                        <div className="mb-4">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400 px-3 py-1 text-xs font-semibold text-emerald-900">
+                            <Zap className="h-3 w-3" />
+                            Most popular
+                          </span>
+                        </div>
+                      )}
+
+                      <div>
+                        <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                        <p className="mt-2 text-sm text-blue-100">{plan.description}</p>
+                      </div>
+
+                      <div className="mt-6">
+                        <span className="text-4xl font-extrabold tracking-tight text-white">
+                          £{price}
+                        </span>
+                        <span className="ml-2 text-base text-blue-100">
+                          /{billingCycle === "monthly" ? "month" : "year"}
+                        </span>
+                        {billingCycle === "annual" && plan.priceAnnual && (
+                          <div className="mt-2 text-sm font-medium text-emerald-300">
+                            Save £{plan.priceMonthly! * 12 - plan.priceAnnual} per year
+                          </div>
+                        )}
+                      </div>
+
+                      <a
+                        href={plan.ctaHref}
+                        className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition ${
+                          plan.popular
+                            ? "bg-emerald-400 text-emerald-900 shadow-lg hover:bg-emerald-300"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                        }`}
+                      >
+                        {plan.cta}
+                      </a>
+
+                      <ul className="mt-6 space-y-2.5">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-300" />
+                            <span className="text-xs text-white">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-8 space-y-4">
+                <div className="rounded-xl border border-emerald-300/30 bg-emerald-400/10 p-4 backdrop-blur">
+                  <p className="text-sm font-semibold text-emerald-200">
+                    💡 Important: Pricing is per publishing department
+                  </p>
+                  <p className="mt-2 text-xs text-emerald-100">
+                    Each department that publishes notices (Planning, Traffic, Environmental Health) requires its own subscription. Departments that only receive notices (Licensing) get free portal access at no cost.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/20 bg-white/5 p-4 text-center backdrop-blur">
+                  <p className="text-sm text-blue-100">
+                    Trusted by 40+ UK local authorities • 99.9% uptime SLA • FOI-ready exports
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Table Section */}
+      <section className="pb-16 md:pb-24">
+        <div className={UI.container}>
           {/* Comparison Table Toggle */}
-          <div className="mt-12 text-center">
+          <div className="text-center">
             <button
               onClick={() => setShowComparison(!showComparison)}
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-800"
@@ -412,14 +665,26 @@ export default function Pricing() {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
                         Features
                       </th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
                         Pay as you go
                       </th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
-                        Council
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
+                        Professional
                       </th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
+                        Business
+                      </th>
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
                         Enterprise
+                      </th>
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
+                        Parish & Town
+                      </th>
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
+                        District
+                      </th>
+                      <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
+                        Unitary & County
                       </th>
                     </tr>
                   </thead>
@@ -427,48 +692,35 @@ export default function Pricing() {
                     {comparisonData.map((category, catIndex) => (
                       <>
                         <tr key={`cat-${catIndex}`} className="border-b border-slate-200 bg-slate-50/50">
-                          <td colSpan={4} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <td colSpan={8} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                             {category.category}
                           </td>
                         </tr>
-                        {category.features.map((feature, featIndex) => (
-                          <tr key={`feat-${catIndex}-${featIndex}`} className="border-b border-slate-100">
-                            <td className="px-6 py-4 text-sm text-slate-700">{feature.name}</td>
-                            <td className="px-6 py-4 text-center text-sm">
-                              {typeof feature.individual === "boolean" ? (
-                                feature.individual ? (
-                                  <Check className="inline h-5 w-5 text-blue-600" />
-                                ) : (
-                                  <span className="text-slate-400">—</span>
-                                )
+                        {category.features.map((feature, featIndex) => {
+                          const renderCell = (value: any) => {
+                            if (typeof value === "boolean") {
+                              return value ? (
+                                <Check className="inline h-4 w-4 text-blue-600" />
                               ) : (
-                                <span className="text-slate-700">{feature.individual}</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-center text-sm">
-                              {typeof feature.council === "boolean" ? (
-                                feature.council ? (
-                                  <Check className="inline h-5 w-5 text-blue-600" />
-                                ) : (
-                                  <span className="text-slate-400">—</span>
-                                )
-                              ) : (
-                                <span className="text-slate-700">{feature.council}</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-center text-sm">
-                              {typeof feature.enterprise === "boolean" ? (
-                                feature.enterprise ? (
-                                  <Check className="inline h-5 w-5 text-blue-600" />
-                                ) : (
-                                  <span className="text-slate-400">—</span>
-                                )
-                              ) : (
-                                <span className="text-slate-700">{feature.enterprise}</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                                <span className="text-slate-400">—</span>
+                              );
+                            }
+                            return <span className="text-slate-700 text-xs">{value}</span>;
+                          };
+
+                          return (
+                            <tr key={`feat-${catIndex}-${featIndex}`} className="border-b border-slate-100">
+                              <td className="px-6 py-4 text-sm text-slate-700">{feature.name}</td>
+                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.individual)}</td>
+                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.professional)}</td>
+                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.business)}</td>
+                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.enterprise)}</td>
+                              <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilSmall)}</td>
+                              <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilMedium)}</td>
+                              <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilLarge)}</td>
+                            </tr>
+                          );
+                        })}
                       </>
                     ))}
                   </tbody>

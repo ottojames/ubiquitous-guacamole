@@ -55,10 +55,11 @@ const STEP_PATHS: Record<Step, string> = wizardSteps.reduce(
 const NOTICE_TYPE_STORAGE_PREFIX = "publish:noticeType:";
 
 const stepFromPath = (pathname: string): Step | null => {
-  if (pathname.startsWith("/publish/step-1")) return 1;
-  if (pathname.startsWith("/publish/step-2")) return 2;
-  if (pathname.startsWith("/publish/step-3")) return 3;
-  if (pathname.startsWith("/publish/step-4")) return 4;
+  // Handle both public (/publish/step-X) and portal (/f/slug/publish/step-X or /c/slug/dept/publish/step-X) paths
+  if (pathname.includes("/publish/step-1")) return 1;
+  if (pathname.includes("/publish/step-2")) return 2;
+  if (pathname.includes("/publish/step-3")) return 3;
+  if (pathname.includes("/publish/step-4")) return 4;
   return null;
 };
 
@@ -163,6 +164,11 @@ export default function NewPublishFlow() {
   const navigate = useNavigate();
   const currentStep = stepFromPath(pathname);
   const [definitionId, setDefinitionId] = useState<string | null>(null);
+
+  // Firm practice area filtering
+  const [firmPracticeAreas, setFirmPracticeAreas] = useState<string[] | null>(null);
+  const [firmSlug, setFirmSlug] = useState<string | null>(null);
+  const [practiceAreasLoading, setPracticeAreasLoading] = useState(true);
   const [draftId, setDraftIdState] = useState<string | null>(() => {
     const params = new URLSearchParams(search);
     const fromSearch = params.get("draft");
@@ -179,7 +185,24 @@ export default function NewPublishFlow() {
 
   const buildStepUrl = React.useCallback(
     (target: Step, overrideDraft?: string | null) => {
-      const base = STEP_PATHS[target];
+      // Detect if we're in a portal context and build the appropriate path
+      let base: string;
+      if (pathname.startsWith('/f/')) {
+        // Extract firm slug and build firm portal path
+        const firmMatch = pathname.match(/\/f\/([^\/]+)/);
+        const firmSlug = firmMatch ? firmMatch[1] : '';
+        base = `/f/${firmSlug}/publish/step-${target}`;
+      } else if (pathname.startsWith('/c/')) {
+        // Extract council/dept slug and build council portal path
+        const councilMatch = pathname.match(/\/c\/([^\/]+)\/([^\/]+)/);
+        const orgSlug = councilMatch ? councilMatch[1] : '';
+        const deptSlug = councilMatch ? councilMatch[2] : '';
+        base = `/c/${orgSlug}/${deptSlug}/publish/step-${target}`;
+      } else {
+        // Public path
+        base = STEP_PATHS[target];
+      }
+
       const params = new URLSearchParams(search);
       const effectiveDraft = overrideDraft === undefined ? draftId : overrideDraft;
       if (effectiveDraft) {
@@ -190,7 +213,7 @@ export default function NewPublishFlow() {
       const query = params.toString();
       return query ? `${base}?${query}` : base;
     },
-    [draftId, search]
+    [draftId, search, pathname]
   );
 
   const goToStep = React.useCallback(
@@ -238,6 +261,65 @@ export default function NewPublishFlow() {
       navigate(buildStepUrl(1), { replace: true });
     }
   }, [buildStepUrl, currentStep, navigate, pathname]);
+
+  // Detect portal context (firm or council)
+  const isPortalContext = pathname.startsWith('/f/') || pathname.startsWith('/c/');
+
+  // Load firm practice areas if publishing from firm context
+  useEffect(() => {
+    const loadFirmPracticeAreas = async () => {
+      try {
+        // Check if we have a firm slug in URL or session storage
+        let slug: string | null = null;
+
+        // First check if we're in a firm portal route
+        const firmMatch = pathname.match(/\/f\/([^\/]+)/);
+        if (firmMatch) {
+          slug = firmMatch[1];
+        } else {
+          // Fallback to referrer
+          const referrer = document.referrer;
+          const referrerMatch = referrer.match(/\/f\/([^\/]+)/);
+          if (referrerMatch) {
+            slug = referrerMatch[1];
+          } else {
+            // Check session storage for last accessed firm
+            const stored = sessionStorage.getItem('lastAccessedFirm');
+            if (stored) {
+              try {
+                const parsed = JSON.parse(stored);
+                slug = parsed.slug;
+              } catch {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+
+        if (slug) {
+          setFirmSlug(slug);
+
+          // Load practice areas from Supabase
+          const { data, error } = await supabase
+            .from('organizations')
+            .select('practice_areas')
+            .eq('slug', slug)
+            .eq('type', 'firm')
+            .single();
+
+          if (!error && data) {
+            setFirmPracticeAreas(data.practice_areas || null);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load firm practice areas:', err);
+      } finally {
+        setPracticeAreasLoading(false);
+      }
+    };
+
+    loadFirmPracticeAreas();
+  }, [pathname]);
 
   const definition = useMemo<NoticeDefinition | null>(
     () => (definitionId ? getDefinitionById(definitionId) ?? null : null),
@@ -1219,7 +1301,7 @@ export default function NewPublishFlow() {
             notice_data: noticeData,
             notice_type: definition?.id || "premises-licence",
             title: legalDetails.premisesName || "Licensing Application",
-            billing_amount: 150.00,
+            // billing_amount calculated automatically by database trigger based on subscription tier
           },
           session.access_token
         );
@@ -1281,40 +1363,42 @@ export default function NewPublishFlow() {
   return (
     <WizardBoundary contextKey={boundaryContextKey} onReset={() => goToStep(1, { replace: true })}>
       <div className="relative">
-        {/* Hero Band with Integrated Stepper */}
-        <section className="relative overflow-hidden pb-8 pt-12 md:pb-12 md:pt-16">
-          <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
+        {/* Hero Band with Integrated Stepper - Only show in public context */}
+        {!isPortalContext && (
+          <section className="relative overflow-hidden pb-8 pt-12 md:pb-12 md:pt-16">
+            <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
-          <div className={`${UI.container} relative z-10`}>
-            <div className="mx-auto max-w-4xl text-center">
-              <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl lg:text-6xl">
-                Publish with calm,
-                <br />
-                compliant confidence
-              </h1>
-              <p className="mt-6 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-lg">
-                Start by choosing your notice type. We'll tailor everything automatically.
-              </p>
+            <div className={`${UI.container} relative z-10`}>
+              <div className="mx-auto max-w-4xl text-center">
+                <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl lg:text-6xl">
+                  Publish with calm,
+                  <br />
+                  compliant confidence
+                </h1>
+                <p className="mt-6 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-lg">
+                  Start by choosing your notice type. We'll tailor everything automatically.
+                </p>
 
-              {/* Integrated Lightweight Stepper */}
-              <div className="mt-12 flex justify-center">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 shadow-lg backdrop-blur-md">
-                  <WizardStepper currentPath={pathname} guards={stepGuards} hrefs={stepHrefMap} />
-                  <div className="ml-4 h-4 w-px bg-white/20" />
-                  <span className="inline-flex items-center gap-2 text-xs font-medium text-white/90">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden />
-                    {saveState === 'saving'
-                      ? 'Saving…'
-                      : savedAt
-                      ? `Saved • ${formatRelativeTimestamp(savedAt)}`
-                      : 'Saved'}
-                  </span>
+                {/* Integrated Lightweight Stepper */}
+                <div className="mt-12 flex justify-center">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 shadow-lg backdrop-blur-md">
+                    <WizardStepper currentPath={pathname} guards={stepGuards} hrefs={stepHrefMap} />
+                    <div className="ml-4 h-4 w-px bg-white/20" />
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-white/90">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden />
+                      {saveState === 'saving'
+                        ? 'Saving…'
+                        : savedAt
+                        ? `Saved • ${formatRelativeTimestamp(savedAt)}`
+                        : 'Saved'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Main Content */}
         <div className="bg-[#F9FAFB] py-12 md:py-16" data-testid="publish-next-flow">
@@ -1328,6 +1412,8 @@ export default function NewPublishFlow() {
               continuePending={step1Pending}
               guardMessage={guardMessage}
               onClearGuard={() => setGuardMessage(null)}
+              practiceAreas={firmPracticeAreas}
+              settingsUrl={firmSlug ? `/f/${firmSlug}/settings` : undefined}
             />
             </div>
           )}

@@ -9,7 +9,10 @@ const NAV_LINKS = [
   { href: "/pricing", label: "Pricing" },
 ] as const;
 
+type PortalType = 'council' | 'professional' | null;
+
 export default function Login() {
+  const [portalType, setPortalType] = useState<PortalType>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,18 +29,29 @@ export default function Login() {
       return;
     }
 
-    // Demo council logins (no password validation required)
-    if (email === "licensing@sample.gov.uk" && password === "sample123") {
-      console.log("Sample Council login successful!");
-      window.location.href = "/c/sample-borough/licensing";
-      return;
-    } else if (email === "demo@council.gov.uk" && password === "demo123") {
-      console.log("Westminster Council login successful!");
-      window.location.href = "/c/westminster/licensing";
-      return;
+    // Demo council logins (no password validation required - use window.location for bypass)
+    if (portalType === 'council') {
+      if (email === "licensing@sample.gov.uk" && password === "sample123") {
+        console.log("Sample Council login successful!");
+        window.location.href = "/c/sample-borough/licensing";
+        return;
+      } else if (email === "demo@council.gov.uk" && password === "demo123") {
+        console.log("Westminster Council login successful!");
+        window.location.href = "/c/westminster/licensing";
+        return;
+      }
     }
 
-    // Real Supabase authentication for test users
+    // Demo firm login (temporary bypass for testing)
+    if (portalType === 'professional') {
+      if (email === "solicitor@wilsonpartners.com" && password === "SolicitorTest123!") {
+        console.log("Wilson & Partners login successful!");
+        window.location.href = "/f/wilson-partners/dashboard";
+        return;
+      }
+    }
+
+    // All other logins use real Supabase authentication
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -49,29 +63,72 @@ export default function Login() {
       if (data.user) {
         console.log("User authenticated:", data.user.email);
 
-        // Get user's department membership to redirect to correct dashboard
-        const { data: membership, error: membershipError } = await supabase
-          .from('department_memberships')
-          .select(`
-            department:departments (
-              id,
-              slug
-            )
-          `)
-          .eq('user_id', data.user.id)
-          .limit(1)
-          .single();
+        if (portalType === 'council') {
+          // Council portal: Check department membership
+          const { data: membership, error: membershipError } = await supabase
+            .from('department_memberships')
+            .select(`
+              department:departments (
+                id,
+                slug,
+                organization:organizations (
+                  id,
+                  slug,
+                  type
+                )
+              )
+            `)
+            .eq('user_id', data.user.id)
+            .limit(1)
+            .single();
 
-        if (membershipError || !membership) {
-          console.error("No department membership found:", membershipError);
-          // Fallback to sample-borough for demo
-          window.location.href = "/c/sample-borough/licensing";
-          return;
+          if (membershipError || !membership) {
+            setError("No council access found for this account");
+            setLoading(false);
+            return;
+          }
+
+          const dept = (membership as any).department;
+          if (dept.organization.type !== 'council') {
+            setError("This account is not associated with a council");
+            setLoading(false);
+            return;
+          }
+
+          const orgSlug = dept.organization.slug;
+          const deptSlug = dept.slug;
+          window.location.href = `/c/${orgSlug}/${deptSlug}/dashboard`;
+
+        } else if (portalType === 'professional') {
+          // Professional portal: Check organization membership
+          const { data: membership, error: membershipError } = await supabase
+            .from('organization_memberships')
+            .select(`
+              organization:organizations (
+                id,
+                slug,
+                type
+              )
+            `)
+            .eq('user_id', data.user.id)
+            .limit(1)
+            .single();
+
+          if (membershipError || !membership) {
+            setError("No firm access found for this account");
+            setLoading(false);
+            return;
+          }
+
+          const org = (membership as any).organization;
+          if (org.type !== 'firm') {
+            setError("This account is not associated with a firm");
+            setLoading(false);
+            return;
+          }
+
+          window.location.href = `/f/${org.slug}/dashboard`;
         }
-
-        // Redirect to user's department dashboard
-        const deptSlug = (membership as any).department.slug;
-        window.location.href = `/c/sample-borough/${deptSlug}/dashboard`;
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -128,54 +185,140 @@ export default function Login() {
         <div className={`${UI.container} relative z-10`}>
           <div className="mx-auto max-w-xl text-center">
             <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-              Welcome back
+              {!portalType ? 'Choose Your Portal' : 'Welcome back'}
             </h1>
             <p className="mt-4 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] font-normal md:text-lg">
-              Sign in to your CivicNotices account to manage your statutory notices
+              {!portalType ? 'Select the portal type to continue' : 'Sign in to your CivicNotices account'}
             </p>
           </div>
         </div>
       </section>
 
-      {/* Login Form */}
+      {/* Portal Selection or Login Form */}
       <section className="pb-20 md:pb-28">
         <div className={UI.container}>
-          <div className="mx-auto max-w-md">
-            <div className="rounded-xl bg-white border border-slate-200/60 p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-              {/* Demo Credentials Banner */}
-              <div className="mb-6 rounded-xl bg-blue-50 border border-blue-200 p-4">
-                <div className="flex items-start gap-3">
-                  <svg className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-900 mb-2">Test Accounts</p>
-                    <div className="space-y-2 mb-3">
-                      <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Sample Borough Council (Demo)</p>
-                        <p className="text-xs text-blue-700">
-                          <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">licensing@sample.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">sample123</code>
-                        </p>
-                      </div>
-                      <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
-                        <p className="text-xs font-semibold text-blue-900 mb-1">Westminster Council (Demo)</p>
-                        <p className="text-xs text-blue-700">
-                          <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo@council.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo123</code>
-                        </p>
-                      </div>
+          {!portalType ? (
+            /* Portal Selection */
+            <div className="mx-auto max-w-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Council Portal */}
+                <button
+                  onClick={() => setPortalType('council')}
+                  className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-blue-400 hover:shadow-xl transition-all duration-200 text-left"
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
+                      <svg className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
                     </div>
-                    <div className="pt-2 border-t border-blue-200 space-y-1.5">
-                      <p className="text-xs font-semibold text-blue-900">RBAC Test Users:</p>
-                      <div className="grid grid-cols-1 gap-1.5 text-xs text-blue-700">
-                        <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">viewer@test.civicnotices.co.uk</code> - Read-only (4 permissions)</p>
-                        <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">officer@test.civicnotices.co.uk</code> - Officer (12 permissions)</p>
-                        <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">admin@test.civicnotices.co.uk</code> - Admin (21 permissions)</p>
-                        <p className="text-blue-600 mt-1">Password: <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">TestPassword123!</code></p>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Council Portal</h2>
+                    <p className="text-slate-600 text-sm">
+                      For council officers and licensing departments
+                    </p>
+                  </div>
+                </button>
+
+                {/* Professional Portal */}
+                <button
+                  onClick={() => setPortalType('professional')}
+                  className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-purple-400 hover:shadow-xl transition-all duration-200 text-left"
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mb-4 group-hover:bg-purple-600 transition-colors">
+                      <svg className="w-8 h-8 text-purple-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional Portal</h2>
+                    <p className="text-slate-600 text-sm">
+                      For solicitors, law firms & GVOL operators
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Login Form */
+            <div className="mx-auto max-w-md">
+              {/* Back Button */}
+              <button
+                onClick={() => {
+                  setPortalType(null);
+                  setError(null);
+                  setEmail("");
+                  setPassword("");
+                }}
+                className="mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="text-sm font-medium">Back to portal selection</span>
+              </button>
+
+              <div className="rounded-xl bg-white border border-slate-200/60 p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+                {/* Demo Credentials Banner - Council */}
+                {portalType === 'council' && (
+                  <div className="mb-6 rounded-xl bg-blue-50 border border-blue-200 p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-blue-900 mb-2">Council Test Accounts</p>
+                        <div className="space-y-2 mb-3">
+                          <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
+                            <p className="text-xs font-semibold text-blue-900 mb-1">Sample Borough Council (Demo)</p>
+                            <p className="text-xs text-blue-700">
+                              <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">licensing@sample.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">sample123</code>
+                            </p>
+                          </div>
+                          <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
+                            <p className="text-xs font-semibold text-blue-900 mb-1">Westminster Council (Demo)</p>
+                            <p className="text-xs text-blue-700">
+                              <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo@council.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo123</code>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-blue-200 space-y-1.5">
+                          <p className="text-xs font-semibold text-blue-900">RBAC Test Users:</p>
+                          <div className="grid grid-cols-1 gap-1.5 text-xs text-blue-700">
+                            <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">viewer@test.civicnotices.co.uk</code> - Read-only (4 permissions)</p>
+                            <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">officer@test.civicnotices.co.uk</code> - Officer (12 permissions)</p>
+                            <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">admin@test.civicnotices.co.uk</code> - Admin (21 permissions)</p>
+                            <p className="text-blue-600 mt-1">Password: <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">TestPassword123!</code></p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                )}
+
+                {/* Demo Credentials Banner - Professional */}
+                {portalType === 'professional' && (
+                  <div className="mb-6 rounded-xl bg-purple-50 border border-purple-200 p-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="h-5 w-5 flex-shrink-0 text-purple-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-purple-900 mb-2">Professional Test Accounts</p>
+                        <div className="space-y-2">
+                          <div className="bg-white/60 rounded-lg p-2 border border-purple-100">
+                            <p className="text-xs font-semibold text-purple-900 mb-1">Wilson & Partners (Solicitors)</p>
+                            <p className="text-xs text-purple-700 mb-1">
+                              <code className="bg-purple-100 px-1.5 py-0.5 rounded font-mono">solicitor@wilsonpartners.com</code>
+                            </p>
+                            <p className="text-xs text-purple-600">
+                              Password: <code className="bg-purple-100 px-1.5 py-0.5 rounded font-mono">SolicitorTest123!</code>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               <form onSubmit={handleSubmit} className="space-y-7">
                 {/* Email Field */}
@@ -321,7 +464,8 @@ export default function Login() {
                 </p>
               </div>
             </div>
-          </div>
+            </div>
+          )}
         </div>
       </section>
 

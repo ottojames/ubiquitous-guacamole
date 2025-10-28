@@ -30,6 +30,9 @@ import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
 import AuditLog from "@/pages/council/AuditLog";
+import FirmLayout from "@/pages/firm/FirmLayout";
+import FirmDashboard from "@/pages/firm/Dashboard";
+import FirmSettings from "@/pages/firm/Settings";
 import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
 import Accessibility from "@/pages/legal/Accessibility";
@@ -76,6 +79,16 @@ export default function App() {
           <Route path="templates" element={<Templates />} />
           <Route path="settings" element={<Settings />} />
           <Route path="audit" element={<AuditLog />} />
+        </Route>
+
+        {/* Firm Portal Routes */}
+        <Route path="/f/:firmSlug" element={<FirmLayout />}>
+          <Route path="dashboard" element={<FirmDashboard />} />
+          <Route path="notices" element={<div className="p-6">Notices page coming soon</div>} />
+          <Route path="billing" element={<div className="p-6">Billing page coming soon</div>} />
+          <Route path="team" element={<div className="p-6">Team page coming soon</div>} />
+          <Route path="settings" element={<FirmSettings />} />
+          <Route path="publish/*" element={<PublishPage />} />
         </Route>
 
         {NEW_PUBLISH_FLOW && (

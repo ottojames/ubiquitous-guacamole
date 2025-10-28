@@ -62,7 +62,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       notice_type,
       title,
       client_id,
-      billing_amount = 150.00 // Default cost
+      billing_amount // Optional - calculated by database trigger if not provided
     } = req.body;
 
     // Validation
@@ -126,8 +126,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
         consultation: notice_data.consultation || {},
         licensing: notice_data.licensing || {},
         extras: notice_data.extras || {},
-        billing_amount,
-        billing_status: 'pending',
+        // billing_amount and billing_status calculated by database trigger based on subscription tier
         published_at: new Date().toISOString(),
         // Auto-calculate deadlines (28 days for licensing)
         representation_deadline: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),

@@ -1,8 +1,9 @@
 import React from "react";
-import { Check } from "lucide-react";
+import { Check, Info, Settings } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { NOTICE_CATEGORY_TREE, type NoticeDefinition } from "@/next/publish/config/noticeTypes";
 import DisclosureSection from "@/next/publish/flow/components/DisclosureSection";
+import { getFilteredNoticeCategoryTree, getFilteredOutCategories, getAllPracticeAreas } from "@/config/practiceAreas";
 
 const STORAGE_PREFIX = "pn:notice-group:";
 
@@ -13,6 +14,10 @@ export type NoticeTypeStepProps = {
   continuePending?: boolean;
   guardMessage?: string | null;
   onClearGuard?: () => void;
+  /** Practice areas for filtering (null/undefined = show all categories) */
+  practiceAreas?: string[] | null;
+  /** Optional link to settings page for firms */
+  settingsUrl?: string;
 };
 
 type OpenGroupsState = Record<string, boolean>;
@@ -45,14 +50,34 @@ export default function NoticeTypeStep({
   continuePending,
   guardMessage,
   onClearGuard,
+  practiceAreas,
+  settingsUrl,
 }: NoticeTypeStepProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showGuidance, setShowGuidance] = React.useState(false);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Apply practice area filtering
+  const baseTree = React.useMemo(() =>
+    getFilteredNoticeCategoryTree(NOTICE_CATEGORY_TREE, practiceAreas),
+    [practiceAreas]
+  );
+
+  const filteredOutCategoryNames = React.useMemo(() =>
+    getFilteredOutCategories(practiceAreas),
+    [practiceAreas]
+  );
+
+  const practiceAreaNames = React.useMemo(() => {
+    if (!practiceAreas || practiceAreas.length === 0) return [];
+    return practiceAreas
+      .map(id => getAllPracticeAreas().find(pa => pa.id === id)?.name)
+      .filter(Boolean) as string[];
+  }, [practiceAreas]);
+
   const variantToCategory = React.useMemo(() => {
     const map = new Map<string, string>();
-    for (const category of NOTICE_CATEGORY_TREE) {
+    for (const category of baseTree) {
       for (const group of category.groups) {
         for (const variant of group.variants) {
           map.set(variant.id, category.id);
@@ -60,21 +85,21 @@ export default function NoticeTypeStep({
       }
     }
     return map;
-  }, []);
+  }, [baseTree]);
 
   const selectedCategoryId = selectedId ? variantToCategory.get(selectedId) ?? null : null;
 
   const [openGroups, setOpenGroups] = React.useState<OpenGroupsState>({});
   React.useEffect(() => {
     const initial: OpenGroupsState = {};
-    NOTICE_CATEGORY_TREE.forEach((category) => {
+    baseTree.forEach((category) => {
       const stored = readStoredState(category.id);
       // All categories open by default for better accessibility
       const open = stored ?? true;
       initial[category.id] = !!open;
     });
     setOpenGroups(initial);
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, baseTree]);
 
   // Keyboard nav for search
   React.useEffect(() => {
@@ -100,10 +125,10 @@ export default function NoticeTypeStep({
 
   // Filter variants based on search
   const filteredTree = React.useMemo(() => {
-    if (!searchQuery.trim()) return NOTICE_CATEGORY_TREE;
+    if (!searchQuery.trim()) return baseTree;
 
     const query = searchQuery.toLowerCase();
-    return NOTICE_CATEGORY_TREE.map((category) => ({
+    return baseTree.map((category) => ({
       ...category,
       groups: category.groups.map((group) => ({
         ...group,
@@ -115,7 +140,7 @@ export default function NoticeTypeStep({
         ),
       })).filter((group) => group.variants.length > 0),
     })).filter((category) => category.groups.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, baseTree]);
 
   // Auto-expand all categories when searching
   React.useEffect(() => {
@@ -130,7 +155,7 @@ export default function NoticeTypeStep({
 
   const selectedVariant = React.useMemo(() => {
     if (!selectedId) return null;
-    for (const category of NOTICE_CATEGORY_TREE) {
+    for (const category of baseTree) {
       for (const group of category.groups) {
         for (const variant of group.variants) {
           if (variant.id === selectedId) return variant;
@@ -138,7 +163,7 @@ export default function NoticeTypeStep({
       }
     }
     return null;
-  }, [selectedId]);
+  }, [selectedId, baseTree]);
 
   const hasResults = filteredTree.length > 0;
 
@@ -229,6 +254,49 @@ export default function NoticeTypeStep({
           )}
         </div>
       </header>
+
+      {/* Practice Area Filter Banner */}
+      {practiceAreas && practiceAreas.length > 0 && (
+        <div className="overflow-hidden rounded-3xl border border-purple-200/80 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 p-8 shadow-[0_8px_32px_rgba(139,92,246,0.12)] backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 shadow-lg shadow-purple-600/30">
+                <Info className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <h3 className="text-lg font-bold text-purple-900">
+                  Notice types filtered by your practice areas
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-purple-700">
+                  You're seeing notice types that match your firm's selected practice areas: <strong>{practiceAreaNames.join(', ')}</strong>.
+                </p>
+              </div>
+
+              {filteredOutCategoryNames.length > 0 && (
+                <div className="rounded-xl border border-purple-200 bg-white/60 px-4 py-3">
+                  <p className="text-sm text-purple-800">
+                    <strong>Hidden categories:</strong> {filteredOutCategoryNames.join(', ')}
+                  </p>
+                </div>
+              )}
+
+              {settingsUrl && (
+                <div className="pt-1">
+                  <a
+                    href={settingsUrl}
+                    className="inline-flex items-center gap-2 rounded-xl border border-purple-300 bg-white px-5 py-2.5 text-sm font-semibold text-purple-700 shadow-sm transition-all hover:border-purple-400 hover:bg-purple-50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Manage practice areas
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-10">
         {!hasResults ? (

@@ -15,6 +15,7 @@ interface DepartmentMembership {
       id: string;
       name: string;
       type: string;
+      slug: string;
     };
   };
 }
@@ -26,6 +27,7 @@ interface OrganizationMembership {
     id: string;
     name: string;
     type: string;
+    slug: string;
   };
 }
 
@@ -65,7 +67,8 @@ export default function SwitchContext() {
             organization:organizations (
               id,
               name,
-              type
+              type,
+              slug
             )
           )
         `)
@@ -74,7 +77,7 @@ export default function SwitchContext() {
 
       if (deptError) throw deptError;
 
-      // Load organization memberships
+      // Load organization memberships (for firms)
       const { data: orgData, error: orgError } = await supabase
         .from('organization_memberships')
         .select(`
@@ -83,15 +86,16 @@ export default function SwitchContext() {
           organization:organizations (
             id,
             name,
-            type
+            type,
+            slug
           )
         `)
         .eq('user_id', userId);
 
       if (orgError) throw orgError;
 
-      setDeptMemberships(deptData || []);
-      setOrgMemberships(orgData || []);
+      setDeptMemberships(deptData as any || []);
+      setOrgMemberships(orgData as any || []);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load memberships:', err);
@@ -115,8 +119,7 @@ export default function SwitchContext() {
       // Navigate to department dashboard
       const org = membership.department.organization;
       const dept = membership.department;
-      // Hardcode sample-borough for now since organizations don't have slugs
-      const orgSlug = 'sample-borough';
+      const orgSlug = org.slug;
       navigate(`/c/${orgSlug}/${dept.slug}/dashboard`);
     } catch (err) {
       console.error('Failed to select department:', err);
@@ -126,10 +129,10 @@ export default function SwitchContext() {
   const selectOrganization = (membership: OrganizationMembership) => {
     const org = membership.organization;
     if (org.type === 'firm') {
-      navigate(`/f/${org.id}/dashboard`);
+      navigate(`/f/${org.slug}/dashboard`);
     } else {
-      // Council org-wide view
-      navigate(`/c/${org.id}/all-departments/dashboard`);
+      // Council org-wide view (not yet implemented)
+      navigate(`/c/${org.slug}/all-departments/dashboard`);
     }
   };
 
