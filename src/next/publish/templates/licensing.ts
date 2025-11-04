@@ -19,7 +19,7 @@ const TEMPLATES: Record<LicensingVariant, string> = {
   "licensing-premises-new": `LICENSING ACT 2003
 APPLICATION FOR A NEW PREMISES LICENCE
 
-Notice is hereby given that {{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} has applied to {{AUTHORITY_NAME}} for a new premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
+Notice is hereby given that {{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a new premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
 
 Licensable activities applied for: {{LICENSABLE_ACTIVITIES}}.
 Proposed hours: {{ACTIVITY_SCHEDULE}}.{{#if OPENING_HOURS}} Opening hours: {{OPENING_HOURS}}.{{/if}}{{#if DPS_NAME}} The proposed designated premises supervisor is {{DPS_NAME}}.{{/if}}
@@ -33,7 +33,7 @@ It is an offence to knowingly or recklessly make a false statement in connection
   "licensing-premises-variation": `LICENSING ACT 2003
 APPLICATION TO VARY A PREMISES LICENCE
 
-{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} to vary the premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
+{{APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} to vary the premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
 
 Nature of variation: {{NATURE_OF_VARIATION}}.
 Licensable activities/hours after variation: {{ACTIVITY_SCHEDULE}}.{{#if OPENING_HOURS}} Opening hours: {{OPENING_HOURS}}.{{/if}}{{#if DPS_NAME}} Designated premises supervisor (if applicable): {{DPS_NAME}}.{{/if}}
@@ -47,7 +47,7 @@ It is an offence to knowingly or recklessly make a false statement in connection
   "licensing-premises-review": `LICENSING ACT 2003
 APPLICATION FOR REVIEW OF A PREMISES LICENCE
 
-{{REVIEW_APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a review of the premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
+{{REVIEW_APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a review of the premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
 
 Grounds for review: {{REVIEW_GROUNDS}}{{#if LICENSING_OBJECTIVES}} (relating to: {{LICENSING_OBJECTIVES}}){{/if}}.
 
@@ -60,7 +60,7 @@ It is an offence to knowingly or recklessly make a false statement in connection
   "licensing-club-new": `LICENSING ACT 2003
 APPLICATION FOR A NEW CLUB PREMISES CERTIFICATE
 
-{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a club premises certificate at {{PREMISES_ADDRESS}} for the following qualifying club activities: {{LICENSABLE_ACTIVITIES}}. Proposed hours: {{ACTIVITY_SCHEDULE}}.
+{{APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a club premises certificate at {{PREMISES_ADDRESS}} for the following qualifying club activities: {{LICENSABLE_ACTIVITIES}}. Proposed hours: {{ACTIVITY_SCHEDULE}}.
 
 The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
 
@@ -71,7 +71,7 @@ It is an offence to knowingly or recklessly make a false statement in connection
   "licensing-club-variation": `LICENSING ACT 2003
 APPLICATION TO VARY A CLUB PREMISES CERTIFICATE
 
-{{APPLICANT_NAME}} seeks to vary the club premises certificate at {{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}. Hours/activities after variation: {{ACTIVITY_SCHEDULE}}.
+{{APPLICANT_NAME}} seeks to vary{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently with {{AUTHORITY_NAMES_LIST}}{{/if}} the club premises certificate at {{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}. Hours/activities after variation: {{ACTIVITY_SCHEDULE}}.
 
 The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
 
@@ -82,7 +82,7 @@ It is an offence to knowingly or recklessly make a false statement in connection
   "licensing-club-review": `LICENSING ACT 2003
 APPLICATION FOR REVIEW OF A CLUB PREMISES CERTIFICATE
 
-{{REVIEW_APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a review of the club premises certificate for {{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
+{{REVIEW_APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a review of the club premises certificate for {{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
 
 The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
 

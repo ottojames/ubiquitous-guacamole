@@ -1,0 +1,83 @@
+fix(licensing): add multi-jurisdiction support for boundary premises (CRIT-008)
+
+STATUTORY COMPLIANCE FIX - Licensing Act 2003
+
+Issue:
+- Platform could not handle premises on boundaries of multiple licensing authorities
+- Schema only supported single authority (AUTHORITY_NAME)
+- Templates assumed single authority application
+- Common real-world scenario: Westminster/Camden, City of London borders
+
+Statutory Requirement:
+- Licensing Act 2003 s.4 - Definition of licensing authority
+- Boundary premises require concurrent applications to all relevant authorities
+- Notices must properly identify all authorities receiving application
+
+Changes:
+
+Schema (src/next/publish/schema/licensing.ts):
+- Added additionalAuthoritySchema sub-schema with fields: name, address, email, phone
+- Added ADDITIONAL_LICENSING_AUTHORITIES: z.array(additionalAuthoritySchema).optional()
+- Updated mapper to build authority list from primary + additional authorities
+- Added helper tokens for templates:
+  - AUTHORITY_NAMES_LIST: comma-separated list with "and" (e.g., "Westminster City Council and Camden Borough Council")
+  - HAS_MULTIPLE_AUTHORITIES: boolean flag ("true" or "")
+
+Templates (src/next/publish/templates/licensing.ts):
+All 6 licensing templates updated with conditional multi-jurisdiction rendering:
+- licensing-premises-new
+- licensing-premises-variation
+- licensing-premises-review
+- licensing-club-new
+- licensing-club-variation
+- licensing-club-review
+
+Template Pattern Changes:
+
+Single Authority (existing behavior):
+"{{APPLICANT_NAME}} has applied to Westminster City Council..."
+
+Multiple Authorities (new behavior):
+"{{APPLICANT_NAME}} has applied concurrently to Westminster City Council and Camden Borough Council..."
+
+Implementation:
+- Changed "{{AUTHORITY_NAME}}" to "{{AUTHORITY_NAMES_LIST}}" in application statements
+- Added "{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}}" to indicate boundary application
+- Kept "{{AUTHORITY_NAME}}" in representation contact section (primary authority)
+
+Wording Strategy:
+- "concurrently" signals simultaneous application to multiple authorities
+- List format: "Authority A, Authority B and Authority C" (Oxford comma omitted per UK style)
+- Representation contact remains primary authority (standard practice)
+
+Legal Effect:
+- Notices now properly declare concurrent applications to multiple authorities
+- Boundary premises applications correctly identify all licensing authorities
+- Complies with s.4 requirement that each authority receives proper notice
+- Reduces risk of challenge for procedurally defective notice
+
+Use Cases Supported:
+1. Premises on authority boundary (Westminster/Camden)
+2. Premises spanning multiple authorities (rare but possible)
+3. Premises in disputed boundary areas
+4. Single authority applications (backward compatible)
+
+Backward Compatibility:
+✅ Single authority applications work exactly as before
+✅ ADDITIONAL_LICENSING_AUTHORITIES field is optional
+✅ Templates render identically when no additional authorities provided
+✅ No breaking changes to existing data
+
+Files Changed:
+- src/next/publish/schema/licensing.ts (schema + mapper + 20 lines)
+- src/next/publish/templates/licensing.ts (6 templates updated)
+
+UI Enhancement Required (follow-up):
+- Add "Boundary Premises" checkbox to wizard form
+- Add dynamic form for additional authorities (name, address, email, phone)
+- Show warning: "This notice must be published in newspapers circulating in all authority areas"
+- Validate at least one additional authority when checkbox selected
+
+Testing: See patches/CRIT-008-validation.md
+
+Refs: CRIT-008, COMPLIANCE_VALIDATION_REPORT.md Lines 309-339

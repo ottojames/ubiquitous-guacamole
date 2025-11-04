@@ -60,6 +60,13 @@ const isoDateField = (label: string) =>
     .trim()
     .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` });
 
+const additionalAuthoritySchema = z.object({
+  name: requiredString("Additional authority name"),
+  address: optionalString(),
+  email: optionalEmail(),
+  phone: optionalString(),
+});
+
 const licensingBaseSchema = z
   .object({
     variant: z.enum(LICENSING_VARIANTS),
@@ -98,6 +105,7 @@ const licensingBaseSchema = z
     AUTHORITY_ADDRESS: optionalString(),
     AUTHORITY_EMAIL: optionalEmail(),
     AUTHORITY_PHONE: optionalString(),
+    ADDITIONAL_LICENSING_AUTHORITIES: z.array(additionalAuthoritySchema).optional(),
     ONLINE_REGISTER_URL: optionalUrl(),
     REFERENCE: optionalString(),
     RESPONSIBLE_AUTHORITIES_LIST_URL: optionalUrl(),
@@ -164,6 +172,17 @@ function valueOrUndefined(value?: string | null): string | undefined {
 }
 
 export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBase {
+  // Build authority list for multi-jurisdiction support
+  const allAuthorities = [input.AUTHORITY_NAME];
+  if (input.ADDITIONAL_LICENSING_AUTHORITIES && input.ADDITIONAL_LICENSING_AUTHORITIES.length > 0) {
+    allAuthorities.push(...input.ADDITIONAL_LICENSING_AUTHORITIES.map(auth => auth.name));
+  }
+
+  const hasMultipleAuthorities = allAuthorities.length > 1;
+  const authorityNamesList = hasMultipleAuthorities
+    ? allAuthorities.slice(0, -1).join(", ") + " and " + allAuthorities[allAuthorities.length - 1]
+    : allAuthorities[0];
+
   const tokens: Record<string, string> = {
     NOTICE_TYPE: valueOrEmpty(input.NOTICE_TYPE),
     ACT_TITLE: valueOrEmpty(input.ACT_TITLE),
@@ -197,6 +216,8 @@ export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBas
     AUTHORITY_ADDRESS: valueOrEmpty(input.AUTHORITY_ADDRESS),
     AUTHORITY_EMAIL: valueOrEmpty(input.AUTHORITY_EMAIL),
     AUTHORITY_PHONE: valueOrEmpty(input.AUTHORITY_PHONE),
+    AUTHORITY_NAMES_LIST: authorityNamesList,
+    HAS_MULTIPLE_AUTHORITIES: hasMultipleAuthorities ? "true" : "",
     ONLINE_REGISTER_URL: valueOrEmpty(input.ONLINE_REGISTER_URL),
     REFERENCE: valueOrEmpty(input.REFERENCE),
   };
