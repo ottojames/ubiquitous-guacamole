@@ -1,0 +1,57 @@
+fix(licensing): add responsible authorities statement to all templates and schema (CRIT-002)
+
+STATUTORY COMPLIANCE FIX - Licensing Act 2003
+
+Issue:
+- All 6 licensing templates missing statement that representors must serve copies on responsible authorities
+- Schema lacked RESPONSIBLE_AUTHORITIES_LIST_URL field for optional URL to authorities list
+
+Statutory Requirement:
+- Licensing Act 2003 s.17(5)(b) - Notice must facilitate service on responsible authorities
+- Licensing Act 2003 s.13 - Definition of responsible authorities
+- Licensing Act 2003 s.17(3)(b) - Representors must serve responsible authorities
+
+Changes:
+
+Schema (src/next/publish/schema/licensing.ts):
+- Added RESPONSIBLE_AUTHORITIES_LIST_URL field (optional URL)
+- Uses existing optionalUrl() validator
+- Allows councils to provide link to their responsible authorities list
+
+Templates (src/next/publish/templates/licensing.ts):
+All 6 templates updated with new statement:
+- licensing-premises-new
+- licensing-premises-variation
+- licensing-premises-review
+- licensing-club-new
+- licensing-club-variation
+- licensing-club-review
+
+New wording structure:
+"Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}
+ {{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
+ Representors must also serve a copy of their representations on each of the responsible authorities
+ {{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}."
+
+Features:
+- Mandatory statement about serving responsible authorities
+- Optional conditional display of URL if council provides one
+- Generic statement if URL not provided (users can get list from authority)
+- Changed "{{REPRESENTATION_METHOD}}" to explicit "in writing" for clarity
+
+UI Note:
+- Form input for RESPONSIBLE_AUTHORITIES_LIST_URL field should be added to notice creation form (wizard step)
+- Field should be optional text input with URL validation
+- Help text: "Provide link where representors can view responsible authorities list"
+
+Legal Risk Eliminated:
+- Notices now facilitate service on responsible authorities per s.17(5)(b)
+- Reduces risk of judicial review for failure to comply with consultation requirements
+
+Files Changed:
+- src/next/publish/schema/licensing.ts (+1 field)
+- src/next/publish/templates/licensing.ts (6 templates updated)
+
+Testing: See patches/CRIT-002-validation.md
+
+Refs: CRIT-002, COMPLIANCE_VALIDATION_REPORT.md Lines 112-166

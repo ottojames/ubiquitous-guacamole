@@ -100,6 +100,7 @@ const licensingBaseSchema = z
     AUTHORITY_PHONE: optionalString(),
     ONLINE_REGISTER_URL: optionalUrl(),
     REFERENCE: optionalString(),
+    RESPONSIBLE_AUTHORITIES_LIST_URL: optionalUrl(),
   })
   .superRefine((value, ctx) => {
     const isPremises = value.variant.includes("premises");
