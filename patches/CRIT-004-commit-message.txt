@@ -1,0 +1,57 @@
+fix(gambling): add licensing objectives statement to all 16 gambling templates (CRIT-004)
+
+STATUTORY COMPLIANCE FIX - Gambling Act 2005
+
+Issue:
+- All 16 gambling templates missing statement about licensing objectives
+- No guidance provided to representors on grounds for valid representations
+
+Statutory Requirement:
+- Gambling Act 2005 s.1 - Three licensing objectives apply to all premises licence applications
+- Licensing objectives are mandatory consideration for representations
+
+Changes:
+Added licensing objectives statement to all 16 gambling templates:
+- gambling-betting-new
+- gambling-betting-variation
+- gambling-betting-review
+- gambling-betting-transfer
+- gambling-bingo-new
+- gambling-bingo-variation
+- gambling-bingo-review
+- gambling-bingo-transfer
+- gambling-agc-new
+- gambling-agc-variation
+- gambling-agc-review
+- gambling-agc-transfer
+- gambling-fec-new
+- gambling-fec-variation
+- gambling-fec-review
+- gambling-fec-transfer
+
+New Statement Added (between premises description and inspection details):
+"Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling."
+
+Location in Templates:
+- "New" templates: Inserted after premises/hours description, before inspection location
+- "Variation" templates: Inserted after variation description, before "Inspection and representation details as above"
+- "Review" templates: Inserted after review grounds, before "Inspection and representation details as above"
+- "Transfer" templates: Inserted after transfer details, before "Inspection and representation details as above"
+
+Legal Risk Eliminated:
+- Representors now informed of statutory grounds for valid representations
+- Reduces risk of irrelevant representations that must be administratively filtered
+- Ensures councils receive focused, licensing-objective-related representations
+- Aligns with Gambling Commission guidance on consultation
+
+Files Changed:
+- src/next/publish/templates/gambling.ts (16 templates updated)
+
+Implementation Method:
+- Manual insertion into each of 16 templates
+- Statement placed logically between application details and procedural information
+- Consistent wording across all variants
+
+Testing: See patches/CRIT-004-validation.md
+
+Refs: CRIT-004, COMPLIANCE_VALIDATION_REPORT.md Lines 170-191
