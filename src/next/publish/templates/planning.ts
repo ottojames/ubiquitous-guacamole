@@ -46,12 +46,16 @@ APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — LISTED BUILDING
 
 {{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
 
+This application affects a listed building and has been notified to Historic England and other statutory consultees as required by the Planning (Listed Buildings and Conservation Areas) Act 1990.
+
 Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
 
   "planning-conservation": `PLANNING (LISTED BUILDINGS AND CONSERVATION AREAS) ACT 1990
 APPLICATION REFERENCE: {{APPLICATION_REFERENCE}} — CONSERVATION AREA
 
 {{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for planning permission at {{SITE_ADDRESS}} described as: {{PROPOSAL_DESCRIPTION}}.
+
+This application affects a conservation area and has been notified to relevant heritage bodies and statutory consultees as required by the Planning (Listed Buildings and Conservation Areas) Act 1990.
 
 Details can be viewed at {{INSPECTION_LOCATION}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}. Comments must be submitted {{COMMENT_METHOD}} to {{AUTHORITY_NAME}} {{COMMENT_DESTINATIONS}} by {{DEADLINE_DATE}}.`,
 
