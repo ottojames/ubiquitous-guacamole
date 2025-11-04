@@ -1,0 +1,51 @@
+fix(gambling): add Schedule 9 reference to all 16 gambling templates (CRIT-003)
+
+STATUTORY COMPLIANCE FIX - Gambling Act 2005
+
+Issue:
+- All 16 gambling templates missing Schedule 9 reference in header
+- Headers incorrectly stated "GAMBLING ACT 2005" without Schedule 9 citation
+
+Statutory Requirement:
+- Gambling Act 2005, Schedule 9 - Source of statutory notice requirements for premises licences
+- Schedule 9 defines publication and notification procedures
+
+Changes:
+Automated find-and-replace across all 16 gambling templates:
+- gambling-betting-new
+- gambling-betting-variation
+- gambling-betting-review
+- gambling-betting-transfer
+- gambling-bingo-new
+- gambling-bingo-variation
+- gambling-bingo-review
+- gambling-bingo-transfer
+- gambling-agc-new
+- gambling-agc-variation
+- gambling-agc-review
+- gambling-agc-transfer
+- gambling-fec-new
+- gambling-fec-variation
+- gambling-fec-review
+- gambling-fec-transfer
+
+Change Pattern:
+BEFORE: "GAMBLING ACT 2005"
+AFTER:  "GAMBLING ACT 2005, SCHEDULE 9"
+
+Legal Risk Eliminated:
+- Notices now properly cite statutory source (Schedule 9)
+- Reduces risk of challenge for procedurally defective notice header
+- Aligns with Gambling Commission guidance and professional standards
+
+Files Changed:
+- src/next/publish/templates/gambling.ts (16 template headers updated)
+
+Implementation Method:
+- Automated find-and-replace using replace_all flag
+- No manual template-by-template editing required
+- Consistent change across all variants
+
+Testing: See patches/CRIT-003-validation.md
+
+Refs: CRIT-003, COMPLIANCE_VALIDATION_REPORT.md Lines 168-213
