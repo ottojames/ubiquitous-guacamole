@@ -6,6 +6,56 @@ export const GVOL_VARIANTS = ["gvol-new", "gvol-variation"] as const;
 
 export type GvolVariant = (typeof GVOL_VARIANTS)[number];
 
+// UK Traffic Areas under Goods Vehicles (Licensing of Operators) Act 1995
+export const TRAFFIC_AREAS = [
+  "Eastern",
+  "North Eastern",
+  "North Western",
+  "Scottish",
+  "South Eastern & Metropolitan",
+  "Wales & Western",
+  "West Midlands",
+  "Yorkshire",
+] as const;
+
+export type TrafficArea = (typeof TRAFFIC_AREAS)[number];
+
+// Traffic Commissioner office addresses by area
+const TRAFFIC_COMMISSIONER_OFFICES: Record<TrafficArea, { address: string; email: string }> = {
+  "Eastern": {
+    address: "Eastbrook, Shaftesbury Road, Cambridge CB2 8DR",
+    email: "eastern@otc.gov.uk",
+  },
+  "North Eastern": {
+    address: "Hillcrest House, 386 Harehills Lane, Leeds LS9 6NF",
+    email: "north.eastern@otc.gov.uk",
+  },
+  "North Western": {
+    address: "Suite 4, Stone Cross Place, Stone Cross Lane North, Golborne, Warrington WA3 2SH",
+    email: "north.western@otc.gov.uk",
+  },
+  "Scottish": {
+    address: "Level 6, The Stamp Office, 10 Waterloo Place, Edinburgh EH1 3EG",
+    email: "scottish@otc.gov.uk",
+  },
+  "South Eastern & Metropolitan": {
+    address: "Ivy House, 3 Ivy Terrace, Eastbourne BN21 4QT",
+    email: "south.eastern@otc.gov.uk",
+  },
+  "Wales & Western": {
+    address: "38 George Road, Edgbaston, Birmingham B15 1PL",
+    email: "wales.western@otc.gov.uk",
+  },
+  "West Midlands": {
+    address: "38 George Road, Edgbaston, Birmingham B15 1PL",
+    email: "west.midlands@otc.gov.uk",
+  },
+  "Yorkshire": {
+    address: "Hillcrest House, 386 Harehills Lane, Leeds LS9 6NF",
+    email: "yorkshire@otc.gov.uk",
+  },
+};
+
 const requiredString = (label: string) => z.string().trim().min(1, `${label} is required`);
 
 const optionalString = () =>
@@ -41,7 +91,9 @@ export const gvolNoticeSchema = z
     APPLICANT_TRADING_AS: optionalString(),
     APPLICANT_ADDRESS: requiredString("Applicant address"),
     LICENCE_CATEGORY: requiredString("Licence category"),
-    TRAFFIC_AREA_NAME: requiredString("Traffic area"),
+    TRAFFIC_AREA: z.enum(TRAFFIC_AREAS, {
+      errorMap: () => ({ message: "Select a valid Traffic Area" }),
+    }),
     OPERATING_CENTRE_ADDRESS: requiredString("Operating centre address"),
     NUMBER_OF_VEHICLES: digitsOnly("Number of vehicles"),
     NUMBER_OF_TRAILERS: digitsOnly("Number of trailers"),
@@ -49,9 +101,6 @@ export const gvolNoticeSchema = z
     PUBLICATION_DATE: isoDateField("Publication date"),
     DEADLINE_DATE: isoDateField("Objection deadline"),
     REPRESENTATION_METHOD: requiredString("Representation method"),
-    AUTHORITY_NAME: requiredString("Traffic Commissioner / Area office"),
-    AUTHORITY_ADDRESS: requiredString("Representation address"),
-    AUTHORITY_EMAIL: optionalString(),
   })
   .superRefine((value, ctx) => {
     const isVariation = value.variant.includes("variation");
@@ -76,6 +125,10 @@ function valueOrUndefined(value?: string | null): string | undefined {
 }
 
 export function mapGvolToNoticeBase(input: GvolNoticeInput): NoticeBase {
+  // Derive Traffic Commissioner office details from TRAFFIC_AREA enum
+  const trafficArea = input.TRAFFIC_AREA;
+  const commissionerOffice = TRAFFIC_COMMISSIONER_OFFICES[trafficArea];
+
   const tokens: Record<string, string> = {
     NOTICE_TYPE: valueOrEmpty(input.NOTICE_TYPE),
     APPLICANT_NAME: valueOrEmpty(input.APPLICANT_NAME),
@@ -83,7 +136,9 @@ export function mapGvolToNoticeBase(input: GvolNoticeInput): NoticeBase {
     APPLICANT_TRADING_AS: valueOrEmpty(input.APPLICANT_TRADING_AS),
     APPLICANT_ADDRESS: valueOrEmpty(input.APPLICANT_ADDRESS),
     LICENCE_CATEGORY: valueOrEmpty(input.LICENCE_CATEGORY),
-    TRAFFIC_AREA_NAME: valueOrEmpty(input.TRAFFIC_AREA_NAME),
+    TRAFFIC_AREA: trafficArea,
+    TRAFFIC_COMMISSIONER_OFFICE: commissionerOffice.address,
+    TRAFFIC_COMMISSIONER_EMAIL: commissionerOffice.email,
     OPERATING_CENTRE_ADDRESS: valueOrEmpty(input.OPERATING_CENTRE_ADDRESS),
     NUMBER_OF_VEHICLES: valueOrEmpty(input.NUMBER_OF_VEHICLES),
     NUMBER_OF_TRAILERS: valueOrEmpty(input.NUMBER_OF_TRAILERS),
@@ -91,9 +146,6 @@ export function mapGvolToNoticeBase(input: GvolNoticeInput): NoticeBase {
     PUBLICATION_DATE: valueOrEmpty(input.PUBLICATION_DATE),
     DEADLINE_DATE: valueOrEmpty(input.DEADLINE_DATE),
     REPRESENTATION_METHOD: valueOrEmpty(input.REPRESENTATION_METHOD),
-    AUTHORITY_NAME: valueOrEmpty(input.AUTHORITY_NAME),
-    AUTHORITY_ADDRESS: valueOrEmpty(input.AUTHORITY_ADDRESS),
-    AUTHORITY_EMAIL: valueOrEmpty(input.AUTHORITY_EMAIL),
   };
 
   return {

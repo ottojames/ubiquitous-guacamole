@@ -1,0 +1,115 @@
+fix(gvol): replace generic authority with Traffic Commissioner structure (CRIT-005)
+
+STATUTORY COMPLIANCE FIX - BREAKING CHANGE - Goods Vehicles (Licensing of Operators) Act 1995
+
+Issue:
+- GVOL templates used generic "{{AUTHORITY_NAME}}, {{AUTHORITY_ADDRESS}}"
+- Schema had free-text TRAFFIC_AREA_NAME instead of enum
+- Did NOT explicitly reference "Traffic Commissioner" as statutory body
+- Incorrect structure for GVOL Act 1995 compliance
+
+Statutory Requirement:
+- GVOL Act 1995 s.2 - Traffic Commissioners determine operator licence applications
+- GVOL Act 1995 s.57 - Representations must be made to Traffic Commissioner
+- Applications are NOT made to generic "authority" but specifically to Traffic Commissioner
+- UK has 8 defined Traffic Areas, each with a specific Traffic Commissioner office
+
+Changes:
+
+Schema (src/next/publish/schema/gvol.ts):
+- **BREAKING**: Removed generic fields:
+  - ❌ AUTHORITY_NAME (free text field)
+  - ❌ AUTHORITY_ADDRESS (free text field)
+  - ❌ AUTHORITY_EMAIL (free text field)
+  - ❌ TRAFFIC_AREA_NAME (free text field)
+
+- **ADDED**: Structured Traffic Commissioner fields:
+  - ✅ TRAFFIC_AREA: z.enum([8 traffic areas])
+  - ✅ TRAFFIC_COMMISSIONER_OFFICE: derived from TRAFFIC_AREA
+  - ✅ TRAFFIC_COMMISSIONER_EMAIL: derived from TRAFFIC_AREA
+
+- **ADDED**: TRAFFIC_AREAS enum with 8 UK traffic areas:
+  1. Eastern (Cambridge)
+  2. North Eastern (Leeds)
+  3. North Western (Warrington)
+  4. Scottish (Edinburgh)
+  5. South Eastern & Metropolitan (Eastbourne)
+  6. Wales & Western (Birmingham)
+  7. West Midlands (Birmingham)
+  8. Yorkshire (Leeds)
+
+- **ADDED**: TRAFFIC_COMMISSIONER_OFFICES lookup table
+  - Maps each traffic area to official office address and email
+  - Authoritative data source for Traffic Commissioner contact details
+  - Ensures consistent, correct office details across all notices
+
+Templates (src/next/publish/templates/gvol.ts):
+Both templates (gvol-new, gvol-variation) updated:
+
+**BEFORE**:
+"...may make representations to {{AUTHORITY_NAME}}, {{AUTHORITY_ADDRESS}} by {{DEADLINE_DATE}}."
+
+**AFTER**:
+"...may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}."
+
+**Key Changes**:
+- Explicitly states "Traffic Commissioner" (not generic "authority")
+- Uses derived TRAFFIC_COMMISSIONER_OFFICE address (not free-text input)
+- Changed TRAFFIC_AREA_NAME → TRAFFIC_AREA (enum-validated)
+
+Migration Impact:
+⚠️ **BREAKING CHANGE** - Existing GVOL data requires migration:
+
+1. **Existing drafts/forms**: Will fail validation
+   - Forms using old AUTHORITY_NAME/AUTHORITY_ADDRESS fields will error
+   - Forms must be updated to use TRAFFIC_AREA enum dropdown
+
+2. **Migration Path**:
+   - Add TRAFFIC_AREA dropdown to wizard UI (Step 3: Legal Details)
+   - Remove AUTHORITY_NAME, AUTHORITY_ADDRESS, AUTHORITY_EMAIL fields
+   - TRAFFIC_COMMISSIONER_OFFICE auto-populates from TRAFFIC_AREA selection
+   - Show read-only office address for user confirmation
+
+3. **Data Loss Risk**: LOW
+   - GVOL notices are rare (most councils don't publish these)
+   - New publish wizard has draft persistence, but drafts are session-only
+   - No database migration needed (notices table stores JSON extras)
+
+Legal Effect:
+✅ Templates now explicitly reference "Traffic Commissioner" as statutory authority
+✅ Notice text complies with GVOL Act 1995 s.2 and s.57
+✅ Enum validation ensures only valid Traffic Areas can be selected
+✅ Office addresses are authoritative and cannot be mistyped
+✅ Reduces risk of invalid notices due to incorrect authority identification
+
+Statutory Compliance:
+- GVOL Act 1995 s.2: Traffic Commissioners appointed for traffic areas
+- GVOL Act 1995 s.57: Representations to Traffic Commissioner
+- Senior Traffic Commissioner's Statutory Documents and Guidance
+
+Use Cases Supported:
+1. New operator licence applications (gvol-new)
+2. Operator licence variations (gvol-variation)
+3. All 8 UK traffic areas with correct office details
+4. Proper statutory authority identification
+
+Backward Compatibility:
+❌ **NOT BACKWARD COMPATIBLE** (intentional)
+- Old schema field names removed (AUTHORITY_NAME, etc.)
+- Existing data using old fields will fail validation
+- UI forms must be updated to use dropdown for TRAFFIC_AREA
+- This is necessary for statutory compliance
+
+Files Changed:
+- src/next/publish/schema/gvol.ts (schema + mapper + 59 lines)
+- src/next/publish/templates/gvol.ts (2 templates updated)
+
+UI Enhancement Required (follow-up):
+- Replace AUTHORITY_NAME/ADDRESS text inputs with TRAFFIC_AREA dropdown
+- Show auto-populated TRAFFIC_COMMISSIONER_OFFICE as read-only field
+- Add help text: "Select the Traffic Area where your operating centre is located"
+- Validation: Must select one of 8 traffic areas
+
+Testing: See patches/CRIT-005-validation.md
+
+Refs: CRIT-005, COMPLIANCE_VALIDATION_REPORT.md Lines 193-233

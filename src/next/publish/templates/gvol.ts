@@ -12,23 +12,23 @@ type GvolVariant = "gvol-new" | "gvol-variation";
 const TEMPLATES: Record<GvolVariant, string> = {
   "gvol-new": `GOODS VEHICLE (OPERATOR'S) LICENCE
 
-{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} is applying for a {{LICENCE_CATEGORY}} operator's licence in the {{TRAFFIC_AREA_NAME}} Traffic Area.
+{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} is applying for a {{LICENCE_CATEGORY}} operator's licence in the {{TRAFFIC_AREA}} Traffic Area.
 
 Proposed operating centre: {{OPERATING_CENTRE_ADDRESS}}.
 Authorisation: {{NUMBER_OF_VEHICLES}} goods vehicles and {{NUMBER_OF_TRAILERS}} trailers.
 
-Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to {{AUTHORITY_NAME}}, {{AUTHORITY_ADDRESS}} by {{DEADLINE_DATE}}.
+Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}.
 
 Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above.`,
 
   "gvol-variation": `GOODS VEHICLE (OPERATOR'S) LICENCE — VARIATION
 
-{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} has applied to vary the operator's licence in the {{TRAFFIC_AREA_NAME}} Traffic Area as follows: {{GVOL_VARIATION_DETAILS}}.
+{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} has applied to vary the operator's licence in the {{TRAFFIC_AREA}} Traffic Area as follows: {{GVOL_VARIATION_DETAILS}}.
 
 Operating centre: {{OPERATING_CENTRE_ADDRESS}}.
 Authorisation after variation: {{NUMBER_OF_VEHICLES}} goods vehicles and {{NUMBER_OF_TRAILERS}} trailers.
 
-Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to {{AUTHORITY_NAME}}, {{AUTHORITY_ADDRESS}} by {{DEADLINE_DATE}}.
+Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}.
 
 Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above.`,
 };
