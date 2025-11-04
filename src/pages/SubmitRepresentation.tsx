@@ -60,50 +60,43 @@ export default function SubmitRepresentation() {
       });
   }, [id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    // Get licensing authority email
-    const authorityEmail = notice?.rawData?.extras?.tokens?.REPRESENTATION_EMAIL
-      || notice?.rawData?.extras?.tokens?.AUTHORITY_EMAIL
-      || 'licensing@council.gov.uk';
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? 'http://localhost:5174' : '');
 
-    const subject = `Representation: ${notice?.noticeType} - ${notice?.premisesName}`;
-    const body = `
-Representation ${formData.representationType === 'objection' ? 'in Objection to' : 'in Support of'} Notice
+      const response = await fetch(`${API_BASE}/api/representations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          noticeId: notice?.id,
+          submitterName: formData.fullName,
+          submitterEmail: formData.email,
+          submitterPhone: formData.phone || undefined,
+          submitterAddress: formData.address || undefined,
+          type: formData.representationType,
+          content: formData.comments,
+        }),
+      });
 
-Notice Details:
-- Notice ID: ${notice?.id}
-- Notice Type: ${notice?.noticeType}
-- Premises: ${notice?.premisesName}
-- Address: ${notice?.premisesAddress}
-- Applicant: ${notice?.applicantName || 'N/A'}
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to submit representation' }));
+        throw new Error(errorData.error || 'Failed to submit representation');
+      }
 
-Representation From:
-- Name: ${formData.fullName}
-- Email: ${formData.email}
-- Address: ${formData.address}
+      await response.json();
 
-Type of Representation: ${formData.representationType === 'objection' ? 'OBJECTION' : 'SUPPORT'}
-
-Comments:
-${formData.comments}
-
----
-This representation was submitted via CivicNotices (civicnotices.com)
-Submitted: ${new Date().toLocaleString('en-GB')}
-    `.trim();
-
-    // Open mailto link
-    const mailtoLink = `mailto:${authorityEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
-
-    // Show success message after a brief delay
-    setTimeout(() => {
       setSubmitting(false);
       setSubmitted(true);
-    }, 1000);
+    } catch (error) {
+      console.error('Error submitting representation:', error);
+      setSubmitting(false);
+      alert(`Failed to submit representation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   if (loading) {

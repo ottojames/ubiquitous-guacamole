@@ -15,6 +15,7 @@ interface Department {
   organization: {
     id: string;
     name: string;
+    logo_url?: string;
   };
 }
 
@@ -32,6 +33,8 @@ export default function Settings() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [department, setDepartment] = useState<Department>(initialDepartment);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [settings, setSettings] = useState({
     default_representation_period_days: 28,
     require_approval_for_publication: false,
@@ -41,11 +44,72 @@ export default function Settings() {
     ...initialDepartment.settings
   });
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'].includes(file.type)) {
+      setError('Please upload a PNG, JPG, or SVG image');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be smaller than 2MB');
+      return;
+    }
+
+    setLogoFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
       setError(null);
 
+      let logoUrl = null;
+
+      // Upload logo if provided
+      if (logoFile) {
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `${department.organization.id}/${Date.now()}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('organization-logos')
+          .upload(fileName, logoFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Logo upload error:', uploadError);
+          setError('Failed to upload logo: ' + uploadError.message);
+          setSaving(false);
+          return;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('organization-logos')
+          .getPublicUrl(fileName);
+
+        logoUrl = publicUrl;
+      }
+
+      // Update department settings
       const { error: updateError } = await supabase
         .from('departments')
         .update({
@@ -57,6 +121,34 @@ export default function Settings() {
         .eq('id', department.id);
 
       if (updateError) throw updateError;
+
+      // Update organization logo if provided
+      if (logoUrl) {
+        const { error: logoError } = await supabase
+          .from('organizations')
+          .update({ logo_url: logoUrl })
+          .eq('id', department.organization.id);
+
+        if (logoError) {
+          console.error('Logo update error:', logoError);
+          setError('Failed to update logo: ' + logoError.message);
+          setSaving(false);
+          return;
+        }
+
+        // Update local state
+        setDepartment({
+          ...department,
+          organization: {
+            ...department.organization,
+            logo_url: logoUrl
+          }
+        });
+
+        // Clear logo file and preview
+        setLogoFile(null);
+        setLogoPreview(null);
+      }
 
       setSuccess('Settings saved successfully');
       setSaving(false);
@@ -280,6 +372,58 @@ export default function Settings() {
       {/* Organization Info (Read-only) */}
       <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Organization Information</h2>
+
+        {/* Logo Upload */}
+        <div className="mb-6 pb-6 border-b border-gray-200">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Organization Logo
+          </label>
+          <div className="flex items-start gap-6">
+            <div className="flex-shrink-0">
+              {logoPreview || department.organization.logo_url ? (
+                <div className="relative w-32 h-32 rounded-xl border-2 border-gray-200 overflow-hidden bg-white">
+                  <img
+                    src={logoPreview || department.organization.logo_url || ''}
+                    alt="Organization logo"
+                    className="w-full h-full object-contain p-2"
+                  />
+                </div>
+              ) : (
+                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+                  <span className="text-gray-400 text-sm text-center px-2">No logo</span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-3">
+                Upload your organization's logo. This will be displayed on notices and documents. Recommended size: 400x400px.
+              </p>
+              <div className="flex gap-2">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                  Choose File
+                </label>
+                {(logoPreview || logoFile) && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Accepted formats: PNG, JPG, SVG (max 2MB)
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="space-y-4">
           <div>

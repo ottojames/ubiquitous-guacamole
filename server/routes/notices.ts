@@ -651,6 +651,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
     const statusParam = String(req.query.status ?? '').trim();
     const startParam = String(req.query.start ?? '').trim();
     const endParam = String(req.query.end ?? '').trim();
+    const trafficAreaParam = String(req.query.traffic_area ?? '').trim();
     const sortParam = String(req.query.sort ?? '').trim() || undefined;
     const limitParam = parseLimit(req.query.limit);
     const radiusKmParam = Number(req.query.radius_km);
@@ -714,6 +715,10 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
         qb = qb.eq('extras->>councilId', councilParam);
       }
 
+      if (trafficAreaParam) {
+        qb = qb.eq('extras->>trafficArea', trafficAreaParam);
+      }
+
       if (startParam) {
         qb = qb.gte('created_at', startParam);
       }
@@ -757,7 +762,29 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
     const { column: sortColumn, direction } = parseSort(sortParam);
 
     let rows: any[] = [];
-    if (bbox) {
+    if (bbox && radiusSearchReady && radiusCoordinates) {
+      // When both bbox and radius are present, use radius search and filter by bbox client-side
+      // This allows the radius dropdown to work even when the map is showing
+      console.log('[notice-search] Using radius search (with bbox):', {
+        lng: radiusCoordinates.longitude,
+        lat: radiusCoordinates.latitude,
+        radius_meters: radiusMeters,
+        bbox
+      });
+      const { data, error } = await client.rpc('get_nearby_notices', {
+        lng: radiusCoordinates.longitude,
+        lat: radiusCoordinates.latitude,
+        radius_meters: radiusMeters,
+      });
+
+      if (error) {
+        console.error('[notice-search] Supabase radius RPC error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      rows = Array.isArray(data) ? data : [];
+      console.log('[notice-search] Radius RPC (with bbox) returned', rows.length, 'rows');
+    } else if (bbox) {
       const [south, west, north, east] = bbox;
       const { data, error } = await client.rpc('get_bbox_notices', {
         min_lat: south,
@@ -773,6 +800,11 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
 
       rows = Array.isArray(data) ? data : [];
     } else if (radiusSearchReady && radiusCoordinates) {
+      console.log('[notice-search] Using radius search:', {
+        lng: radiusCoordinates.longitude,
+        lat: radiusCoordinates.latitude,
+        radius_meters: radiusMeters
+      });
       const { data, error } = await client.rpc('get_nearby_notices', {
         lng: radiusCoordinates.longitude,
         lat: radiusCoordinates.latitude,
@@ -785,6 +817,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
       }
 
       rows = Array.isArray(data) ? data : [];
+      console.log('[notice-search] Radius RPC returned', rows.length, 'rows');
     } else {
       const queryBuilder = applyQueryFilters(
         client.from('notices').select(selectColumns).limit(limitParam)
@@ -804,7 +837,9 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
     }
 
     const filteredRows = rows.filter((row: any) => {
-      if (bbox) {
+      // Don't apply bbox filter if we're using radius search - the radius is more important
+      // and the bbox is just for map display, not for limiting results
+      if (bbox && !radiusSearchReady) {
         const [south, west, north, east] = bbox;
         const lat = extractLatitude(row);
         const lng = extractLongitude(row);
@@ -833,9 +868,13 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
         }
       }
 
-      const rowPostcode = extractPostcode(row);
-      if (effectivePostcode && (!rowPostcode || !rowPostcode.startsWith(effectivePostcode.outward))) {
-        return false;
+      // Only filter by postcode if we're NOT doing a radius search
+      // When using radius, the geographic area is already defined by the radius
+      if (!radiusSearchReady) {
+        const rowPostcode = extractPostcode(row);
+        if (effectivePostcode && (!rowPostcode || !rowPostcode.startsWith(effectivePostcode.outward))) {
+          return false;
+        }
       }
 
       if (startParam) {
@@ -940,7 +979,8 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
       sortedRows = sortRowsBy(filteredRows, sortColumn, direction);
     }
 
-    const limitedRows = bbox ? sortedRows : sortedRows.slice(0, limitParam);
+    // Don't apply limit for radius search or bbox - show all results
+    const limitedRows = (bbox || radiusSearchReady) ? sortedRows : sortedRows.slice(0, limitParam);
 
     const items = limitedRows.map((row: any) => {
       const premises = row?.premises && typeof row.premises === 'object' ? row.premises : {};
@@ -1008,7 +1048,7 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('notices')
-      .select('*')
+      .select('*, councils(*)')
       .eq('id', id)
       .single();
 
@@ -1049,6 +1089,9 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
       viewUrl: firstNonEmptyString(extras.viewUrl, row?.view_url),
       latitude,
       longitude,
+      // Council information (for representations)
+      council_id: row.council_id,
+      councils: row.councils || null,
       // Additional detailed fields
       applicantName: firstNonEmptyString(applicant.name, consultation.applicantName, licensing.applicantName),
       applicantAddress: applicant.address || consultation.applicantAddress || null,

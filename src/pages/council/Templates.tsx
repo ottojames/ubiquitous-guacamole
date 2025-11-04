@@ -80,6 +80,11 @@ export default function Templates() {
     setShowCreateModal(true);
   };
 
+  const handleUseTemplate = (template: Template) => {
+    // Navigate to notice editor with template parameter
+    window.location.href = `/c/${orgSlug}/${deptSlug}/notices/new?template=${template.id}`;
+  };
+
   const handleEdit = (template: Template) => {
     setEditingTemplate(template);
     setFormData({
@@ -156,12 +161,6 @@ export default function Templates() {
       console.error('Failed to delete template:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete template');
     }
-  };
-
-  const handleUseTemplate = (template: Template) => {
-    // Navigate to notice editor with template pre-filled
-    // For now, just show a message
-    alert(`Using template: ${template.name}\n\nThis would pre-fill the notice editor with template defaults.`);
   };
 
   const formatNoticeType = (type: string) => {

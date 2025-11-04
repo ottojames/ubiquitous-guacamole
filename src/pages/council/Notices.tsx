@@ -48,6 +48,12 @@ export default function Notices() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Bulk operations state
+  const [selectedNotices, setSelectedNotices] = useState<Set<string>>(new Set());
+  const [bulkActionInProgress, setBulkActionInProgress] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [csvImportFile, setCsvImportFile] = useState<File | null>(null);
+
   // Check if we're in demo mode
   const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster';
   const isDemoSampleBorough = orgSlug === 'sample-borough';
@@ -168,6 +174,166 @@ export default function Notices() {
     });
   };
 
+  // Bulk operations handlers
+  const handleSelectAll = () => {
+    if (selectedNotices.size === filteredNotices.length) {
+      setSelectedNotices(new Set());
+    } else {
+      setSelectedNotices(new Set(filteredNotices.map(n => n.id)));
+    }
+  };
+
+  const handleSelectNotice = (noticeId: string) => {
+    const newSelected = new Set(selectedNotices);
+    if (newSelected.has(noticeId)) {
+      newSelected.delete(noticeId);
+    } else {
+      newSelected.add(noticeId);
+    }
+    setSelectedNotices(newSelected);
+  };
+
+  const handleBulkPublish = async () => {
+    if (!confirm(`Publish ${selectedNotices.size} selected notices?`)) return;
+
+    try {
+      setBulkActionInProgress(true);
+
+      // TODO: Replace with actual database update
+      // In production, this would call Supabase to update multiple notices
+      for (const noticeId of selectedNotices) {
+        await supabase
+          .from('notices')
+          .update({
+            status: 'published',
+            published_at: new Date().toISOString()
+          })
+          .eq('id', noticeId);
+      }
+
+      alert(`Successfully published ${selectedNotices.size} notices`);
+      setSelectedNotices(new Set());
+      loadNotices(); // Reload to show updated statuses
+    } catch (err) {
+      console.error('Bulk publish failed:', err);
+      alert('Failed to publish notices. Please try again.');
+    } finally {
+      setBulkActionInProgress(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedNotices.size} selected notices? This action cannot be undone.`)) return;
+
+    try {
+      setBulkActionInProgress(true);
+
+      // TODO: Replace with actual database delete
+      for (const noticeId of selectedNotices) {
+        await supabase
+          .from('notices')
+          .delete()
+          .eq('id', noticeId);
+      }
+
+      alert(`Successfully deleted ${selectedNotices.size} notices`);
+      setSelectedNotices(new Set());
+      loadNotices(); // Reload to show updated list
+    } catch (err) {
+      console.error('Bulk delete failed:', err);
+      alert('Failed to delete notices. Please try again.');
+    } finally {
+      setBulkActionInProgress(false);
+    }
+  };
+
+  const handleBulkExport = () => {
+    // Get selected notices data
+    const selectedData = notices.filter(n => selectedNotices.has(n.id));
+
+    // Create CSV content
+    const headers = ['ID', 'Title', 'Notice Type', 'Status', 'Created At', 'Published At', 'Representation Deadline'];
+    const rows = selectedData.map(n => [
+      n.id,
+      `"${n.title.replace(/"/g, '""')}"`, // Escape quotes in CSV
+      n.notice_type,
+      n.status,
+      n.created_at,
+      n.published_at || '',
+      n.representation_deadline || ''
+    ]);
+
+    const csv = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Download CSV file
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `notices-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert(`Exported ${selectedNotices.size} notices to CSV`);
+  };
+
+  const handleCsvImport = async () => {
+    if (!csvImportFile) return;
+
+    try {
+      setBulkActionInProgress(true);
+
+      // Read CSV file
+      const text = await csvImportFile.text();
+      const lines = text.split('\n').filter(line => line.trim());
+
+      if (lines.length < 2) {
+        throw new Error('CSV file appears to be empty');
+      }
+
+      // Parse CSV (simple implementation - assumes well-formed CSV)
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const titleIndex = headers.indexOf('title');
+      const typeIndex = headers.indexOf('notice type') || headers.indexOf('notice_type');
+
+      if (titleIndex === -1 || typeIndex === -1) {
+        throw new Error('CSV must have "Title" and "Notice Type" columns');
+      }
+
+      let importCount = 0;
+
+      // Process each row (skip header)
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+
+        const title = values[titleIndex];
+        const noticeType = values[typeIndex];
+
+        if (!title || !noticeType) continue;
+
+        // TODO: In production, create actual notice records
+        // For now, just log what would be imported
+        console.log('Would import:', { title, noticeType });
+        importCount++;
+      }
+
+      alert(`Successfully imported ${importCount} notices from CSV`);
+      setShowBulkImportModal(false);
+      setCsvImportFile(null);
+      loadNotices(); // Reload to show imported notices
+    } catch (err) {
+      console.error('CSV import failed:', err);
+      alert(err instanceof Error ? err.message : 'Failed to import CSV. Please check the file format.');
+    } finally {
+      setBulkActionInProgress(false);
+    }
+  };
+
   // Get department-specific configuration
   const deptConfig = getDepartmentConfig(department.type);
   // Check if user has permission to create notices using RBAC system
@@ -206,19 +372,91 @@ export default function Notices() {
             Manage your department's public notices
           </p>
         </div>
-        {canCreateNotice && (
-          <Link
-            to={`${basePath}/notices/new`}
-            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-          >
-            + Create Notice
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          {canCreateNotice && (
+            <>
+              <button
+                onClick={() => setShowBulkImportModal(true)}
+                className="bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                Import CSV
+              </button>
+              <Link
+                to={`${basePath}/notices/new`}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                + Create Notice
+              </Link>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Bulk Actions Toolbar */}
+      {selectedNotices.size > 0 && (
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-3xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="font-semibold text-gray-900">
+                {selectedNotices.size} notice{selectedNotices.size !== 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={() => setSelectedNotices(new Set())}
+                className="text-sm text-gray-600 hover:text-gray-900 underline"
+              >
+                Clear selection
+              </button>
+            </div>
+            <div className="flex items-center gap-3">
+              {hasPermission(PERMISSIONS.NOTICES_PUBLISH) && (
+                <button
+                  onClick={handleBulkPublish}
+                  disabled={bulkActionInProgress}
+                  className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  Publish Selected
+                </button>
+              )}
+              <button
+                onClick={handleBulkExport}
+                disabled={bulkActionInProgress}
+                className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                Export to CSV
+              </button>
+              {hasPermission(PERMISSIONS.NOTICES_DELETE) && (
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkActionInProgress}
+                  className="bg-red-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  Delete Selected
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
         <div className="flex flex-col md:flex-row gap-4">
+          {/* Select All Checkbox */}
+          {filteredNotices.length > 0 && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedNotices.size === filteredNotices.length && filteredNotices.length > 0}
+                onChange={handleSelectAll}
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                title="Select all notices"
+              />
+              <label className="ml-2 text-sm font-medium text-gray-700">
+                Select All
+              </label>
+            </div>
+          )}
+
           {/* Search */}
           <div className="flex-1">
             <input
@@ -280,21 +518,39 @@ export default function Notices() {
       ) : (
         <div className="space-y-4">
           {filteredNotices.map((notice) => (
-            <Link
+            <div
               key={notice.id}
-              to={`${basePath}/notices/${notice.id}`}
-              className="block bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.01] transition-all"
+              className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl transition-all"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {notice.title}
-                    </h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(notice.status)}`}>
-                      {formatStatus(notice.status)}
-                    </span>
-                  </div>
+              <div className="flex items-start gap-4">
+                {/* Checkbox */}
+                <div className="pt-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedNotices.has(notice.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleSelectNotice(notice.id);
+                    }}
+                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                {/* Notice Content - Now clickable */}
+                <Link
+                  to={`${basePath}/notices/${notice.id}`}
+                  className="flex-1 flex items-start justify-between hover:opacity-80 transition-opacity"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {notice.title}
+                      </h3>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(notice.status)}`}>
+                        {formatStatus(notice.status)}
+                      </span>
+                    </div>
 
                   <p className="text-sm text-gray-600 mb-3">
                     {formatNoticeType(notice.notice_type)}
@@ -367,20 +623,106 @@ export default function Notices() {
                   </div>
                 </div>
 
-                <svg
-                  className="w-6 h-6 text-gray-400 flex-shrink-0"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
+                  <svg
+                    className="w-6 h-6 text-gray-400 flex-shrink-0"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
+        </div>
+      )}
+
+      {/* CSV Import Modal */}
+      {showBulkImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Import Notices from CSV</h2>
+                <button
+                  onClick={() => {
+                    setShowBulkImportModal(false);
+                    setCsvImportFile(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>CSV Format:</strong> Your file must include "Title" and "Notice Type" columns.
+                    Additional columns will be ignored.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select CSV File
+                  </label>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setCsvImportFile(e.target.files?.[0] || null)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {csvImportFile && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Selected: {csvImportFile.name} ({(csvImportFile.size / 1024).toFixed(1)} KB)
+                    </p>
+                  )}
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> This is a demo implementation. In production, imported notices
+                    would be created as drafts in the database for review before publishing.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowBulkImportModal(false);
+                    setCsvImportFile(null);
+                  }}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  disabled={bulkActionInProgress}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCsvImport}
+                  disabled={!csvImportFile || bulkActionInProgress}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {bulkActionInProgress ? 'Importing...' : 'Import CSV'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

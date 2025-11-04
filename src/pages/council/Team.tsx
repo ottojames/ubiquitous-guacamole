@@ -40,6 +40,17 @@ export default function Team() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Bulk import state
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResults, setImportResults] = useState<{
+    total: number;
+    successful: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
+
   useEffect(() => {
     loadTeamMembers();
   }, [department.id]);
@@ -149,6 +160,130 @@ export default function Team() {
       console.error('Failed to remove member:', err);
       setError(err instanceof Error ? err.message : 'Failed to remove member');
     }
+  };
+
+  const handleBulkImport = async () => {
+    if (!csvFile) return;
+
+    try {
+      setImporting(true);
+      setError(null);
+      setImportResults(null);
+
+      // Read CSV file
+      const text = await csvFile.text();
+      const lines = text.split('\n').filter(line => line.trim());
+
+      if (lines.length < 2) {
+        throw new Error('CSV file appears to be empty');
+      }
+
+      // Parse CSV headers
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const emailIndex = headers.findIndex(h => h === 'email' || h === 'email address');
+      const roleIndex = headers.findIndex(h => h === 'role');
+
+      if (emailIndex === -1) {
+        throw new Error('CSV must have an "Email" column');
+      }
+
+      const results = {
+        total: lines.length - 1, // Exclude header
+        successful: 0,
+        failed: 0,
+        errors: [] as string[]
+      };
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      // Process each row (skip header)
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+          const email = values[emailIndex];
+          const role = roleIndex !== -1 ? values[roleIndex] : 'viewer';
+
+          if (!email) {
+            results.errors.push(`Row ${i}: Missing email`);
+            results.failed++;
+            continue;
+          }
+
+          // Validate email format
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            results.errors.push(`Row ${i}: Invalid email format: ${email}`);
+            results.failed++;
+            continue;
+          }
+
+          // Validate role
+          const validRoles = ['department_admin', 'editor', 'viewer'];
+          const normalizedRole = role.toLowerCase().replace(/\s+/g, '_');
+          if (!validRoles.includes(normalizedRole)) {
+            results.errors.push(`Row ${i}: Invalid role "${role}". Must be one of: Department Admin, Editor, Viewer`);
+            results.failed++;
+            continue;
+          }
+
+          // TODO: In production, this would:
+          // 1. Check if user exists in auth.users
+          // 2. If not, send an invitation email
+          // 3. Create department_membership record
+
+          const { error: inviteError } = await supabase
+            .from('invitations')
+            .insert({
+              department_id: department.id,
+              email: email,
+              role: normalizedRole,
+              invited_by: session.user.id
+            });
+
+          if (inviteError) {
+            results.errors.push(`Row ${i}: ${inviteError.message}`);
+            results.failed++;
+          } else {
+            results.successful++;
+          }
+        } catch (err) {
+          results.errors.push(`Row ${i}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+          results.failed++;
+        }
+      }
+
+      setImportResults(results);
+
+      if (results.successful > 0) {
+        setSuccess(`Successfully imported ${results.successful} team members`);
+        setTimeout(loadTeamMembers, 1000);
+      }
+
+      if (results.failed > 0 && results.successful === 0) {
+        setError(`Failed to import any team members. Check the errors below.`);
+      }
+    } catch (err) {
+      console.error('Bulk import failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to import CSV');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    const template = 'Email,Role\nexample@council.gov.uk,Editor\nuser@council.gov.uk,Viewer\nadmin@council.gov.uk,Department Admin';
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'team-import-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -261,13 +396,22 @@ export default function Team() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={inviting}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {inviting ? 'Sending...' : 'Send Invitation'}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={inviting}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {inviting ? 'Sending...' : 'Send Invitation'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkImportModal(true)}
+                className="bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors"
+              >
+                Bulk Import CSV
+              </button>
+            </div>
           </form>
 
           {/* Role Descriptions */}
@@ -374,6 +518,145 @@ export default function Team() {
           </div>
         )}
       </div>
+
+      {/* Bulk Import Modal */}
+      {showBulkImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Bulk Import Team Members</h2>
+                <button
+                  onClick={() => {
+                    setShowBulkImportModal(false);
+                    setCsvFile(null);
+                    setImportResults(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>CSV Format:</strong> Your file must include an "Email" column. Optional "Role" column (defaults to Viewer).
+                  </p>
+                  <p className="text-sm text-blue-800">
+                    <strong>Roles:</strong> Department Admin, Editor, Viewer
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Template
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select CSV File
+                  </label>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      setCsvFile(e.target.files?.[0] || null);
+                      setImportResults(null);
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {csvFile && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Selected: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
+                    </p>
+                  )}
+                </div>
+
+                {/* Import Results */}
+                {importResults && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">Import Results</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Rows:</span>
+                        <span className="font-semibold">{importResults.total}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Successful:</span>
+                        <span className="font-semibold text-green-600">{importResults.successful}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Failed:</span>
+                        <span className="font-semibold text-red-600">{importResults.failed}</span>
+                      </div>
+                    </div>
+
+                    {importResults.errors.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-semibold text-red-800 mb-2">Errors:</h4>
+                        <div className="max-h-40 overflow-y-auto bg-white rounded-lg p-3 space-y-1">
+                          {importResults.errors.map((error, index) => (
+                            <p key={index} className="text-xs text-red-700">{error}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowBulkImportModal(false);
+                    setCsvFile(null);
+                    setImportResults(null);
+                  }}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  disabled={importing}
+                >
+                  {importResults ? 'Close' : 'Cancel'}
+                </button>
+                {!importResults && (
+                  <button
+                    onClick={handleBulkImport}
+                    disabled={!csvFile || importing}
+                    className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  >
+                    {importing ? 'Importing...' : 'Import CSV'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

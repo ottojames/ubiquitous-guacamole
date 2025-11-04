@@ -22,6 +22,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "ingest:councils": "tsx scripts/ingestCouncils.ts",
     "backfill:locations": "tsx scripts/backfillNoticeLocations.ts",
+    "test:scraper": "tsx server/jobs/testScraper.ts",
     "smoke:api": "node -e \"(async()=>{const h=await fetch('http://localhost:5174/api/health');console.log('health:',await h.json());const s=await fetch('http://localhost:5174/api/addresses?q=9%20lower');console.log('sample:',await s.json())})().catch(e=>{console.error(e);process.exit(1)})\""
   },
   "dependencies": {
@@ -62,6 +63,7 @@
     "sharp": "^0.33.4",
     "slugify": "^1.6.6",
     "supercluster": "^7.1.5",
+    "swagger-ui-react": "^5.30.2",
     "tesseract.js": "^6.0.1",
     "textract": "^2.5.0",
     "uuid": "^9.0.1",

@@ -63,6 +63,155 @@ export interface DailySummaryData {
   totalNew: number;
 }
 
+export interface TeamInvitationData {
+  firmName: string;
+  inviterName: string;
+  inviterEmail: string;
+  role: 'admin' | 'member';
+  loginUrl: string;
+}
+
+/**
+ * Send team invitation email
+ */
+export async function sendTeamInvitation(
+  to: string,
+  data: TeamInvitationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] RESEND_API_KEY not configured, skipping team invitation email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const roleDescription = data.role === 'admin'
+      ? 'administrator with full access to manage the firm'
+      : 'member with the ability to publish notices';
+
+    const subject = `You've been invited to join ${data.firmName} on CivicNotices`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header h1 { color: white; margin: 0; font-size: 24px; }
+          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+          .greeting { font-size: 18px; color: #111827; margin-bottom: 20px; }
+          .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
+          .role-badge { display: inline-block; background: #ede9fe; color: #6b21a8; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+          .button { display: inline-block; background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+          .button:hover { background: #5568d3; }
+          .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Team Invitation</h1>
+          </div>
+          <div class="content">
+            <p class="greeting">Hello!</p>
+
+            <p><strong>${data.inviterName}</strong> has invited you to join <strong>${data.firmName}</strong> on CivicNotices.</p>
+
+            <div class="info-box">
+              <p style="margin: 0;"><strong>Your Role:</strong> <span class="role-badge">${data.role}</span></p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #6b7280;">You'll be joining as a ${roleDescription}.</p>
+            </div>
+
+            <p>CivicNotices is a platform for publishing and managing legal notices. As a member of ${data.firmName}, you'll be able to:</p>
+
+            <ul style="color: #4b5563;">
+              ${data.role === 'admin' ? `
+                <li>Publish notices on behalf of your firm</li>
+                <li>Manage team members and permissions</li>
+                <li>Update firm settings and profile</li>
+                <li>View billing and subscription details</li>
+              ` : `
+                <li>Publish notices on behalf of your firm</li>
+                <li>View and manage notice submissions</li>
+                <li>Access firm resources and templates</li>
+              `}
+            </ul>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.loginUrl}" class="button">Sign In to Get Started</a>
+            </div>
+
+            <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+              If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+            </p>
+          </div>
+          <div class="footer">
+            <p>CivicNotices - Modern Legal Notice Publishing</p>
+            <p style="font-size: 12px; color: #9ca3af;">This invitation was sent by ${data.inviterEmail}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Team Invitation - CivicNotices
+
+Hello!
+
+${data.inviterName} has invited you to join ${data.firmName} on CivicNotices.
+
+Your Role: ${data.role}
+You'll be joining as a ${roleDescription}.
+
+CivicNotices is a platform for publishing and managing legal notices. As a member of ${data.firmName}, you'll be able to:
+
+${data.role === 'admin' ? `
+- Publish notices on behalf of your firm
+- Manage team members and permissions
+- Update firm settings and profile
+- View billing and subscription details
+` : `
+- Publish notices on behalf of your firm
+- View and manage notice submissions
+- Access firm resources and templates
+`}
+
+Sign in to get started: ${data.loginUrl}
+
+If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+
+---
+CivicNotices - Modern Legal Notice Publishing
+This invitation was sent by ${data.inviterEmail}
+    `;
+
+    console.log('[Email] Sending team invitation to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Team invitation sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send team invitation:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
 /**
  * Send confirmation email after notice is published
  */

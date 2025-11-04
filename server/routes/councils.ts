@@ -5,7 +5,6 @@ const router = Router();
 
 router.get('/', async (req, res) => {
   const q = String(req.query.q || '').trim();
-  if (!q) return res.json([]);
 
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key =
@@ -19,12 +18,18 @@ router.get('/', async (req, res) => {
   }
 
   const sb = createClient(url, key);
-  const { data, error } = await sb
+
+  // If query provided, filter by name, otherwise return all
+  let query = sb
     .from('councils')
-    .select('id, name, email')
-    .ilike('name', `%${q}%`)
-    .order('name')
-    .limit(10);
+    .select('id, name, slug')
+    .order('name');
+
+  if (q) {
+    query = query.ilike('name', `%${q}%`).limit(10);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return res

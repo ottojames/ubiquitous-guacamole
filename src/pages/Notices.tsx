@@ -13,8 +13,18 @@ import { getCouncilForPostcode } from '@/lib/councils';
 import { useNoticeSearch } from '@/hooks/useNoticeSearch';
 import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
+import { TRAFFIC_AREAS } from '@/next/publish/config/trafficAreas';
+import { supabase } from '@/lib/supabase';
 
-const TYPE_OPTIONS = ['Premises Licence', 'Traffic Order', 'Planning'];
+const TYPE_OPTIONS = [
+  'Licensing Act 2003',
+  'Gambling Act 2005',
+  'Goods Vehicle Operator\'s Licence',
+  'Planning',
+  'Probate',
+  'Club Premises Certificate',
+  'Traffic Order'
+];
 // Database status values are: 'draft', 'submitted', 'published'
 // For now, just show published notices (no status filter UI)
 const STATUS_OPTIONS: string[] = [];
@@ -51,6 +61,7 @@ export default function NoticesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [addressValue, setAddressValue] = useState('');
   const [addressInlineError, setAddressInlineError] = useState<string | null>(null);
+  const [councils, setCouncils] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const toastMessage = useToastController();
 
   const queryParam = (searchParams.get('query') ?? '').trim();
@@ -60,6 +71,7 @@ export default function NoticesPage() {
   const statusFilter = (searchParams.get('status') ?? '').trim();
   const startFilter = (searchParams.get('start') ?? '').trim();
   const endFilter = (searchParams.get('end') ?? '').trim();
+  const trafficAreaFilter = (searchParams.get('traffic_area') ?? '').trim();
   const viewParam = (searchParams.get('view') ?? '').trim();
   const sortParam = (searchParams.get('sort') ?? '').trim() || 'created_at.desc';
   const radiusParam = searchParams.get('radius_km');
@@ -107,6 +119,22 @@ export default function NoticesPage() {
     setAddressValue(queryParam);
   }, [queryParam]);
 
+  // Fetch councils for the dropdown
+  useEffect(() => {
+    const fetchCouncils = async () => {
+      const { data, error } = await supabase
+        .from('councils')
+        .select('id, name, slug')
+        .order('name');
+
+      if (!error && data) {
+        setCouncils(data);
+      }
+    };
+
+    fetchCouncils();
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     if (!postcodeParam && queryParam) {
@@ -134,6 +162,7 @@ export default function NoticesPage() {
     status: statusFilter || undefined,
     start: startFilter || undefined,
     end: endFilter || undefined,
+    trafficArea: trafficAreaFilter || undefined,
     sort: sortParam,
     radiusKm: radiusValue,
     bbox: mapBoundingBox ?? undefined,
@@ -165,7 +194,7 @@ export default function NoticesPage() {
     }
   }, [hoveredNoticeId, filteredResults]);
 
-  const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || radiusParam);
+  const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || trafficAreaFilter || radiusParam);
   const searchLabel = (formatPostcodeForDisplay(postcodeParam) ?? queryParam) || 'your filters';
 
   const updateParams = useCallback(
@@ -270,6 +299,13 @@ export default function NoticesPage() {
     }, true);
   }, [updateParams]);
 
+  const toggleTrafficArea = useCallback((areaId: string) => {
+    updateParams((params) => {
+      if (params.get('traffic_area') === areaId) params.delete('traffic_area');
+      else params.set('traffic_area', areaId);
+    }, true);
+  }, [updateParams]);
+
   const handleDateChange = useCallback((field: 'start' | 'end', value: string) => {
     updateParams((params) => {
       if (value) params.set(field, value);
@@ -307,6 +343,7 @@ export default function NoticesPage() {
       params.delete('start');
       params.delete('end');
       params.delete('council');
+      params.delete('traffic_area');
       params.delete('radius_km');
     }, true);
   }, [updateParams]);
@@ -416,6 +453,80 @@ export default function NoticesPage() {
               className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
             />
           </label>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium text-slate-700">Traffic Area</span>
+            <select
+              value={trafficAreaFilter}
+              onChange={(event) => {
+                const value = event.target.value;
+                updateParams((params) => {
+                  if (value) {
+                    params.set('traffic_area', value);
+                  } else {
+                    params.delete('traffic_area');
+                  }
+                }, true);
+              }}
+              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            >
+              <option value="">All Areas</option>
+              {TRAFFIC_AREAS.map((area) => (
+                <option key={area.id} value={area.id}>
+                  {area.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="font-medium text-slate-700">Council</span>
+            <select
+              value={councilParam}
+              onChange={(event) => {
+                const value = event.target.value;
+                updateParams((params) => {
+                  if (value) {
+                    params.set('council', value);
+                  } else {
+                    params.delete('council');
+                  }
+                }, true);
+              }}
+              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            >
+              <option value="">All Councils</option>
+              {councils.map((council) => (
+                <option key={council.id} value={council.id}>
+                  {council.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {postcodeParam && (
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <span className="font-medium text-slate-700">Radius</span>
+              <select
+                value={radiusValue}
+                onChange={(event) => {
+                  updateParams((params) => {
+                    const value = event.target.value;
+                    if (value === '5') {
+                      params.delete('radius_km'); // 5km is default
+                    } else {
+                      params.set('radius_km', value);
+                    }
+                  }, true);
+                }}
+                className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              >
+                <option value="1">1 km</option>
+                <option value="2">2 km</option>
+                <option value="5">5 km</option>
+                <option value="10">10 km</option>
+                <option value="20">20 km</option>
+                <option value="50">50 km</option>
+              </select>
+            </label>
+          )}
           {showClear && hasActiveFilters && (
             <button
               type="button"

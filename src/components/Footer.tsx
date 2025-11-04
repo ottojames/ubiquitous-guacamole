@@ -22,6 +22,9 @@ export default function Footer() {
             <a href="/contact" className="transition hover:text-slate-900">
               Contact
             </a>
+            <a href="/api-docs" className="transition hover:text-slate-900">
+              API Documentation
+            </a>
             <a href="/docs" className="transition hover:text-slate-900">
               Documentation
             </a>

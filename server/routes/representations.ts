@@ -337,6 +337,106 @@ router.post('/representations/:representationId/comment', requireAuth, loadUserP
 });
 
 /**
+ * POST /api/representations
+ * Submit a new representation (public endpoint - no auth required)
+ * Body: {
+ *   noticeId: string,
+ *   submitterName: string,
+ *   submitterEmail: string,
+ *   submitterPhone?: string,
+ *   submitterAddress?: string,
+ *   type: 'support' | 'objection' | 'comment',
+ *   content: string
+ * }
+ */
+router.post('/representations', async (req: Request, res: Response) => {
+  try {
+    const {
+      noticeId,
+      submitterName,
+      submitterEmail,
+      submitterPhone,
+      submitterAddress,
+      type,
+      content
+    } = req.body;
+
+    // Validation
+    if (!noticeId || typeof noticeId !== 'string') {
+      return res.status(400).json({ error: 'noticeId is required' });
+    }
+
+    if (!submitterName || typeof submitterName !== 'string' || submitterName.trim().length === 0) {
+      return res.status(400).json({ error: 'submitterName is required' });
+    }
+
+    if (!submitterEmail || typeof submitterEmail !== 'string' || !submitterEmail.includes('@')) {
+      return res.status(400).json({ error: 'Valid submitterEmail is required' });
+    }
+
+    if (!type || !['support', 'objection', 'comment'].includes(type)) {
+      return res.status(400).json({ error: 'type must be support, objection, or comment' });
+    }
+
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return res.status(400).json({ error: 'content is required' });
+    }
+
+    const supabase = getSupabase();
+
+    // Verify notice exists
+    const { data: notice, error: noticeError } = await supabase
+      .from('notices')
+      .select('id, representation_deadline')
+      .eq('id', noticeId)
+      .single();
+
+    if (noticeError || !notice) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    // Check if deadline has passed (if set)
+    if (notice.representation_deadline) {
+      const deadline = new Date(notice.representation_deadline);
+      if (deadline < new Date()) {
+        return res.status(400).json({ error: 'Representation deadline has passed' });
+      }
+    }
+
+    // Insert representation
+    const { data: representation, error: insertError } = await supabase
+      .from('representations')
+      .insert({
+        notice_id: noticeId,
+        submitter_name: submitterName.trim(),
+        submitter_email: submitterEmail.trim().toLowerCase(),
+        submitter_phone: submitterPhone?.trim() || null,
+        submitter_address: submitterAddress?.trim() || null,
+        type,
+        content: content.trim(),
+        status: 'submitted',
+        submitted_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting representation:', insertError);
+      return res.status(500).json({ error: 'Failed to submit representation' });
+    }
+
+    return res.status(201).json({
+      success: true,
+      representation,
+      message: 'Your representation has been submitted successfully'
+    });
+  } catch (error) {
+    console.error('Error in POST /api/representations:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * GET /api/representations/export
  * Export representations to CSV
  * Query params:

@@ -41,6 +41,10 @@ export default function AuditLog() {
   const [filterTable, setFilterTable] = useState<FilterTable>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [dateRange, setDateRange] = useState('30'); // days
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [exporting, setExporting] = useState(false);
   const logsPerPage = 20;
 
   useEffect(() => {
@@ -49,7 +53,7 @@ export default function AuditLog() {
 
   useEffect(() => {
     filterLogs();
-  }, [logs, filterAction, filterTable, searchQuery]);
+  }, [logs, filterAction, filterTable, searchQuery, startDate, endDate]);
 
   const loadAuditLogs = async () => {
     try {
@@ -83,6 +87,20 @@ export default function AuditLog() {
       filtered = filtered.filter(log => log.table_name === filterTable);
     }
 
+    // Filter by date range
+    if (startDate || endDate) {
+      filtered = filtered.filter(log => {
+        const logDate = new Date(log.created_at);
+        if (startDate && logDate < new Date(startDate)) return false;
+        if (endDate) {
+          const endDateTime = new Date(endDate);
+          endDateTime.setHours(23, 59, 59, 999); // Include the entire end date
+          if (logDate > endDateTime) return false;
+        }
+        return true;
+      });
+    }
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -95,6 +113,59 @@ export default function AuditLog() {
 
     setFilteredLogs(filtered);
     setPage(1); // Reset to first page when filters change
+  };
+
+  const handleExportCSV = () => {
+    try {
+      setExporting(true);
+
+      // Prepare CSV headers
+      const headers = ['Date/Time', 'Action', 'Table', 'Record ID', 'User ID', 'Old Values', 'New Values'];
+
+      // Prepare CSV rows
+      const rows = filteredLogs.map(log => [
+        formatDate(log.created_at),
+        log.action,
+        log.table_name,
+        log.record_id,
+        log.user_id,
+        log.old_values ? JSON.stringify(log.old_values) : '',
+        log.new_values ? JSON.stringify(log.new_values) : ''
+      ]);
+
+      // Create CSV content
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `audit-log-${department.slug}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setExporting(false);
+    } catch (err) {
+      console.error('Export failed:', err);
+      setExporting(false);
+      alert('Failed to export audit log');
+    }
+  };
+
+  const handleQuickDateRange = (days: string) => {
+    setDateRange(days);
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - parseInt(days));
+
+    setStartDate(start.toISOString().split('T')[0]);
+    setEndDate(end.toISOString().split('T')[0]);
   };
 
   const getActionColor = (action: string) => {
@@ -174,15 +245,27 @@ export default function AuditLog() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Audit Log</h1>
-        <p className="text-gray-600 mt-1">
-          Track all changes made in {department.name}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Audit Log</h1>
+          <p className="text-gray-600 mt-1">
+            Track all changes made in {department.name}
+          </p>
+        </div>
+        <button
+          onClick={handleExportCSV}
+          disabled={exporting || filteredLogs.length === 0}
+          className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {exporting ? 'Exporting...' : 'Export CSV'}
+        </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -219,6 +302,71 @@ export default function AuditLog() {
             <option value="department_memberships">Team Members</option>
             <option value="invitations">Invitations</option>
           </select>
+        </div>
+
+        {/* Date Range Filters */}
+        <div className="flex flex-col md:flex-row gap-4 pt-4 border-t border-gray-200">
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleQuickDateRange('7')}
+              className={`px-4 py-2 rounded-xl font-semibold transition-colors ${
+                dateRange === '7' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Last 7 days
+            </button>
+            <button
+              onClick={() => handleQuickDateRange('30')}
+              className={`px-4 py-2 rounded-xl font-semibold transition-colors ${
+                dateRange === '30' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Last 30 days
+            </button>
+            <button
+              onClick={() => handleQuickDateRange('90')}
+              className={`px-4 py-2 rounded-xl font-semibold transition-colors ${
+                dateRange === '90' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Last 90 days
+            </button>
+          </div>
+
+          <div className="flex gap-3 flex-1">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setDateRange('custom');
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setDateRange('custom');
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="pt-3 border-t border-gray-200">
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-900">{filteredLogs.length}</span> of{' '}
+            <span className="font-semibold text-gray-900">{logs.length}</span> audit log entries
+          </p>
         </div>
       </div>
 

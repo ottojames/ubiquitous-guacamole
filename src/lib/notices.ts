@@ -38,6 +38,7 @@ export type NoticeSearchParams = {
   status?: string;
   start?: string;
   end?: string;
+  trafficArea?: string;
   radiusKm?: number;
   latitude?: number;
   longitude?: number;
@@ -58,6 +59,7 @@ export function buildNoticeSearchQuery(params: NoticeSearchParams = {}): string 
   if (params.status) sp.set('status', params.status);
   if (params.start) sp.set('start', params.start);
   if (params.end) sp.set('end', params.end);
+  if (params.trafficArea) sp.set('traffic_area', params.trafficArea);
   if (typeof params.radiusKm === 'number' && Number.isFinite(params.radiusKm)) {
     sp.set('radius_km', String(params.radiusKm));
   }

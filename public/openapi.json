@@ -1,0 +1,591 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Public Notice Portal API",
+    "version": "1.0.0",
+    "description": "RESTful API for managing public notices, representations, councils, and licensing applications in the UK. This API serves councils, firms, and the general public.",
+    "contact": {
+      "name": "API Support",
+      "email": "support@publicnoticeportal.uk"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5174/api",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api.publicnoticeportal.uk",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Notices",
+      "description": "Public notice management - search, create, view notices"
+    },
+    {
+      "name": "Representations",
+      "description": "Public representations (objections, support, comments) on notices"
+    },
+    {
+      "name": "Councils",
+      "description": "Council and local authority management"
+    },
+    {
+      "name": "Publishing",
+      "description": "Notice publishing workflows for firms and councils"
+    },
+    {
+      "name": "Drafts",
+      "description": "Draft notice management"
+    },
+    {
+      "name": "Upload",
+      "description": "File upload and OCR processing"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Check if API is running",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notices/search": {
+      "get": {
+        "summary": "Search notices",
+        "description": "Search and filter public notices with geographic, text, and metadata filters. Supports radius search, bounding box, council filtering, and text search.",
+        "tags": ["Notices"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Text search query - searches premises name, address, applicant, notice type",
+            "schema": { "type": "string" },
+            "example": "Groucho Club"
+          },
+          {
+            "name": "postcode",
+            "in": "query",
+            "description": "UK postcode (full or outward code)",
+            "schema": { "type": "string" },
+            "example": "W1D 4HT"
+          },
+          {
+            "name": "radius_km",
+            "in": "query",
+            "description": "Radius in kilometers (used with lat/lng or postcode)",
+            "schema": { "type": "number", "minimum": 0.1, "maximum": 100 },
+            "example": 5
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Latitude for radius search",
+            "schema": { "type": "number", "minimum": -90, "maximum": 90 },
+            "example": 51.5074
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "description": "Longitude for radius search",
+            "schema": { "type": "number", "minimum": -180, "maximum": 180 },
+            "example": -0.1278
+          },
+          {
+            "name": "bbox",
+            "in": "query",
+            "description": "Bounding box as south,west,north,east",
+            "schema": { "type": "string" },
+            "example": "51.45,-0.25,51.55,-0.05"
+          },
+          {
+            "name": "councilId",
+            "in": "query",
+            "description": "Filter by council ID",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by notice type",
+            "schema": { "type": "string" },
+            "example": "licensing-premises-new"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by notice status",
+            "schema": { "type": "string", "enum": ["draft", "published", "expired"] },
+            "example": "published"
+          },
+          {
+            "name": "traffic_area",
+            "in": "query",
+            "description": "Filter by traffic area (for transport notices)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results to return (1-100)",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort order: column.direction (e.g., created_at.desc, distance.asc)",
+            "schema": { "type": "string" },
+            "example": "created_at.desc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notices matching search criteria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Notice" }
+                    },
+                    "query": { "type": "string" },
+                    "postcode": { "type": "string", "nullable": true },
+                    "bbox": { "type": "array", "items": { "type": "number" }, "nullable": true },
+                    "radiusKm": { "type": "number", "nullable": true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notices/{id}": {
+      "get": {
+        "summary": "Get notice by ID",
+        "description": "Retrieve full details of a specific notice including council information and raw data",
+        "tags": ["Notices"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Notice UUID",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notice details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NoticeDetail" }
+              }
+            }
+          },
+          "404": {
+            "description": "Notice not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notices/draft": {
+      "post": {
+        "summary": "Create draft notice",
+        "description": "Create a new draft notice with basic address information. Requires authentication.",
+        "tags": ["Drafts"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["postcode"],
+                "properties": {
+                  "postcode": { "type": "string", "example": "W1D 4HT" },
+                  "councilId": { "type": "string", "format": "uuid" },
+                  "address": {
+                    "type": "object",
+                    "properties": {
+                      "line1": { "type": "string" },
+                      "line2": { "type": "string" },
+                      "town": { "type": "string" },
+                      "postcode": { "type": "string" },
+                      "uprn": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Draft created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/notices/submit": {
+      "post": {
+        "summary": "Submit notice for publication",
+        "description": "Submit a complete notice (new or draft update) for immediate publication. Requires authentication.",
+        "tags": ["Publishing"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["notice_type", "premises", "applicant"],
+                "properties": {
+                  "id": { "type": "string", "format": "uuid", "description": "Existing draft ID to update" },
+                  "notice_type": { "type": "string", "example": "licensing-premises-new" },
+                  "contact_email": { "type": "string", "format": "email" },
+                  "premises": { "type": "object" },
+                  "applicant": { "type": "object" },
+                  "licensing": { "type": "object" },
+                  "consultation": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notice published",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/representations": {
+      "post": {
+        "summary": "Submit representation",
+        "description": "Submit a public representation (objection, support, or comment) on a notice. No authentication required.",
+        "tags": ["Representations"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["noticeId", "submitterName", "submitterEmail", "type", "content"],
+                "properties": {
+                  "noticeId": { "type": "string", "format": "uuid" },
+                  "submitterName": { "type": "string", "minLength": 1 },
+                  "submitterEmail": { "type": "string", "format": "email" },
+                  "submitterPhone": { "type": "string" },
+                  "submitterAddress": { "type": "string" },
+                  "type": { "type": "string", "enum": ["support", "objection", "comment"] },
+                  "content": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Representation submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "representation": { "$ref": "#/components/schemas/Representation" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or deadline passed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notices/{noticeId}/representations": {
+      "get": {
+        "summary": "Get notice representations",
+        "description": "Retrieve all representations for a specific notice. Requires authentication.",
+        "tags": ["Representations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "noticeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "User ID to check read status",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of representations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Representation" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/representations/{representationId}/mark-read": {
+      "post": {
+        "summary": "Mark representation as read",
+        "description": "Mark a representation as read by a user. Idempotent operation. Requires authentication.",
+        "tags": ["Representations"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "representationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId"],
+                "properties": {
+                  "userId": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Marked as read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "representationId": { "type": "string" },
+                    "alreadyRead": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/councils": {
+      "get": {
+        "summary": "List all councils",
+        "description": "Retrieve list of UK councils and local authorities",
+        "tags": ["Councils"],
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "description": "Filter by region",
+            "schema": { "type": "string", "enum": ["england", "scotland", "wales", "northern-ireland"] }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by council type",
+            "schema": { "type": "string", "enum": ["county", "district", "unitary", "london-borough", "metropolitan"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of councils",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Council" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Supabase JWT token from authentication"
+      }
+    },
+    "schemas": {
+      "Notice": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "noticeType": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "published", "expired"] },
+          "premisesName": { "type": "string", "nullable": true },
+          "premisesAddress": { "type": "string", "nullable": true },
+          "premisesPostcode": { "type": "string", "nullable": true },
+          "repsDeadline": { "type": "string", "format": "date-time", "nullable": true },
+          "applicationDate": { "type": "string", "format": "date-time", "nullable": true },
+          "publicationDate": { "type": "string", "format": "date-time", "nullable": true },
+          "newspaper": { "type": "string", "nullable": true },
+          "latitude": { "type": "number", "nullable": true },
+          "longitude": { "type": "number", "nullable": true }
+        }
+      },
+      "NoticeDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Notice" },
+          {
+            "type": "object",
+            "properties": {
+              "council_id": { "type": "string", "format": "uuid", "nullable": true },
+              "councils": { "$ref": "#/components/schemas/Council", "nullable": true },
+              "applicantName": { "type": "string", "nullable": true },
+              "applicantAddress": { "type": "string", "nullable": true },
+              "licensingActivities": { "type": "array", "items": { "type": "string" } },
+              "openingHours": { "type": "string", "nullable": true },
+              "description": { "type": "string" },
+              "rawData": { "type": "object" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "updatedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        ]
+      },
+      "Representation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "notice_id": { "type": "string", "format": "uuid" },
+          "submitter_name": { "type": "string" },
+          "submitter_email": { "type": "string", "format": "email" },
+          "submitter_phone": { "type": "string", "nullable": true },
+          "submitter_address": { "type": "string", "nullable": true },
+          "type": { "type": "string", "enum": ["support", "objection", "comment"] },
+          "content": { "type": "string" },
+          "status": { "type": "string", "enum": ["submitted", "under_review", "acknowledged", "rejected"] },
+          "submitted_at": { "type": "string", "format": "date-time" },
+          "internal_notes": { "type": "array", "items": { "type": "object" } },
+          "is_read": { "type": "boolean", "description": "Only present when userId query param provided" }
+        }
+      },
+      "Council": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "type": { "type": "string", "enum": ["county", "district", "unitary", "london-borough", "metropolitan"] },
+          "region": { "type": "string", "enum": ["england", "scotland", "wales", "northern-ireland"] },
+          "website_url": { "type": "string", "format": "uri", "nullable": true },
+          "contact_details": {
+            "type": "object",
+            "properties": {
+              "licensing_email": { "type": "string", "format": "email" },
+              "planning_email": { "type": "string", "format": "email" },
+              "enquiries_email": { "type": "string", "format": "email" },
+              "phone": { "type": "string" },
+              "address": {
+                "type": "object",
+                "properties": {
+                  "line1": { "type": "string" },
+                  "line2": { "type": "string" },
+                  "city": { "type": "string" },
+                  "postcode": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication required",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "Unauthorized" }
+          }
+        }
+      }
+    }
+  }
+}

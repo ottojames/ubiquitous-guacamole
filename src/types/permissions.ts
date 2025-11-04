@@ -38,6 +38,9 @@ export const PERMISSIONS = {
   SETTINGS_READ: 'settings.read',
   SETTINGS_UPDATE: 'settings.update',
 
+  // Billing
+  BILLING_MANAGE: 'billing.manage',
+
   // Audit
   AUDIT_READ: 'audit.read',
 } as const;
@@ -172,6 +175,7 @@ export function getPermissionDescription(permission: PermissionName): string {
     [PERMISSIONS.TEMPLATES_DELETE]: 'Delete notice templates',
     [PERMISSIONS.SETTINGS_READ]: 'View department settings',
     [PERMISSIONS.SETTINGS_UPDATE]: 'Update department settings',
+    [PERMISSIONS.BILLING_MANAGE]: 'Manage billing and subscriptions',
     [PERMISSIONS.AUDIT_READ]: 'View audit logs',
   };
 

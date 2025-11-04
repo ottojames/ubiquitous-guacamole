@@ -24,19 +24,26 @@ import CreateOrganization from "@/pages/onboarding/CreateOrganization";
 import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
 import CouncilNotices from "@/pages/council/Notices";
+import CouncilDrafts from "@/pages/council/Drafts";
 import NoticeEditor from "@/pages/council/NoticeEditor";
 import NoticeDetail from "@/pages/council/NoticeDetail";
 import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
+import Billing from "@/pages/council/Billing";
 import AuditLog from "@/pages/council/AuditLog";
+import Analytics from "@/pages/council/Analytics";
 import FirmLayout from "@/pages/firm/FirmLayout";
 import FirmDashboard from "@/pages/firm/Dashboard";
+import FirmClients from "@/pages/firm/Clients";
 import FirmSettings from "@/pages/firm/Settings";
+import FirmTeam from "@/pages/firm/Team";
 import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
 import Accessibility from "@/pages/legal/Accessibility";
 import Contact from "@/pages/Contact";
+import EmailAlerts from "@/pages/EmailAlerts";
+import ApiDocs from "@/pages/ApiDocs";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function App() {
@@ -62,6 +69,8 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/email-alerts" element={<EmailAlerts />} />
+        <Route path="/api-docs" element={<ApiDocs />} />
 
         {/* Auth & Onboarding Routes */}
         <Route path="/auth/sign-in" element={<SignIn />} />
@@ -75,18 +84,22 @@ export default function App() {
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeDetail />} />
+          <Route path="drafts" element={<CouncilDrafts />} />
           <Route path="team" element={<Team />} />
           <Route path="templates" element={<Templates />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="settings" element={<Settings />} />
           <Route path="audit" element={<AuditLog />} />
+          <Route path="analytics" element={<Analytics />} />
         </Route>
 
         {/* Firm Portal Routes */}
         <Route path="/f/:firmSlug" element={<FirmLayout />}>
           <Route path="dashboard" element={<FirmDashboard />} />
+          <Route path="clients" element={<FirmClients />} />
           <Route path="notices" element={<div className="p-6">Notices page coming soon</div>} />
           <Route path="billing" element={<div className="p-6">Billing page coming soon</div>} />
-          <Route path="team" element={<div className="p-6">Team page coming soon</div>} />
+          <Route path="team" element={<FirmTeam />} />
           <Route path="settings" element={<FirmSettings />} />
           <Route path="publish/*" element={<PublishPage />} />
         </Route>

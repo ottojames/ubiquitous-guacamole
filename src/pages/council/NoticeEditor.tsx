@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext, useNavigate, useParams } from 'react-router-dom';
+import { useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import UploadDropzone, { type UploadStatus } from '@/components/publish/UploadDropzone';
+import { extractLegalDetailsFromOcr, type LegalDetails } from '@/next/publish/flow/lib/legalDetails';
 
 interface Department {
   id: string;
@@ -34,11 +37,18 @@ interface NoticeData {
 export default function NoticeEditor() {
   const { department, userRole } = useOutletContext<ContextType>();
   const { orgSlug, deptSlug, noticeId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<Array<{id: string, name: string, default_values: any}>>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [requireApproval, setRequireApproval] = useState(false);
+  const [showOcrModal, setShowOcrModal] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState<UploadStatus>('idle');
 
   const [noticeData, setNoticeData] = useState<NoticeData>({
     title: '',
@@ -75,12 +85,183 @@ export default function NoticeEditor() {
     expires_at: ''
   });
 
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  // Map notice_type to notice_category for drafts API
+  const getNoticeCategory = (noticeType: string): 'licensing' | 'gambling' | 'gvol' | 'planning' | 'probate' => {
+    if (noticeType.includes('licence') || noticeType.includes('certificate')) return 'licensing';
+    if (noticeType.includes('planning')) return 'planning';
+    if (noticeType.includes('traffic')) return 'licensing'; // Default to licensing
+    return 'licensing';
+  };
+
+  // Auto-save hook
+  const { isSaving: isAutoSaving, lastSaved } = useAutoSave({
+    draftId,
+    formData: noticeData,
+    noticeCategory: getNoticeCategory(noticeData.notice_type),
+    noticeDefinitionId: noticeData.notice_type,
+    draftName: noticeData.title || 'Untitled Draft',
+    organizationId: department.organization.id,
+    departmentId: department.id,
+    enabled: !isEdit && noticeData.title.length > 0, // Only auto-save for new notices with content
+    onSaveSuccess: (savedDraftId) => {
+      if (!draftId) {
+        setDraftId(savedDraftId);
+      }
+    },
+  });
+
+  useEffect(() => {
+    loadTemplates();
+    loadDepartmentSettings();
+  }, [department.id]);
+
+  const loadDepartmentSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('settings')
+        .eq('id', department.id)
+        .single();
+
+      if (!error && data?.settings) {
+        setRequireApproval(data.settings.require_approval_for_publication === true);
+      }
+    } catch (err) {
+      console.error('Failed to load department settings:', err);
+    }
+  };
+
   useEffect(() => {
     if (noticeId && noticeId !== 'new') {
       setIsEdit(true);
       loadNotice();
+    } else {
+      // Check for template parameter
+      const templateId = searchParams.get('template');
+      if (templateId) {
+        loadTemplateAndApply(templateId);
+      }
     }
-  }, [noticeId]);
+  }, [noticeId, searchParams]);
+
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('id, name, default_values, notice_type')
+        .eq('department_id', department.id)
+        .order('use_count', { ascending: false });
+
+      if (!error && data) {
+        setTemplates(data);
+      }
+    } catch (err) {
+      console.error('Failed to load templates:', err);
+    }
+  };
+
+  const loadTemplateAndApply = async (templateId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      if (error) throw error;
+      if (!data) return;
+
+      // Apply template defaults
+      applyTemplateDefaults(data.default_values, data.notice_type);
+      setSelectedTemplate(templateId);
+
+      // Increment use count
+      await supabase
+        .from('templates')
+        .update({ use_count: (data.use_count || 0) + 1 })
+        .eq('id', templateId);
+    } catch (err) {
+      console.error('Failed to load template:', err);
+    }
+  };
+
+  const applyTemplateDefaults = (defaults: any, templateNoticeType?: string) => {
+    if (!defaults) return;
+
+    setNoticeData(prev => ({
+      ...prev,
+      ...(templateNoticeType && { notice_type: templateNoticeType }),
+      ...(defaults.title && { title: defaults.title }),
+      ...(defaults.description && { description: defaults.description }),
+      ...(defaults.premises && { premises: { ...prev.premises, ...defaults.premises } }),
+      ...(defaults.applicant && { applicant: { ...prev.applicant, ...defaults.applicant } }),
+      ...(defaults.consultation && { consultation: { ...prev.consultation, ...defaults.consultation } }),
+      ...(defaults.licensing && { licensing: { ...prev.licensing, ...defaults.licensing } }),
+      ...(defaults.representation_deadline && { representation_deadline: defaults.representation_deadline }),
+      ...(defaults.expires_at && { expires_at: defaults.expires_at }),
+    }));
+  };
+
+  const handleApplyTemplate = () => {
+    if (!selectedTemplate) return;
+
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (template) {
+      applyTemplateDefaults(template.default_values, template.notice_type);
+    }
+  };
+
+  const handleOcrText = (text: string) => {
+    console.log('[NoticeEditor] OCR text received:', text.substring(0, 100));
+
+    // Extract legal details from OCR text
+    const extraction = extractLegalDetailsFromOcr(text);
+    const details = extraction.details;
+
+    console.log('[NoticeEditor] Extracted details:', details);
+
+    // Map extracted details to notice data
+    setNoticeData(prev => ({
+      ...prev,
+      title: details.premisesName || details.tradingName || prev.title,
+      description: details.applicationSummary || details.aiGeneratedSummary || prev.description,
+      premises: {
+        name: details.premisesName || prev.premises.name,
+        address: {
+          line1: details.premisesLine1 || prev.premises.address.line1,
+          line2: details.premisesLine2 || prev.premises.address.line2,
+          city: details.premisesCity || prev.premises.address.city,
+          postcode: details.premisesPostcode || prev.premises.address.postcode,
+        }
+      },
+      applicant: {
+        name: details.applicantName || prev.applicant.name,
+        address: prev.applicant.address
+      },
+      consultation: {
+        ...prev.consultation,
+        authority: details.councilName || prev.consultation.authority,
+      },
+      licensing: {
+        activities: details.activities.length > 0 ? details.activities : prev.licensing.activities
+      },
+      representation_deadline: details.representationDeadline || prev.representation_deadline,
+    }));
+
+    // Close modal on successful OCR
+    if (ocrStatus === 'ready') {
+      setTimeout(() => {
+        setShowOcrModal(false);
+      }, 1000);
+    }
+  };
+
+  const handleOcrStatusChange = (status: UploadStatus) => {
+    setOcrStatus(status);
+  };
 
   const loadNotice = async () => {
     try {
@@ -194,6 +375,23 @@ export default function NoticeEditor() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setAttachments(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   const noticeTypes = [
     { value: 'premises-licence', label: 'Premises Licence' },
     { value: 'variation', label: 'Variation' },
@@ -219,6 +417,19 @@ export default function NoticeEditor() {
   const canPublish = ['owner', 'org_admin', 'department_admin'].includes(userRole);
   const canEdit = ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
 
+  // Format last saved time
+  const formatLastSaved = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+
+    if (diffSecs < 10) return 'just now';
+    if (diffSecs < 60) return `${diffSecs}s ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   if (!canEdit) {
     return (
       <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 text-center">
@@ -243,9 +454,31 @@ export default function NoticeEditor() {
           <h1 className="text-3xl font-bold text-gray-900">
             {isEdit ? 'Edit Notice' : 'Create Notice'}
           </h1>
-          <p className="text-gray-600 mt-1">
-            {isEdit ? 'Update notice details' : 'Create a new public notice'}
-          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-gray-600">
+              {isEdit ? 'Update notice details' : 'Create a new public notice'}
+            </p>
+            {!isEdit && (
+              <div className="flex items-center gap-2 text-sm">
+                {isAutoSaving ? (
+                  <span className="text-blue-600 flex items-center gap-1">
+                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving draft...
+                  </span>
+                ) : lastSaved ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Draft saved {formatLastSaved(lastSaved)}
+                  </span>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
         <button
           onClick={() => navigate(`/c/${orgSlug}/${deptSlug}/notices`)}
@@ -264,6 +497,60 @@ export default function NoticeEditor() {
       {/* Main Form */}
       <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
         <div className="space-y-6">
+          {/* Template Selector */}
+          {!isEdit && templates.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Start from a Template</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Save time by using a pre-filled template with default values for common notice types.
+              </p>
+              <div className="flex gap-3">
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">Select a template...</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleApplyTemplate}
+                  disabled={!selectedTemplate}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Apply Template
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* OCR Import */}
+          {!isEdit && (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Import from Document</h3>
+                  <p className="text-sm text-gray-600">
+                    Upload a PDF, Word document, or image to automatically extract notice details using OCR.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowOcrModal(true)}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Import Document
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Basic Information */}
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
@@ -524,6 +811,70 @@ export default function NoticeEditor() {
             </div>
           )}
 
+          {/* Planning Attachments */}
+          {noticeData.notice_type.includes('planning') && (
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Planning Documents</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload site plans, drawings, and supporting documents (PDF, PNG, JPG). Max 10MB per file.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PDF, PNG, JPG (MAX. 10MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={handleFileChange}
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
+
+                {attachments.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-gray-700">Uploaded Files ({attachments.length})</h3>
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="flex-shrink-0 ml-3 text-red-600 hover:text-red-800 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Dates */}
           <div className="border-t border-gray-200 pt-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Important Dates</h2>
@@ -582,17 +933,15 @@ export default function NoticeEditor() {
             {saving ? 'Saving...' : 'Save as Draft'}
           </button>
 
-          {noticeData.status === 'draft' && (
+          {requireApproval ? (
             <button
               onClick={handleSubmitForApproval}
               disabled={saving}
-              className="px-6 py-3 bg-yellow-600 text-white rounded-xl font-semibold hover:bg-yellow-700 transition-colors disabled:opacity-50"
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Submit for Approval
+              {saving ? 'Submitting...' : 'Submit for Approval'}
             </button>
-          )}
-
-          {canPublish && (
+          ) : canPublish ? (
             <button
               onClick={handlePublish}
               disabled={saving}
@@ -600,9 +949,69 @@ export default function NoticeEditor() {
             >
               {saving ? 'Publishing...' : 'Publish Notice'}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
+
+      {/* OCR Import Modal */}
+      {showOcrModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Import from Document</h2>
+                <button
+                  onClick={() => setShowOcrModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-gray-600 mb-4">
+                  Upload a PDF, Word document, or image file. Our OCR system will automatically extract notice details and populate the form fields.
+                </p>
+                {ocrStatus === 'ready' && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-green-800 font-semibold">
+                      Document processed successfully! Form fields have been pre-filled.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <UploadDropzone
+                onText={handleOcrText}
+                onStatusChange={handleOcrStatusChange}
+                heading="Upload Notice Document"
+                description="PDF, DOC, DOCX, Pages, RTF, PNG, JPG, or TIFF (max 25MB)"
+              />
+
+              {ocrStatus === 'ready' && (
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => setShowOcrModal(false)}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Continue Editing
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

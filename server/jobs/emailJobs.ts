@@ -35,10 +35,10 @@ export function startDeadlineReminderJob() {
 
       const { data: notices, error } = await db
         .from('notices')
-        .select('id, notice_type, raw_data, reps_deadline')
-        .not('reps_deadline', 'is', null)
-        .gte('reps_deadline', now.toISOString())
-        .lte('reps_deadline', fortyEightHoursFromNow.toISOString())
+        .select('id, title, notice_type, premises, applicant, representation_deadline')
+        .not('representation_deadline', 'is', null)
+        .gte('representation_deadline', now.toISOString())
+        .lte('representation_deadline', fortyEightHoursFromNow.toISOString())
         .eq('status', 'published') as { data: any[] | null; error: any };
 
       if (error) {
@@ -55,7 +55,7 @@ export function startDeadlineReminderJob() {
 
       // For each notice, check if we should send 48h or 24h reminder
       for (const notice of notices) {
-        const deadline = new Date(notice.reps_deadline!);
+        const deadline = new Date(notice.representation_deadline!);
         const hoursUntilDeadline = Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60));
 
         // Determine which reminder to send (48h or 24h)
@@ -70,15 +70,15 @@ export function startDeadlineReminderJob() {
 
         const hoursRemaining = shouldSend48h ? 48 : 24;
 
-        // Get all users who have interacted with this notice (saved/watched)
-        // For now, we'll send to a test email or council contact email
-        const rawData = notice.raw_data as any;
-        const recipientEmail = rawData?.extras?.tokens?.REPRESENTATION_EMAIL
-          || rawData?.extras?.tokens?.AUTHORITY_EMAIL
-          || 'licensing@council.gov.uk';
+        // Get contact email from notice data
+        // For firms publishing, get the firm user's email
+        // For public notices, send to council contact or representation email
+        const premises = notice.premises as any;
+        const applicant = notice.applicant as any;
 
-        const premisesName = rawData?.fields?.premises_name || rawData?.name;
-        const premisesAddress = rawData?.fields?.premises_address || rawData?.address;
+        const recipientEmail = applicant?.email || 'licensing@council.gov.uk';
+        const premisesName = premises?.name || notice.title;
+        const premisesAddress = premises?.address || 'Not specified';
 
         try {
           await sendDeadlineReminder({
@@ -86,7 +86,7 @@ export function startDeadlineReminderJob() {
             noticeType: notice.notice_type,
             premisesName,
             premisesAddress,
-            deadline: new Date(notice.reps_deadline!).toLocaleDateString('en-GB', {
+            deadline: new Date(notice.representation_deadline!).toLocaleDateString('en-GB', {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -126,11 +126,12 @@ export function startDailySummaryJob() {
       const now = new Date();
       const yesterdayOffset = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      // Get all councils with active notices
+      // Get all organizations that are councils with contact_email set
       const { data: councils, error: councilsError } = await db
-        .from('councils')
+        .from('organizations')
         .select('id, name, contact_email')
-        .eq('active', true) as { data: any[] | null; error: any };
+        .eq('type', 'council')
+        .not('contact_email', 'is', null) as { data: any[] | null; error: any };
 
       if (councilsError) {
         console.error('[Cron] Error fetching councils:', councilsError);
@@ -156,12 +157,13 @@ export function startDailySummaryJob() {
               created_at,
               notices!inner (
                 id,
+                title,
                 notice_type,
-                raw_data,
-                council_id
+                premises,
+                organization_id
               )
             `)
-            .eq('notices.council_id', council.id)
+            .eq('notices.organization_id', council.id)
             .gte('created_at', yesterdayOffset.toISOString()) as { data: any[] | null; error: any };
 
           if (repsError) {
@@ -178,10 +180,11 @@ export function startDailySummaryJob() {
           const byNotice = representations.reduce((acc: any, rep: any) => {
             const noticeId = rep.notice_id;
             if (!acc[noticeId]) {
+              const premises = rep.notices.premises as any;
               acc[noticeId] = {
                 noticeId,
                 noticeType: rep.notices.notice_type,
-                premisesName: rep.notices.raw_data?.fields?.premises_name || rep.notices.raw_data?.name,
+                premisesName: premises?.name || rep.notices.title,
                 representations: [],
                 supportCount: 0,
                 objectCount: 0,

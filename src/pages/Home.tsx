@@ -27,6 +27,7 @@ const NAV_LINKS = [
   { href: "#notices", label: "Find notices" },
   { href: "#for-councils", label: "For councils" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/email-alerts", label: "Email alerts" },
 ] as const;
 
 // Testimonials

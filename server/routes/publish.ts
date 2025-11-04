@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { requireAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
+import { sendNoticeConfirmation } from '../services/email';
 
 const router = Router();
 
@@ -82,7 +83,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
     // Get user's organization (must be a firm)
     const { data: memberships } = await supabase
       .from('organization_memberships')
-      .select('organization_id, organization:organizations(type)')
+      .select('organization_id, organization:organizations(type, name)')
       .eq('user_id', user.id)
       .single();
 
@@ -91,6 +92,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
     }
 
     const orgType = (memberships as any).organization.type;
+    const firmName = (memberships as any).organization.name;
     if (orgType !== 'firm') {
       return res.status(403).json({ error: 'Only firms can publish via this endpoint' });
     }
@@ -159,8 +161,18 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
     const magicLink = `${appUrl}/notices/${notice.id}?token=${magicToken}`;
 
-    // TODO: Send email notification to firm
-    // TODO: Send notification to council department
+    // Send email notification to firm
+    await sendNoticeConfirmation(user.email, {
+      noticeTitle: notice.title,
+      noticeType: notice.notice_type,
+      councilName: (department as any).organizations?.name || 'Unknown Council',
+      publishedDate: new Date(notice.published_at).toLocaleDateString('en-GB'),
+      deadline: new Date(notice.representation_deadline).toLocaleDateString('en-GB'),
+      noticeUrl: magicLink,
+      firmName: firmName
+    });
+
+    // TODO: Send notification to council department (requires council contact email)
 
     console.log('[notice-publish] Notice published successfully:', {
       id: notice.id,
