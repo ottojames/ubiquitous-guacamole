@@ -34,6 +34,7 @@ export type PlaceholderKey =
   | "DPS_NAME"
   | "DPS_LICENSING_AUTHORITY"
   | "ACTIVITIES_HOURS_DATA"
+  | "GAMBLING_ACTIVITIES_HOURS_DATA"
   | "NATURE_OF_VARIATION"
   | "TRANSFER_FROM_NAME"
   | "TRANSFER_TO_NAME"
@@ -53,6 +54,14 @@ export type PlaceholderKey =
   | "COMMENT_METHOD"
   | "COMMENT_URL"
   | "COMMENT_EMAIL"
+  | "COMMENT_POSTAL"
+  | "EIA_PUBLICISING_DATE"
+  | "CLUB_QUALIFYING_CONDITIONS"
+  | "CURRENT_HOLDER_NAME"
+  | "NEW_HOLDER_NAME"
+  | "TRANSFER_DATE"
+  | "VARIATION_DETAILS"
+  | "ADDITIONAL_LICENSING_AUTHORITIES"
   | "DECEASED_NAME"
   | "DECEASED_ALIAS"
   | "DECEASED_LAST_ADDRESS"
@@ -90,7 +99,8 @@ export type SectionBlueprint = {
 export type DeadlineRule =
   | { base: "APPLICATION_DATE"; offsetDays: number }
   | { base: "PUBLICATION_DATE"; offsetDays: number }
-  | { base: "PUBLICATION_DATE"; addMonths: number };
+  | { base: "PUBLICATION_DATE"; addMonths: number }
+  | { base: "EIA_PUBLICISING_DATE"; offsetDays: number };
 
 export type AtLeastOneRule = {
   tokens: PlaceholderKey[];
@@ -241,8 +251,10 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
   switch (definition.category) {
     case "licensing": {
       const isPremises = definition.id.includes("premises");
+      const isClub = definition.id.includes("club");
       const isVariation = definition.id.includes("variation");
       const isReview = definition.id.includes("review");
+      const isNew = !isVariation && !isReview;
 
       const sections: SectionBlueprint[] = [
         {
@@ -256,8 +268,17 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
             }),
             field("APPLICANT_STATUS", {
               label: "Applicant status",
-              hint: "e.g., individual, company, LLP",
+              type: "select",
               span: 12,
+              required: false,
+              options: [
+                { value: "individual", label: "Individual" },
+                { value: "limited-company", label: "Limited company" },
+                { value: "llp", label: "Limited liability partnership (LLP)" },
+                { value: "partnership", label: "Partnership" },
+                { value: "charitable-trust", label: "Charitable trust" },
+                { value: "other", label: "Other" },
+              ],
             }),
             field("APPLICANT_TRADING_AS", {
               label: "Trading name (optional)",
@@ -279,21 +300,30 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         },
         {
           id: "premises",
-          title: "Premises",
+          title: isClub ? "Club premises" : "Premises",
           fields: [
             field("PREMISES_NAME", {
-              label: "Premises name",
+              label: isClub ? "Club name" : "Premises name",
               span: 12,
               required: true,
-              hint: "Required if applicable to the premises",
+              hint: isClub ? "Full registered name of the club" : "Required if applicable to the premises",
             }),
             field("PREMISES_ADDRESS", {
-              label: "Premises address",
+              label: isClub ? "Club premises address" : "Premises address",
               type: "textarea",
               rows: 3,
               required: true,
               span: 12,
               hint: "Single block including postcode.",
+            }),
+            field("CLUB_QUALIFYING_CONDITIONS", {
+              label: "Club qualifying conditions",
+              type: "textarea",
+              rows: 4,
+              required: isClub && isNew,
+              span: 12,
+              hint: "Confirm the club meets qualifying conditions under s.62 of the Licensing Act 2003.",
+              showIf: () => isClub && isNew,
             }),
           ],
         },
@@ -474,23 +504,110 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       const premisesType = definition.group;
 
       const sections: SectionBlueprint[] = [
-        applicantSection(),
-        premisesSection("Premises / site", "Premises or centre name", "PREMISES_ADDRESS"),
         {
-          id: "application-details",
-          title: "Application details",
+          id: "applicant",
+          title: "Applicant / Publisher",
           fields: [
-            field("GAMBLING_PREMISES_TYPE", {
-              label: "Premises type",
+            field("APPLICANT_NAME", {
+              label: "Applicant name",
               required: true,
               span: 12,
+            }),
+            field("APPLICANT_STATUS", {
+              label: "Applicant status",
+              type: "select",
+              span: 12,
+              required: false,
+              options: [
+                { value: "individual", label: "Individual" },
+                { value: "limited-company", label: "Limited company" },
+                { value: "llp", label: "Limited liability partnership (LLP)" },
+                { value: "partnership", label: "Partnership" },
+                { value: "charitable-trust", label: "Charitable trust" },
+                { value: "other", label: "Other" },
+              ],
+            }),
+            field("APPLICANT_TRADING_AS", {
+              label: "Trading name (optional)",
+              span: 12,
+            }),
+            field("APPLICANT_ADDRESS", {
+              label: "Applicant address",
+              type: "textarea",
+              rows: 3,
+              required: true,
+              span: 12,
+              hint: "Include postcode and country if outside the UK.",
+            }),
+            field("APPLICANT_COMPANY_NUMBER", {
+              label: "Company number (optional)",
+              span: 12,
+            }),
+          ],
+        },
+        {
+          id: "premises",
+          title: "Premises / site",
+          fields: [
+            field("PREMISES_NAME", {
+              label: "Premises or centre name",
+              span: 12,
+              required: true,
+            }),
+            field("PREMISES_ADDRESS", {
+              label: "Premises address",
+              type: "textarea",
+              rows: 3,
+              required: true,
+              span: 12,
+              hint: "Single block including postcode.",
+            }),
+          ],
+        },
+        // NEW SECTION: Special handling for gambling activities and hours (only for new/variation)
+        ...((!isReview && !isTransfer) ? [{
+          id: "gambling-activities-hours",
+          title: "Gambling activities and operating hours",
+          description: "Select the gambling activities you're applying for and specify operating hours.",
+          fields: [
+            // Hidden placeholder fields for validation tracking
+            // These fields are NOT rendered as form inputs (filtered in TemplateBuilderForm)
+            // but ARE tracked by validation logic (blueprintMissingCount)
+            // The actual UI is rendered by GamblingActivitiesSection component
+            field("LICENSABLE_ACTIVITIES", {
+              label: "Licensed activities",
+              type: "textarea",
+              rows: 3,
+              required: true,
+              span: 12,
+              hint: "Describe the gambling activities permitted.",
             }),
             field("OPENING_HOURS", {
               label: "Proposed opening hours",
               type: "textarea",
               rows: 3,
               span: 12,
-              required: !isReview && !isTransfer,
+              required: true,
+              hint: "Days and times of operation.",
+            }),
+          ],
+        }] : []),
+        {
+          id: "application-details",
+          title: "Application details",
+          fields: [
+            field("GAMBLING_PREMISES_TYPE", {
+              label: "Premises type",
+              type: "select",
+              required: true,
+              span: 12,
+              hint: "As defined in Gambling Act 2005 Part 8. Each premises type has different activity restrictions.",
+              options: [
+                { value: "betting", label: "Betting premises" },
+                { value: "bingo", label: "Bingo premises" },
+                { value: "agc", label: "Adult Gaming Centre (AGC)" },
+                { value: "fec", label: "Family Entertainment Centre (FEC)" },
+              ],
             }),
             field("NATURE_OF_VARIATION", {
               label: "Nature of variation",
@@ -530,6 +647,14 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               span: 12,
               showIf: () => isTransfer,
             }),
+            field("APPLICATION_DATE", {
+              label: "Transfer date",
+              type: "date",
+              required: isTransfer,
+              span: 12,
+              showIf: () => isTransfer,
+              hint: "Date the transfer takes effect.",
+            }),
           ],
         },
         {
@@ -539,19 +664,23 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
             field("APPLICATION_DATE", {
               label: "Application date",
               type: "date",
-              required: true,
+              required: !isTransfer,
               span: 4,
+              showIf: () => !isTransfer,
             }),
             field("PUBLICATION_DATE", {
-              label: "Publication date (optional)",
+              label: "Publication date",
               type: "date",
+              required: true,
               span: 4,
+              hint: "Date this notice will be published.",
             }),
             field("DEADLINE_DATE", {
               label: "Representation deadline",
               type: "date",
               required: true,
               span: 4,
+              hint: "28 days after application date for new/variation/review.",
             }),
           ],
         },
@@ -568,6 +697,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               label: "Authority address",
               type: "textarea",
               rows: 3,
+              required: true,
               span: 12,
             }),
             field("AUTHORITY_EMAIL", {
@@ -575,24 +705,23 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "email",
               span: 12,
             }),
-            field("INSPECTION_LOCATION", {
-              label: "Inspection location",
-              type: "textarea",
-              rows: 3,
-              required: false,
+            field("AUTHORITY_PHONE", {
+              label: "Authority phone (optional)",
+              type: "tel",
               span: 12,
-              showIf: () => false,
             }),
             field("REPRESENTATION_ADDRESS", {
               label: "Representation address",
               type: "textarea",
               rows: 3,
               span: 12,
+              hint: "Postal address for submitting representations.",
             }),
             field("REPRESENTATION_EMAIL", {
               label: "Representation email",
               type: "email",
               span: 12,
+              hint: "Email address for submitting representations.",
             }),
           ],
         },
@@ -603,7 +732,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         autoValues: [
           { token: "NOTICE_TYPE", value: definition.label },
           { token: "ACT_TITLE", value: "Gambling Act 2005" },
-          { token: "GAMBLING_PREMISES_TYPE", value: premisesType },
+          { token: "GAMBLING_PREMISES_TYPE", value: premisesType.toLowerCase() },
           { token: "REPRESENTATION_METHOD", value: "in writing" },
         ],
         aliasTokens: [{ source: "PREMISES_NAME", targets: ["SITE_NAME", "CENTRE_NAME"] }],
@@ -721,6 +850,12 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       };
     }
     case "planning": {
+      const isEIA = definition.id === "planning-eia";
+      const isListed = definition.id === "planning-listed";
+      const isConservation = definition.id === "planning-conservation";
+      const isPROW = definition.id === "planning-prow";
+      const isDeparture = definition.id === "planning-departure";
+
       const sections: SectionBlueprint[] = [
         applicantSection(),
         {
@@ -752,8 +887,16 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
             }),
             field("PLANNING_REASON", {
               label: "Press notice reason",
+              required: isEIA || isListed || isConservation,
               span: 12,
-              hint: "e.g., Major Development, EIA Development.",
+              hint: isEIA
+                ? "Explain why this is classified as EIA development."
+                : isListed
+                ? "Explain why listed building consent is required."
+                : isConservation
+                ? "Explain why conservation area consent is required."
+                : "e.g., Major Development, Departure from Development Plan.",
+              showIf: () => isEIA || isListed || isConservation || isDeparture,
             }),
             field("PROPOSAL_DESCRIPTION", {
               label: "Proposal description",
@@ -764,20 +907,39 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               maxLength: 1500,
               hint: "Concise description of the proposal (max 1,500 characters).",
             }),
-            field("COMMENT_METHOD", {
-              label: "Comment method",
-              required: true,
+            field("EIA_PUBLICISING_DATE", {
+              label: "EIA publicising date",
+              type: "date",
+              required: isEIA,
               span: 12,
+              hint: "Date the LPA directed publication under EIA Regulations 2017.",
+              showIf: () => isEIA,
             }),
-            field("COMMENT_EMAIL", {
-              label: "Comment email",
-              type: "email",
-              span: 12,
-            }),
+          ],
+        },
+        {
+          id: "comment-methods",
+          title: "Comment submission methods",
+          description: "Provide at least one method for the public to submit comments.",
+          fields: [
             field("COMMENT_URL", {
-              label: "Comment URL",
+              label: "Online comment form URL",
               type: "url",
               span: 12,
+              hint: "URL where comments can be submitted online.",
+            }),
+            field("COMMENT_EMAIL", {
+              label: "Email for comments",
+              type: "email",
+              span: 12,
+              hint: "Email address for submitting comments.",
+            }),
+            field("COMMENT_POSTAL", {
+              label: "Postal address for comments",
+              type: "textarea",
+              rows: 3,
+              span: 12,
+              hint: "Full postal address where written comments can be sent.",
             }),
           ],
         },
@@ -785,6 +947,21 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
           id: "dates",
           title: "Statutory dates",
           fields: [
+            field("APPLICATION_DATE", {
+              label: "Application date",
+              type: "date",
+              required: !isEIA,
+              span: 6,
+              showIf: () => !isEIA,
+            }),
+            field("EIA_PUBLICISING_DATE", {
+              label: "EIA publicising date",
+              type: "date",
+              required: isEIA,
+              span: 6,
+              showIf: () => isEIA,
+              hint: "Date LPA directed publication.",
+            }),
             field("PUBLICATION_DATE", {
               label: "Publication date",
               type: "date",
@@ -796,6 +973,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "date",
               required: true,
               span: 6,
+              hint: isEIA ? "30 days from publicising date." : "21 days from publication date.",
             }),
           ],
         },
@@ -819,29 +997,17 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "email",
               span: 12,
             }),
-            field("INSPECTION_LOCATION", {
-              label: "Inspection location",
-              type: "textarea",
-              rows: 3,
-              span: 12,
-              showIf: () => false,
-            }),
             field("ONLINE_REGISTER_URL", {
-              label: "Online register URL",
+              label: "Online planning register URL",
               type: "url",
               span: 12,
-            }),
-            field("REPRESENTATION_ADDRESS", {
-              label: "Postal address for comments",
-              type: "textarea",
-              rows: 3,
-              span: 12,
+              hint: "URL to view the application online.",
             }),
           ],
         },
       ];
 
-      const offset = definition.id === "planning-eia" ? 30 : 21;
+      const offset = isEIA ? 30 : 21;
 
       return {
         sections,
@@ -850,10 +1016,12 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
           { token: "ACT_TITLE", value: "Town and Country Planning Act 1990" },
         ],
         aliasTokens: [{ source: "SITE_NAME", targets: ["PREMISES_NAME", "CENTRE_NAME"] }],
-        deadlineRule: { base: "PUBLICATION_DATE", offsetDays: offset },
+        deadlineRule: isEIA
+          ? { base: "EIA_PUBLICISING_DATE" as const, offsetDays: offset }
+          : { base: "PUBLICATION_DATE" as const, offsetDays: offset },
         atLeastOne: [
           {
-            tokens: ["COMMENT_EMAIL", "COMMENT_URL", "REPRESENTATION_ADDRESS"],
+            tokens: ["COMMENT_EMAIL", "COMMENT_URL", "COMMENT_POSTAL"],
             message: "Provide at least one method for comments (email, URL, or postal address).",
           },
         ],

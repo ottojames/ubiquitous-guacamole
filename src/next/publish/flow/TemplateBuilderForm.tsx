@@ -12,6 +12,7 @@ import AddressLookup, { mockProvider, type AddressResult } from "@/components/Ad
 import AddressAutocomplete, { type AddressOption } from "@/components/AddressAutocomplete";
 import AddressFields from "@/components/AddressFields";
 import ActivitiesHoursSection, { type ActivitiesHoursData } from "@/components/publish/ActivitiesHoursSection";
+import GamblingActivitiesSection, { type GamblingActivitiesHoursData } from "@/components/publish/GamblingActivitiesSection";
 import CouncilSelect, { type Council } from "@/components/CouncilSelect";
 
 export type TemplateBuilderFormProps = {
@@ -277,10 +278,136 @@ export default function TemplateBuilderForm({
     [onChange, setValue, setHasAlcohol]
   );
 
+  // ============================================================================
+  // Gambling Activities & Hours Data
+  // ============================================================================
+
+  const gamblingActivitiesHoursData = React.useMemo<GamblingActivitiesHoursData>(() => {
+    const data: GamblingActivitiesHoursData = {
+      openingHours: {
+        Mon: null,
+        Tue: null,
+        Wed: null,
+        Thu: null,
+        Fri: null,
+        Sat: null,
+        Sun: null,
+      },
+      activities: {},
+    };
+
+    // Parse stored JSON if exists
+    const storedData = draft?.["GAMBLING_ACTIVITIES_HOURS_DATA"];
+    if (storedData && typeof storedData === "string") {
+      try {
+        const parsed = JSON.parse(storedData);
+        if (parsed && typeof parsed === "object") {
+          return { ...data, ...parsed };
+        }
+      } catch {
+        // Keep default
+      }
+    }
+
+    return data;
+  }, [draft]);
+
+  const updateGamblingActivitiesHoursData = React.useCallback(
+    (data: GamblingActivitiesHoursData) => {
+      // Store as JSON in GAMBLING_ACTIVITIES_HOURS_DATA field
+      onChange(["GAMBLING_ACTIVITIES_HOURS_DATA"], JSON.stringify(data));
+
+      // Generate LICENSABLE_ACTIVITIES summary from selected activities
+      const selectedActivities = Object.entries(data.activities)
+        .filter(([_, activityData]) => activityData.enabled)
+        .map(([key, activityData]) => {
+          // Convert key to readable label with machine count if applicable
+          const labels: Record<string, string> = {
+            fobt: "Fixed-odds betting terminals (FOBTs)",
+            otc_betting: "Over-the-counter betting",
+            ssbt: "Self-service betting terminals",
+            cash_bingo: "Cash bingo",
+            prize_bingo: "Prize bingo",
+            bingo_machines_b3_b4: "Gaming machines - Category B3/B4",
+            bingo_machines_c: "Gaming machines - Category C",
+            bingo_machines_d: "Gaming machines - Category D",
+            agc_machines_b3_b4: "Gaming machines - Category B3/B4",
+            agc_machines_c: "Gaming machines - Category C",
+            agc_machines_d: "Gaming machines - Category D",
+            fec_machines_c: "Gaming machines - Category C",
+            fec_machines_d: "Gaming machines - Category D",
+            equal_chance_gaming: "Equal chance gaming",
+          };
+          const label = labels[key] || key;
+
+          // Add machine count if present
+          if (activityData.machineCount) {
+            return `${label} (${activityData.machineCount} machines)`;
+          }
+          return label;
+        });
+
+      setValue("LICENSABLE_ACTIVITIES", selectedActivities.join(", "), { fromUser: true });
+
+      // Generate OPENING_HOURS summary
+      const hours = data.openingHours;
+      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+      const filled = days.filter(d => hours[d] !== null);
+
+      if (filled.length === 0) {
+        setValue("OPENING_HOURS", "", { fromUser: true });
+      } else if (filled.length === 7 && filled.every(d => {
+        const h = hours[d];
+        return h && h.start === hours[filled[0]]?.start && h.end === hours[filled[0]]?.end;
+      })) {
+        const h = hours[filled[0]];
+        setValue("OPENING_HOURS", `Mon–Sun ${h?.start}–${h?.end}`, { fromUser: true });
+      } else {
+        // Group consecutive days with same hours
+        const groups: string[] = [];
+        let currentGroup: string[] = [];
+        let currentHours: { start: string; end: string } | null = null;
+
+        for (const day of days) {
+          const h = hours[day];
+          if (!h) {
+            if (currentGroup.length > 0 && currentHours) {
+              const dayStr = currentGroup.length === 1 ? currentGroup[0] : `${currentGroup[0]}–${currentGroup[currentGroup.length - 1]}`;
+              groups.push(`${dayStr} ${currentHours.start}–${currentHours.end}`);
+              currentGroup = [];
+              currentHours = null;
+            }
+            continue;
+          }
+
+          if (!currentHours || (h.start === currentHours.start && h.end === currentHours.end)) {
+            currentGroup.push(day);
+            currentHours = h;
+          } else {
+            if (currentGroup.length > 0 && currentHours) {
+              const dayStr = currentGroup.length === 1 ? currentGroup[0] : `${currentGroup[0]}–${currentGroup[currentGroup.length - 1]}`;
+              groups.push(`${dayStr} ${currentHours.start}–${currentHours.end}`);
+            }
+            currentGroup = [day];
+            currentHours = h;
+          }
+        }
+
+        if (currentGroup.length > 0 && currentHours) {
+          const dayStr = currentGroup.length === 1 ? currentGroup[0] : `${currentGroup[0]}–${currentGroup[currentGroup.length - 1]}`;
+          groups.push(`${dayStr} ${currentHours.start}–${currentHours.end}`);
+        }
+
+        setValue("OPENING_HOURS", groups.join(", "), { fromUser: true });
+      }
+    },
+    [onChange, setValue]
+  );
+
   const sectionElements = React.useMemo(() => {
     const rendered: React.ReactNode[] = [];
     for (const section of blueprint.sections) {
-      // Special handling for activities-hours section
+      // Special handling for activities-hours section (Licensing Act 2003)
       if (section.id === "activities-hours") {
         rendered.push(
           <section key={section.id}>
@@ -298,16 +425,43 @@ export default function TemplateBuilderForm({
         continue;
       }
 
+      // Special handling for gambling-activities-hours section (Gambling Act 2005)
+      if (section.id === "gambling-activities-hours") {
+        const premisesType = getValue("GAMBLING_PREMISES_TYPE") as "betting" | "bingo" | "agc" | "fec" || "betting";
+        rendered.push(
+          <section key={section.id}>
+            <GamblingActivitiesSection
+              value={gamblingActivitiesHoursData}
+              onChange={updateGamblingActivitiesHoursData}
+              premisesType={premisesType}
+              errors={{
+                licensableActivities: errors?.["LICENSABLE_ACTIVITIES"],
+                openingHours: errors?.["OPENING_HOURS"],
+              }}
+            />
+          </section>
+        );
+        continue;
+      }
+
       const visibleFields = section.fields.filter((field) => {
         // Apply showIf condition from blueprint if present
         if (field.showIf && !field.showIf(context)) return false;
 
-        // Skip fields handled by ActivitiesHoursSection
-        if (field.token === "LICENSABLE_ACTIVITIES" ||
-            field.token === "ACTIVITY_SCHEDULE" ||
-            field.token === "OPENING_HOURS" ||
-            field.token === "DPS_NAME" ||
-            field.token === "DPS_LICENSING_AUTHORITY") {
+        // Skip fields handled by GamblingActivitiesSection
+        if (section.id === "gambling-activities-hours" &&
+            (field.token === "LICENSABLE_ACTIVITIES" ||
+             field.token === "OPENING_HOURS")) {
+          return false;
+        }
+
+        // Skip fields handled by ActivitiesHoursSection (only for the activities-hours section)
+        if (section.id === "activities-hours" &&
+            (field.token === "LICENSABLE_ACTIVITIES" ||
+             field.token === "ACTIVITY_SCHEDULE" ||
+             field.token === "OPENING_HOURS" ||
+             field.token === "DPS_NAME" ||
+             field.token === "DPS_LICENSING_AUTHORITY")) {
           return false;
         }
 
@@ -338,7 +492,7 @@ export default function TemplateBuilderForm({
       );
     }
     return rendered;
-  }, [blueprint.sections, context, errors, getValue, setValue, definition.id, activitiesHoursData, updateActivitiesHoursData]);
+  }, [blueprint.sections, context, errors, getValue, setValue, definition.id, activitiesHoursData, updateActivitiesHoursData, gamblingActivitiesHoursData, updateGamblingActivitiesHoursData]);
 
   const atLeastOneMessages = React.useMemo(() => {
     if (!blueprint.atLeastOne?.length) return [];
@@ -514,15 +668,6 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
 
   const baseInputClasses = "w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10";
   const errorInputClasses = "w-full rounded-lg border bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 focus:outline-none focus:ring-4 border-rose-300 hover:border-rose-400 focus:border-rose-500 focus:ring-rose-500/10";
-
-  // These fields are now handled by ActivitiesHoursSection - don't render them individually
-  if (field.token === "LICENSABLE_ACTIVITIES" ||
-      field.token === "ACTIVITY_SCHEDULE" ||
-      field.token === "OPENING_HOURS" ||
-      field.token === "DPS_NAME" ||
-      field.token === "DPS_LICENSING_AUTHORITY") {
-    return null;
-  }
 
   let control: React.ReactNode = null;
 
