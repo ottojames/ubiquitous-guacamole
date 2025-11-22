@@ -10,6 +10,7 @@ import PaymentStep from "./steps/PaymentStep";
 import { getNoticeBuilder } from "@/next/publish/schema/registry";
 import { validateWindowRules, type WindowRuleIssue } from "@/next/publish/validation/windowRules";
 import { getNoticeTemplateRenderer } from "@/next/publish/templates";
+import { renderNoticeWithTemplate } from "@/lib/templateService";
 import { buildSampleDraft } from "@/next/publish/sampleData";
 import { getNested, setNested } from "@/next/publish/utils/object";
 import { getMandatoryFieldsForOCR } from "@/next/publish/config/formBlueprints";
@@ -251,13 +252,17 @@ export default function NewPublishFlow() {
   }, [draftId, search]);
 
   useEffect(() => {
-    if (pathname === "/publish") {
+    // Redirect to step-1 if we're at the base publish path (no step specified)
+    // Handles: /publish, /f/slug/publish, /c/org/dept/publish
+    if (pathname.endsWith("/publish") || pathname === "/publish") {
       navigate(buildStepUrl(1), { replace: true });
     }
   }, [buildStepUrl, pathname, navigate]);
 
   useEffect(() => {
-    if (currentStep === null && pathname.startsWith("/publish")) {
+    // Redirect to step-1 if no valid step is detected
+    // Handles both public and portal contexts
+    if (currentStep === null && pathname.includes("/publish")) {
       navigate(buildStepUrl(1), { replace: true });
     }
   }, [buildStepUrl, currentStep, navigate, pathname]);
@@ -805,14 +810,100 @@ export default function NewPublishFlow() {
     }
   }, [builder, templateDraft, definition?.id]);
 
-  const templateText = useMemo(() => {
-    if (!templateRenderer || !templateNotice) return "";
-    try {
-      return templateRenderer.renderText(templateNotice) ?? "";
-    } catch {
-      return "";
+  const [templateText, setTemplateText] = useState("");
+
+  // Render notice text with custom template support
+  useEffect(() => {
+    if (!templateNotice) {
+      setTemplateText("");
+      return;
     }
-  }, [templateRenderer, templateNotice]);
+
+    let cancelled = false;
+
+    const renderText = async () => {
+      try {
+        // Get department ID from template draft (populated by CouncilDepartmentSelect)
+        let departmentId = templateDraft?.DEPARTMENT_ID as string | undefined;
+
+        // WORKAROUND: If user typed "Westminster City Council" without selecting from dropdown,
+        // automatically look up the department ID
+        if (!departmentId && templateDraft?.AUTHORITY_NAME) {
+          const authorityName = String(templateDraft.AUTHORITY_NAME).toLowerCase();
+          console.log('[NewPublishFlow] Checking authority name for auto-detection:', authorityName);
+          if (authorityName.includes('westminster')) {
+            console.log('[NewPublishFlow] 🔍 Westminster detected without DEPARTMENT_ID, looking up...');
+            console.log('[NewPublishFlow] Template draft:', templateDraft);
+            try {
+              const { data, error } = await supabase
+                .from('organizations')
+                .select('id, departments!inner(id, type)')
+                .ilike('name', '%westminster%')
+                .eq('departments.type', 'licensing')
+                .eq('type', 'council')
+                .single();
+
+              console.log('[NewPublishFlow] Westminster query result:', { data, error });
+
+              if (error) {
+                console.error('[NewPublishFlow] ❌ Westminster query error:', error);
+              } else if (data && data.departments && data.departments.length > 0) {
+                departmentId = data.departments[0].id;
+                console.log('[NewPublishFlow] ✅ Auto-detected Westminster department ID:', departmentId);
+              } else {
+                console.warn('[NewPublishFlow] ⚠️ Westminster found but no licensing department');
+              }
+            } catch (err) {
+              console.error('[NewPublishFlow] ❌ Exception during Westminster lookup:', err);
+            }
+          }
+        } else {
+          console.log('[NewPublishFlow] Auto-detection skipped:', {
+            hasDepartmentId: !!departmentId,
+            hasAuthorityName: !!templateDraft?.AUTHORITY_NAME,
+            authorityName: templateDraft?.AUTHORITY_NAME
+          });
+        }
+
+        // CRITICAL FIX: Use definition.id (e.g. 'licensing-premises-new') instead of templateNotice.noticeType
+        // templateNotice.noticeType contains the display name like "Premises Licence — New"
+        // but the database stores the ID like "licensing-premises-new"
+        const noticeTypeId = definition?.id || 'licensing-premises-new';
+
+        console.log('[NewPublishFlow] Rendering notice with custom template service');
+        console.log('[NewPublishFlow] Department ID:', departmentId);
+        console.log('[NewPublishFlow] Notice Type ID:', noticeTypeId);
+        console.log('[NewPublishFlow] Authority Name:', templateDraft?.AUTHORITY_NAME);
+
+        // Use the template service which handles custom templates and fallback
+        const rendered = await renderNoticeWithTemplate(templateNotice, departmentId, noticeTypeId);
+
+        if (!cancelled) {
+          setTemplateText(rendered);
+        }
+      } catch (err) {
+        console.error('[NewPublishFlow] Error rendering template text:', err);
+        if (!cancelled) {
+          // Fallback to default renderer
+          if (templateRenderer) {
+            try {
+              setTemplateText(templateRenderer.renderText(templateNotice) ?? "");
+            } catch {
+              setTemplateText("");
+            }
+          } else {
+            setTemplateText("");
+          }
+        }
+      }
+    };
+
+    renderText();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [templateNotice, templateRenderer, templateDraft, definition]);
 
   // Validation
   const validationIssues: WindowRuleIssue[] = useMemo(
@@ -1234,14 +1325,29 @@ export default function NewPublishFlow() {
       // Check if user is authenticated (for Phase 5 firm publishing)
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Use new Phase 5 publish endpoint if authenticated, otherwise fall back to old flow
+      // Use Phase 5 flow when:
+      // 1. User is in a portal context (/f/ or /c/) OR
+      // 2. User is authenticated (logged in firm/council)
+      // Anonymous public users at /publish will use legacy flow
       const usePhase5Flow = !!session;
 
       let noticeData: any;
 
+      console.log('[🔥 NewPublishFlow PUBLISH DEBUG] uploadMethod:', uploadMethod);
+      console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateNotice:', templateNotice ? 'EXISTS' : 'NULL');
+      console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateDraft keys:', templateDraft ? Object.keys(templateDraft) : 'NULL');
+      console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateDraft sample:', templateDraft ? {
+        APPLICANT_NAME: templateDraft.APPLICANT_NAME,
+        PREMISES_NAME: templateDraft.PREMISES_NAME,
+        PREMISES_ADDRESS: templateDraft.PREMISES_ADDRESS,
+        AUTHORITY_NAME: templateDraft.AUTHORITY_NAME,
+        DEPARTMENT_ID: templateDraft.DEPARTMENT_ID,
+      } : 'NULL');
+
       if (uploadMethod === "template" && templateNotice) {
         // Publishing from template builder
         // IMPORTANT: Pass raw template draft as extras.tokens so generateNoticeText() can use it
+        console.log('[🔥 NewPublishFlow PUBLISH DEBUG] ✅ Using template branch - tokens will be:', templateDraft);
         noticeData = {
           premises: templateNotice.premises || {},
           applicant: templateNotice.applicant || {},
@@ -1260,6 +1366,28 @@ export default function NewPublishFlow() {
           legalDetails.premisesPostcode
         ].filter(Boolean).join(", ");
 
+        // Build template tokens from structured form data for custom template rendering
+        const templateTokens = {
+          APPLICANT_NAME: legalDetails.applicantName || "",
+          APPLICANT_ADDRESS: "", // TODO: Add if available
+          PREMISES_NAME: legalDetails.premisesName || "",
+          PREMISES_ADDRESS: fullAddress || "",
+          APPLICATION_DATE: legalDetails.applicationDate || new Date().toISOString().split('T')[0],
+          DEADLINE_DATE: legalDetails.representationDeadline || "",
+          PUBLICATION_DATE: new Date().toISOString().split('T')[0],
+          LICENSABLE_ACTIVITIES: legalDetails.activities?.join(', ') || "Not specified",
+          ACTIVITY_SCHEDULE: "Not specified", // TODO: Add if available
+          OPERATING_HOURS: "Not specified", // TODO: Add if available
+          DPS_NAME: "", // TODO: Add if available
+          DPS_LICENSING_AUTHORITY: "", // TODO: Add if available
+          REPRESENTATION_ADDRESS: "", // TODO: Add if available
+          INSPECTION_LOCATION: "", // TODO: Add if available
+          INSPECTION_HOURS: "", // TODO: Add if available
+          ONLINE_REGISTER_URL: "", // TODO: Add if available
+          RESPONSIBLE_AUTHORITIES_LIST_URL: "", // TODO: Add if available
+          ...templateDraft, // Merge with any existing template tokens
+        };
+
         noticeData = {
           premises: {
             name: legalDetails.premisesName || "",
@@ -1276,9 +1404,14 @@ export default function NewPublishFlow() {
             ocrText: ocrText || "",
             applicationType: legalDetails.applicationType || null,
             activities: legalDetails.activities || [],
+            tokens: templateTokens, // Include mapped template tokens for custom template rendering
           },
         };
       } else {
+        console.log('[🔥 NewPublishFlow PUBLISH DEBUG] ❌ ELSE BRANCH - neither template nor notice upload!');
+        console.log('[🔥 NewPublishFlow PUBLISH DEBUG] uploadMethod:', uploadMethod);
+        console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateNotice:', templateNotice);
+        console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateDraft:', templateDraft);
         toast("Please complete the form before submitting");
         return;
       }
@@ -1287,12 +1420,34 @@ export default function NewPublishFlow() {
         // Phase 5: Authenticated firm publishing (goes live immediately with billing)
         const { publishNotice } = await import("@/lib/notices");
 
-        // TODO: Add council/department selection to wizard
-        // For now, using placeholder UUIDs - these should come from form selection
-        const councilId = "00000000-0000-0000-0000-000000000001"; // Placeholder council UUID
-        const departmentId = "00000000-0000-0000-0000-000000000002"; // Placeholder department UUID
+        // Get department ID from draft (set when user clicks Westminster dropdown)
+        const draftDepartmentId = templateDraft?.DEPARTMENT_ID;
 
-        console.log("[NewPublishFlow] Publishing via Phase 5 authenticated endpoint...");
+        if (!draftDepartmentId) {
+          toast("Please select a licensing authority (e.g., Westminster City Council)");
+          return;
+        }
+
+        console.log("[NewPublishFlow] Looking up department and council for:", draftDepartmentId);
+
+        // Query Supabase to get both department and its organization (council)
+        const { data: deptData, error: deptError } = await supabase
+          .from('departments')
+          .select('id, organization_id, organizations(id, name)')
+          .eq('id', draftDepartmentId)
+          .single();
+
+        if (deptError || !deptData) {
+          console.error("[NewPublishFlow] Department lookup failed:", deptError);
+          toast("Failed to find licensing authority. Please try selecting it again from the dropdown.");
+          return;
+        }
+
+        const councilId = deptData.organization_id;
+        const departmentId = deptData.id;
+        const councilName = (deptData as any).organizations?.name || "Unknown Council";
+
+        console.log("[NewPublishFlow] Publishing to:", { councilName, councilId, departmentId });
 
         const result = await publishNotice(
           {

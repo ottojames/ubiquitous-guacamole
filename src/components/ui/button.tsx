@@ -20,9 +20,9 @@ const variantStyles: Record<ButtonVariant, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  default: 'h-11 px-5 py-[10px]',
+  default: 'h-11 px-5',
   sm: 'h-9 px-3',
-  lg: 'h-12 px-6',
+  lg: 'h-14 px-6',
   icon: 'h-11 w-11 p-0',
 };
 

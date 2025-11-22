@@ -15,36 +15,36 @@ function licensingSample(variant: string) {
     variant,
     NOTICE_TYPE: 'Premises Licence — New',
     ACT_TITLE: 'Licensing Act 2003',
-    APPLICANT_NAME: 'Sample Bars Ltd',
+    APPLICANT_NAME: 'Red Lion Hospitality Ltd',
     APPLICANT_STATUS: 'company',
-    APPLICANT_TRADING_AS: 'Sample Lounge',
-    APPLICANT_ADDRESS: '1 Demo Road, Sampleton SW1A 1AA',
+    APPLICANT_TRADING_AS: 'The Red Lion',
+    APPLICANT_ADDRESS: '123 High Street, Sampleton, SP1 1AA',
     APPLICANT_COMPANY_NUMBER: '12345678',
-    PREMISES_NAME: 'Sample Venue',
-    PREMISES_ADDRESS: '10 High Street, Sampleton SW1A 1AA',
-    LICENSABLE_ACTIVITIES: 'Sale of alcohol (on the premises); Live music',
-    ACTIVITY_SCHEDULE: 'Mon–Sat 10:00–23:00; Sun 12:00–22:30',
-    OPENING_HOURS: 'Daily 10:00–00:00',
-    DPS_NAME: 'Jane Doe',
-    DPS_LICENSING_AUTHORITY: 'Sample Borough Council',
-    NATURE_OF_VARIATION: 'Extend alcohol sales until 01:00 daily.',
-    REVIEW_APPLICANT_NAME: 'Sample Police Licensing Unit',
-    REVIEW_GROUNDS: 'Failure to uphold the prevention of public nuisance objective.',
-    LICENSING_OBJECTIVES: 'Prevention of public nuisance; Public safety',
+    PREMISES_NAME: 'The Red Lion',
+    PREMISES_ADDRESS: '45 Market Street, Sampleton, SP2 3BB',
+    LICENSABLE_ACTIVITIES: 'Sale of alcohol (on and off the premises), Live music, Late night refreshment',
+    ACTIVITY_SCHEDULE: 'Alcohol: Mon–Sun 11:00–23:00, Live Music: Fri–Sat 20:00–23:30, Late Night Refreshment: Fri–Sat 23:00–00:30',
+    OPENING_HOURS: 'Mon–Thu 10:00–23:30, Fri–Sat 10:00–00:30, Sun 11:00–22:30',
+    DPS_NAME: 'Sarah Johnson',
+    DPS_LICENSING_AUTHORITY: 'Sampleton Borough Council',
+    NATURE_OF_VARIATION: 'Extend alcohol sales on Friday and Saturday until 01:00',
+    REVIEW_APPLICANT_NAME: 'Sampleton Police Licensing Unit',
+    REVIEW_GROUNDS: 'Prevention of crime and disorder, Prevention of public nuisance',
+    LICENSING_OBJECTIVES: 'Prevention of crime and disorder; Prevention of public nuisance; Public safety',
     APPLICATION_DATE: applicationDate,
     PUBLICATION_DATE: publicationDate,
     DEADLINE_DATE: deadline28,
-    INSPECTION_LOCATION: 'Licensing Team, Civic Centre, Sampleton',
-    INSPECTION_TIMES: 'Mon–Fri, 9am–5pm',
-    REPRESENTATION_METHOD: 'in writing',
-    REPRESENTATION_ADDRESS: 'Licensing Team, Civic Centre, Sampleton SW1A 2BB',
-    REPRESENTATION_EMAIL: 'licensing@sample.gov.uk',
-    AUTHORITY_NAME: 'Sample Borough Council',
-    AUTHORITY_ADDRESS: 'Civic Centre, Sampleton SW1A 2BB',
-    AUTHORITY_EMAIL: 'licensing@sample.gov.uk',
+    INSPECTION_LOCATION: 'Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA',
+    INSPECTION_TIMES: 'Monday–Friday 9:00 AM – 5:00 PM',
+    REPRESENTATION_METHOD: 'in writing or by email',
+    REPRESENTATION_ADDRESS: 'Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA',
+    REPRESENTATION_EMAIL: 'licensing@sampleton.gov.uk',
+    AUTHORITY_NAME: 'Sampleton Borough Council',
+    AUTHORITY_ADDRESS: 'Civic Centre, High Street, Sampleton, SP1 1AA',
+    AUTHORITY_EMAIL: 'licensing@sampleton.gov.uk',
     AUTHORITY_PHONE: '01234 567890',
-    ONLINE_REGISTER_URL: 'https://sample.gov.uk/licensing/register',
-    REFERENCE: 'LIC/2025/0001',
+    ONLINE_REGISTER_URL: 'https://sampleton.gov.uk/licensing/register',
+    REFERENCE: 'SAMP/LIC/2025/0001',
   } as Record<string, string>;
 
   if (variant.includes('premises-variation')) {
@@ -213,6 +213,51 @@ function probateSample() {
   } as Record<string, string>;
 }
 
+function troSample(variant: string) {
+  const effectiveDate = toISODate(addDays(today, 14));
+  const expiryDate = toISODate(addDays(today, 90));
+  const objectionDeadline = deadline21FromPublication;
+
+  const base = {
+    variant,
+    NOTICE_TYPE: 'Traffic Regulation Order',
+    AUTHORITY_NAME: 'Sample County Council',
+    AUTHORITY_EMAIL: 'traffic@sample.gov.uk',
+    ORDER_TITLE: 'Sample County Council (High Street, Sample Town) (Prohibition of Waiting) Order 2025',
+    ORDER_DESCRIPTION: 'prohibit waiting at any time on both sides of High Street between its junctions with Market Place and Station Road',
+    ROADS_AFFECTED: 'High Street, Sample Town, between Market Place and Station Road',
+    NATURE_OF_ORDER: 'Prohibition of waiting',
+    REASON_FOR_ORDER: 'To improve traffic flow and road safety',
+    EFFECTIVE_DATE: effectiveDate,
+    EXPIRY_DATE: '',
+    EXPERIMENTAL_PERIOD: '',
+    INSPECTION_LOCATION: 'Highways Department, County Hall, Sample Town ST1 1AA',
+    INSPECTION_HOURS: 'Monday to Friday, 9:00am to 5:00pm',
+    OBJECTION_DEADLINE: objectionDeadline,
+    OBJECTION_METHOD: 'in writing to the address below or by email',
+    OBJECTION_ADDRESS: 'Highways Department, County Hall, Sample Town ST1 1AA',
+    PUBLICATION_DATE: publicationDate,
+  } as Record<string, string>;
+
+  if (variant === 'tro-temporary') {
+    base.NOTICE_TYPE = 'Temporary Traffic Regulation Order';
+    base.ORDER_TITLE = 'Sample County Council (High Street, Sample Town) (Temporary Road Closure) Order 2025';
+    base.ORDER_DESCRIPTION = 'temporarily close High Street to all vehicular traffic';
+    base.NATURE_OF_ORDER = 'Temporary road closure';
+    base.REASON_FOR_ORDER = 'To facilitate essential highway maintenance works';
+    base.EXPIRY_DATE = expiryDate;
+  } else if (variant === 'tro-experimental') {
+    base.NOTICE_TYPE = 'Experimental Traffic Order';
+    base.ORDER_TITLE = 'Sample County Council (High Street, Sample Town) (One-Way System) Experimental Order 2025';
+    base.ORDER_DESCRIPTION = 'introduce a one-way traffic system on High Street, northbound only';
+    base.NATURE_OF_ORDER = 'Experimental one-way system';
+    base.REASON_FOR_ORDER = 'To test improvements to traffic flow and pedestrian safety';
+    base.EXPERIMENTAL_PERIOD = '18 months';
+  }
+
+  return base;
+}
+
 export function buildSampleDraft(definitionId: string): Record<string, unknown> | null {
   const definition = NOTICE_DEFINITIONS.find((item) => item.id === definitionId);
   if (!definition) return null;
@@ -228,6 +273,8 @@ export function buildSampleDraft(definitionId: string): Record<string, unknown> 
       return planningSample(definition.id);
     case 'probate':
       return probateSample();
+    case 'tro':
+      return troSample(definition.id);
     default:
       return null;
   }

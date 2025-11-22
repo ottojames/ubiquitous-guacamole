@@ -38,7 +38,7 @@ export default function ConfirmStep({
       aria-busy={continuePending ? "true" : undefined}
     >
       {/* Glass Section Header Card */}
-      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
+      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
         <div className="space-y-4 text-center">
           <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
             {uploadMethod === "notice" ? "Review your notice" : "Confirm your notice"}

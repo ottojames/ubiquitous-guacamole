@@ -110,28 +110,70 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Department not found' });
     }
 
+    // Fetch custom template for this department (if exists)
+    const { data: template } = await supabase
+      .from('templates')
+      .select('template_text')
+      .eq('department_id', target_department_id)
+      .eq('notice_type', notice_type)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    // Render template with tokens if custom template exists
+    let renderedNoticeText = title || notice_data.description || null;
+    if (template && template.template_text && notice_data.extras?.tokens) {
+      console.log('[notice-publish] Found custom template, rendering with tokens...');
+      console.log('[notice-publish] Template preview:', template.template_text.substring(0, 200));
+      console.log('[notice-publish] Tokens received:', Object.keys(notice_data.extras.tokens));
+
+      let rendered = template.template_text;
+      const tokens = notice_data.extras.tokens;
+
+      // Replace all {{TOKEN}} placeholders with actual values
+      for (const [key, value] of Object.entries(tokens)) {
+        const placeholder = `{{${key}}}`;
+        rendered = rendered.replace(new RegExp(placeholder, 'g'), String(value || ''));
+      }
+
+      renderedNoticeText = rendered;
+      console.log('[notice-publish] Template rendered successfully');
+      console.log('[notice-publish] Rendered preview:', renderedNoticeText.substring(0, 300));
+    } else {
+      console.log('[notice-publish] No custom template found or missing tokens', {
+        hasTemplate: !!template,
+        hasTemplateText: !!template?.template_text,
+        hasTokens: !!notice_data.extras?.tokens
+      });
+    }
+
+    // Extract application_date from consultation data for database trigger
+    // The trigger will automatically calculate reps_deadline as application_date + 28 days
+    const consultation = notice_data.consultation || {};
+    const applicationDate = consultation.applicationDate ? new Date(consultation.applicationDate) : new Date();
+
     // Create published notice (goes live immediately)
-    const { data: notice, error: noticeError } = await supabase
+    const { data: notice, error: noticeError} = await supabase
       .from('notices')
       .insert({
         organization_id: target_council_id,
         department_id: target_department_id,
-        published_by_organization_id: memberships.organization_id,
-        published_by_user_id: user.id,
-        client_id: client_id || null,
-        title,
+        created_by: user.id,
         notice_type,
         status: 'published', // Goes live immediately
-        description: notice_data.description || null,
+        description: renderedNoticeText, // Use rendered template text
         premises: notice_data.premises || {},
         applicant: notice_data.applicant || {},
         consultation: notice_data.consultation || {},
-        licensing: notice_data.licensing || {},
-        extras: notice_data.extras || {},
-        // billing_amount and billing_status calculated by database trigger based on subscription tier
+        application_date: applicationDate.toISOString().split('T')[0], // Extract date part for database column
+        // reps_deadline will be auto-calculated by database trigger (application_date + 28 days)
+        extras: {
+          ...notice_data.extras,
+          published_by_organization_id: memberships.organization_id,
+          published_by_user_id: user.id,
+          client_id: client_id || null,
+        },
         published_at: new Date().toISOString(),
-        // Auto-calculate deadlines (28 days for licensing)
-        representation_deadline: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
+        // representation_deadline no longer set here - using reps_deadline column instead
         expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .select()
@@ -167,7 +209,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       noticeType: notice.notice_type,
       councilName: (department as any).organizations?.name || 'Unknown Council',
       publishedDate: new Date(notice.published_at).toLocaleDateString('en-GB'),
-      deadline: new Date(notice.representation_deadline).toLocaleDateString('en-GB'),
+      deadline: notice.reps_deadline ? new Date(notice.reps_deadline).toLocaleDateString('en-GB') : 'TBD',
       noticeUrl: magicLink,
       firmName: firmName
     });
@@ -184,15 +226,16 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
     return res.json({
       notice: {
         id: notice.id,
-        title: notice.title,
+        title: notice.description || title, // Use description field (title doesn't exist in schema)
         notice_type: notice.notice_type,
         status: notice.status,
         published_at: notice.published_at,
-        representation_deadline: notice.representation_deadline,
+        application_date: notice.application_date,
+        reps_deadline: notice.reps_deadline, // Auto-calculated by database trigger
         expires_at: notice.expires_at,
         council_name: (department as any).organizations?.name || 'Unknown Council',
-        billing_amount: notice.billing_amount,
-        billing_status: notice.billing_status,
+        billing_amount: notice.billing_amount || null,
+        billing_status: notice.billing_status || 'pending',
       },
       magicLink,
       message: 'Notice published successfully'

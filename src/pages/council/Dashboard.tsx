@@ -37,6 +37,18 @@ interface RecentNotice {
   created_at: string;
   published_at: string | null;
   proof_pdf_url?: string | null;
+  repsDeadline?: string;
+  representations_count?: number;
+}
+
+interface PriorityItem {
+  id: string;
+  title: string;
+  type: 'closing_soon' | 'pending_approval' | 'high_reps' | 'unread_reps';
+  urgency: 'high' | 'medium';
+  deadline?: string;
+  count?: number;
+  noticeId?: string;
 }
 
 export default function Dashboard() {
@@ -53,6 +65,7 @@ export default function Dashboard() {
     expired: 0
   });
   const [recentNotices, setRecentNotices] = useState<RecentNotice[]>([]);
+  const [priorities, setPriorities] = useState<PriorityItem[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -60,58 +73,64 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Check if we're in demo mode
+      // Check if we're in demo mode (supporting both mock and real Westminster department)
       const isDemoSampleBorough = department.id === 'demo-sample-borough-id';
       const isDemoWestminster = department.id === 'demo-westminster-id';
-      const isDemoMode = isDemoSampleBorough || isDemoWestminster;
+      // Also support real Westminster Licensing department for showcase demo
+      const isRealWestminsterLicensing = department.id === '53c08600-5c5a-46a4-8805-16c129022952';
+      const isDemoMode = isDemoSampleBorough || isDemoWestminster || isRealWestminsterLicensing;
 
       let notices: any[] = [];
       let recent: any[] = [];
 
       if (isDemoMode) {
-        // For demo mode, fetch all notices via API
-        // In a real system, notices would have a council_id field to filter by
-        // For demo purposes, we show ALL notices as if they're all for this council
-        const demoCouncilName = isDemoSampleBorough ? 'Sample Borough' : 'Westminster';
+        // For Westminster demo, use server API to bypass RLS restrictions
+        console.log(`[Dashboard] Demo mode: fetching notices via API for department ${department.id}`);
 
-        console.log(`[Dashboard] Demo mode: fetching notices for ${demoCouncilName} Council`);
+        try {
+          // Fetch notices via API endpoint which uses service role key
+          const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
+          if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+          }
 
-        // Fetch all notices from API (simulating all notices are for this council)
-        const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
-        if (!response.ok) {
-          throw new Error('Failed to fetch notices from API');
-        }
+          const responseData = await response.json();
+          const allNotices = responseData.items || [];
+          console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
 
-        const responseData = await response.json();
-        const allNotices = responseData.items || [];
-        console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
-        console.log(`[Dashboard] Sample notice data:`, allNotices[0]);
-
-        // In production, this would filter by council_id or similar
-        // For demo, we're showing all notices as if they're all for this council
-        const filteredNotices = allNotices;
-        console.log(`[Dashboard] Showing ${filteredNotices.length} notices for ${demoCouncilName} Council`);
-
-        notices = filteredNotices.map((n: any) => ({
-          id: n.id,
-          status: n.status || 'published',
-        }));
-
-        recent = filteredNotices.slice(0, 5).map((n: any) => {
-          // Build title from available data
-          const title = n.premisesName || n.premisesAddress || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
-
-          return {
+          // Map API response to notice format
+          notices = allNotices.map((n: any) => ({
             id: n.id,
-            title: title,
             status: n.status || 'published',
+            premises: { name: n.premisesName },
+            notice_type: n.noticeType,
             created_at: n.publicationDate || new Date().toISOString(),
             published_at: n.publicationDate || null,
-            proof_pdf_url: null,
-          };
-        });
+            representation_deadline: n.repsDeadline,
+            proof_pdf_url: null
+          }));
 
-        console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
+          // Get recent notices with full details
+          recent = allNotices.slice(0, 5).map((n: any) => {
+            const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
+
+            return {
+              id: n.id,
+              title: title,
+              status: n.status || 'published',
+              created_at: n.publicationDate || new Date().toISOString(),
+              published_at: n.publicationDate || null,
+              proof_pdf_url: null,
+              repsDeadline: n.repsDeadline,
+              premisesName: n.premisesName
+            };
+          });
+
+          console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
+        } catch (err) {
+          console.error('[Dashboard] Error fetching from API:', err);
+          throw err;
+        }
       } else {
         // Normal mode - query by department_id
         const { data: noticesData, error: noticesError } = await supabase
@@ -152,6 +171,71 @@ export default function Dashboard() {
 
       setStats(statsData);
       setRecentNotices(recent || []);
+
+      // Calculate priorities for Licensing Officer
+      const priorityItems: PriorityItem[] = [];
+      const now = new Date();
+      const fortyEightHours = 48 * 60 * 60 * 1000;
+
+      // 1. Notices closing within 48 hours (HIGH PRIORITY)
+      recent.forEach((notice: any) => {
+        const deadline = notice.repsDeadline || notice.reps_deadline;
+        if (deadline) {
+          const deadlineDate = new Date(deadline);
+          const hoursUntil = (deadlineDate.getTime() - now.getTime()) / (60 * 60 * 1000);
+
+          if (hoursUntil > 0 && hoursUntil <= 48) {
+            priorityItems.push({
+              id: `closing-${notice.id}`,
+              title: notice.title || notice.premisesName || 'Notice',
+              type: 'closing_soon',
+              urgency: 'high',
+              deadline: deadline,
+              noticeId: notice.id
+            });
+          }
+        }
+      });
+
+      // 2. Notices with high representation counts (MEDIUM PRIORITY)
+      recent.forEach((notice: any) => {
+        const repsCount = notice.representations_count || notice.repsCount || 0;
+        if (repsCount >= 5) {
+          priorityItems.push({
+            id: `highreps-${notice.id}`,
+            title: notice.title || notice.premisesName || 'Notice',
+            type: 'high_reps',
+            urgency: 'medium',
+            count: repsCount,
+            noticeId: notice.id
+          });
+        }
+      });
+
+      // 3. Pending submissions (HIGH PRIORITY)
+      if (statsData.pending_approval > 0) {
+        priorityItems.push({
+          id: 'pending-submissions',
+          title: `${statsData.pending_approval} submission${statsData.pending_approval > 1 ? 's' : ''} awaiting review`,
+          type: 'pending_approval',
+          urgency: 'high',
+          count: statsData.pending_approval
+        });
+      }
+
+      // Sort by urgency (high first) then by deadline
+      priorityItems.sort((a, b) => {
+        if (a.urgency !== b.urgency) {
+          return a.urgency === 'high' ? -1 : 1;
+        }
+        if (a.deadline && b.deadline) {
+          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+        }
+        return 0;
+      });
+
+      setPriorities(priorityItems.slice(0, 5)); // Show top 5 priorities
+
       setLoading(false);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
@@ -335,6 +419,99 @@ export default function Dashboard() {
           <p className="text-3xl font-bold text-gray-900">{stats.expired}</p>
         </Link>
       </div>
+
+      {/* Priorities Section */}
+      {priorities.length > 0 && (
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 mb-8 border-2 border-amber-200">
+          <div className="flex items-center gap-3 mb-6">
+            <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h2 className="text-xl font-semibold text-gray-900">Priority Items</h2>
+            <span className="ml-auto bg-amber-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+              {priorities.length} item{priorities.length > 1 ? 's' : ''} require attention
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {priorities.map((priority) => {
+              const isUrgent = priority.urgency === 'high';
+              const bgColor = isUrgent ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200';
+              const iconColor = isUrgent ? 'text-red-600' : 'text-amber-600';
+
+              return (
+                <div
+                  key={priority.id}
+                  className={`${bgColor} border-2 rounded-xl p-4 hover:shadow-md transition-all ${priority.noticeId ? 'cursor-pointer' : ''}`}
+                  onClick={() => priority.noticeId && navigate(`${basePath}/notices/${priority.noticeId}`)}
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Icon based on type */}
+                    <div className={`${iconColor} flex-shrink-0 mt-0.5`}>
+                      {priority.type === 'closing_soon' && (
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                      {priority.type === 'high_reps' && (
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      )}
+                      {priority.type === 'pending_approval' && (
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900">{priority.title}</h3>
+                        {isUrgent && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded-full uppercase">
+                            Urgent
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        {priority.type === 'closing_soon' && priority.deadline && (
+                          <>
+                            <span className="font-medium text-red-600">
+                              Closes {formatDate(priority.deadline)}
+                            </span>
+                            <span>• Click to review representations</span>
+                          </>
+                        )}
+                        {priority.type === 'high_reps' && (
+                          <>
+                            <span className="font-medium">{priority.count} representations received</span>
+                            <span>• Requires attention</span>
+                          </>
+                        )}
+                        {priority.type === 'pending_approval' && (
+                          <>
+                            <span className="font-medium">Action required</span>
+                            <span>• Review and approve submissions</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {priority.noticeId && (
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Recent Notices */}
       <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 mb-8">

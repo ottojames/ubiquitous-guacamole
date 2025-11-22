@@ -98,7 +98,7 @@ export default function UploadMethodStep({
       aria-busy={continuePending || switching ? "true" : undefined}
     >
       {/* Glass Section Header Card */}
-      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
+      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
         <div className="space-y-8">
           <div className="space-y-4 text-center">
             <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
@@ -114,18 +114,6 @@ export default function UploadMethodStep({
             <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
               <button
                 type="button"
-                onClick={() => toggle("notice")}
-                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
-                  active === "notice"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-                aria-pressed={active === "notice"}
-              >
-                Upload & OCR
-              </button>
-              <button
-                type="button"
                 onClick={() => toggle("template")}
                 className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
                   active === "template"
@@ -136,13 +124,25 @@ export default function UploadMethodStep({
               >
                 Structured template
               </button>
+              <button
+                type="button"
+                onClick={() => toggle("notice")}
+                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                  active === "notice"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                aria-pressed={active === "notice"}
+              >
+                Upload via File
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       {/* Contact Email Card */}
-      <div className="rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+      <div className="rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <h3 className="mb-3 text-lg font-bold text-slate-900">Confirmation email</h3>
         <p className="mb-6 text-sm text-slate-600">
           We'll send your confirmation and receipt to this email address.
@@ -163,12 +163,15 @@ export default function UploadMethodStep({
             placeholder="your.email@example.com"
             className={`w-full rounded-xl border ${
               emailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
-            } px-4 py-3 text-base text-slate-900 placeholder-slate-400 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+            } px-4 py-3 text-base text-slate-900 placeholder-slate-600 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
             disabled={continuePending}
+            aria-invalid={!!emailError}
+            aria-describedby={emailError ? "email-error" : undefined}
+            autoComplete="off"
           />
           {emailError && (
-            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {emailError}

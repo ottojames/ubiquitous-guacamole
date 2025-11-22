@@ -19,7 +19,7 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
       aria-busy={submitting ? "true" : undefined}
     >
       {/* Glass Section Header Card */}
-      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
+      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
         <div className="space-y-4 text-center">
           <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
             Review & pay
@@ -32,7 +32,7 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
 
       <div className="space-y-8">
         {/* Notice Summary Card */}
-        <div className="rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+        <div className="rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
           <h3 className="mb-6 text-lg font-bold text-slate-900">Notice summary</h3>
           <dl className="grid gap-4 text-base sm:grid-cols-2">
             <div>
@@ -61,7 +61,7 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
         </div>
 
         {/* Payment Integration Placeholder */}
-        <div className="space-y-4 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50/80 p-8 text-center">
+        <div className="space-y-4 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50/80 p-4 sm:p-8 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200">
             <svg className="h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />

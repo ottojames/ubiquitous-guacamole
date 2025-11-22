@@ -69,6 +69,7 @@ const gamblingBaseSchema = z
     SITE_NAME: optionalString(),
     CENTRE_NAME: optionalString(),
     PREMISES_ADDRESS: requiredString("Premises address"),
+    LICENSABLE_ACTIVITIES: optionalString(),
     OPENING_HOURS: optionalString(),
     NATURE_OF_VARIATION: optionalString(),
     REVIEW_APPLICANT_NAME: optionalString(),
@@ -101,6 +102,14 @@ const gamblingBaseSchema = z
         code: z.ZodIssueCode.custom,
         path: ["REPRESENTATION_ADDRESS"],
         message: "Provide a postal or email contact for representations.",
+      });
+    }
+
+    if (requiresHours && !value.LICENSABLE_ACTIVITIES) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["LICENSABLE_ACTIVITIES"],
+        message: "Select at least one gambling activity.",
       });
     }
 
@@ -181,6 +190,7 @@ export function mapGamblingToNoticeBase(input: GamblingNoticeInput): NoticeBase 
     SITE_NAME: valueOrEmpty(input.SITE_NAME),
     CENTRE_NAME: valueOrEmpty(input.CENTRE_NAME),
     PREMISES_ADDRESS: valueOrEmpty(input.PREMISES_ADDRESS),
+    LICENSABLE_ACTIVITIES: valueOrEmpty(input.LICENSABLE_ACTIVITIES),
     OPENING_HOURS: valueOrEmpty(input.OPENING_HOURS),
     NATURE_OF_VARIATION: valueOrEmpty(input.NATURE_OF_VARIATION),
     REVIEW_APPLICANT_NAME: valueOrEmpty(input.REVIEW_APPLICANT_NAME),

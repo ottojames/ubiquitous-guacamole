@@ -16,6 +16,8 @@ import { getCouncilForPostcode } from '@/lib/councils';
 import useNoticeSearch from '@/hooks/useNoticeSearch';
 import { toast, useToastController } from '@/lib/ui/toast';
 import Footer from '@/components/Footer';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // -------- analytics stub (intentional - replace with actual analytics service) --------
 function track(event: string, payload: Record<string, unknown> = {}) {
@@ -61,6 +63,13 @@ export default function Home() {
   const [compactNav, setCompactNav] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeHash, setActiveHash] = useState<string>(typeof window !== "undefined" ? window.location.hash || "" : "");
+
+  // Focus trap for mobile menu (WCAG 2.4.3 compliance)
+  const mobileTrapRef = useFocusTrap(mobileOpen, () => setMobileOpen(false));
+
+  // Respect user's motion preferences for accessibility
+  const prefersReducedMotion = useReducedMotion();
+  const animationDuration = prefersReducedMotion ? 0 : 500;
 
   // Hysteresis-free compact header using IntersectionObserver on sentinel
   useEffect(() => {
@@ -130,7 +139,7 @@ export default function Home() {
     setTimeout(() => {
       setTestiIdx((i) => (i - 1 + testimonials.length) % testimonials.length);
     }, 0);
-    setTimeout(() => setTestiAnimating(false), 500);
+    setTimeout(() => setTestiAnimating(false), animationDuration);
   };
 
   const goToNextTestimonial = () => {
@@ -141,7 +150,7 @@ export default function Home() {
     setTimeout(() => {
       setTestiIdx((i) => (i + 1) % testimonials.length);
     }, 0);
-    setTimeout(() => setTestiAnimating(false), 500);
+    setTimeout(() => setTestiAnimating(false), animationDuration);
   };
 
   const handleAddressSubmit = useCallback(async ({ query, suggestion }: AddressSearchSubmitPayload) => {
@@ -172,6 +181,7 @@ export default function Home() {
       if (filters.status) params.set('status', filters.status);
       if (filters.start) params.set('start', filters.start);
       if (filters.end) params.set('end', filters.end);
+      params.set('view', 'map'); // Default to map view to show clusters
 
       navigate(`/notices?${params.toString()}`);
 
@@ -197,6 +207,13 @@ export default function Home() {
 
   return (
     <div className={`${UI.pageWrap} relative flex flex-col font-sans`}>
+      {/* Skip link for keyboard accessibility (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
 
       {/* -------- HEADER: sticky, compact-on-scroll, one primary CTA -------- */}
       <header
@@ -259,7 +276,7 @@ export default function Home() {
 
         {/* Mobile sheet */}
         {mobileOpen && (
-          <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
+          <div ref={mobileTrapRef} className="fixed inset-0 z-50" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
             <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-white shadow-2xl p-6 flex flex-col">
               <div className="flex items-center justify-between">
@@ -301,8 +318,10 @@ export default function Home() {
       {/* Sentinel right after header */}
       <div id="header-sentinel" className="h-2" aria-hidden="true" />
 
-      {/* -------- HERO SECTION -------- */}
-      <section className="relative overflow-hidden pb-32 pt-20 md:pb-40 md:pt-32 lg:pb-48">
+      {/* Main content landmark for skip link */}
+      <main id="main-content">
+        {/* -------- HERO SECTION -------- */}
+        <section className="relative overflow-hidden pb-32 pt-20 md:pb-40 md:pt-32 lg:pb-48">
         <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
@@ -456,7 +475,7 @@ export default function Home() {
 
               {/* Testimonial content with slide animation */}
               <div className="overflow-hidden relative min-h-[200px]">
-                {testiAnimating && (
+                {testiAnimating && !prefersReducedMotion && (
                   /* Previous testimonial sliding out */
                   <div
                     className={`absolute inset-0 ${
@@ -479,7 +498,7 @@ export default function Home() {
 
                 {/* Current testimonial */}
                 <div
-                  className={testiAnimating ? (
+                  className={testiAnimating && !prefersReducedMotion ? (
                     testiDirection === 'right'
                       ? 'animate-slideInFromRight'
                       : 'animate-slideInFromLeft'
@@ -510,13 +529,17 @@ export default function Home() {
                       setTestiDirection(idx > testiIdx ? 'right' : 'left');
                       setTimeout(() => {
                         setTestiIdx(idx);
-                        setTimeout(() => setTestiAnimating(false), 50);
-                      }, 500);
+                        setTimeout(() => setTestiAnimating(false), prefersReducedMotion ? 0 : 50);
+                      }, animationDuration);
                     }}
-                    className={`h-2 rounded-full transition-all ${
-                      testiIdx === idx ? "w-8 bg-blue-600" : "w-2 bg-slate-300 hover:bg-slate-400"
-                    }`}
-                  />
+                    className="p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded-full"
+                  >
+                    <span
+                      className={`block h-2 rounded-full transition-all ${
+                        testiIdx === idx ? "w-8 bg-blue-600" : "w-2 bg-slate-300"
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
 
@@ -858,6 +881,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* -------- FOOTER -------- */}
       <Footer />
@@ -909,7 +933,7 @@ export default function Home() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-4 right-4 rounded-md bg-slate-900 px-4 py-2 text-xs text-white shadow-lg"
+          className="fixed bottom-4 right-4 rounded-lg bg-slate-900 px-4 py-2 text-xs text-white shadow-lg"
         >
           {toastMessage}
         </div>

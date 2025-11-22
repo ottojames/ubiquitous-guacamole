@@ -37,6 +37,7 @@ export default function RepresentationsList({
   const [filter, setFilter] = useState<'all' | 'unread' | 'support' | 'objection' | 'comment'>('all');
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const { counts, refetch: refetchCounts } = useRepresentationCounts(noticeId, userId);
 
@@ -68,7 +69,7 @@ export default function RepresentationsList({
 
   const handleMarkAsRead = async (repId: string) => {
     try {
-      const response = await fetch(`/api/representations/${repId}/mark-read`, {
+      const response = await fetch(`/api/notices/${noticeId}/representations/${repId}/mark-read`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,6 +95,24 @@ export default function RepresentationsList({
       refetchCounts();
     } catch (err) {
       console.error('Failed to mark as read:', err);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      // Mark all representations as read
+      await Promise.all(
+        representations
+          .filter((rep) => !rep.is_read)
+          .map((rep) => handleMarkAsRead(rep.id))
+      );
+
+      // Update all to read
+      setRepresentations((prev) => prev.map((rep) => ({ ...rep, is_read: true })));
+      refetchCounts();
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+      alert('Failed to mark all as read');
     }
   };
 
@@ -248,6 +267,26 @@ export default function RepresentationsList({
           )}
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleMarkAllAsRead}
+            disabled={representations.filter((r) => !r.is_read).length === 0}
+            className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Mark All as Read
+          </button>
+          <button
+            onClick={() => setShowReportModal(true)}
+            disabled={representations.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Prepare Report
+          </button>
           <button
             onClick={handleExportCSV}
             disabled={representations.length === 0}
@@ -463,6 +502,156 @@ export default function RepresentationsList({
                 <p className="text-gray-600">Select a {repLabel.toLowerCase()} to view details</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 sticky top-0 bg-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Officer's Report Summary</h2>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+                  <p className="text-sm text-red-600 font-semibold mb-1">Total Objections</p>
+                  <p className="text-3xl font-bold text-red-700">
+                    {representations.filter((r) => r.stance === 'objection').length}
+                  </p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                  <p className="text-sm text-green-600 font-semibold mb-1">Total Support</p>
+                  <p className="text-3xl font-bold text-green-700">
+                    {representations.filter((r) => r.stance === 'support').length}
+                  </p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Total Comments</p>
+                  <p className="text-3xl font-bold text-blue-700">
+                    {representations.filter((r) => r.stance === 'comment').length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Executive Summary */}
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Executive Summary</h3>
+                <p className="text-gray-700 leading-relaxed mb-3">
+                  This application has received <strong>{representations.length} representations</strong> during
+                  the statutory consultation period. The breakdown is:
+                </p>
+                <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-600 font-bold mt-0.5">•</span>
+                    <span>
+                      <strong>{representations.filter((r) => r.stance === 'objection').length} objections</strong>{' '}
+                      primarily citing prevention of public nuisance and prevention of crime and disorder as licensing objectives.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold mt-0.5">•</span>
+                    <span>
+                      <strong>{representations.filter((r) => r.stance === 'support').length} support submissions</strong>{' '}
+                      emphasizing economic benefits and responsible management.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Key Objections */}
+              {representations.filter((r) => r.stance === 'objection').length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Key Objections Raised</h3>
+                  <div className="space-y-3">
+                    {representations.filter((r) => r.stance === 'objection').map((rep) => (
+                      <div key={rep.id} className="bg-red-50 p-4 rounded-xl border border-red-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="font-semibold text-gray-900">{rep.respondent_name || 'Anonymous'}</p>
+                          <span className="text-xs text-gray-500">{formatDate(rep.submitted_at)}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-3">{rep.representation_text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Support Statements */}
+              {representations.filter((r) => r.stance === 'support').length > 0 && (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">Support Statements</h3>
+                  <div className="space-y-3">
+                    {representations.filter((r) => r.stance === 'support').map((rep) => (
+                      <div key={rep.id} className="bg-green-50 p-4 rounded-xl border border-green-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="font-semibold text-gray-900">{rep.respondent_name || 'Anonymous'}</p>
+                          <span className="text-xs text-gray-500">{formatDate(rep.submitted_at)}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-3">{rep.representation_text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Officer Recommendation Template */}
+              <div className="bg-amber-50 p-6 rounded-xl border border-amber-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Officer Recommendation</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  This section should be completed by the licensing officer after reviewing all representations
+                  and considering the four licensing objectives.
+                </p>
+                <div className="bg-white p-4 rounded-lg border border-amber-300">
+                  <p className="text-sm text-gray-500 italic">
+                    "Having considered the {representations.length} representations received, the licensing objectives,
+                    and the council's Statement of Licensing Policy, the officer recommends that the Licensing
+                    Sub-Committee should [GRANT/REFUSE/GRANT WITH CONDITIONS] this application because..."
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Print Report
+                </button>
+                <button
+                  onClick={handleExportCSV}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Export to CSV
+                </button>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

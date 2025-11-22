@@ -1,9 +1,19 @@
 import React from "react";
 import { Check, Info, Settings } from "lucide-react";
 import * as UI from "@/styles/ui";
-import { NOTICE_CATEGORY_TREE, type NoticeDefinition } from "@/next/publish/config/noticeTypes";
+import { NOTICE_CATEGORY_TREE, type NoticeDefinition, type NoticeCategoryId } from "@/next/publish/config/noticeTypes";
 import DisclosureSection from "@/next/publish/flow/components/DisclosureSection";
 import { getFilteredNoticeCategoryTree, getFilteredOutCategories, getAllPracticeAreas } from "@/config/practiceAreas";
+
+// Category icon mapping
+const CATEGORY_ICONS: Record<NoticeCategoryId, string> = {
+  licensing: '📄',
+  gambling: '🎲',
+  gvol: '🚛',
+  planning: '🏗️',
+  probate: '⚖️',
+  tro: '🚦',
+};
 
 const STORAGE_PREFIX = "pn:notice-group:";
 
@@ -93,10 +103,9 @@ export default function NoticeTypeStep({
   React.useEffect(() => {
     const initial: OpenGroupsState = {};
     baseTree.forEach((category) => {
-      const stored = readStoredState(category.id);
-      // All categories open by default for better accessibility
-      const open = stored ?? true;
-      initial[category.id] = !!open;
+      // Always start collapsed, only open if category contains the selected variant
+      const hasSelection = selectedCategoryId === category.id;
+      initial[category.id] = hasSelection;
     });
     setOpenGroups(initial);
   }, [selectedCategoryId, baseTree]);
@@ -118,7 +127,7 @@ export default function NoticeTypeStep({
       const currentOpen = prev[categoryId] ?? false;
       if (currentOpen === nextOpen) return prev;
       const next = { ...prev, [categoryId]: nextOpen };
-      persistGroupState(categoryId, nextOpen);
+      // No longer persist to localStorage - always start fresh on page load
       return next;
     });
   }, []);
@@ -142,16 +151,25 @@ export default function NoticeTypeStep({
     })).filter((category) => category.groups.length > 0);
   }, [searchQuery, baseTree]);
 
-  // Auto-expand all categories when searching
+  // Auto-expand all categories when searching, collapse when search cleared
   React.useEffect(() => {
     if (searchQuery.trim()) {
+      // Search active: expand all matching categories
       const allOpen: OpenGroupsState = {};
       filteredTree.forEach((category) => {
         allOpen[category.id] = true;
       });
       setOpenGroups(allOpen);
+    } else {
+      // Search cleared: reset to default (all collapsed except selected category)
+      const defaultState: OpenGroupsState = {};
+      baseTree.forEach((category) => {
+        const hasSelection = selectedCategoryId === category.id;
+        defaultState[category.id] = hasSelection;
+      });
+      setOpenGroups(defaultState);
     }
-  }, [searchQuery, filteredTree]);
+  }, [searchQuery, filteredTree, baseTree, selectedCategoryId]);
 
   const selectedVariant = React.useMemo(() => {
     if (!selectedId) return null;
@@ -174,7 +192,7 @@ export default function NoticeTypeStep({
       aria-busy={continuePending ? "true" : undefined}
     >
       {/* Glass Section Header Card */}
-      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
+      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
         {guardMessage ? (
           <div
             className="mb-8 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white px-6 py-4 text-base font-medium text-amber-900 shadow-sm"
@@ -194,36 +212,45 @@ export default function NoticeTypeStep({
             </p>
           </div>
 
-          {/* Enhanced Search with Icon */}
-          <div className="relative mx-auto max-w-2xl">
-            <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-              <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search notice types... (press Esc to clear)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-2xl border border-slate-300 bg-white pl-12 pr-12 py-4 text-base text-slate-900 placeholder-slate-400 shadow-sm ring-1 ring-slate-200 transition-all duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-              aria-label="Search notice types"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  searchInputRef.current?.focus();
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Clear search (or press Escape)"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          {/* GDS-Compliant Search */}
+          <div className="relative mx-auto max-w-2xl space-y-2">
+            <label htmlFor="notice-search" className="sr-only">
+              Search notice types
+            </label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+                <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-              </button>
-            )}
+              </div>
+              <input
+                id="notice-search"
+                ref={searchInputRef}
+                type="search"
+                placeholder="e.g., Premises licence"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 bg-white pl-12 pr-12 py-4 text-base text-slate-900 placeholder-slate-600 shadow-sm ring-1 ring-slate-200 transition-all duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                aria-describedby="search-hint"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    searchInputRef.current?.focus();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                  aria-label="Clear search"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <p id="search-hint" className="text-sm text-slate-600">
+              Press Escape to clear your search
+            </p>
           </div>
 
           {/* Selected Notice Pill */}
@@ -257,7 +284,7 @@ export default function NoticeTypeStep({
 
       {/* Practice Area Filter Banner */}
       {practiceAreas && practiceAreas.length > 0 && (
-        <div className="overflow-hidden rounded-3xl border border-purple-200/80 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 p-8 shadow-[0_8px_32px_rgba(139,92,246,0.12)] backdrop-blur-sm">
+        <div className="overflow-hidden rounded-3xl border border-purple-200/80 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 p-4 sm:p-8 shadow-[0_8px_32px_rgba(139,92,246,0.12)] backdrop-blur-sm">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 shadow-lg shadow-purple-600/30">
@@ -300,7 +327,7 @@ export default function NoticeTypeStep({
 
       <div className="space-y-10">
         {!hasResults ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-16 text-center shadow-md">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-12 md:p-16 text-center shadow-md">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
               <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -310,9 +337,14 @@ export default function NoticeTypeStep({
             <p className="mt-3 text-lg text-slate-600">
               We couldn't find any notice types matching "<strong>{searchQuery}</strong>".
             </p>
-            <p className="mt-2 text-base text-slate-500">
-              Try different keywords or browse all categories below.
-            </p>
+            <div className="mt-4 space-y-2 text-base text-slate-600">
+              <p className="font-semibold">Try:</p>
+              <ul className="text-left inline-block space-y-1 text-slate-600">
+                <li>• Using broader terms (e.g., "licence" instead of "licensing")</li>
+                <li>• Common types: Premises licence, Planning notice, TRO</li>
+                <li>• Browsing all categories below</li>
+              </ul>
+            </div>
             <button
               onClick={() => {
                 setSearchQuery("");
@@ -334,10 +366,17 @@ export default function NoticeTypeStep({
           >
           {filteredTree.map((category) => {
             const isOpen = openGroups[category.id] ?? false;
+            // Calculate total number of notice types in this category
+            const totalVariants = category.groups.reduce(
+              (sum, group) => sum + group.variants.length,
+              0
+            );
             return (
               <DisclosureSection
                 key={category.id}
                 title={category.label}
+                icon={CATEGORY_ICONS[category.id]}
+                count={totalVariants}
                 open={isOpen}
                 onToggle={(event) => toggleGroup(category.id, event.currentTarget.open)}
               >
@@ -414,7 +453,7 @@ export default function NoticeTypeStep({
                   <button
                     type="button"
                     onClick={() => setShowGuidance(!showGuidance)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                    className="inline-flex items-center gap-2 h-9 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -427,7 +466,7 @@ export default function NoticeTypeStep({
                 type="button"
                 onClick={onContinue}
                 disabled={!selectedId || continuePending}
-                className={`inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                className={`inline-flex items-center gap-2 h-11 rounded-xl px-8 text-base font-bold shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
                   selectedId
                     ? 'bg-blue-600 text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] hover:bg-blue-700 hover:shadow-[0_12px_32px_rgba(37,99,235,0.45)] hover:scale-[1.02] active:scale-[0.98]'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'

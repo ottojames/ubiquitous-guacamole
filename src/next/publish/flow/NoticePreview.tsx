@@ -207,19 +207,18 @@ export default function NoticePreview({ text, highlights, activeHighlight, onHig
       <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-slate-50/30 shadow-inner">
         <AnimatePresence mode="wait" initial={false}>
           {!isEmpty ? (
-            <motion.pre
+            <motion.div
               key={safeText}
               initial={{ opacity: reduceMotion ? 1 : 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: reduceMotion ? 1 : 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.2 }}
-              className="notice-preview max-h-[600px] overflow-y-auto whitespace-pre-wrap break-words bg-white p-4 font-sans text-[14px] leading-[1.6] text-slate-800 [overflow-wrap:anywhere] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
+              className="notice-preview max-h-[600px] overflow-y-auto break-words bg-white p-4 font-sans text-[14px] leading-[1.6] text-slate-800 [overflow-wrap:anywhere] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
               style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
               }}
-            >
-              {segments}
-            </motion.pre>
+              dangerouslySetInnerHTML={{ __html: safeText }}
+            />
           ) : (
             <motion.div
               key="placeholder"

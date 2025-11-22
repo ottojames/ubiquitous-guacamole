@@ -1,0 +1,571 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - generic [ref=e4]:
+    - complementary [ref=e5]:
+      - generic [ref=e7]:
+        - heading "Wilson & Partners LLP" [level=2] [ref=e8]
+        - paragraph [ref=e9]: Law Firm Portal
+        - generic [ref=e10]: Owner
+      - navigation [ref=e11]:
+        - link "Dashboard" [ref=e12] [cursor=pointer]:
+          - /url: /f/wilson-partners/dashboard
+          - img [ref=e13] [cursor=pointer]
+          - generic [ref=e15] [cursor=pointer]: Dashboard
+        - link "Clients" [ref=e16] [cursor=pointer]:
+          - /url: /f/wilson-partners/clients
+          - img [ref=e17] [cursor=pointer]
+          - generic [ref=e19] [cursor=pointer]: Clients
+        - link "Notices" [ref=e20] [cursor=pointer]:
+          - /url: /f/wilson-partners/notices
+          - img [ref=e21] [cursor=pointer]
+          - generic [ref=e23] [cursor=pointer]: Notices
+        - link "Billing" [ref=e24] [cursor=pointer]:
+          - /url: /f/wilson-partners/billing
+          - img [ref=e25] [cursor=pointer]
+          - generic [ref=e27] [cursor=pointer]: Billing
+        - link "Team" [ref=e28] [cursor=pointer]:
+          - /url: /f/wilson-partners/team
+          - img [ref=e29] [cursor=pointer]
+          - generic [ref=e31] [cursor=pointer]: Team
+        - link "Settings" [ref=e32] [cursor=pointer]:
+          - /url: /f/wilson-partners/settings
+          - img [ref=e33] [cursor=pointer]
+          - generic [ref=e35] [cursor=pointer]: Settings
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - link "Switch Organization" [ref=e38] [cursor=pointer]:
+            - /url: /switch-context
+          - button "Sign Out" [ref=e39] [cursor=pointer]
+        - button "Collapse sidebar" [ref=e40] [cursor=pointer]:
+          - img [ref=e41] [cursor=pointer]
+    - main [ref=e43]:
+      - generic [ref=e49]:
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - heading "Upload your notice" [level=2] [ref=e53]
+            - paragraph [ref=e54]: You can upload a signed notice or build from our structured template. We'll extract your text automatically.
+          - generic [ref=e56]:
+            - button "Upload & OCR" [ref=e57] [cursor=pointer]
+            - button "Structured template" [pressed] [ref=e58] [cursor=pointer]
+        - generic [ref=e59]:
+          - heading "Confirmation email" [level=3] [ref=e60]
+          - paragraph [ref=e61]: We'll send your confirmation and receipt to this email address.
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - text: Email address
+              - generic [ref=e64]: "*"
+            - textbox "Email address *" [ref=e65]: test@example.com
+        - generic [ref=e66]:
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - generic [ref=e71]:
+                  - paragraph [ref=e72]: Structured fields
+                  - paragraph [ref=e73]: Tailored questions keep you compliant. Switch back to OCR at any point—your inputs are preserved.
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - heading "Premises Licence — New" [level=2] [ref=e77]
+                    - generic [ref=e78]:
+                      - heading "Complete the required details" [level=3] [ref=e79]
+                      - paragraph [ref=e80]: Fill in all the required fields below to create your notice.
+                    - generic [ref=e81]:
+                      - generic [ref=e82]:
+                        - heading "Applicant / Publisher" [level=3] [ref=e84]
+                        - generic [ref=e85]:
+                          - generic [ref=e86]:
+                            - generic [ref=e87]:
+                              - text: Applicant name
+                              - generic [ref=e88]: "*"
+                            - textbox "Applicant name*" [ref=e89]: Test Applicant Ltd
+                          - generic [ref=e90]:
+                            - generic [ref=e91]: Applicant status
+                            - combobox "Applicant status" [ref=e92]:
+                              - option "Select an option" [selected]
+                              - option "Individual"
+                              - option "Limited company"
+                              - option "Limited liability partnership (LLP)"
+                              - option "Partnership"
+                              - option "Charitable trust"
+                              - option "Other"
+                          - generic [ref=e93]:
+                            - generic [ref=e94]: Trading name (optional)
+                            - textbox "Trading name (optional)" [ref=e95]
+                          - generic [ref=e97]:
+                            - generic [ref=e98]:
+                              - generic [ref=e99]:
+                                - text: Applicant address
+                                - generic [ref=e100]: "*"
+                              - generic [ref=e101]:
+                                - textbox "Applicant address*" [ref=e102]
+                                - generic [ref=e103]: Start typing to look up the premises and pre-fill council details.
+                              - paragraph [ref=e104]: Start typing to look up the address and pre-fill details.
+                            - generic [ref=e105]:
+                              - generic [ref=e106]:
+                                - generic [ref=e107]:
+                                  - text: Address line 1
+                                  - generic [ref=e108]: "*"
+                                - textbox "Address line 1 *" [ref=e109]: 123 Test Street
+                              - generic [ref=e110]:
+                                - generic [ref=e111]: Address line 2
+                                - textbox "Address line 2" [ref=e112]: London
+                              - generic [ref=e113]:
+                                - generic [ref=e114]:
+                                  - generic [ref=e115]:
+                                    - text: Town/City
+                                    - generic [ref=e116]: "*"
+                                  - textbox "Town/City *" [ref=e117]: London
+                                - generic [ref=e118]:
+                                  - generic [ref=e119]:
+                                    - text: Postcode
+                                    - generic [ref=e120]: "*"
+                                  - textbox "Postcode *" [ref=e121]: SW1A 1AA
+                          - generic [ref=e122]:
+                            - generic [ref=e123]: Company number (optional)
+                            - textbox "Company number (optional)" [ref=e124]
+                      - generic [ref=e125]:
+                        - heading "Premises" [level=3] [ref=e127]
+                        - generic [ref=e128]:
+                          - generic [ref=e129]:
+                            - generic [ref=e130]:
+                              - text: Premises name
+                              - generic [ref=e131]: "*"
+                            - textbox "Premises name*" [ref=e132]: The Test Pub
+                            - paragraph [ref=e133]: Required if applicable to the premises
+                          - generic [ref=e135]:
+                            - generic [ref=e136]:
+                              - generic [ref=e137]:
+                                - text: Premises address
+                                - generic [ref=e138]: "*"
+                              - generic [ref=e139]:
+                                - textbox "Premises address*" [ref=e140]
+                                - generic [ref=e141]: Start typing to look up the premises and pre-fill council details.
+                              - paragraph [ref=e142]: Start typing to look up the address and pre-fill details.
+                            - generic [ref=e143]:
+                              - generic [ref=e144]:
+                                - generic [ref=e145]:
+                                  - text: Address line 1
+                                  - generic [ref=e146]: "*"
+                                - textbox "Address line 1 *" [ref=e147]: 456 High Street
+                              - generic [ref=e148]:
+                                - generic [ref=e149]: Address line 2
+                                - textbox "Address line 2" [ref=e150]: Westminster
+                              - generic [ref=e151]:
+                                - generic [ref=e152]:
+                                  - generic [ref=e153]:
+                                    - text: Town/City
+                                    - generic [ref=e154]: "*"
+                                  - textbox "Town/City *" [ref=e155]: Westminster
+                                - generic [ref=e156]:
+                                  - generic [ref=e157]:
+                                    - text: Postcode
+                                    - generic [ref=e158]: "*"
+                                  - textbox "Postcode *" [ref=e159]: SW1A 2AA
+                      - generic [ref=e161]:
+                        - generic [ref=e162]:
+                          - heading "Activities & hours *" [level=3] [ref=e163]:
+                            - text: Activities & hours
+                            - generic [ref=e164]: "*"
+                          - paragraph [ref=e165]: Select each activity you're applying for, then set the hours. Opening hours can differ from activity hours.
+                        - generic [ref=e166]:
+                          - generic [ref=e167]:
+                            - generic [ref=e168]:
+                              - heading "Opening hours" [level=4] [ref=e169]
+                              - paragraph [ref=e170]: Set the times when the premises is open to the public (optional).
+                            - generic [ref=e171]:
+                              - button "Copy to weekdays" [ref=e172] [cursor=pointer]
+                              - button "Copy to all days" [active] [ref=e173] [cursor=pointer]
+                              - button "24 hours" [ref=e174] [cursor=pointer]
+                              - button "Clear all" [ref=e175] [cursor=pointer]
+                          - generic [ref=e176]:
+                            - generic [ref=e177]:
+                              - generic [ref=e178]: Mon
+                              - textbox "Mon start time" [ref=e179]: 11:00
+                              - generic [ref=e180]: –
+                              - generic [ref=e181]: Mon end time
+                              - textbox "Mon end time" [ref=e182]: 23:00
+                              - generic [ref=e183] [cursor=pointer]:
+                                - checkbox "None" [ref=e184]
+                                - text: None
+                            - generic [ref=e185]:
+                              - generic [ref=e186]: Tue
+                              - textbox "Tue start time" [ref=e187]: 11:00
+                              - generic [ref=e188]: –
+                              - generic [ref=e189]: Tue end time
+                              - textbox "Tue end time" [ref=e190]: 23:00
+                              - generic [ref=e191] [cursor=pointer]:
+                                - checkbox "None" [ref=e192]
+                                - text: None
+                            - generic [ref=e193]:
+                              - generic [ref=e194]: Wed
+                              - textbox "Wed start time" [ref=e195]: 11:00
+                              - generic [ref=e196]: –
+                              - generic [ref=e197]: Wed end time
+                              - textbox "Wed end time" [ref=e198]: 23:00
+                              - generic [ref=e199] [cursor=pointer]:
+                                - checkbox "None" [ref=e200]
+                                - text: None
+                            - generic [ref=e201]:
+                              - generic [ref=e202]: Thu
+                              - textbox "Thu start time" [ref=e203]: 11:00
+                              - generic [ref=e204]: –
+                              - generic [ref=e205]: Thu end time
+                              - textbox "Thu end time" [ref=e206]: 23:00
+                              - generic [ref=e207] [cursor=pointer]:
+                                - checkbox "None" [ref=e208]
+                                - text: None
+                            - generic [ref=e209]:
+                              - generic [ref=e210]: Fri
+                              - textbox "Fri start time" [ref=e211]: 11:00
+                              - generic [ref=e212]: –
+                              - generic [ref=e213]: Fri end time
+                              - textbox "Fri end time" [ref=e214]: 23:00
+                              - generic [ref=e215] [cursor=pointer]:
+                                - checkbox "None" [ref=e216]
+                                - text: None
+                            - generic [ref=e217]:
+                              - generic [ref=e218]: Sat
+                              - textbox "Sat start time" [ref=e219]: 11:00
+                              - generic [ref=e220]: –
+                              - generic [ref=e221]: Sat end time
+                              - textbox "Sat end time" [ref=e222]: 23:00
+                              - generic [ref=e223] [cursor=pointer]:
+                                - checkbox "None" [ref=e224]
+                                - text: None
+                            - generic [ref=e225]:
+                              - generic [ref=e226]: Sun
+                              - textbox "Sun start time" [ref=e227]: 11:00
+                              - generic [ref=e228]: –
+                              - generic [ref=e229]: Sun end time
+                              - textbox "Sun end time" [ref=e230]: 23:00
+                              - generic [ref=e231] [cursor=pointer]:
+                                - checkbox "None" [ref=e232]
+                                - text: None
+                          - generic [ref=e233]:
+                            - generic [ref=e234]: "Summary:"
+                            - text: Mon–Sun 11:00–23:00
+                        - generic [ref=e235]:
+                          - generic [ref=e236]:
+                            - generic [ref=e237]:
+                              - checkbox "Sale of alcohol – On the premises (on-sales)" [checked] [ref=e238]
+                              - generic [ref=e239] [cursor=pointer]:
+                                - img [ref=e240] [cursor=pointer]
+                                - generic [ref=e242] [cursor=pointer]: Sale of alcohol – On the premises (on-sales)
+                              - button "What this activity means" [ref=e243] [cursor=pointer]:
+                                - img [ref=e244] [cursor=pointer]
+                            - generic [ref=e246]:
+                              - generic [ref=e247]:
+                                - paragraph [ref=e248]:
+                                  - text: Set the times when this activity may take place.
+                                  - generic [ref=e249]: "*"
+                                - generic [ref=e250]:
+                                  - button "Copy to weekdays" [ref=e251] [cursor=pointer]
+                                  - button "Copy to all days" [ref=e252] [cursor=pointer]
+                                  - button "24 hours" [ref=e253] [cursor=pointer]
+                                  - button "Clear all" [ref=e254] [cursor=pointer]
+                              - paragraph [ref=e256]: Set at least one day's hours for this activity
+                              - generic [ref=e257]:
+                                - generic [ref=e258]:
+                                  - generic [ref=e259]: Mon
+                                  - textbox "Mon start time" [disabled] [ref=e260]
+                                  - generic [ref=e261]: –
+                                  - generic [ref=e262]: Mon end time
+                                  - textbox "Mon end time" [disabled] [ref=e263]
+                                  - generic [ref=e264] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e265]
+                                    - text: None
+                                - generic [ref=e266]:
+                                  - generic [ref=e267]: Tue
+                                  - textbox "Tue start time" [disabled] [ref=e268]
+                                  - generic [ref=e269]: –
+                                  - generic [ref=e270]: Tue end time
+                                  - textbox "Tue end time" [disabled] [ref=e271]
+                                  - generic [ref=e272] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e273]
+                                    - text: None
+                                - generic [ref=e274]:
+                                  - generic [ref=e275]: Wed
+                                  - textbox "Wed start time" [disabled] [ref=e276]
+                                  - generic [ref=e277]: –
+                                  - generic [ref=e278]: Wed end time
+                                  - textbox "Wed end time" [disabled] [ref=e279]
+                                  - generic [ref=e280] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e281]
+                                    - text: None
+                                - generic [ref=e282]:
+                                  - generic [ref=e283]: Thu
+                                  - textbox "Thu start time" [disabled] [ref=e284]
+                                  - generic [ref=e285]: –
+                                  - generic [ref=e286]: Thu end time
+                                  - textbox "Thu end time" [disabled] [ref=e287]
+                                  - generic [ref=e288] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e289]
+                                    - text: None
+                                - generic [ref=e290]:
+                                  - generic [ref=e291]: Fri
+                                  - textbox "Fri start time" [disabled] [ref=e292]
+                                  - generic [ref=e293]: –
+                                  - generic [ref=e294]: Fri end time
+                                  - textbox "Fri end time" [disabled] [ref=e295]
+                                  - generic [ref=e296] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e297]
+                                    - text: None
+                                - generic [ref=e298]:
+                                  - generic [ref=e299]: Sat
+                                  - textbox "Sat start time" [disabled] [ref=e300]
+                                  - generic [ref=e301]: –
+                                  - generic [ref=e302]: Sat end time
+                                  - textbox "Sat end time" [disabled] [ref=e303]
+                                  - generic [ref=e304] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e305]
+                                    - text: None
+                                - generic [ref=e306]:
+                                  - generic [ref=e307]: Sun
+                                  - textbox "Sun start time" [disabled] [ref=e308]
+                                  - generic [ref=e309]: –
+                                  - generic [ref=e310]: Sun end time
+                                  - textbox "Sun end time" [disabled] [ref=e311]
+                                  - generic [ref=e312] [cursor=pointer]:
+                                    - checkbox "None" [checked] [ref=e313]
+                                    - text: None
+                              - generic [ref=e314]:
+                                - generic [ref=e315]: Seasonal or Bank Holiday variations (optional, max 120 chars)
+                                - textbox "Seasonal or Bank Holiday variations (optional, max 120 chars)" [ref=e316]
+                              - generic [ref=e317]:
+                                - generic [ref=e318]: "Summary:"
+                                - text: No hours set
+                          - generic [ref=e320]:
+                            - checkbox "Sale of alcohol – Off the premises (off-sales)" [ref=e321]
+                            - generic [ref=e322] [cursor=pointer]:
+                              - img [ref=e323] [cursor=pointer]
+                              - generic [ref=e325] [cursor=pointer]: Sale of alcohol – Off the premises (off-sales)
+                            - button "What this activity means" [ref=e326] [cursor=pointer]:
+                              - img [ref=e327] [cursor=pointer]
+                          - generic [ref=e330]:
+                            - checkbox "Sale of alcohol – On & off the premises" [ref=e331]
+                            - generic [ref=e332] [cursor=pointer]:
+                              - img [ref=e333] [cursor=pointer]
+                              - generic [ref=e335] [cursor=pointer]: Sale of alcohol – On & off the premises
+                            - button "What this activity means" [ref=e336] [cursor=pointer]:
+                              - img [ref=e337] [cursor=pointer]
+                          - generic [ref=e340]:
+                            - checkbox "Performance of live music" [ref=e341]
+                            - generic [ref=e342] [cursor=pointer]:
+                              - img [ref=e343] [cursor=pointer]
+                              - generic [ref=e345] [cursor=pointer]: Performance of live music
+                            - button "What this activity means" [ref=e346] [cursor=pointer]:
+                              - img [ref=e347] [cursor=pointer]
+                          - generic [ref=e350]:
+                            - checkbox "Playing of recorded music" [ref=e351]
+                            - generic [ref=e352] [cursor=pointer]:
+                              - img [ref=e353] [cursor=pointer]
+                              - generic [ref=e355] [cursor=pointer]: Playing of recorded music
+                            - button "What this activity means" [ref=e356] [cursor=pointer]:
+                              - img [ref=e357] [cursor=pointer]
+                          - generic [ref=e360]:
+                            - checkbox "Performance of dance" [ref=e361]
+                            - generic [ref=e362] [cursor=pointer]:
+                              - img [ref=e363] [cursor=pointer]
+                              - generic [ref=e365] [cursor=pointer]: Performance of dance
+                            - button "What this activity means" [ref=e366] [cursor=pointer]:
+                              - img [ref=e367] [cursor=pointer]
+                          - generic [ref=e370]:
+                            - checkbox "Exhibition of films" [ref=e371]
+                            - generic [ref=e372] [cursor=pointer]:
+                              - img [ref=e373] [cursor=pointer]
+                              - generic [ref=e375] [cursor=pointer]: Exhibition of films
+                            - button "What this activity means" [ref=e376] [cursor=pointer]:
+                              - img [ref=e377] [cursor=pointer]
+                          - generic [ref=e380]:
+                            - checkbox "Indoor sporting events" [ref=e381]
+                            - generic [ref=e382] [cursor=pointer]:
+                              - img [ref=e383] [cursor=pointer]
+                              - generic [ref=e385] [cursor=pointer]: Indoor sporting events
+                            - button "What this activity means" [ref=e386] [cursor=pointer]:
+                              - img [ref=e387] [cursor=pointer]
+                          - generic [ref=e390]:
+                            - checkbox "Boxing or wrestling entertainment" [ref=e391]
+                            - generic [ref=e392] [cursor=pointer]:
+                              - img [ref=e393] [cursor=pointer]
+                              - generic [ref=e395] [cursor=pointer]: Boxing or wrestling entertainment
+                            - button "What this activity means" [ref=e396] [cursor=pointer]:
+                              - img [ref=e397] [cursor=pointer]
+                          - generic [ref=e400]:
+                            - checkbox "Late night refreshment" [ref=e401]
+                            - generic [ref=e402] [cursor=pointer]:
+                              - img [ref=e403] [cursor=pointer]
+                              - generic [ref=e405] [cursor=pointer]: Late night refreshment
+                            - button "What this activity means" [ref=e406] [cursor=pointer]:
+                              - img [ref=e407] [cursor=pointer]
+                        - generic [ref=e409]:
+                          - generic [ref=e410]:
+                            - heading "Designated Premises Supervisor (DPS)" [level=4] [ref=e411]
+                            - paragraph [ref=e412]: Required when alcohol is supplied under a Premises Licence.
+                          - generic [ref=e413]:
+                            - generic [ref=e414]:
+                              - generic [ref=e415]:
+                                - text: DPS name
+                                - generic [ref=e416]: "*"
+                              - textbox "DPS name *" [ref=e417]: John Smith
+                            - generic [ref=e418]:
+                              - generic [ref=e419]: DPS licensing authority
+                              - textbox "DPS licensing authority" [ref=e420]: Westminster City Council
+                      - generic [ref=e421]:
+                        - heading "Dates" [level=3] [ref=e423]
+                        - generic [ref=e424]:
+                          - generic [ref=e425]:
+                            - generic [ref=e426]:
+                              - text: Application date
+                              - generic [ref=e427]: "*"
+                            - textbox "Application date*" [ref=e428]: 2025-11-20
+                          - generic [ref=e429]:
+                            - generic [ref=e430]: Publication date (optional)
+                            - textbox "Publication date (optional)" [ref=e431]
+                          - generic [ref=e432]:
+                            - generic [ref=e433]:
+                              - text: Representation deadline
+                              - generic [ref=e434]: "*"
+                            - textbox "Representation deadline*" [ref=e435]: 2025-12-18
+                            - paragraph [ref=e436]: We've set this to 28 days from the day after your application date. Change only if instructed by the authority.
+                      - generic [ref=e437]:
+                        - heading "Authority & representations" [level=3] [ref=e439]
+                        - generic [ref=e440]:
+                          - generic [ref=e441]:
+                            - generic [ref=e442]:
+                              - text: Licensing authority name
+                              - generic [ref=e443]: "*"
+                            - generic [ref=e445]:
+                              - textbox "Licensing authority name*" [ref=e446]: Westminster City Council
+                              - generic:
+                                - img
+                          - generic [ref=e448]:
+                            - generic [ref=e449]:
+                              - generic [ref=e450]:
+                                - text: Authority address
+                                - generic [ref=e451]: "*"
+                              - generic [ref=e452]:
+                                - textbox "Authority address*" [ref=e453]
+                                - generic [ref=e454]: Start typing to look up the premises and pre-fill council details.
+                              - paragraph [ref=e455]: Start typing to look up the address and pre-fill details.
+                            - generic [ref=e456]:
+                              - generic [ref=e457]:
+                                - generic [ref=e458]:
+                                  - text: Address line 1
+                                  - generic [ref=e459]: "*"
+                                - textbox "Address line 1 *" [ref=e460]
+                              - generic [ref=e461]:
+                                - generic [ref=e462]: Address line 2
+                                - textbox "Address line 2" [ref=e463]
+                              - generic [ref=e464]:
+                                - generic [ref=e465]:
+                                  - generic [ref=e466]:
+                                    - text: Town/City
+                                    - generic [ref=e467]: "*"
+                                  - textbox "Town/City *" [ref=e468]
+                                - generic [ref=e469]:
+                                  - generic [ref=e470]:
+                                    - text: Postcode
+                                    - generic [ref=e471]: "*"
+                                  - textbox "Postcode *" [ref=e472]
+                          - generic [ref=e473]:
+                            - generic [ref=e474]: Authority email
+                            - textbox "Authority email" [ref=e475]: licensing-demo@westminster-demo.civicnotices.co.uk
+                          - generic [ref=e476]:
+                            - generic [ref=e477]: Authority phone (optional)
+                            - textbox "Authority phone (optional)" [ref=e478]
+                          - generic [ref=e479]:
+                            - generic [ref=e480]: Online register URL (optional)
+                            - textbox "Online register URL (optional)" [ref=e481]
+                  - button "Load example data" [ref=e482] [cursor=pointer]
+              - paragraph [ref=e483]: Already have a signed notice? Choose Upload & OCR to extract the text automatically.
+            - generic [ref=e486]:
+              - button "Back" [ref=e487] [cursor=pointer]:
+                - img [ref=e488] [cursor=pointer]
+                - text: Back
+              - generic [ref=e490]:
+                - generic [ref=e491]:
+                  - paragraph [ref=e492]: Complete required fields
+                  - paragraph [ref=e493]: All mandatory fields must appear on the public notice.
+                - button "Continue" [disabled] [ref=e494]:
+                  - text: Continue
+                  - img [ref=e495]
+          - complementary "Preview and guidance" [ref=e497]:
+            - generic [ref=e498]:
+              - generic [ref=e499]:
+                - generic [ref=e500]:
+                  - heading "Preview" [level=3] [ref=e501]
+                  - generic [ref=e502]:
+                    - button "OCR text" [ref=e503] [cursor=pointer]
+                    - button "Structured fields" [ref=e504] [cursor=pointer]
+                - generic [ref=e506]:
+                  - generic [ref=e508]:
+                    - button "Copy text" [ref=e509] [cursor=pointer]:
+                      - img [ref=e510] [cursor=pointer]
+                      - generic [ref=e512] [cursor=pointer]: Copy
+                    - button "Download .txt" [ref=e513] [cursor=pointer]:
+                      - img [ref=e514] [cursor=pointer]
+                      - generic [ref=e516] [cursor=pointer]: Download
+                    - button "Download proof manifest" [ref=e517] [cursor=pointer]:
+                      - img [ref=e518] [cursor=pointer]
+                      - generic [ref=e520] [cursor=pointer]: Proof
+                  - generic [ref=e522]:
+                    - img [ref=e523]
+                    - paragraph [ref=e525]: No preview yet
+                    - paragraph [ref=e526]: Upload a file or complete the form to see your notice
+              - generic [ref=e527]:
+                - heading "Template Fields" [level=3] [ref=e529]
+                - generic [ref=e530]:
+                  - generic [ref=e531]:
+                    - img [ref=e532]
+                    - generic [ref=e534]:
+                      - text: Confirmation email
+                      - generic [ref=e535]: "*"
+                  - generic [ref=e536]:
+                    - img [ref=e537]
+                    - generic [ref=e539]:
+                      - text: Applicant name
+                      - generic [ref=e540]: "*"
+                  - generic [ref=e541]:
+                    - img [ref=e542]
+                    - generic [ref=e544]:
+                      - text: Applicant address
+                      - generic [ref=e545]: "*"
+                  - generic [ref=e546]:
+                    - img [ref=e547]
+                    - generic [ref=e549]:
+                      - text: Premises name
+                      - generic [ref=e550]: "*"
+                  - generic [ref=e551]:
+                    - img [ref=e552]
+                    - generic [ref=e554]:
+                      - text: Premises address
+                      - generic [ref=e555]: "*"
+                  - generic [ref=e556]:
+                    - img [ref=e557]
+                    - generic [ref=e559]:
+                      - text: Licensable activities
+                      - generic [ref=e560]: "*"
+                  - generic [ref=e561]:
+                    - img [ref=e562]
+                    - generic [ref=e564]:
+                      - text: Designated premises supervisor (DPS)
+                      - generic [ref=e565]: "*"
+                  - generic [ref=e566]:
+                    - img [ref=e567]
+                    - generic [ref=e569]:
+                      - text: Application date
+                      - generic [ref=e570]: "*"
+                  - generic [ref=e571]:
+                    - img [ref=e572]
+                    - generic [ref=e574]:
+                      - text: Representation deadline
+                      - generic [ref=e575]: "*"
+                  - generic [ref=e576]:
+                    - img [ref=e577]
+                    - generic [ref=e579]:
+                      - text: Licensing authority name
+                      - generic [ref=e580]: "*"
+```

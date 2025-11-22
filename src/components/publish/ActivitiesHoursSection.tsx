@@ -266,6 +266,11 @@ export default function ActivitiesHoursSection({
     (a) => a.group === "alcohol" && value.activities[a.key]?.enabled
   );
 
+  // Check if any activities are selected
+  const hasSelectedActivities = Object.values(value.activities).some(
+    (activity) => activity?.enabled
+  );
+
   const updateOpeningHours = (hours: Record<DayKey, DayHours>) => {
     onChange({ ...value, openingHours: hours });
   };
@@ -286,12 +291,24 @@ export default function ActivitiesHoursSection({
       {/* Section header */}
       <div className="space-y-1">
         <h3 className="text-[14px] font-semibold tracking-tight text-slate-900">
-          Activities & hours
+          Activities & hours <span className="text-rose-500">*</span>
         </h3>
         <p className="text-[13px] leading-relaxed text-slate-500">
           Select each activity you're applying for, then set the hours. Opening hours can differ from activity hours.
         </p>
       </div>
+
+      {/* Validation message if no activities selected */}
+      {!hasSelectedActivities && (
+        <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-amber-900">
+            Select at least one licensable activity
+          </p>
+          <p className="mt-0.5 text-[12px] leading-relaxed text-amber-700">
+            You must select and configure at least one activity to proceed with your application.
+          </p>
+        </div>
+      )}
 
       {/* Opening hours */}
       <OpeningHoursPanel
@@ -341,6 +358,10 @@ export default function ActivitiesHoursSection({
                     : "border-slate-300 focus:border-blue-500 focus:ring-blue-500/10"
                 } bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-400 focus:outline-none focus:ring-4`}
                 maxLength={200}
+                placeholder="e.g., John Smith"
+                required
+                aria-required="true"
+                aria-invalid={!!errors?.dpsName?.length}
               />
               {errors?.dpsName?.map((error, i) => (
                 <p key={i} className="text-[12px] leading-relaxed text-rose-600">
@@ -518,7 +539,7 @@ function ActivityPanel({
         <div className="space-y-4 border-t border-slate-200/70 p-5">
           <div className="space-y-2">
             <p className="text-[12px] font-medium text-slate-600">
-              Set the times when this activity may take place.
+              Set the times when this activity may take place. <span className="text-rose-500">*</span>
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -552,6 +573,15 @@ function ActivityPanel({
               </button>
             </div>
           </div>
+
+          {/* Warning if no hours set */}
+          {!DAYS.some((day) => schedule.hours[day] !== null) && (
+            <div className="rounded-lg border border-amber-200/70 bg-amber-50/50 px-3 py-2">
+              <p className="text-[12px] font-medium text-amber-800">
+                Set at least one day's hours for this activity
+              </p>
+            </div>
+          )}
 
           <DayHoursEditor hours={schedule.hours} onChange={updateHours} />
 

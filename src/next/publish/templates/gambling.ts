@@ -11,7 +11,7 @@ const TEMPLATES: Record<string, string> = {
   "gambling-betting-new": `GAMBLING ACT 2005, SCHEDULE 9
 APPLICATION FOR A NEW BETTING PREMISES LICENCE
 
-{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a betting premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a betting premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if LICENSABLE_ACTIVITIES}} Proposed activities: {{LICENSABLE_ACTIVITIES}}.{{/if}}{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
 
 Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
@@ -47,7 +47,7 @@ Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
   "gambling-bingo-new": `GAMBLING ACT 2005, SCHEDULE 9
 APPLICATION FOR A NEW BINGO PREMISES LICENCE
 
-{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a bingo premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a bingo premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if LICENSABLE_ACTIVITIES}} Proposed activities: {{LICENSABLE_ACTIVITIES}}.{{/if}}{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
 
 Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
@@ -83,7 +83,7 @@ Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
   "gambling-agc-new": `GAMBLING ACT 2005, SCHEDULE 9
 APPLICATION FOR A NEW ADULT GAMING CENTRE PREMISES LICENCE
 
-{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for an Adult Gaming Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for an Adult Gaming Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if LICENSABLE_ACTIVITIES}} Proposed activities: {{LICENSABLE_ACTIVITIES}}.{{/if}}{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
 
 Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
@@ -119,7 +119,7 @@ Inspection and representation details as above. Deadline: {{DEADLINE_DATE}}.`,
   "gambling-fec-new": `GAMBLING ACT 2005, SCHEDULE 9
 APPLICATION FOR A NEW FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
 
-{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a Family Entertainment Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
+{{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}} for a Family Entertainment Centre premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.{{#if LICENSABLE_ACTIVITIES}} Proposed activities: {{LICENSABLE_ACTIVITIES}}.{{/if}}{{#if OPENING_HOURS}} Proposed hours: {{OPENING_HOURS}}.{{/if}}
 
 Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 

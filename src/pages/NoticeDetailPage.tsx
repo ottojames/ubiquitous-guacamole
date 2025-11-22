@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Calendar, Clock, FileText, User, Building2,
-  ArrowLeft, ExternalLink, Download, Share2, AlertCircle
+  ArrowLeft, ExternalLink, Download, Share2, AlertCircle, MessageSquare, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import * as UI from '@/styles/ui';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useRepresentations, type Representation } from '@/hooks/useRepresentations';
 
 const NAV_LINKS = [
   { href: '/#notices', label: 'Find notices' },
@@ -30,9 +31,14 @@ type NoticeDetail = {
   longitude: number | null;
   applicantName: string | null;
   applicantAddress: string | null;
+  applicantEmail: string | null;
+  dpsName: string | null;
+  dpsLicenceNumber: string | null;
+  applicationReference: string | null;
   licensingActivities: string[];
   openingHours: string | null;
   description: string | null;
+  contactEmail: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -87,6 +93,10 @@ export default function NoticeDetailPage() {
   const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
   const [mapLoading, setMapLoading] = useState(true);
   const [mapError, setMapError] = useState(false);
+
+  // Fetch representations for this notice
+  const { representations, stats, loading: repsLoading } = useRepresentations(id);
+  const [representationsFilter, setRepresentationsFilter] = useState<'all' | 'objection' | 'support' | 'comment'>('all');
 
   useEffect(() => {
     if (!id) {
@@ -384,10 +394,87 @@ export default function NoticeDetailPage() {
                   <User className="h-6 w-6 text-blue-600" />
                   <h2 className="text-xl font-bold text-slate-900">Applicant Information</h2>
                 </div>
+                <div className="space-y-3 pl-9">
+                  <div>
+                    <p className="text-slate-900 font-medium">{notice.applicantName}</p>
+                    {notice.applicantAddress && (
+                      <p className="text-slate-600 text-sm mt-1">{notice.applicantAddress}</p>
+                    )}
+                  </div>
+                  {notice.applicantEmail && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Contact</p>
+                      <a href={`mailto:${notice.applicantEmail}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        {notice.applicantEmail}
+                      </a>
+                    </div>
+                  )}
+                  {notice.applicationReference && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Application Reference</p>
+                      <p className="text-slate-900 text-sm font-mono">{notice.applicationReference}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Licensing Activities & Operating Hours */}
+            {(notice.licensingActivities?.length > 0 || notice.openingHours) && (
+              <div className="rounded-3xl border border-white/70 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-bold text-slate-900">Licensed Activities & Hours</h2>
+                </div>
+
+                {notice.licensingActivities?.length > 0 && (
+                  <div className="mb-6 pl-9">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Licensed Activities</p>
+                    <div className="flex flex-wrap gap-2">
+                      {notice.licensingActivities.map((activity: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-900"
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                          {activity}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {notice.openingHours && (
+                  <div className="pl-9">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Operating Hours</p>
+                    <div className="space-y-2">
+                      {typeof notice.openingHours === 'object' && !Array.isArray(notice.openingHours) ? (
+                        Object.entries(notice.openingHours).map(([day, hours]) => (
+                          <div key={day} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                            <span className="text-slate-900 font-medium capitalize">{day}</span>
+                            <span className="text-slate-600 font-mono text-sm">{String(hours)}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-600">{String(notice.openingHours)}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* DPS Information */}
+            {notice.dpsName && (
+              <div className="rounded-3xl border border-white/70 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-3 mb-4">
+                  <User className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-bold text-slate-900">Designated Premises Supervisor</h2>
+                </div>
                 <div className="space-y-2 pl-9">
-                  <p className="text-slate-900 font-medium">{notice.applicantName}</p>
-                  {notice.applicantAddress && (
-                    <p className="text-slate-600 text-sm">{notice.applicantAddress}</p>
+                  <p className="text-slate-900 font-medium">{notice.dpsName}</p>
+                  {notice.dpsLicenceNumber && (
+                    <p className="text-slate-600 text-sm">Licence: {notice.dpsLicenceNumber}</p>
                   )}
                 </div>
               </div>
@@ -408,6 +495,51 @@ export default function NoticeDetailPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* How to Respond - Council Contact */}
+            {notice.noticeType?.includes('licensing') && notice.contactEmail && (
+              <div className="rounded-3xl border border-blue-200 bg-blue-50 p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-3 mb-4">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-bold text-slate-900">How to Submit Representations</h2>
+                </div>
+                <div className="space-y-4 text-sm text-slate-700">
+                  <p className="leading-relaxed">
+                    Any person wishing to make a representation about this application should do so in writing to the licensing authority before the deadline above.
+                  </p>
+                  <div className="bg-white rounded-xl p-4 border border-blue-200">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Licensing Authority Contact</p>
+                    <a href={`mailto:${notice.contactEmail}`} className="text-blue-600 hover:text-blue-700 font-medium break-all">
+                      {notice.contactEmail}
+                    </a>
+                  </div>
+                  <div className="pt-4 border-t border-blue-200">
+                    <p className="font-semibold text-slate-900 mb-2">Relevant Licensing Objectives:</p>
+                    <ul className="space-y-1.5 ml-4">
+                      <li className="flex gap-2 items-start">
+                        <span className="text-blue-600 font-bold">•</span>
+                        <span>The prevention of crime and disorder</span>
+                      </li>
+                      <li className="flex gap-2 items-start">
+                        <span className="text-blue-600 font-bold">•</span>
+                        <span>Public safety</span>
+                      </li>
+                      <li className="flex gap-2 items-start">
+                        <span className="text-blue-600 font-bold">•</span>
+                        <span>The prevention of public nuisance</span>
+                      </li>
+                      <li className="flex gap-2 items-start">
+                        <span className="text-blue-600 font-bold">•</span>
+                        <span>The protection of children from harm</span>
+                      </li>
+                    </ul>
+                    <p className="mt-3 text-xs text-slate-600 italic">
+                      Representations must relate to one or more of these licensing objectives under the Licensing Act 2003.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -522,6 +654,211 @@ export default function NoticeDetailPage() {
             )}
           </div>
         </div>
+
+        {/* PUBLIC REPRESENTATIONS SECTION - LEGALLY REQUIRED (Licensing Act 2003 s.35(5)) */}
+        {stats.total > 0 && (
+          <div className="mt-16">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+              {/* Header with Stats */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="h-7 w-7 text-blue-600" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      Public Representations ({stats.total})
+                    </h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                      All representations are public documents under the Licensing Act 2003
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filter Buttons */}
+              <div className="flex flex-wrap gap-3 mb-8">
+                <button
+                  onClick={() => setRepresentationsFilter('all')}
+                  className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                    representationsFilter === 'all'
+                      ? 'bg-slate-900 text-white shadow-lg'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  All ({stats.total})
+                </button>
+                {stats.objections > 0 && (
+                  <button
+                    onClick={() => setRepresentationsFilter('objection')}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                      representationsFilter === 'objection'
+                        ? 'bg-red-600 text-white shadow-lg'
+                        : 'bg-red-50 text-red-700 hover:bg-red-100'
+                    }`}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    Objections ({stats.objections})
+                  </button>
+                )}
+                {stats.support > 0 && (
+                  <button
+                    onClick={() => setRepresentationsFilter('support')}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                      representationsFilter === 'support'
+                        ? 'bg-green-600 text-white shadow-lg'
+                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                    }`}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    Support ({stats.support})
+                  </button>
+                )}
+                {stats.comments > 0 && (
+                  <button
+                    onClick={() => setRepresentationsFilter('comment')}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+                      representationsFilter === 'comment'
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    }`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Comments ({stats.comments})
+                  </button>
+                )}
+              </div>
+
+              {/* Representations List */}
+              <div className="space-y-6">
+                {repsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+                    <p className="text-sm text-slate-600">Loading representations...</p>
+                  </div>
+                ) : (
+                  representations
+                    .filter((rep) => representationsFilter === 'all' || rep.type === representationsFilter)
+                    .map((rep) => (
+                      <div
+                        key={rep.id}
+                        className={`rounded-2xl border-2 p-6 transition-all ${
+                          rep.type === 'objection'
+                            ? 'border-red-200 bg-red-50/50'
+                            : rep.type === 'support'
+                            ? 'border-green-200 bg-green-50/50'
+                            : 'border-blue-200 bg-blue-50/50'
+                        }`}
+                      >
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-lg font-bold text-slate-900">
+                                {rep.representor_name}
+                              </span>
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                                  rep.type === 'objection'
+                                    ? 'bg-red-600 text-white'
+                                    : rep.type === 'support'
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-blue-600 text-white'
+                                }`}
+                              >
+                                {rep.type === 'objection' && <ThumbsDown className="h-3 w-3" />}
+                                {rep.type === 'support' && <ThumbsUp className="h-3 w-3" />}
+                                {rep.type === 'comment' && <MessageSquare className="h-3 w-3" />}
+                                {rep.type}
+                              </span>
+                            </div>
+                            {rep.representor_address && typeof rep.representor_address === 'object' && rep.representor_address.town && (
+                              <p className="text-sm text-slate-600">
+                                Resident of {rep.representor_address.town}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-slate-500 mb-1">Submitted</p>
+                            <p className="text-sm font-medium text-slate-700">
+                              {formatDate(rep.submitted_at)}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1 font-mono">
+                              Ref: {rep.reference_number}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Grounds (for licensing objections) */}
+                        {rep.grounds && (
+                          <div className="mb-4 rounded-lg bg-white/80 p-3 border border-slate-200">
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                              Licensing Grounds Cited
+                            </p>
+                            <div className="text-sm text-slate-700">
+                              {Array.isArray(rep.grounds) ? (
+                                <ul className="space-y-1">
+                                  {rep.grounds.map((ground: string, idx: number) => (
+                                    <li key={idx} className="flex items-start gap-2">
+                                      <span className="text-blue-600 mt-0.5">•</span>
+                                      <span>{ground}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : typeof rep.grounds === 'object' && rep.grounds !== null ? (
+                                <div className="space-y-2">
+                                  {rep.grounds.concerns && (
+                                    <div>
+                                      <span className="font-semibold">Concerns: </span>
+                                      <span>{rep.grounds.concerns}</span>
+                                    </div>
+                                  )}
+                                  {rep.grounds.support_reason && (
+                                    <div>
+                                      <span className="font-semibold">Reason: </span>
+                                      <span>{rep.grounds.support_reason}</span>
+                                    </div>
+                                  )}
+                                  {rep.grounds.licensing_objectives && Array.isArray(rep.grounds.licensing_objectives) && (
+                                    <div>
+                                      <span className="font-semibold">Licensing Objectives: </span>
+                                      <ul className="mt-1 space-y-1">
+                                        {rep.grounds.licensing_objectives.map((obj: string, idx: number) => (
+                                          <li key={idx} className="flex items-start gap-2 ml-4">
+                                            <span className="text-blue-600 mt-0.5">•</span>
+                                            <span>{obj}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span>{String(rep.grounds)}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Representation Text */}
+                        <div className="rounded-lg bg-white p-4 border border-slate-200">
+                          <p className="text-slate-800 leading-relaxed whitespace-pre-wrap">
+                            {rep.representation_text}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+
+              {/* No representations message when filtered */}
+              {!repsLoading && representations.filter((rep) => representationsFilter === 'all' || rep.type === representationsFilter).length === 0 && (
+                <div className="text-center py-12 text-slate-500">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p className="text-lg font-medium">No {representationsFilter !== 'all' ? representationsFilter + 's' : 'representations'} to display</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

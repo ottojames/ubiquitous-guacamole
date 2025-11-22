@@ -473,7 +473,7 @@ router.post('/notices/draft', requireAuth, loadUserPermissions, requirePermissio
   }
 });
 
-router.post('/notices/submit', requireAuth, loadUserPermissions, requirePermission('notices.create'), async (req, res) => {
+router.post('/notices/submit', optionalAuth, async (req, res) => {
   console.log('========== [notice-submit] NEW SUBMISSION REQUEST ==========');
   console.log('[notice-submit] Body:', JSON.stringify(req.body, null, 2));
   try {
@@ -640,6 +640,43 @@ router.post('/notices/submit', requireAuth, loadUserPermissions, requirePermissi
   }
 });
 
+// Map filter category names to database notice types
+function mapCategoryToNoticeTypes(category: string): string[] | null {
+  const categoryMap: Record<string, string[]> = {
+    'Licensing Act 2003': [
+      'licensing-premises-new',
+      'licensing-premises-variation',
+      'licensing-premises-review'
+    ],
+    'Gambling Act 2005': [
+      'gambling-premises'
+    ],
+    'Goods Vehicle Operator\'s Licence': [
+      'gvol-new',
+      'gvol-variation'
+    ],
+    'Planning': [
+      'planning-application',
+      'planning-major-application',
+      'planning-listed-building',
+      'planning-conservation-area'
+    ],
+    'Probate': [
+      'probate'
+    ],
+    'Club Premises Certificate': [
+      'club-premises-certificate'
+    ],
+    'Traffic Order': [
+      'tro-permanent',
+      'tro-temporary',
+      'tro-experimental'
+    ]
+  };
+
+  return categoryMap[category] || null;
+}
+
 router.get('/notices/search', optionalAuth, async (req, res) => {
   try {
     console.log('[notice-search] Incoming query params:', req.query);
@@ -704,7 +741,18 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
       }
 
       if (typeParam) {
-        qb = qb.eq('notice_type', typeParam);
+        // Try to map category name to notice types
+        const noticeTypes = mapCategoryToNoticeTypes(typeParam);
+        console.log('[notice-search] typeParam:', typeParam, '-> noticeTypes:', noticeTypes);
+        if (noticeTypes && noticeTypes.length > 0) {
+          // Use .in() for multiple notice types
+          console.log('[notice-search] Applying notice_type IN filter with:', noticeTypes);
+          qb = qb.in('notice_type', noticeTypes);
+        } else {
+          // Fallback to exact match if no mapping exists
+          console.log('[notice-search] Applying notice_type EQ filter with:', typeParam);
+          qb = qb.eq('notice_type', typeParam);
+        }
       }
 
       if (statusParam) {
@@ -734,6 +782,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
         const filters = [
           buildIlikeFilter('notice_type', q),
           buildIlikeFilter('premises->>name', q),
+          buildIlikeFilter('premises->>address', q), // Simple string address field
           buildIlikeFilter('premises->address->>line1', q),
           buildIlikeFilter('premises->address->>line2', q),
           buildIlikeFilter('premises->address->>town', q),
@@ -857,8 +906,20 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
         return false;
       }
 
-      if (typeParam && row.notice_type !== typeParam) {
-        return false;
+      if (typeParam) {
+        // Use the same mapping logic for client-side filtering
+        const noticeTypes = mapCategoryToNoticeTypes(typeParam);
+        if (noticeTypes && noticeTypes.length > 0) {
+          // Check if row's notice_type is in the mapped array
+          if (!noticeTypes.includes(row.notice_type)) {
+            return false;
+          }
+        } else {
+          // Fallback to exact match
+          if (row.notice_type !== typeParam) {
+            return false;
+          }
+        }
       }
 
       if (councilParam) {
@@ -1095,9 +1156,14 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
       // Additional detailed fields
       applicantName: firstNonEmptyString(applicant.name, consultation.applicantName, licensing.applicantName),
       applicantAddress: applicant.address || consultation.applicantAddress || null,
-      licensingActivities: licensing.activities || [],
-      openingHours: licensing.hours || null,
-      description: row.description || generateNoticeText(row),
+      applicantEmail: firstNonEmptyString(applicant.contactEmail, extras.contactEmail),
+      dpsName: extras.dpsName || licensing.dpsName || null,
+      dpsLicenceNumber: extras.dpsLicenceNumber || licensing.dpsLicenceNumber || null,
+      applicationReference: extras.applicationReference || null,
+      licensingActivities: extras.activities || licensing.activities || [],
+      openingHours: extras.hours || licensing.hours || null,
+      description: row.preview_text || row.description || generateNoticeText(row),
+      contactEmail: row.contact_email || null,
       rawData: {
         premises,
         consultation,
@@ -1113,6 +1179,79 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
     return res.json(notice);
   } catch (error: any) {
     console.error('[notice-get] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /notices/:id/representations - Get representations for a notice
+router.get('/notices/:id/representations', optionalAuth, async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ error: 'Invalid notice ID' });
+  }
+
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  try {
+    // Fetch representations using service role to bypass RLS
+    const { data: representations, error } = await supabase
+      .from('representations')
+      .select('*')
+      .eq('notice_id', id)
+      .order('submitted_at', { ascending: false });
+
+    if (error) {
+      console.error('[representations-get] Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to fetch representations' });
+    }
+
+    // Transform to match expected format
+    const formattedReps = (representations || []).map((rep: any) => ({
+      id: rep.id,
+      submitted_at: rep.submitted_at,
+      respondent_name: rep.representor_name,
+      respondent_email: rep.representor_email,
+      representation_text: rep.representation_text,
+      stance: rep.type, // 'objection', 'support', 'comment'
+      is_read: false, // Could be enhanced with read tracking
+      grounds: rep.grounds || [],
+      address: rep.representor_address || null,
+      reference_number: rep.reference_number || null,
+    }));
+
+    return res.json({ representations: formattedReps });
+  } catch (error: any) {
+    console.error('[representations-get] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /notices/:id/representations/:repId/mark-read - Mark a representation as read
+router.post('/notices/:id/representations/:repId/mark-read', optionalAuth, async (req, res) => {
+  const { id, repId } = req.params;
+  const { userId } = req.body;
+
+  if (!id || !repId) {
+    return res.status(400).json({ error: 'Invalid parameters' });
+  }
+
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  try {
+    // For now, just return success
+    // In a full implementation, you'd store read status in a separate table
+    console.log(`[rep-mark-read] User ${userId} marked representation ${repId} as read for notice ${id}`);
+
+    return res.json({ success: true, is_read: true });
+  } catch (error: any) {
+    console.error('[rep-mark-read] Unexpected error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

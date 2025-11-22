@@ -187,6 +187,7 @@ export default function AddressLookup({
           >
             <input
               {...inputProps}
+              autoComplete="off"
               className={cn(
                 "w-full bg-transparent outline-none",
                 loading && "opacity-80",

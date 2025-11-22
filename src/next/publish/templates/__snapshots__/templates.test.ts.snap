@@ -342,3 +342,81 @@ NOTICE is hereby given that any persons having claims against or an interest in 
 
 After this date the estate may be distributed having regard only to the claims of which notice has been received."
 `;
+
+exports[`Notice template renderers > renders tro-experimental 1`] = `
+"ROAD TRAFFIC REGULATION ACT 1984
+
+Sample County Council
+
+Sample County Council (High Street, Sample Town) (One-Way System) Experimental Order 2025
+
+EXPERIMENTAL TRAFFIC ORDER
+
+NOTICE IS HEREBY GIVEN that Sample County Council has made an Experimental Traffic Order.
+
+The effect of the Order will be to introduce a one-way traffic system on High Street, northbound only.
+
+Roads affected: High Street, Sample Town, between Market Place and Station Road.
+
+Reason: To test improvements to traffic flow and pedestrian safety.
+
+The Experimental Order will come into effect on 2025-12-02 and will operate for a period of 18 months.
+
+A copy of the Order and a map showing the roads to which it relates may be inspected at Highways Department, County Hall, Sample Town ST1 1AA during Monday to Friday, 9:00am to 5:00pm.
+
+Persons wishing to object to the experimental scheme becoming permanent should send the grounds of their objection in writing to in writing to the address below or by email by 2025-12-14. Address: Highways Department, County Hall, Sample Town ST1 1AA.
+
+The Council will consider all objections received during the experimental period before deciding whether to make the Order permanent (with or without modification).
+
+Dated 2025-11-23"
+`;
+
+exports[`Notice template renderers > renders tro-permanent 1`] = `
+"ROAD TRAFFIC REGULATION ACT 1984
+
+Sample County Council
+
+Sample County Council (High Street, Sample Town) (Prohibition of Waiting) Order 2025
+
+NOTICE IS HEREBY GIVEN that Sample County Council proposes to make the above Order.
+
+The effect of the Order will be to prohibit waiting at any time on both sides of High Street between its junctions with Market Place and Station Road.
+
+Roads affected: High Street, Sample Town, between Market Place and Station Road.
+
+Reason: To improve traffic flow and road safety.
+
+A copy of the proposed Order and a map showing the roads to which it relates, together with a statement of the Council's reasons for proposing to make the Order, may be inspected at Highways Department, County Hall, Sample Town ST1 1AA during Monday to Friday, 9:00am to 5:00pm.
+
+If you wish to object to the proposed Order you should send the grounds of your objection in writing to in writing to the address below or by email by 2025-12-14. Address: Highways Department, County Hall, Sample Town ST1 1AA.
+
+If no objections are received, or if objections received are subsequently withdrawn, Sample County Council may make the Order in the form proposed.
+
+Dated 2025-11-23"
+`;
+
+exports[`Notice template renderers > renders tro-temporary 1`] = `
+"ROAD TRAFFIC REGULATION ACT 1984
+
+Sample County Council
+
+Sample County Council (High Street, Sample Town) (Temporary Road Closure) Order 2025
+
+TEMPORARY TRAFFIC REGULATION ORDER
+
+NOTICE IS HEREBY GIVEN that Sample County Council has made a Temporary Order.
+
+The effect of the Order is to temporarily close High Street to all vehicular traffic.
+
+Roads affected: High Street, Sample Town, between Market Place and Station Road.
+
+Reason: To facilitate essential highway maintenance works.
+
+The Order will come into effect on 2025-12-02 and will remain in force until 2026-02-16.
+
+A copy of the Order may be inspected at Highways Department, County Hall, Sample Town ST1 1AA during Monday to Friday, 9:00am to 5:00pm.
+
+For further information please contact Sample County Council at traffic@sample.gov.uk.
+
+Dated 2025-11-23"
+`;

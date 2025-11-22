@@ -1,10 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { NEW_PUBLISH_FLOW } from "@/env";
-import PublishLayout from "@/routes/next/publish/PublishLayout";
-import StepType from "@/routes/next/publish/StepType";
-import StepUpload from "@/routes/next/publish/StepUpload";
-import StepConfirm from "@/routes/next/publish/StepConfirm";
-import StepPay from "@/routes/next/publish/StepPay";
+import NewPublishFlow from "@/next/publish/flow/NewPublishFlow";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import PublishPage from "@/pages/PublishPage";
@@ -20,6 +16,7 @@ import AddressLookupDebug from "@/pages/debug/AddressLookupDebug";
 import SignIn from "@/pages/auth/SignIn";
 import Callback from "@/pages/auth/Callback";
 import SwitchContext from "@/pages/auth/SwitchContext";
+import DepartmentSwitcher from "@/pages/council/DepartmentSwitcher";
 import CreateOrganization from "@/pages/onboarding/CreateOrganization";
 import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
@@ -44,6 +41,8 @@ import Accessibility from "@/pages/legal/Accessibility";
 import Contact from "@/pages/Contact";
 import EmailAlerts from "@/pages/EmailAlerts";
 import ApiDocs from "@/pages/ApiDocs";
+import ConferenceLanding from "@/pages/ConferenceLanding";
+import ShowcaseLanding from "@/pages/ShowcaseLanding";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function App() {
@@ -51,6 +50,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/conference" element={<ConferenceLanding />} />
+        <Route path="/showcase" element={<ShowcaseLanding />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/notices/:id" element={<NoticeDetailPage />} />
@@ -76,10 +77,11 @@ export default function App() {
         <Route path="/auth/sign-in" element={<SignIn />} />
         <Route path="/auth/callback" element={<Callback />} />
         <Route path="/switch-context" element={<SwitchContext />} />
+        <Route path="/switch-department" element={<DepartmentSwitcher />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
 
-        {/* Council Portal Routes - Protected */}
-        <Route path="/c/:orgSlug/:deptSlug" element={<ProtectedRoute><CouncilLayout /></ProtectedRoute>}>
+        {/* Council Portal Routes - Auth handled by CouncilLayout (supports demo mode) */}
+        <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
           <Route path="dashboard" element={<CouncilDashboard />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
@@ -101,17 +103,12 @@ export default function App() {
           <Route path="billing" element={<div className="p-6">Billing page coming soon</div>} />
           <Route path="team" element={<FirmTeam />} />
           <Route path="settings" element={<FirmSettings />} />
-          <Route path="publish/*" element={<PublishPage />} />
+          {/* Comprehensive publish wizard - maintains firm portal context */}
+          <Route path="publish/*" element={<NewPublishFlow />} />
         </Route>
 
         {NEW_PUBLISH_FLOW && (
-          <Route path="/next/publish" element={<PublishLayout />}>
-            <Route index element={<Navigate to="type" replace />} />
-            <Route path="type" element={<StepType />} />
-            <Route path="upload" element={<StepUpload />} />
-            <Route path="confirm" element={<StepConfirm />} />
-            <Route path="pay" element={<StepPay />} />
-          </Route>
+          <Route path="/next/publish/*" element={<NewPublishFlow />} />
         )}
         <Route path="*" element={<Home />} />
       </Routes>

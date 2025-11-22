@@ -1,4 +1,4 @@
-export type NoticeCategoryId = 'licensing' | 'gambling' | 'gvol' | 'planning' | 'probate';
+export type NoticeCategoryId = 'licensing' | 'gambling' | 'gvol' | 'planning' | 'probate' | 'tro';
 
 export type NoticeDefinition = {
   id: string;
@@ -36,17 +36,6 @@ const definitions: NoticeDefinition[] = [
     version: 1,
   },
   {
-    id: 'licensing-premises-review',
-    category: 'licensing',
-    categoryLabel: 'Licensing Act 2003',
-    group: 'Premises Licence',
-    variant: 'Review',
-    label: 'Premises Licence — Review',
-    noticeType: 'Licensing: Premises - Review',
-    templateKey: 'licensing_premises_review_v1',
-    version: 1,
-  },
-  {
     id: 'licensing-club-new',
     category: 'licensing',
     categoryLabel: 'Licensing Act 2003',
@@ -66,17 +55,6 @@ const definitions: NoticeDefinition[] = [
     label: 'Club Premises Certificate — Variation',
     noticeType: 'Licensing: Club Premises Certificate - Variation',
     templateKey: 'licensing_club_variation_v1',
-    version: 1,
-  },
-  {
-    id: 'licensing-club-review',
-    category: 'licensing',
-    categoryLabel: 'Licensing Act 2003',
-    group: 'Club Premises Certificate',
-    variant: 'Review',
-    label: 'Club Premises Certificate — Review',
-    noticeType: 'Licensing: Club Premises Certificate - Review',
-    templateKey: 'licensing_club_review_v1',
     version: 1,
   },
   {
@@ -352,6 +330,39 @@ const definitions: NoticeDefinition[] = [
     label: 'Trustee Act 1925 s.27',
     noticeType: 'Probate: Trustee Act 1925 s.27',
     templateKey: 'probate_trustee_s27_v1',
+    version: 1,
+  },
+  {
+    id: 'tro-permanent',
+    category: 'tro',
+    categoryLabel: 'Traffic Regulation Orders',
+    group: 'Traffic Regulation Order',
+    variant: 'Permanent',
+    label: 'TRO — Permanent',
+    noticeType: 'TRO: Permanent Order',
+    templateKey: 'tro_v1',
+    version: 1,
+  },
+  {
+    id: 'tro-temporary',
+    category: 'tro',
+    categoryLabel: 'Traffic Regulation Orders',
+    group: 'Traffic Regulation Order',
+    variant: 'Temporary',
+    label: 'TRO — Temporary',
+    noticeType: 'TRO: Temporary Order',
+    templateKey: 'tro_v1',
+    version: 1,
+  },
+  {
+    id: 'tro-experimental',
+    category: 'tro',
+    categoryLabel: 'Traffic Regulation Orders',
+    group: 'Traffic Regulation Order',
+    variant: 'Experimental',
+    label: 'TRO — Experimental',
+    noticeType: 'TRO: Experimental Order',
+    templateKey: 'tro_v1',
     version: 1,
   },
 ];

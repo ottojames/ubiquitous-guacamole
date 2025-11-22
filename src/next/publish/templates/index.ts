@@ -4,6 +4,7 @@ import { renderGamblingHtml, renderGamblingPdf, renderGamblingText } from './gam
 import { renderGvolHtml, renderGvolPdf, renderGvolText } from './gvol';
 import { renderPlanningHtml, renderPlanningPdf, renderPlanningText } from './planning';
 import { renderProbateHtml, renderProbatePdf, renderProbateText } from './probate';
+import { renderTroHtml, renderTroPdf, renderTroText } from './tro';
 
 export type NoticeTemplateRenderer = {
   renderText(notice: NoticeBase): string;
@@ -41,6 +42,12 @@ const probateRenderer: NoticeTemplateRenderer = {
   renderPdf: renderProbatePdf,
 };
 
+const troRenderer: NoticeTemplateRenderer = {
+  renderText: renderTroText,
+  renderHtml: renderTroHtml,
+  renderPdf: renderTroPdf,
+};
+
 const TEMPLATE_RENDERERS: Record<string, NoticeTemplateRenderer> = {
   licensing_premises_new_v1: licensingRenderer,
   licensing_premises_variation_v1: licensingRenderer,
@@ -52,6 +59,7 @@ const TEMPLATE_RENDERERS: Record<string, NoticeTemplateRenderer> = {
   gvol_operating_centre_v1: gvolRenderer,
   planning_press_notice_v1: planningRenderer,
   probate_trustee_s27_v1: probateRenderer,
+  tro_v1: troRenderer,
 };
 
 export function getNoticeTemplateRenderer(key: string): NoticeTemplateRenderer | null {

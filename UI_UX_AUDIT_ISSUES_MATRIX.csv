@@ -1,0 +1,18 @@
+Priority,Area,Issue,Location,Impact,Effort,Status,WCAG_Criterion,GDS_Pattern,Estimated_Hours
+P0,Visual Design + A11y,Insufficient color contrast on disabled button states,src/components/ui/Button.tsx:13,Vision-impaired users cannot read disabled labels. Blocks UK gov certification.,Small,Open,SC 1.4.3 Contrast,N/A,3
+P0,Accessibility,Mobile menu lacks focus trap,src/pages/Home.tsx:261-298,Keyboard users can Tab out of modal. Screen readers announce hidden content.,Medium,Open,SC 2.4.3 Focus Order,N/A,6
+P0,Accessibility,Form validation errors missing aria-describedby linkage,src/next/publish/flow/steps/UploadMethodStep.tsx:154-176,Screen readers don't announce errors when field receives focus.,Small,Open,SC 3.3.1 Error Identification,Error Message component,2
+P1,Component Consistency,Button heights inconsistent across components,"src/pages/Home.tsx:233,244; src/next/publish/flow/steps/NoticeTypeStep.tsx:430; src/components/ui/Button.tsx:23",Violates design system coherence. Undermines brand trust.,Medium,Open,N/A,N/A,8
+P1,UX + A11y,Wizard stepper labels disappear on non-current steps,src/wizard/WizardStepper.tsx:48-54,Users lose context of upcoming steps. Increases cognitive load.,Small,Open,N/A,Task List Pages,2
+P1,UX + Forms,Search input placeholder violates GDS guidance,src/next/publish/flow/steps/NoticeTypeStep.tsx:207,Instructions disappear when user starts typing. Keyboard hint lost.,Small,Open,N/A,Text Input component,2
+P1,Accessibility,Missing skip link for keyboard navigation,src/pages/Home.tsx:199-302,Keyboard users must Tab through 6+ nav links on every page.,Small,Open,SC 2.4.1 Bypass Blocks,Skip Link component,3
+P1,UX,Continue button loading state inconsistency,src/next/publish/flow/steps/UploadMethodStep.tsx:270-277,Users uncertain if click registered. May lead to double-clicks.,Medium,Open,N/A,N/A,6
+P1,Responsive + A11y,Touch targets below 44x44px on mobile,"src/wizard/WizardStepper.tsx:29; src/pages/Home.tsx:516-519",Mobile users struggle to tap accurately. Violates iOS guidelines.,Small,Open,SC 2.5.5 Target Size (AAA),N/A,4
+P2,Component Consistency,Card border-radius inconsistency,"src/pages/Home.tsx:424; src/styles/ui.ts:25; src/next/publish/flow/steps/NoticeTypeStep.tsx:361",Subtle inconsistency erodes design system trust.,Medium,Open,N/A,N/A,5
+P2,Accessibility,Testimonial carousel animation ignores prefers-reduced-motion,src/pages/Home.tsx:919-1011,Motion-sensitive users experience nausea. CSS fix doesn't affect JS.,Medium,Open,SC 2.3.3 Animation from Interactions,N/A,6
+P2,Responsive Design,Horizontal scroll on 320px viewport,src/next/publish/flow/steps/NoticeTypeStep.tsx:176-256,Content hidden off-screen on iPhone SE. Frustrates mobile users.,Small,Open,N/A,N/A,2
+P2,UX,Missing empty state actionable guidance,src/next/publish/flow/steps/NoticeTypeStep.tsx:302-328,Users stuck with unhelpful suggestion when search returns zero results.,Small,Open,N/A,N/A,3
+P2,UX (Forms),Email validation triggered too eagerly,src/next/publish/flow/steps/UploadMethodStep.tsx:158-162,Premature error messages frustrate users mid-typing.,Small,Open,N/A,Validation pattern,2
+P3,Visual Design,Shadow scale lacks semantic hierarchy,tailwind.config.js:43,No clear elevation hierarchy. Designers can't communicate depth.,Small,Open,N/A,N/A,3
+P3,Code Quality,Duplicate spinner SVG code,"src/next/publish/flow/steps/NoticeTypeStep.tsx:440-443; src/next/publish/flow/steps/UploadMethodStep.tsx:272-274",Violates DRY principle. Increases bundle size (minor).,Small,Open,N/A,N/A,2
+P3,UX,No confirmation before clearing notice type selection,src/next/publish/flow/steps/NoticeTypeStep.tsx:242-246,Users may accidentally click X and lose selection.,Small,Open,N/A,N/A,1

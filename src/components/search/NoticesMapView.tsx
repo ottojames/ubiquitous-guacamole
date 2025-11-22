@@ -3,7 +3,7 @@ import "../../styles/map.css";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import MapGL, {Layer, Popup, Source,
+import MapGL, {Layer, Marker, Popup, Source,
   type LayerProps,
   type MapLayerMouseEvent,
   type MapRef,
@@ -57,6 +57,7 @@ type NoticesMapViewProps = {
   autoFitToNotices?: boolean;
   mapStyleUrl?: string;
   className?: string;
+  searchedLocation?: { latitude: number; longitude: number; postcode?: string } | null;
 };
 
 const DEFAULT_VIEW_STATE: ViewState = {
@@ -269,6 +270,7 @@ function NoticesMapViewComponent({
   autoFitToNotices = true,
   mapStyleUrl,
   className = '',
+  searchedLocation,
 }: NoticesMapViewProps) {
   const mapRef = useRef<MapRef | null>(null);
   const controlsAddedRef = useRef(false);
@@ -816,6 +818,25 @@ function NoticesMapViewComponent({
     }
   }, [initialViewState, mapReady]);
 
+  // Zoom to searched location when provided
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !searchedLocation) return;
+
+    const { latitude, longitude } = searchedLocation;
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+
+    // Only zoom if we don't have a bbox (user-adjusted view) or if it's the initial load
+    if (!initialBounds && !userAdjustedViewportRef.current) {
+      suppressNextMoveEndRef.current = true;
+      mapRef.current.flyTo({
+        center: [longitude, latitude],
+        zoom: 14, // Close zoom to see the searched location clearly
+        duration: 1000,
+        essential: true,
+      });
+    }
+  }, [searchedLocation, mapReady, initialBounds]);
+
   useEffect(() => {
     if (!hoveredCluster || !mapReady || !mapRef.current) return;
     const map = mapRef.current.getMap();
@@ -943,6 +964,39 @@ function NoticesMapViewComponent({
             </div>
           </Popup>
         )}
+
+        {/* Searched location pin marker */}
+        {searchedLocation && (
+          <Marker
+            longitude={searchedLocation.longitude}
+            latitude={searchedLocation.latitude}
+            anchor="bottom"
+          >
+            <div className="relative">
+              {/* Pin marker */}
+              <svg
+                width="32"
+                height="40"
+                viewBox="0 0 32 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="drop-shadow-lg"
+              >
+                <path
+                  d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24c0-8.837-7.163-16-16-16z"
+                  fill="#EF4444"
+                />
+                <circle cx="16" cy="16" r="6" fill="white" />
+              </svg>
+              {/* Postcode label */}
+              {searchedLocation.postcode && (
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white shadow-md">
+                  {searchedLocation.postcode}
+                </div>
+              )}
+            </div>
+          </Marker>
+        )}
       </MapGL>
 
       {showShimmer && (
@@ -972,7 +1026,10 @@ function arePropsEqual(prev: NoticesMapViewProps, next: NoticesMapViewProps) {
     prev.mapStyleUrl === next.mapStyleUrl &&
     prev.initialViewState?.zoom === next.initialViewState?.zoom &&
     prev.initialViewState?.latitude === next.initialViewState?.latitude &&
-    prev.initialViewState?.longitude === next.initialViewState?.longitude
+    prev.initialViewState?.longitude === next.initialViewState?.longitude &&
+    prev.searchedLocation?.latitude === next.searchedLocation?.latitude &&
+    prev.searchedLocation?.longitude === next.searchedLocation?.longitude &&
+    prev.searchedLocation?.postcode === next.searchedLocation?.postcode
   );
 }
 

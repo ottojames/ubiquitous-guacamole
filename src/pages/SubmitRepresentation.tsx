@@ -42,6 +42,7 @@ export default function SubmitRepresentation() {
     email: '',
     address: '',
     representationType: 'objection' as 'objection' | 'support',
+    licensingObjectives: [] as string[],
     comments: '',
   });
 
@@ -62,6 +63,13 @@ export default function SubmitRepresentation() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate licensing objectives for objections
+    if (formData.representationType === 'objection' && formData.licensingObjectives.length === 0) {
+      alert('Please select at least one licensing objective for your objection.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -76,9 +84,9 @@ export default function SubmitRepresentation() {
           noticeId: notice?.id,
           submitterName: formData.fullName,
           submitterEmail: formData.email,
-          submitterPhone: formData.phone || undefined,
           submitterAddress: formData.address || undefined,
           type: formData.representationType,
+          licensingObjectives: formData.representationType === 'objection' ? formData.licensingObjectives : undefined,
           content: formData.comments,
         }),
       });
@@ -223,6 +231,7 @@ export default function SubmitRepresentation() {
                         email: '',
                         address: '',
                         representationType: 'objection',
+                        licensingObjectives: [],
                         comments: '',
                       });
                     }}
@@ -369,7 +378,7 @@ export default function SubmitRepresentation() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, representationType: 'support' })}
+                        onClick={() => setFormData({ ...formData, representationType: 'support', licensingObjectives: [] })}
                         className={`rounded-xl border-2 p-4 text-left transition ${
                           formData.representationType === 'support'
                             ? 'border-blue-600 bg-blue-50'
@@ -381,6 +390,82 @@ export default function SubmitRepresentation() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Licensing Objectives - Only for Objections */}
+                  {formData.representationType === 'objection' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">
+                        Licensing Objectives *
+                      </label>
+                      <p className="text-sm text-slate-600 mb-4">
+                        Select which licensing objectives your objection relates to (you must select at least one):
+                      </p>
+                      <div className="space-y-3">
+                        {[
+                          {
+                            value: 'prevention-crime-disorder',
+                            label: 'Prevention of crime and disorder',
+                            description: 'Concerns about crime, anti-social behaviour, or public disorder'
+                          },
+                          {
+                            value: 'public-safety',
+                            label: 'Public safety',
+                            description: 'Concerns about risks to public safety'
+                          },
+                          {
+                            value: 'prevention-public-nuisance',
+                            label: 'Prevention of public nuisance',
+                            description: 'Concerns about noise, disturbance, or other nuisances'
+                          },
+                          {
+                            value: 'protection-children-harm',
+                            label: 'Protection of children from harm',
+                            description: 'Concerns about risks to children under 18'
+                          },
+                        ].map((objective) => {
+                          const isChecked = formData.licensingObjectives.includes(objective.value);
+                          return (
+                            <label
+                              key={objective.value}
+                              className={`flex items-start gap-3 rounded-xl border-2 p-4 cursor-pointer transition ${
+                                isChecked
+                                  ? 'border-blue-600 bg-blue-50'
+                                  : 'border-slate-200 bg-white hover:border-slate-300'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({
+                                      ...formData,
+                                      licensingObjectives: [...formData.licensingObjectives, objective.value]
+                                    });
+                                  } else {
+                                    setFormData({
+                                      ...formData,
+                                      licensingObjectives: formData.licensingObjectives.filter(v => v !== objective.value)
+                                    });
+                                  }
+                                }}
+                                className="mt-1 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/30"
+                              />
+                              <div className="flex-1">
+                                <p className="font-semibold text-slate-900">{objective.label}</p>
+                                <p className="text-sm text-slate-600">{objective.description}</p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {formData.licensingObjectives.length === 0 && (
+                        <p className="mt-2 text-sm text-rose-600">
+                          You must select at least one licensing objective for your objection
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label htmlFor="comments" className="block text-sm font-semibold text-slate-700 mb-2">

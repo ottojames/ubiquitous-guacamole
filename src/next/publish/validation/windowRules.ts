@@ -1,4 +1,5 @@
 import type { NoticeBase } from '@/types/notice';
+import { businessDaysBetween } from '@/lib/bankHolidays';
 
 type RuleIssueSeverity = 'error' | 'warning';
 
@@ -25,27 +26,6 @@ function parseDate(value: unknown): Date | null {
 function calendarDaysBetween(start: Date, end: Date): number {
   const diff = end.getTime() - start.getTime();
   return Math.floor(diff / DAY_MS);
-}
-
-function isWeekend(date: Date): boolean {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-}
-
-function businessDaysBetween(start: Date, end: Date): number {
-  if (end < start) return -businessDaysBetween(end, start);
-  let count = 0;
-  const cursor = new Date(start.getTime());
-  cursor.setHours(0, 0, 0, 0);
-  const endDate = new Date(end.getTime());
-  endDate.setHours(0, 0, 0, 0);
-  while (cursor < endDate) {
-    cursor.setDate(cursor.getDate() + 1);
-    if (!isWeekend(cursor)) {
-      count += 1;
-    }
-  }
-  return count;
 }
 
 function addMonths(date: Date, months: number): Date {
@@ -134,23 +114,42 @@ export function validateWindowRules(notice: NoticeBase): WindowRuleIssue[] {
     case 'gvol': {
       if (publicationDate && repsDeadline) {
         const diff = calendarDaysBetween(publicationDate, repsDeadline);
-        if (diff !== 21) {
+        if (diff < 21) {
           issues.push({
             code: 'GVOL_PUBLICATION_WINDOW',
-            message: 'Objection deadline should be exactly 21 days after publication.',
+            message: 'Objection deadline must be at least 21 days after publication.',
           });
         }
       }
       break;
     }
     case 'planning': {
-      if (applicationDate && repsDeadline) {
+      const isEIA = extras && typeof (extras as { variant?: string }).variant === 'string' && (extras as { variant?: string }).variant === 'planning-eia';
+      const eiaPublicisingDate = tokenDate('EIA_PUBLICISING_DATE');
+
+      if (isEIA && eiaPublicisingDate && repsDeadline) {
+        // EIA: use EIA_PUBLICISING_DATE as base, 30 days minimum
+        const diff = calendarDaysBetween(eiaPublicisingDate, repsDeadline);
+        if (diff < 30) {
+          issues.push({
+            code: 'PLANNING_EIA_CONSULTATION_WINDOW',
+            message: 'Representations period must be at least 30 days from the EIA publicising date.',
+          });
+        }
+        // Validate that EIA publicising date is on or after application date
+        if (applicationDate && eiaPublicisingDate < applicationDate) {
+          issues.push({
+            code: 'PLANNING_EIA_PUBLICISING_DATE_INVALID',
+            message: 'EIA publicising date cannot be before the application date.',
+          });
+        }
+      } else if (!isEIA && applicationDate && repsDeadline) {
+        // Non-EIA: use APPLICATION_DATE as base, 21 days minimum
         const diff = calendarDaysBetween(applicationDate, repsDeadline);
-        const minimum = extras && typeof (extras as { variant?: string }).variant === 'string' && (extras as { variant?: string }).variant === 'planning-eia' ? 30 : 21;
-        if (diff < minimum) {
+        if (diff < 21) {
           issues.push({
             code: 'PLANNING_CONSULTATION_WINDOW',
-            message: `Representations period must be at least ${minimum} days from the application date.`,
+            message: 'Representations period must be at least 21 days from the application date.',
           });
         }
       }

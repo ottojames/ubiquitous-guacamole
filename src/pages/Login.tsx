@@ -29,18 +29,9 @@ export default function Login() {
       return;
     }
 
-    // Demo council logins (no password validation required - use window.location for bypass)
-    if (portalType === 'council') {
-      if (email === "licensing@sample.gov.uk" && password === "sample123") {
-        console.log("Sample Council login successful!");
-        window.location.href = "/c/sample-borough/licensing";
-        return;
-      } else if (email === "demo@council.gov.uk" && password === "demo123") {
-        console.log("Westminster Council login successful!");
-        window.location.href = "/c/westminster/licensing";
-        return;
-      }
-    }
+    // Demo council logins - Use real auth with database permissions
+    // For Westminster demo, use: westminster-demo@civicnotices.co.uk / WestminsterDemo123!
+    // (This account has been granted Westminster Licensing Department access in database)
 
     // Demo firm login (temporary bypass for testing)
     if (portalType === 'professional') {

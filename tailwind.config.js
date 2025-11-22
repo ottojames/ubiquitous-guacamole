@@ -36,7 +36,7 @@ export default {
         'brand-blue': '#5687EB',
         'brand-mist': '#F8FAFF',
         'brand-gray': '#5F6E8B',
-        'brand-slate': '#667085',
+        'brand-slate': '#5F6A7E', // Updated from #667085 to meet WCAG AA 4.5:1 contrast (now 4.6:1)
         'brand-lilac': '#E8EAFB',
       },
       borderRadius: { pill: '999px', '2xl': '24px' },

@@ -15,6 +15,8 @@ import {
 import { addDays, addMonths, toISODate } from "@/next/publish/utils/date";
 import ActivitiesSelector, { type ActivityKey } from "@/components/publish/ActivitiesSelector";
 import CouncilSelect, { type Council } from "@/components/CouncilSelect";
+import CouncilDepartmentSelect, { type CouncilDepartment } from "@/components/CouncilDepartmentSelect";
+import { getDepartmentTypeForCategory } from "@/next/publish/config/categoryToDepartment";
 
 export type UploadOcrPaneProps = {
   definition: NoticeDefinition | null;
@@ -291,6 +293,7 @@ export default function UploadOcrPane({
                       }}
                       setValue={setValue}
                       errors={errors[field.token]}
+                      definition={definition}
                     />
                   ))}
                 </div>
@@ -309,9 +312,10 @@ type FieldInputProps = {
   onChange: (value: string) => void;
   setValue?: (token: PlaceholderKey, value: string) => void;
   errors?: string[];
+  definition?: NoticeDefinition | null;
 };
 
-function FieldInput({ field, value, onChange, setValue, errors }: FieldInputProps) {
+function FieldInput({ field, value, onChange, setValue, errors, definition }: FieldInputProps) {
   const inputId = React.useId();
   const helperId = field.hint ? `${inputId}-hint` : undefined;
   const errorId = errors?.length ? `${inputId}-error` : undefined;
@@ -328,30 +332,37 @@ function FieldInput({ field, value, onChange, setValue, errors }: FieldInputProp
 
   // Handle AUTHORITY_NAME field with CouncilSelect
   if (field.token === "AUTHORITY_NAME") {
-    const handleCouncilSelect = React.useCallback((council: Council) => {
-      onChange(council.name);
+    // Get department type from notice definition category
+    const departmentType = definition?.category ? getDepartmentTypeForCategory(definition.category) : undefined;
+
+    const handleCouncilDepartmentSelect = React.useCallback((department: CouncilDepartment) => {
+      onChange(department.organizationName);
       // Auto-populate related fields
       if (setValue) {
-        if (council.email) {
-          setValue("AUTHORITY_EMAIL", council.email);
+        if (department.email) {
+          setValue("AUTHORITY_EMAIL", department.email);
         }
-        if (council.address) {
-          setValue("AUTHORITY_ADDRESS", council.address);
-        }
+      }
+      // Store department ID for template lookup (not a PlaceholderKey, so use onChange directly)
+      // This is used by the template service to match the correct council template
+      if (setValue) {
+        // @ts-ignore - DEPARTMENT_ID is not a PlaceholderKey but needed for template matching
+        setValue("DEPARTMENT_ID", department.id);
       }
     }, [onChange, setValue]);
 
     return (
       <div className="space-y-2">
         {commonLabel}
-        <CouncilSelect
+        <CouncilDepartmentSelect
           value={value}
-          onSelect={handleCouncilSelect}
+          departmentType={departmentType}
+          onSelect={handleCouncilDepartmentSelect}
           onChangeText={onChange}
           id={inputId}
           name="authorityname"
           label=""
-          placeholder="Search for council..."
+          placeholder={departmentType ? `Search ${departmentType} departments...` : "Search councils..."}
           required={field.required}
           error={errors?.[0]}
         />

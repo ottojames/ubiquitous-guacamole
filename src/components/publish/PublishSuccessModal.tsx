@@ -48,9 +48,9 @@ export default function PublishSuccessModal({ notice, magicLink, onClose }: Publ
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
         {/* Header with gradient */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-center">
+        <div className="relative flex-shrink-0 overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 p-8 text-center">
           <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
           <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
 
@@ -76,8 +76,8 @@ export default function PublishSuccessModal({ notice, magicLink, onClose }: Publ
           </p>
         </div>
 
-        {/* Content */}
-        <div className="space-y-6 p-8">
+        {/* Content - Scrollable */}
+        <div className="flex-1 space-y-6 overflow-y-auto p-8">
           {/* Notice Details Card */}
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
             <div className="border-b border-slate-200 bg-white px-6 py-4">
@@ -165,10 +165,12 @@ export default function PublishSuccessModal({ notice, magicLink, onClose }: Publ
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Publication cost</p>
-                <p className="text-2xl font-bold text-slate-900">£{notice.billing_amount.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  £{notice.billing_amount != null ? notice.billing_amount.toFixed(2) : '0.00'}
+                </p>
               </div>
               <div className="rounded-full bg-orange-100 px-4 py-2 text-sm font-semibold text-orange-800">
-                Payment pending
+                {notice.billing_status || 'Payment pending'}
               </div>
             </div>
             <p className="mt-4 text-xs text-slate-500">

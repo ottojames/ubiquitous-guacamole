@@ -62,6 +62,7 @@ export default function NoticesPage() {
   const [addressValue, setAddressValue] = useState('');
   const [addressInlineError, setAddressInlineError] = useState<string | null>(null);
   const [councils, setCouncils] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [searchedLocation, setSearchedLocation] = useState<{ latitude: number; longitude: number; postcode: string } | null>(null);
   const toastMessage = useToastController();
 
   const queryParam = (searchParams.get('query') ?? '').trim();
@@ -150,6 +151,47 @@ export default function NoticesPage() {
       cancelled = true;
     };
   }, [postcodeParam, queryParam, searchParams, setSearchParams]);
+
+  // Fetch coordinates for the searched postcode
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!postcodeParam) {
+      setSearchedLocation(null);
+      return;
+    }
+
+    const fetchCoordinates = async () => {
+      try {
+        const normalizedPostcode = postcodeParam.replace(/(.{1,4})(.{3})$/, '$1 $2');
+        const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(normalizedPostcode)}`);
+
+        if (!response.ok) {
+          console.warn('[Notices] Failed to fetch postcode coordinates:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        const result = data?.result;
+
+        if (!cancelled && result?.latitude && result?.longitude) {
+          setSearchedLocation({
+            latitude: result.latitude,
+            longitude: result.longitude,
+            postcode: normalizedPostcode,
+          });
+        }
+      } catch (error) {
+        console.warn('[Notices] Error fetching postcode coordinates:', error);
+      }
+    };
+
+    fetchCoordinates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postcodeParam]);
 
   const hasSearchTerm = Boolean(postcodeParam || councilParam || queryParam);
 
@@ -709,6 +751,7 @@ export default function NoticesPage() {
                         initialBounds={mapBoundingBox}
                         initialViewState={mapZoom ? { zoom: mapZoom } : undefined}
                         autoFitToNotices={!mapBoundingBox}
+                        searchedLocation={searchedLocation}
                         className="h-full"
                       />
                       <div className="pointer-events-none absolute left-6 top-6 z-10">

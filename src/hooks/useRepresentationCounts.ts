@@ -156,7 +156,7 @@ export function useBulkRepresentationCounts(
     return () => {
       cancelled = true;
     };
-  }, [noticeIds?.join(','), userId, refetchTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [noticeIds?.join(','), userId, refetchTrigger]);  
 
   return { countsMap, loading, error, refetch };
 }

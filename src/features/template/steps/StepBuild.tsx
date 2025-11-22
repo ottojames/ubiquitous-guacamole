@@ -210,13 +210,13 @@ export default function StepBuild() {
 
   React.useEffect(() => {
     form.reset(notice);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [notice.noticeType]);
 
   React.useEffect(() => {
     if (!state.restoredFromDraft) return;
     form.reset(state.notice);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [state.restoredFromDraft]);
 
   React.useEffect(() => {

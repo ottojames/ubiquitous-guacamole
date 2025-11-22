@@ -24,9 +24,9 @@ export function WizardStepper({ currentPath, guards, hrefs }: WizardStepperProps
           const isLastStep = index === wizardSteps.length - 1;
 
           const stepContent = (
-            <div className="flex items-center gap-2">
-              {/* Compact Step Circle */}
-              <div className={`relative flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200 ${
+            <div className="flex items-center gap-3">
+              {/* Step Circle - 44px for touch targets (WCAG 2.5.5) */}
+              <div className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all duration-200 ${
                 isCurrent
                   ? "border-white bg-white text-blue-600 shadow-lg"
                   : isCompleted
@@ -36,22 +36,24 @@ export function WizardStepper({ currentPath, guards, hrefs }: WizardStepperProps
                   : "border-white/20 bg-white/10 text-white/40"
               }`}>
                 {isCompleted ? (
-                  <Check className="h-4 w-4" strokeWidth={2.5} />
+                  <Check className="h-5 w-5" strokeWidth={2.5} />
                 ) : (
-                  <span className="text-xs font-bold">
+                  <span className="text-sm font-bold">
                     {step.id}
                   </span>
                 )}
               </div>
 
-              {/* Compact Label - only show for current/completed */}
-              {(isCurrent || isCompleted) && (
-                <span className={`text-xs font-semibold transition-colors duration-200 ${
-                  isCurrent ? "text-white" : "text-white/80"
-                }`}>
-                  {step.title}
-                </span>
-              )}
+              {/* Label - Always visible for orientation (GDS pattern) */}
+              <span className={`text-sm transition-colors duration-200 ${
+                isCurrent
+                  ? "font-semibold text-white"
+                  : isCompleted
+                  ? "font-medium text-white/90"
+                  : "font-normal text-white/60"
+              }`}>
+                {step.title}
+              </span>
             </div>
           );
 

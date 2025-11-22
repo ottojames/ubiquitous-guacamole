@@ -13,7 +13,8 @@ import AddressAutocomplete, { type AddressOption } from "@/components/AddressAut
 import AddressFields from "@/components/AddressFields";
 import ActivitiesHoursSection, { type ActivitiesHoursData } from "@/components/publish/ActivitiesHoursSection";
 import GamblingActivitiesSection, { type GamblingActivitiesHoursData } from "@/components/publish/GamblingActivitiesSection";
-import CouncilSelect, { type Council } from "@/components/CouncilSelect";
+import CouncilDepartmentSelect, { type CouncilDepartment } from "@/components/CouncilDepartmentSelect";
+import { getDepartmentTypeForCategory } from "@/next/publish/config/categoryToDepartment";
 
 export type TemplateBuilderFormProps = {
   definition: NoticeDefinition;
@@ -76,12 +77,14 @@ function isTruthy(value: unknown): boolean {
   return Boolean(typeof value === "string" ? value.trim() : value);
 }
 
+// VERSION: 2025-11-17-18:28 - Using CouncilDepartmentSelect (database-driven)
 export default function TemplateBuilderForm({
   definition,
   draft,
   onChange,
   errors,
 }: TemplateBuilderFormProps) {
+  console.log('🔥🔥🔥 [TemplateBuilderForm] v2025-11-17-18:28 LOADED - Using CouncilDepartmentSelect from line 16');
   const blueprint = React.useMemo(() => getFormBlueprint(definition), [definition]);
   const aliasMap = React.useMemo(() => buildAliasMap(blueprint), [blueprint]);
   const context = React.useMemo(() => ({ definition }), [definition]);
@@ -485,6 +488,7 @@ export default function TemplateBuilderForm({
                 onChange={(value, options) => setValue(field.token, value, options)}
                 errors={errors?.[field.token]}
                 setValue={setValue}
+                definition={definition}
               />
             ))}
           </div>
@@ -582,9 +586,10 @@ type FieldInputProps = {
   errors?: string[];
   onAlcoholChange?: (hasAlcohol: boolean) => void;
   setValue?: (token: PlaceholderKey, value: string, options?: SetValueOptions) => void;
+  definition?: NoticeDefinition;
 };
 
-function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue }: FieldInputProps) {
+function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue, definition }: FieldInputProps) {
   const inputId = React.useId();
   const helperId = field.hint ? `${inputId}-hint` : undefined;
   const errorId = errors?.length ? `${inputId}-error` : undefined;
@@ -599,18 +604,21 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
     </label>
   );
 
-  // Handle AUTHORITY_NAME field with CouncilSelect
+  // Handle AUTHORITY_NAME field with CouncilDepartmentSelect (database-driven)
   if (field.token === "AUTHORITY_NAME") {
-    const handleCouncilSelect = React.useCallback((council: Council) => {
-      onChange(council.name, { fromUser: true });
+    // Get department type from notice definition category
+    const departmentType = definition?.category ? getDepartmentTypeForCategory(definition.category) : undefined;
+
+    const handleCouncilDepartmentSelect = React.useCallback((department: CouncilDepartment) => {
+      onChange(department.organizationName, { fromUser: true });
       // Auto-populate related fields
       if (setValue) {
-        if (council.email) {
-          setValue("AUTHORITY_EMAIL", council.email, { fromAuto: true });
+        if (department.email) {
+          setValue("AUTHORITY_EMAIL", department.email, { fromAuto: true });
         }
-        if (council.address) {
-          setValue("AUTHORITY_ADDRESS", council.address, { fromAuto: true });
-        }
+        // Store department ID for template lookup
+        // @ts-ignore - DEPARTMENT_ID is not a PlaceholderKey but needed for template matching
+        setValue("DEPARTMENT_ID", department.id, { fromAuto: true });
       }
     }, [onChange, setValue]);
 
@@ -620,14 +628,15 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
           {field.label}
           {field.required ? <span className="ml-1 text-rose-500">*</span> : null}
         </label>
-        <CouncilSelect
+        <CouncilDepartmentSelect
           value={value}
-          onSelect={handleCouncilSelect}
+          departmentType={departmentType}
+          onSelect={handleCouncilDepartmentSelect}
           onChangeText={(text) => onChange(text, { fromUser: true })}
           id={inputId}
           name="authorityname"
           label=""
-          placeholder="Search for council..."
+          placeholder={departmentType ? `Search ${departmentType} departments...` : "Search councils..."}
           required={field.required}
           error={errors?.[0]}
         />
@@ -684,6 +693,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
           aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
           onChange={handleChange}
           maxLength={field.maxLength}
+          autoComplete="off"
         />
       );
       break;
@@ -782,6 +792,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
             aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
             onChange={handleChange}
             maxLength={field.maxLength}
+            autoComplete="off"
           />
         );
       }
@@ -802,6 +813,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
           aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
           onChange={handleChange}
           maxLength={field.maxLength}
+          autoComplete="off"
         />
       );
       break;
@@ -837,6 +849,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue 
           aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
           onChange={handleChange}
           maxLength={field.maxLength}
+          autoComplete="off"
         />
       );
       break;

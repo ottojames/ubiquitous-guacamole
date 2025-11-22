@@ -69,7 +69,19 @@ export type PlaceholderKey =
   | "PERSONAL_REPRESENTATIVE"
   | "SOLICITOR_NAME"
   | "SOLICITOR_ADDRESS"
-  | "CLAIM_REFERENCE";
+  | "CLAIM_REFERENCE"
+  | "ORDER_TITLE"
+  | "ORDER_DESCRIPTION"
+  | "ROADS_AFFECTED"
+  | "NATURE_OF_ORDER"
+  | "REASON_FOR_ORDER"
+  | "EFFECTIVE_DATE"
+  | "EXPIRY_DATE"
+  | "EXPERIMENTAL_PERIOD"
+  | "OBJECTION_DEADLINE"
+  | "OBJECTION_METHOD"
+  | "OBJECTION_ADDRESS"
+  | "INSPECTION_HOURS";
 
 export type FieldType = "text" | "textarea" | "email" | "date" | "number" | "tel" | "url" | "select";
 
@@ -1112,6 +1124,151 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
             message: "Provide the personal representative or solicitor responsible for the estate.",
           },
         ],
+      };
+    }
+    case "tro": {
+      const isTemporary = definition.id.includes("temporary");
+      const isExperimental = definition.id.includes("experimental");
+
+      const sections: SectionBlueprint[] = [
+        {
+          id: "authority",
+          title: "Highway authority",
+          fields: [
+            field("AUTHORITY_NAME", {
+              label: "Authority name",
+              required: true,
+              span: 12,
+              hint: "Full name of the local highway authority",
+            }),
+            field("AUTHORITY_EMAIL", {
+              label: "Authority email (optional)",
+              type: "email",
+              span: 12,
+            }),
+          ],
+        },
+        {
+          id: "order",
+          title: "Traffic regulation order details",
+          fields: [
+            field("ORDER_TITLE", {
+              label: "Order title",
+              required: true,
+              span: 12,
+              hint: "Full title of the traffic regulation order",
+            }),
+            field("ORDER_DESCRIPTION", {
+              label: "Effect of the order",
+              type: "textarea",
+              rows: 3,
+              required: true,
+              span: 12,
+              hint: "Describe what the order will do (e.g., prohibit parking, restrict access)",
+            }),
+            field("NATURE_OF_ORDER", {
+              label: "Nature of order",
+              required: true,
+              span: 12,
+              hint: "Type of traffic regulation (e.g., parking restriction, road closure, one-way system)",
+            }),
+            field("ROADS_AFFECTED", {
+              label: "Roads affected",
+              type: "textarea",
+              rows: 2,
+              required: true,
+              span: 12,
+              hint: "List all roads, streets, or areas affected by this order",
+            }),
+            field("REASON_FOR_ORDER", {
+              label: "Reason for order (optional)",
+              type: "textarea",
+              rows: 2,
+              span: 12,
+              hint: "Explain why the order is necessary (e.g., road safety, traffic management)",
+            }),
+          ],
+        },
+        {
+          id: "dates",
+          title: "Key dates",
+          fields: [
+            field("PUBLICATION_DATE", {
+              label: "Publication date",
+              type: "date",
+              required: true,
+              span: 6,
+            }),
+            field("EFFECTIVE_DATE", {
+              label: "Effective date",
+              type: "date",
+              required: true,
+              span: 6,
+              hint: "When the order comes into effect",
+            }),
+            field("EXPIRY_DATE", {
+              label: "Expiry date",
+              type: "date",
+              required: isTemporary,
+              span: 6,
+              hint: "Required for temporary orders",
+              showIf: () => isTemporary,
+            }),
+            field("EXPERIMENTAL_PERIOD", {
+              label: "Experimental period",
+              required: isExperimental,
+              span: 6,
+              hint: "Duration of experimental period (e.g., '18 months')",
+              showIf: () => isExperimental,
+            }),
+            field("OBJECTION_DEADLINE", {
+              label: "Objection deadline",
+              type: "date",
+              required: true,
+              span: 6,
+            }),
+          ],
+        },
+        {
+          id: "consultation",
+          title: "Inspection and objections",
+          fields: [
+            field("INSPECTION_LOCATION", {
+              label: "Inspection location",
+              type: "textarea",
+              rows: 2,
+              required: true,
+              span: 12,
+              hint: "Where the order and supporting documents can be inspected",
+            }),
+            field("INSPECTION_HOURS", {
+              label: "Inspection hours (optional)",
+              span: 12,
+              hint: "Opening hours for inspection (e.g., 'Monday to Friday, 9am to 5pm')",
+            }),
+            field("OBJECTION_METHOD", {
+              label: "How to object",
+              type: "textarea",
+              rows: 2,
+              required: true,
+              span: 12,
+              hint: "How objections should be submitted (e.g., 'in writing to the address below')",
+            }),
+            field("OBJECTION_ADDRESS", {
+              label: "Objection address (optional)",
+              type: "textarea",
+              rows: 2,
+              span: 12,
+              hint: "Postal address for submitting objections",
+            }),
+          ],
+        },
+      ];
+
+      return {
+        sections,
+        autoValues: [{ token: "NOTICE_TYPE", value: definition.label }],
+        deadlineRule: { base: "PUBLICATION_DATE", offsetDays: 21 },
       };
     }
     default:

@@ -22,12 +22,12 @@ interface RecentNotice {
   id: string;
   notice_type: string;
   premises: any;
-  created_at: string;
+  published_at: string;
   payment_status: string;
   billing_amount: number;
-  organization: {
+  council: {
     name: string;
-  };
+  } | null;
 }
 
 export default function FirmDashboard() {
@@ -75,36 +75,40 @@ export default function FirmDashboard() {
         .eq('published_by_organization_id', firm.id)
         .in('payment_status', ['pending', 'overdue']);
 
-      // Calculate outstanding balance from billing transactions
+      // Calculate outstanding balance from billing transactions (only pending)
       const { data: transactions } = await supabase
         .from('billing_transactions')
-        .select('amount, type')
+        .select('amount, type, status')
         .eq('organization_id', firm.id);
 
       let balance = 0;
       if (transactions) {
         transactions.forEach(t => {
-          if (t.type === 'charge') balance += Number(t.amount);
-          if (t.type === 'payment') balance -= Number(t.amount);
+          if (t.type === 'charge' && t.status === 'pending') {
+            balance += Number(t.amount);
+          }
+          if (t.type === 'payment' && t.status === 'pending') {
+            balance -= Number(t.amount);
+          }
         });
       }
 
-      // Get recent notices
+      // Get recent notices with council info
       const { data: notices } = await supabase
         .from('notices')
         .select(`
           id,
           notice_type,
           premises,
-          created_at,
+          published_at,
           payment_status,
           billing_amount,
-          organization:organizations!notices_organization_id_fkey (
+          council:councils (
             name
           )
         `)
         .eq('published_by_organization_id', firm.id)
-        .order('created_at', { ascending: false })
+        .order('published_at', { ascending: false })
         .limit(10);
 
       setStats({
@@ -167,7 +171,7 @@ export default function FirmDashboard() {
           <p className="text-gray-600 mt-1">Welcome to {firm.name}</p>
         </div>
         <Link
-          to={`/f/${firmSlug}/publish/step-1`}
+          to={`/f/${firmSlug}/publish`}
           className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl"
         >
           Publish Notice
@@ -230,7 +234,7 @@ export default function FirmDashboard() {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            to={`/f/${firmSlug}/notices/new`}
+            to={`/f/${firmSlug}/publish`}
             className="flex items-center gap-4 p-4 border-2 border-purple-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all"
           >
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -330,10 +334,10 @@ export default function FirmDashboard() {
                       {notice.premises?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {notice.organization?.name || 'N/A'}
+                      {notice.council?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {formatDate(notice.created_at)}
+                      {formatDate(notice.published_at)}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                       {notice.billing_amount ? formatCurrency(Number(notice.billing_amount)) : '—'}

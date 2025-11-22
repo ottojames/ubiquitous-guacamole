@@ -253,6 +253,284 @@ function extractSummary(text: string): { value?: string; range?: { start: number
 }
 
 /**
+ * Extract DPS name from licensing notices
+ */
+function extractDPSName(text: string): { value?: string; range?: { start: number; end: number }; confidence?: number } {
+  const patterns = [
+    /designated premises supervisor[:\-\s]+(.+?)(?:\n|$)/i,
+    /dps[:\-\s]+(.+?)(?:\n|$)/i,
+    /supervisor[:\-\s]+(.+?)(?:\n|$)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const value = match[1].trim();
+      const idx = text.toLowerCase().indexOf(value.toLowerCase());
+      return {
+        value,
+        range: idx >= 0 ? { start: idx, end: idx + value.length } : undefined,
+        confidence: 0.85,
+      };
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract licensable activities from licensing notices
+ */
+function extractLicensableActivities(text: string): { value?: string; confidence?: number } {
+  const lower = text.toLowerCase();
+  const activities: string[] = [];
+
+  if (lower.includes('sale of alcohol') || lower.includes('supply of alcohol')) {
+    if (lower.includes('on and off') || lower.includes('on & off')) {
+      activities.push('Sale of alcohol for consumption on and off the premises');
+    } else if (lower.includes('off premises') || lower.includes('off the premises')) {
+      activities.push('Sale of alcohol for consumption off the premises');
+    } else if (lower.includes('on premises') || lower.includes('on the premises')) {
+      activities.push('Sale of alcohol for consumption on the premises');
+    } else {
+      activities.push('Sale of alcohol');
+    }
+  }
+
+  if (lower.includes('late night refreshment')) {
+    activities.push('Provision of late night refreshment');
+  }
+
+  if (lower.includes('regulated entertainment') || lower.includes('live music') || lower.includes('recorded music')) {
+    activities.push('Provision of regulated entertainment');
+  }
+
+  if (activities.length > 0) {
+    return { value: activities.join('\n'), confidence: 0.8 };
+  }
+  return {};
+}
+
+/**
+ * Extract opening hours from notices
+ */
+function extractOpeningHours(text: string): { value?: string; confidence?: number } {
+  const patterns = [
+    /opening hours[:\-\s]+(.+?)(?:\n\n|\n[A-Z])/is,
+    /hours of operation[:\-\s]+(.+?)(?:\n\n|\n[A-Z])/is,
+    /hours[:\-\s]+((?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun).+?)(?:\n\n|\n[A-Z])/is,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const value = match[1].trim().replace(/\s+/g, ' ');
+      if (value.length > 10) {
+        return { value, confidence: 0.75 };
+      }
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract variation details
+ */
+function extractVariationDetails(text: string): { value?: string; confidence?: number } {
+  const patterns = [
+    /nature of variation[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+    /variation[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+    /proposed changes?[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const value = match[1].trim();
+      if (value.length > 20) {
+        return { value, confidence: 0.7 };
+      }
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract review grounds
+ */
+function extractReviewGrounds(text: string): { value?: string; confidence?: number } {
+  const patterns = [
+    /review grounds?[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+    /grounds? for review[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+    /grounds?[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const value = match[1].trim();
+      if (value.length > 20) {
+        return { value, confidence: 0.7 };
+      }
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract gambling premises type
+ */
+function extractGamblingPremisesType(text: string): { value?: string; confidence?: number } {
+  const lower = text.toLowerCase();
+
+  if (lower.includes('family entertainment centre') || lower.includes('fec')) {
+    return { value: 'fec', confidence: 0.9 };
+  }
+  if (lower.includes('adult gaming centre') || lower.includes('agc')) {
+    return { value: 'agc', confidence: 0.9 };
+  }
+  if (lower.includes('bingo')) {
+    return { value: 'bingo', confidence: 0.9 };
+  }
+  if (lower.includes('betting')) {
+    return { value: 'betting', confidence: 0.9 };
+  }
+
+  return {};
+}
+
+/**
+ * Extract transfer details (current and new holder)
+ */
+function extractTransferDetails(text: string): {
+  currentHolder?: string;
+  newHolder?: string;
+  transferDate?: string;
+  confidence?: number;
+} {
+  const currentHolderMatch = text.match(/current (?:licence )?holder[:\-\s]+(.+?)(?:\n|$)/i);
+  const newHolderMatch = text.match(/(?:new|proposed) (?:licence )?holder[:\-\s]+(.+?)(?:\n|$)/i);
+  const transferDateMatch = text.match(/transfer date[:\-\s]+(.+?)(?:\n|$)/i);
+
+  const result: {
+    currentHolder?: string;
+    newHolder?: string;
+    transferDate?: string;
+    confidence?: number;
+  } = {};
+
+  if (currentHolderMatch && currentHolderMatch[1]) {
+    result.currentHolder = currentHolderMatch[1].trim();
+  }
+  if (newHolderMatch && newHolderMatch[1]) {
+    result.newHolder = newHolderMatch[1].trim();
+  }
+  if (transferDateMatch && transferDateMatch[1]) {
+    result.transferDate = transferDateMatch[1].trim();
+  }
+
+  if (result.currentHolder || result.newHolder) {
+    result.confidence = 0.8;
+  }
+
+  return result;
+}
+
+/**
+ * Extract GVOL traffic area
+ */
+function extractTrafficArea(text: string): { value?: string; confidence?: number } {
+  const patterns = [
+    /traffic commissioner for the (eastern and wales|north[- ]eastern|north[- ]western|scottish|south[- ]eastern[- ]metropolitan|western|west[- ]midland) traffic area/i,
+    /traffic area[:\-\s]+(eastern and wales|north[- ]eastern|north[- ]western|scottish|south[- ]eastern[- ]metropolitan|western|west[- ]midland)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const raw = match[1].toLowerCase().replace(/[- ]/g, '-');
+      return { value: raw, confidence: 0.9 };
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract operating centre address for GVOL
+ */
+function extractOperatingCentre(text: string): { value?: string; confidence?: number } {
+  const match = text.match(/operating centre[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is);
+  if (match && match[1]) {
+    const value = match[1].trim();
+    if (value.length > 10) {
+      return { value, confidence: 0.85 };
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract planning-specific fields
+ */
+function extractPlanningReason(text: string): { value?: string; confidence?: number } {
+  const patterns = [
+    /reason for (?:classification|advertisement)[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is,
+    /classified as[:\-\s]+(.+?)(?:\n|$)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const value = match[1].trim();
+      if (value.length > 5) {
+        return { value, confidence: 0.75 };
+      }
+    }
+  }
+  return {};
+}
+
+/**
+ * Extract comment submission methods for planning
+ */
+function extractCommentMethods(text: string): {
+  url?: string;
+  email?: string;
+  postal?: string;
+  confidence?: number;
+} {
+  const result: {
+    url?: string;
+    email?: string;
+    postal?: string;
+    confidence?: number;
+  } = {};
+
+  // Extract URL
+  const urlMatch = text.match(/(?:comments? (?:can be )?submitted (?:online )?at|view (?:and comment )?online at)[:\-\s]+(https?:\/\/[^\s]+)/i);
+  if (urlMatch && urlMatch[1]) {
+    result.url = urlMatch[1].trim();
+  }
+
+  // Extract email
+  const emailMatch = text.match(/(?:comments? (?:to|by email)|email comments? to)[:\-\s]+([^\s@]+@[^\s@]+\.[^\s@]+)/i);
+  if (emailMatch && emailMatch[1]) {
+    result.email = emailMatch[1].trim();
+  }
+
+  // Extract postal address
+  const postalMatch = text.match(/(?:write to|postal address)[:\-\s]+(.+?)(?:\n\n|\n[A-Z]{3,})/is);
+  if (postalMatch && postalMatch[1]) {
+    result.postal = postalMatch[1].trim();
+  }
+
+  if (result.url || result.email || result.postal) {
+    result.confidence = 0.8;
+  }
+
+  return result;
+}
+
+/**
  * Generate a concise, grammatically correct summary of what is being applied for.
  * Maximum 10 words, proper capitalization, focusing on application type and activities.
  */
@@ -488,6 +766,82 @@ export function extractLegalDetailsFromOcr(text: string): ExtractResult {
         confidence: summary.confidence,
       });
     }
+  }
+
+  // Note: The following extractions are for enhanced field population but are not
+  // part of the legacy LegalDetails type. These would be used in the new publish flow
+  // to auto-populate additional fields in the form blueprints.
+
+  // Licensing-specific extractions (stored as extended properties)
+  const dpsName = extractDPSName(text);
+  if (dpsName.value) {
+    // Store in details for potential use (would need type extension)
+    (details as any).dpsName = dpsName.value;
+  }
+
+  const licensableActivities = extractLicensableActivities(text);
+  if (licensableActivities.value) {
+    (details as any).licensableActivities = licensableActivities.value;
+  }
+
+  const openingHours = extractOpeningHours(text);
+  if (openingHours.value) {
+    (details as any).openingHours = openingHours.value;
+  }
+
+  const variationDetails = extractVariationDetails(text);
+  if (variationDetails.value) {
+    (details as any).variationDetails = variationDetails.value;
+  }
+
+  const reviewGrounds = extractReviewGrounds(text);
+  if (reviewGrounds.value) {
+    (details as any).reviewGrounds = reviewGrounds.value;
+  }
+
+  // Gambling-specific extractions
+  const gamblingType = extractGamblingPremisesType(text);
+  if (gamblingType.value) {
+    (details as any).gamblingPremisesType = gamblingType.value;
+  }
+
+  const transferDetails = extractTransferDetails(text);
+  if (transferDetails.currentHolder) {
+    (details as any).currentHolder = transferDetails.currentHolder;
+  }
+  if (transferDetails.newHolder) {
+    (details as any).newHolder = transferDetails.newHolder;
+  }
+  if (transferDetails.transferDate) {
+    (details as any).transferDate = transferDetails.transferDate;
+  }
+
+  // GVOL-specific extractions
+  const trafficArea = extractTrafficArea(text);
+  if (trafficArea.value) {
+    (details as any).trafficArea = trafficArea.value;
+  }
+
+  const operatingCentre = extractOperatingCentre(text);
+  if (operatingCentre.value) {
+    (details as any).operatingCentre = operatingCentre.value;
+  }
+
+  // Planning-specific extractions
+  const planningReason = extractPlanningReason(text);
+  if (planningReason.value) {
+    (details as any).planningReason = planningReason.value;
+  }
+
+  const commentMethods = extractCommentMethods(text);
+  if (commentMethods.url) {
+    (details as any).commentUrl = commentMethods.url;
+  }
+  if (commentMethods.email) {
+    (details as any).commentEmail = commentMethods.email;
+  }
+  if (commentMethods.postal) {
+    (details as any).commentPostal = commentMethods.postal;
   }
 
   return {

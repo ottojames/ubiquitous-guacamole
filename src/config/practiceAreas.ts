@@ -210,7 +210,7 @@ export function getFilteredOutCategories(
   const allowedCategories = getAllowedNoticeCategoriesForPracticeAreas(practiceAreas);
 
   // All possible categories
-  const allCategories: NoticeCategoryId[] = ['licensing', 'gambling', 'gvol', 'planning', 'probate'];
+  const allCategories: NoticeCategoryId[] = ['licensing', 'gambling', 'gvol', 'planning', 'probate', 'tro'];
 
   // Find which ones are filtered out
   const filteredOut = allCategories.filter(cat => !allowedCategories.includes(cat));
@@ -221,7 +221,8 @@ export function getFilteredOutCategories(
     'gambling': 'Gambling Act 2005',
     'gvol': 'GVOL',
     'planning': 'Planning',
-    'probate': 'Probate'
+    'probate': 'Probate',
+    'tro': 'Traffic Regulation Orders'
   };
 
   return filteredOut.map(cat => categoryNames[cat]);

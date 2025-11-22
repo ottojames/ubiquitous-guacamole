@@ -39,30 +39,65 @@ export default function CouncilLayout() {
       // Check if user has a real session first
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Only use demo mode if there's NO real session
-      const isDemoSampleBorough = !session && orgSlug === 'sample-borough' && deptSlug === 'licensing';
-      const isDemoWestminster = !session && orgSlug === 'westminster' && deptSlug === 'licensing';
+      // Demo mode paths for showcase
+      const demoPaths = [
+        { org: 'sample-borough', dept: 'licensing', orgName: 'Sample Borough Council', deptName: 'Licensing Department' },
+        { org: 'westminster', dept: 'licensing', orgName: 'Westminster Council', deptName: 'Westminster Licensing' },
+        { org: 'bristol-council', dept: 'licensing', orgName: 'Bristol Council', deptName: 'Licensing' },
+        { org: 'bristol-council', dept: 'planning', orgName: 'Bristol Council', deptName: 'Planning' },
+        { org: 'bristol-council', dept: 'traffic', orgName: 'Bristol Council', deptName: 'Traffic & Highways' },
+        { org: 'westminster-city-of-council', dept: 'licensing', orgName: 'Westminster (City of) Council', deptName: 'Licensing' },
+        { org: 'westminster-city-of-council', dept: 'planning', orgName: 'Westminster (City of) Council', deptName: 'Planning' },
+        { org: 'westminster-city-of-council', dept: 'highways', orgName: 'Westminster (City of) Council', deptName: 'Highways' },
+      ];
 
-      if (isDemoSampleBorough || isDemoWestminster) {
-        // Set mock department data for demo
+      const demoPath = !session && demoPaths.find(p => orgSlug === p.org && deptSlug === p.dept);
+
+      if (demoPath) {
+        // Try to load real department data first for demo
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id, name, slug')
+          .eq('slug', orgSlug)
+          .single();
+
+        if (orgData) {
+          const { data: deptData } = await supabase
+            .from('departments')
+            .select('id, name, slug, type')
+            .eq('organization_id', orgData.id)
+            .eq('slug', deptSlug)
+            .single();
+
+          if (deptData) {
+            // Use real data for demo
+            setDepartment({
+              ...deptData,
+              organization: orgData
+            } as Department);
+            setUserRole('org_admin');
+            await loadPermissions(deptData.id, 'org_admin');
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to mock data if database lookup fails
         const mockDepartment = {
-          id: isDemoSampleBorough ? 'demo-sample-borough-id' : 'demo-westminster-id',
-          name: isDemoSampleBorough ? 'Licensing Department' : 'Westminster Licensing',
+          id: `demo-${orgSlug}-${deptSlug}`,
+          name: demoPath.deptName,
           slug: deptSlug!,
-          type: 'licensing',
+          type: deptSlug === 'licensing' ? 'licensing' : deptSlug === 'planning' ? 'planning' : 'traffic',
           organization: {
-            id: isDemoSampleBorough ? 'sample-borough-org-id' : 'westminster-org-id',
-            name: isDemoSampleBorough ? 'Sample Borough Council' : 'Westminster Council',
+            id: `demo-${orgSlug}-org`,
+            name: demoPath.orgName,
             slug: orgSlug
           }
         };
 
         setDepartment(mockDepartment as Department);
         setUserRole('org_admin');
-
-        // Load permissions for demo user (bypass database, use role-based permissions)
         await loadPermissions(mockDepartment.id, 'org_admin');
-
         setLoading(false);
         return;
       }
@@ -269,7 +304,7 @@ export default function CouncilLayout() {
           {sidebarOpen ? (
             <div className="space-y-2">
               <Link
-                to="/switch-context"
+                to="/switch-department"
                 className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-xl text-center font-semibold"
               >
                 Switch Department
@@ -284,7 +319,7 @@ export default function CouncilLayout() {
           ) : (
             <div className="space-y-2">
               <Link
-                to="/switch-context"
+                to="/switch-department"
                 className="flex items-center justify-center p-2 text-gray-700 hover:bg-gray-100 rounded-xl"
                 title="Switch Department"
               >

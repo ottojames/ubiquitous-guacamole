@@ -53,7 +53,7 @@ export default function AddressFields({
           value={value.addressLine1 || ''}
           onChange={(e) => handleChange('addressLine1', e.target.value)}
           data-testid={`${testIdPrefix}-line1`}
-          autoComplete="address-line1"
+          autoComplete="off"
         />
       </div>
 
@@ -68,7 +68,7 @@ export default function AddressFields({
           value={value.addressLine2 || ''}
           onChange={(e) => handleChange('addressLine2', e.target.value)}
           data-testid={`${testIdPrefix}-line2`}
-          autoComplete="address-line2"
+          autoComplete="off"
         />
       </div>
 
@@ -84,7 +84,7 @@ export default function AddressFields({
             value={value.city || ''}
             onChange={(e) => handleChange('city', e.target.value)}
             data-testid={`${testIdPrefix}-city`}
-            autoComplete="address-level2"
+            autoComplete="off"
           />
         </div>
 
@@ -100,7 +100,7 @@ export default function AddressFields({
             onChange={(e) => handleChange('postcode', e.target.value)}
             pattern="[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}"
             data-testid={`${testIdPrefix}-postcode`}
-            autoComplete="postal-code"
+            autoComplete="off"
             inputMode="text"
           />
         </div>
