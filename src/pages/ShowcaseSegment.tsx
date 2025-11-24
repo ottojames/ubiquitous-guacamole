@@ -61,7 +61,7 @@ export default function ShowcaseSegment() {
   const { segmentId } = useParams<{ segmentId: string }>();
   const segment = segmentId ? segmentData[segmentId] : null;
 
-  // Scroll to top when segment changes
+  // Scroll to top when segment changes or component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [segmentId]);
