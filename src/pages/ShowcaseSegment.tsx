@@ -17,8 +17,8 @@ const segmentData: Record<string, SegmentInfo> = {
   public: {
     id: 'public',
     title: 'General Public Journey',
-    description: 'Meet Rachael, a resident in central London who has just learned about a new late-night venue applying for a premises license around the corner from her home. Using Civic Notices, Rachael can quickly find and respond to this application.',
-    persona: 'Rachael, Local Resident',
+    description: 'In this demonstration, I\'ll walk you through how a local resident discovers a new premises license application in their area and submits a representation. You\'ll see how Civic Notices makes it simple for residents to find relevant notices and have their voice heard in the consultation process.',
+    persona: 'Local Resident Perspective',
     duration: '~2 minutes',
     icon: <Users className="w-6 h-6" />,
     gradient: 'from-blue-500 to-cyan-500',
@@ -27,8 +27,8 @@ const segmentData: Record<string, SegmentInfo> = {
   legal: {
     id: 'legal',
     title: 'Legal Firm Journey',
-    description: 'Meet James Wilson, a solicitor at Wilson & Partners LLP. His firm has an account with Civic Notices, giving them streamlined access to publish notices across all their client matters.',
-    persona: 'James Wilson, Solicitor',
+    description: 'This walkthrough demonstrates how solicitors use Civic Notices to publish statutory notices on behalf of their clients. I\'ll show you the streamlined submission process, automated validation, and how the platform delivers 82% cost savings compared to traditional newspaper publication.',
+    persona: 'Solicitor Perspective',
     duration: '~1 minute',
     icon: <Briefcase className="w-6 h-6" />,
     gradient: 'from-purple-500 to-pink-500',
@@ -37,8 +37,8 @@ const segmentData: Record<string, SegmentInfo> = {
   officer: {
     id: 'officer',
     title: 'Council Officer Journey',
-    description: 'Emma Martinez is a Senior Licensing Officer at Westminster City Council\'s licensing department. Her responsibilities include reviewing applications from solicitors and agents, managing public consultations, and processing representations from residents.',
-    persona: 'Emma Martinez, Senior Licensing Officer',
+    description: 'In this demonstration, I\'ll show you how licensing officers manage incoming applications, review representations from residents, and collaborate with their team. You\'ll see how Civic Notices streamlines the entire consultation workflow and maintains a complete audit trail.',
+    persona: 'Licensing Officer Perspective',
     duration: '~2 minutes',
     icon: <Shield className="w-6 h-6" />,
     gradient: 'from-emerald-500 to-teal-500',
@@ -47,11 +47,12 @@ const segmentData: Record<string, SegmentInfo> = {
   manager: {
     id: 'manager',
     title: 'Council Manager Journey',
-    description: 'David Chen is the Head of Regulatory Services at Westminster City Council, overseeing licensing, planning, and highways departments. David\'s priorities are accountability, efficiency, cost control, and statutory compliance.',
-    persona: 'David Chen, Head of Regulatory Services',
+    description: 'This walkthrough demonstrates the strategic management view of Civic Notices. I\'ll show you how senior officers gain real-time insights into departmental performance, track statutory compliance, and demonstrate value for money to elected members and oversight bodies.',
+    persona: 'Senior Management Perspective',
     duration: '~2 minutes',
     icon: <TrendingUp className="w-6 h-6" />,
     gradient: 'from-orange-500 to-red-500',
+    youtubeId: 'AhOjCpTQTtQ',
   },
 };
 
