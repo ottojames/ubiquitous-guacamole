@@ -10,6 +10,7 @@ interface SegmentInfo {
   icon: React.ReactNode;
   gradient: string;
   videoPath?: string;
+  youtubeId?: string;
 }
 
 const segmentData: Record<string, SegmentInfo> = {
@@ -21,7 +22,7 @@ const segmentData: Record<string, SegmentInfo> = {
     duration: '~2 minutes',
     icon: <Users className="w-6 h-6" />,
     gradient: 'from-blue-500 to-cyan-500',
-    videoPath: '/videos/segment-1-public-journey.mov',
+    youtubeId: 'oRUbdWePvZw',
   },
   legal: {
     id: 'legal',
@@ -105,7 +106,16 @@ export default function ShowcaseSegment() {
         {/* Video Container */}
         <div className="mb-8">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900">
-            {segment.videoPath ? (
+            {segment.youtubeId ? (
+              <iframe
+                className="w-full aspect-video"
+                src={`https://www.youtube.com/embed/${segment.youtubeId}`}
+                title={segment.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : segment.videoPath ? (
               <video
                 controls
                 className="w-full aspect-video"
