@@ -3,5 +3,11 @@
   "outputDirectory": "dist",
   "devCommand": "npm run dev:web",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/showcase"
+    }
+  ]
 }
