@@ -98,9 +98,32 @@ export default function Dashboard() {
           const allNotices = responseData.items || [];
           console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
 
+          // Licensing notice types (matching database values)
+          const LICENSING_NOTICE_TYPES = [
+            'licensing-premises-new',
+            'licensing-premises-variation',
+            'licensing-premises-review',
+            'licensing-club-premises',
+            'licensing-club-premises-variation',
+            'licensing-personal-licence',
+            'licensing-temporary-event',
+            'premises-licence',
+            'premises-licence-variation',
+            'premises-licence-review',
+            'club-premises-certificate',
+            'club-premises-certificate-variation',
+            'personal-licence',
+            'temporary-event-notice',
+          ];
+
           // Map API response to notice format and deduplicate by ID
           const noticesMap = new Map();
           allNotices.forEach((n: any) => {
+            // Only include licensing notices for licensing department
+            if (department.type === 'licensing' && !LICENSING_NOTICE_TYPES.includes(n.noticeType)) {
+              return;
+            }
+
             if (!noticesMap.has(n.id)) {
               noticesMap.set(n.id, {
                 id: n.id,
@@ -119,6 +142,11 @@ export default function Dashboard() {
           // Get recent notices with full details (deduplicated)
           const recentMap = new Map();
           allNotices.forEach((n: any) => {
+            // Only include licensing notices for licensing department
+            if (department.type === 'licensing' && !LICENSING_NOTICE_TYPES.includes(n.noticeType)) {
+              return;
+            }
+
             if (!recentMap.has(n.id)) {
               const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
               recentMap.set(n.id, {
@@ -170,11 +198,22 @@ export default function Dashboard() {
       // Drafts: Never published (status = draft)
       // Expired: Consultation window closed (status = expired)
       // Representations: Total representations across all notices
+      const totalCount = notices?.length || 0;
+      const publishedCount = notices?.filter(n => n.status === 'published').length || 0;
+      const draftCount = notices?.filter(n => n.status === 'draft').length || 0;
+      const expiredCount = notices?.filter(n => n.status === 'expired').length || 0;
+
+      // Make stats less exact-looking for demo
+      const displayTotal = isDemoMode ? 47 : totalCount;
+      const displayPublished = isDemoMode ? 42 : publishedCount;
+      const displayDraft = isDemoMode ? 3 : draftCount;
+      const displayExpired = isDemoMode ? 2 : expiredCount;
+
       const statsData = {
-        total: notices?.length || 0,
-        published: notices?.filter(n => n.status === 'published').length || 0,
-        draft: notices?.filter(n => n.status === 'draft').length || 0,
-        expired: notices?.filter(n => n.status === 'expired').length || 0,
+        total: displayTotal,
+        published: displayPublished,
+        draft: displayDraft,
+        expired: displayExpired,
         representations_total: 0 // Will be calculated below
       };
 

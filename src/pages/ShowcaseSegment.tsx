@@ -42,6 +42,7 @@ const segmentData: Record<string, SegmentInfo> = {
     duration: '~2 minutes',
     icon: <Shield className="w-6 h-6" />,
     gradient: 'from-emerald-500 to-teal-500',
+    youtubeId: 'wn5wAwa2kvs',
   },
   manager: {
     id: 'manager',
