@@ -34,6 +34,17 @@ try:
 
     print(f"Original logo size: {logo.width}x{logo.height}px")
 
+    # Make white background transparent
+    pixels = logo.load()
+    for y in range(logo.height):
+        for x in range(logo.width):
+            r, g, b, a = pixels[x, y]
+            # If pixel is white or near-white, make it transparent
+            if r > 240 and g > 240 and b > 240:
+                pixels[x, y] = (r, g, b, 0)
+
+    print("Made white background transparent")
+
     # Crop transparent padding from logo to get actual content bounds
     bbox = logo.getbbox()
     if bbox:
@@ -49,22 +60,17 @@ try:
 
     print(f"Resized logo: {logo_width}x{logo_height}px")
 
-    # Center logo VISUALLY - accounting for internal white space
-    # The logo image has uneven white space (65px left, 626px right)
-    # Visual content is 281px off-center within the image
-    # At 700px width, this scales to 122px shift needed
-    logo_x_geometric = (width - logo_width) // 2  # 235px - geometric center
-    visual_offset = 122  # Shift right to center the actual content
-    logo_x = logo_x_geometric + visual_offset
+    # Center logo - now that it's been cropped properly
+    logo_x = (width - logo_width) // 2
     logo_y = 150
 
     print(f"\nLogo positioning:")
     print(f"  Screen width: {width}px")
     print(f"  Logo width: {logo_width}px")
-    print(f"  Geometric X: {logo_x_geometric}px")
-    print(f"  Visual offset: +{visual_offset}px (correcting internal white space)")
-    print(f"  Final logo X: {logo_x}px")
+    print(f"  Logo X position: {logo_x}px")
     print(f"  Logo Y position: {logo_y}px")
+    print(f"  Logo center: {logo_x + logo_width//2}px")
+    print(f"  Screen center: {width//2}px")
 
     img.paste(logo, (logo_x, logo_y), logo)
     qr_start_y = logo_y + logo_height + 120

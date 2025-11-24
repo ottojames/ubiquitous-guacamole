@@ -106,6 +106,30 @@ export default function ShowcaseSegment() {
           <p className="text-sm text-slate-500">{segment.duration}</p>
         </div>
 
+        {/* Other Segments */}
+        <div className="bg-gradient-to-r from-slate-100 to-slate-50 rounded-2xl p-8 mb-8">
+          <h2 className="text-2xl font-semibold text-slate-900 mb-6">Explore Other Journeys</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Object.values(segmentData)
+              .filter(s => s.id !== segment.id)
+              .map(s => (
+                <Link
+                  key={s.id}
+                  to={`/showcase/${s.id}`}
+                  className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r ${s.gradient} text-white mb-3 group-hover:scale-110 transition-transform duration-200`}>
+                    {s.icon}
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-slate-500">{s.persona}</p>
+                </Link>
+              ))}
+          </div>
+        </div>
+
         {/* Video Container */}
         <div className="mb-8">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900">
@@ -147,30 +171,6 @@ export default function ShowcaseSegment() {
           <p className="text-slate-600 leading-relaxed text-lg">
             {segment.description}
           </p>
-        </div>
-
-        {/* Other Segments */}
-        <div className="bg-gradient-to-r from-slate-100 to-slate-50 rounded-2xl p-8">
-          <h2 className="text-2xl font-semibold text-slate-900 mb-6">Explore Other Journeys</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {Object.values(segmentData)
-              .filter(s => s.id !== segment.id)
-              .map(s => (
-                <Link
-                  key={s.id}
-                  to={`/showcase/${s.id}`}
-                  className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200"
-                >
-                  <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r ${s.gradient} text-white mb-3 group-hover:scale-110 transition-transform duration-200`}>
-                    {s.icon}
-                  </div>
-                  <h3 className="font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
-                    {s.title}
-                  </h3>
-                  <p className="text-sm text-slate-500">{s.persona}</p>
-                </Link>
-              ))}
-          </div>
         </div>
 
         {/* Sample Notice CTA */}
