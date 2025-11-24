@@ -175,28 +175,28 @@ export default function ShowcaseSegment() {
         <div className="mt-8">
           <Link
             to="/sample-notice"
-            className="group relative block bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+            className="group relative block bg-[#2d3748] rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
           >
-            <div className="relative p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm text-white">
-                    <FileText className="w-6 h-6" />
+            <div className="relative px-8 py-6">
+              <div className="flex items-center justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className="flex-shrink-0 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-600/50 text-white">
+                    <FileText className="w-7 h-7" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-xl font-bold text-white mb-1">
-                      View Sample Notice Template
+                    <h3 className="text-2xl font-semibold text-white mb-1">
+                      View Sample Notice
                     </h3>
-                    <p className="text-slate-300 text-sm">
-                      Sampleton Borough Council — Premises Licence
+                    <p className="text-slate-300 text-base">
+                      See our structured template format for Sampleton Borough Council
                     </p>
                   </div>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="inline-flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-sm font-medium group-hover:bg-white/20 transition-all duration-300">
+                  <div className="inline-flex items-center px-6 py-3 rounded-xl text-white font-medium group-hover:bg-white/10 transition-all duration-200">
                     View Template
                     <svg
-                      className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+                      className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -211,10 +211,6 @@ export default function ShowcaseSegment() {
                   </div>
                 </div>
               </div>
-            </div>
-            {/* Hover shine effect */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             </div>
           </Link>
         </div>
