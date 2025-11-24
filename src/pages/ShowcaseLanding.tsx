@@ -1,255 +1,204 @@
 import { Link } from 'react-router-dom';
-import {
-  MapPin,
-  Users,
-  Briefcase,
-  Building,
-  BarChart3,
-  ExternalLink,
-  Mail
-} from 'lucide-react';
+import { Users, Briefcase, Shield, TrendingUp, FileText } from 'lucide-react';
 
-interface DemoCardProps {
+interface SegmentCard {
+  id: string;
   title: string;
   description: string;
-  icon: React.ReactNode;
-  link: string;
   persona: string;
-  color: string;
+  icon: React.ReactNode;
+  gradient: string;
 }
 
-function DemoCard({ title, description, icon, link, persona, color }: DemoCardProps) {
-  return (
-    <Link
-      to={link}
-      className={`group relative overflow-hidden rounded-xl bg-white p-8 shadow-lg transition-all hover:shadow-2xl hover:scale-105 border-2 border-transparent hover:border-${color}-500`}
-    >
-      {/* Icon */}
-      <div className={`mb-6 inline-flex rounded-full bg-${color}-100 p-4 text-${color}-600`}>
-        {icon}
-      </div>
-
-      {/* Title */}
-      <h3 className="mb-3 text-2xl font-bold text-gray-900">{title}</h3>
-
-      {/* Description */}
-      <p className="mb-4 text-gray-600">{description}</p>
-
-      {/* Persona */}
-      <div className="mb-4 flex items-center text-sm text-gray-500">
-        <Users className="mr-2 h-4 w-4" />
-        <span>{persona}</span>
-      </div>
-
-      {/* CTA */}
-      <div className="flex items-center font-semibold text-blue-600 group-hover:text-blue-700">
-        <span>View Demo</span>
-        <ExternalLink className="ml-2 h-4 w-4" />
-      </div>
-    </Link>
-  );
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}
-
-function StatCard({ label, value, icon }: StatCardProps) {
-  return (
-    <div className="text-center">
-      {icon && <div className="mb-2 flex justify-center text-blue-600">{icon}</div>}
-      <div className="mb-1 text-4xl font-bold text-gray-900">{value}</div>
-      <div className="text-sm font-medium text-gray-600">{label}</div>
-    </div>
-  );
-}
+const segments: SegmentCard[] = [
+  {
+    id: 'public',
+    title: 'General Public Journey',
+    description: 'Discover how residents find and engage with local notices in their community.',
+    persona: 'Rachael, Local Resident',
+    icon: <Users className="w-6 h-6" />,
+    gradient: 'from-blue-500 to-cyan-500',
+  },
+  {
+    id: 'legal',
+    title: 'Legal Firm Journey',
+    description: 'See how solicitors publish notices efficiently with 82% cost savings.',
+    persona: 'James Wilson, Solicitor',
+    icon: <Briefcase className="w-6 h-6" />,
+    gradient: 'from-purple-500 to-pink-500',
+  },
+  {
+    id: 'officer',
+    title: 'Council Officer Journey',
+    description: 'Explore how licensing officers manage submissions and representations.',
+    persona: 'Emma Martinez, Senior Licensing Officer',
+    icon: <Shield className="w-6 h-6" />,
+    gradient: 'from-emerald-500 to-teal-500',
+  },
+  {
+    id: 'manager',
+    title: 'Council Manager Journey',
+    description: 'Learn how senior management gains strategic oversight and demonstrates value.',
+    persona: 'David Chen, Head of Regulatory Services',
+    icon: <TrendingUp className="w-6 h-6" />,
+    gradient: 'from-orange-500 to-red-500',
+  },
+];
 
 export default function ShowcaseLanding() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Civic Notices</h1>
-              <p className="mt-1 text-sm text-gray-600">Live Demonstration System</p>
-            </div>
-            <Link
-              to="/"
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              Exit Demo
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100 via-white to-transparent opacity-50" />
 
-      <div className="mx-auto max-w-7xl px-4 py-16">
-        {/* Hero Section */}
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-5xl font-bold text-gray-900">
-            Transforming Public Notices
-          </h2>
-          <p className="mx-auto max-w-3xl text-xl text-gray-600">
-            Experience how councils, firms, and residents engage with statutory public notices
-            in a modern, efficient, and transparent platform
-          </p>
-        </div>
-
-        {/* 5-segment Demo Cards */}
-        <div className="mb-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {/* Segment 1: Resident Search */}
-          <DemoCard
-            title="Resident Search"
-            description="Find notices near home, filter by type, and subscribe to weekly email alerts for your area"
-            icon={<MapPin className="h-8 w-8" />}
-            link="/notices?postcode=SW1A1AA"
-            persona="Sarah Thompson, Westminster Resident"
-            color="blue"
-          />
-
-          {/* Segment 2: Public Applicant */}
-          <DemoCard
-            title="Public Applicant"
-            description="View notice details, submit representations, and track your submissions in real-time"
-            icon={<Users className="h-8 w-8" />}
-            link="/"
-            persona="Michael Chen, Small Business Owner"
-            color="green"
-          />
-
-          {/* Segment 3: Law Firm */}
-          <DemoCard
-            title="Legal Firm"
-            description="Publish notices for clients, manage submissions, and track billing across all applications"
-            icon={<Briefcase className="h-8 w-8" />}
-            link="/f/wilson-partners"
-            persona="James Wilson, Solicitor"
-            color="purple"
-          />
-
-          {/* Segment 4: Council Officer */}
-          <DemoCard
-            title="Council Officer"
-            description="Review submissions, manage representations, publish notices, and respond to applicants"
-            icon={<Building className="h-8 w-8" />}
-            link="/c/bristol-council/licensing"
-            persona="Emma Martinez, Licensing Officer"
-            color="orange"
-          />
-
-          {/* Segment 5: Council Manager */}
-          <DemoCard
-            title="Council Manager"
-            description="Analytics dashboards, cost savings reports, compliance monitoring, and strategic insights"
-            icon={<BarChart3 className="h-8 w-8" />}
-            link="/c/westminster-city-of-council/licensing/analytics"
-            persona="David Chen, Head of Regulatory Services"
-            color="red"
-          />
-        </div>
-
-        {/* Live Platform Statistics */}
-        <div className="mb-16 overflow-hidden rounded-2xl bg-white shadow-xl">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
-            <h3 className="text-center text-2xl font-bold text-white">
-              Live Platform Statistics
-            </h3>
-          </div>
-          <div className="grid gap-8 p-8 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Active Councils"
-              value="349"
-              icon={<Building className="h-8 w-8" />}
-            />
-            <StatCard
-              label="Published Notices"
-              value="106"
-              icon={<Mail className="h-8 w-8" />}
-            />
-            <StatCard
-              label="Public Representations"
-              value="80"
-              icon={<Users className="h-8 w-8" />}
-            />
-            <StatCard
-              label="Active Submissions"
-              value="13"
-              icon={<Briefcase className="h-8 w-8" />}
-            />
-          </div>
-        </div>
-
-        {/* Key Features */}
-        <div className="mb-16 rounded-2xl bg-white p-8 shadow-lg">
-          <h3 className="mb-6 text-center text-2xl font-bold text-gray-900">
-            Platform Highlights
-          </h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="rounded-lg border border-gray-200 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">Advanced Search</h4>
-              <p className="text-sm text-gray-600">
-                MapLibre GL clustering, radius filtering, 7 notice types, real-time geocoding
-              </p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">Multi-Tenant</h4>
-              <p className="text-sm text-gray-600">
-                355 departments across 349 councils, firm portals, role-based access control
-              </p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">Workflow Automation</h4>
-              <p className="text-sm text-gray-600">
-                Firm submissions, council reviews, change requests, automated approvals
-              </p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">Public Engagement</h4>
-              <p className="text-sm text-gray-600">
-                Representation submission, email alerts, consultation tracking, deadline management
-              </p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">50+ Notice Types</h4>
-              <p className="text-sm text-gray-600">
-                Licensing, Planning, Traffic Orders, GVOL, Gambling, Probate, Environmental
-              </p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">Analytics & Reporting</h4>
-              <p className="text-sm text-gray-600">
-                Real-time dashboards, cost savings, compliance metrics, departmental insights
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="rounded-lg bg-blue-600 p-8 text-center text-white">
-          <h3 className="mb-2 text-2xl font-bold">Ready to Transform Your Notices?</h3>
-          <p className="mb-6 text-blue-100">
-            Join 349 councils already using the Public Notice Portal
-          </p>
-          <div className="flex justify-center gap-4">
-            <Link
-              to="/contact"
-              className="rounded-lg bg-white px-6 py-3 font-semibold text-blue-600 transition-colors hover:bg-blue-50"
-            >
-              Get in Touch
-            </Link>
-            <Link
-              to="/pricing"
-              className="rounded-lg border-2 border-white px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
-            >
-              View Pricing
-            </Link>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+          <div className="text-center">
+            <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 tracking-tight mb-6">
+              Civic Notices
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600 mt-2">
+                Platform Showcase
+              </span>
+            </h1>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              Transforming how statutory public notices are published, discovered, and engaged with across the UK.
+              Watch our journey through four distinct user experiences.
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Segment Cards */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {segments.map((segment, index) => (
+            <Link
+              key={segment.id}
+              to={`/showcase/${segment.id}`}
+              className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+              style={{
+                animationDelay: `${index * 100}ms`,
+                animation: 'fadeInUp 0.6s ease-out forwards',
+                opacity: 0,
+              }}
+            >
+              {/* Gradient Border Effect */}
+              <div className={`absolute inset-0 bg-gradient-to-r ${segment.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                   style={{ padding: '2px' }}>
+                <div className="absolute inset-[2px] bg-white rounded-2xl" />
+              </div>
+
+              {/* Card Content */}
+              <div className="relative p-8">
+                {/* Icon */}
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r ${segment.gradient} text-white mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  {segment.icon}
+                </div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-semibold text-slate-900 mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-cyan-600 transition-all duration-300">
+                  {segment.title}
+                </h3>
+
+                {/* Persona */}
+                <p className="text-sm font-medium text-slate-500 mb-3">
+                  {segment.persona}
+                </p>
+
+                {/* Description */}
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  {segment.description}
+                </p>
+
+                {/* CTA */}
+                <div className="flex items-center text-sm font-medium text-blue-600 group-hover:text-blue-700">
+                  Watch Demo
+                  <svg
+                    className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Hover Shine Effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Sample Notice CTA */}
+        <div className="max-w-4xl mx-auto mt-12">
+          <Link
+            to="/sample-notice"
+            className="group relative block bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
+          >
+            <div className="relative p-8 sm:p-10">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 inline-flex items-center justify-center w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm text-white">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      View Sample Notice
+                    </h3>
+                    <p className="text-slate-300">
+                      See our structured template format for Sampleton Borough Council
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl text-white font-medium group-hover:bg-white/20 transition-all duration-300">
+                    View Template
+                    <svg
+                      className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Hover shine effect */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Keyframe Animation */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

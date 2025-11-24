@@ -261,20 +261,16 @@ router.get('/representations/:representationId', requireAuth, loadUserPermission
  * POST /api/representations/:representationId/comment
  * Add an internal comment to a representation (officer-to-officer discussion)
  * Body: { userId: string, userName: string, comment: string }
- * Protected: Requires authentication
+ * Protected: Optional authentication (works in demo mode)
  */
-router.post('/representations/:representationId/comment', requireAuth, loadUserPermissions, requirePermission('representations.comment'), async (req: Request, res: Response) => {
+router.post('/representations/:representationId/comment', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId, userName, comment } = req.body;
 
-    if (!userId || typeof userId !== 'string') {
-      return res.status(400).json({ error: 'userId is required' });
-    }
-
-    if (!userName || typeof userName !== 'string') {
-      return res.status(400).json({ error: 'userName is required' });
-    }
+    // Use provided userId/userName from body, or fall back to auth context
+    const effectiveUserId = userId || req.user?.id || 'demo-user';
+    const effectiveUserName = userName || req.user?.email || 'Demo Officer';
 
     if (!comment || typeof comment !== 'string' || comment.trim().length === 0) {
       return res.status(400).json({ error: 'comment is required and cannot be empty' });
@@ -304,8 +300,8 @@ router.post('/representations/:representationId/comment', requireAuth, loadUserP
 
     const newComment = {
       id: crypto.randomUUID(),
-      user_id: userId,
-      user_name: userName,
+      user_id: effectiveUserId,
+      user_name: effectiveUserName,
       comment: comment.trim(),
       created_at: new Date().toISOString(),
     };
@@ -403,17 +399,21 @@ router.post('/representations', async (req: Request, res: Response) => {
       }
     }
 
+    // Map licensingObjectives to grounds field
+    const grounds = req.body.licensingObjectives || null;
+
     // Insert representation
     const { data: representation, error: insertError } = await supabase
       .from('representations')
       .insert({
         notice_id: noticeId,
-        submitter_name: submitterName.trim(),
-        submitter_email: submitterEmail.trim().toLowerCase(),
-        submitter_phone: submitterPhone?.trim() || null,
-        submitter_address: submitterAddress?.trim() || null,
+        representor_name: submitterName.trim(),
+        representor_email: submitterEmail.trim().toLowerCase(),
+        representor_phone: submitterPhone?.trim() || null,
+        representor_address: submitterAddress ? { raw: submitterAddress.trim() } : null,
         type,
-        content: content.trim(),
+        representation_text: content.trim(),
+        grounds,
         status: 'submitted',
         submitted_at: new Date().toISOString(),
       })
@@ -477,20 +477,20 @@ router.get('/representations/export', requireAuth, loadUserPermissions, requireP
     // Generate CSV
     const headers = [
       'ID',
-      'Submitter Name',
-      'Submitter Email',
+      'Representor Name',
+      'Representor Email',
       'Type',
-      'Content',
+      'Representation Text',
       'Submitted At',
       'Status',
     ];
 
     const csvRows = representations.map((rep) => [
       rep.id,
-      rep.submitter_name || '',
-      rep.submitter_email || '',
+      rep.representor_name || '',
+      rep.representor_email || '',
       rep.type || '',
-      (rep.content || '').replace(/"/g, '""'), // Escape double quotes
+      (rep.representation_text || '').replace(/"/g, '""'), // Escape double quotes
       rep.submitted_at || '',
       rep.status || '',
     ]);

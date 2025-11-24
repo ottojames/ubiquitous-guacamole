@@ -32,9 +32,12 @@ interface Notice {
   expires_at: string | null;
   representation_deadline: string | null;
   proof_pdf_url?: string | null;
+  representations_count?: number;
+  objections_count?: number;
+  support_count?: number;
 }
 
-type FilterStatus = 'all' | 'draft' | 'pending_approval' | 'published' | 'expired';
+type FilterStatus = 'all' | 'draft' | 'published' | 'expired';
 
 export default function Notices() {
   const { department, userRole } = useOutletContext<ContextType>();
@@ -55,14 +58,14 @@ export default function Notices() {
   const [csvImportFile, setCsvImportFile] = useState<File | null>(null);
 
   // Check if we're in demo mode
-  const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster';
+  const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster' || orgSlug === 'westminster-city-of-council' || orgSlug === 'bristol-council';
   const isDemoSampleBorough = orgSlug === 'sample-borough';
 
   // Read status from URL on mount
   useEffect(() => {
     const statusParam = searchParams.get('status');
-    if (statusParam && ['draft', 'pending', 'published', 'expired'].includes(statusParam)) {
-      setFilterStatus(statusParam === 'pending' ? 'pending_approval' : statusParam as FilterStatus);
+    if (statusParam && ['draft', 'published', 'expired'].includes(statusParam)) {
+      setFilterStatus(statusParam as FilterStatus);
     }
   }, [searchParams]);
 
@@ -87,16 +90,41 @@ export default function Notices() {
         const allNotices = responseData.items || [];
 
         // Transform API response to match Notice interface
-        const transformedNotices = allNotices.map((n: any) => ({
-          id: n.id,
-          title: n.premisesName || n.title || 'Untitled Notice',
-          notice_type: n.noticeType || 'Unknown',
-          status: n.status || 'published',
-          created_at: n.publicationDate || n.created_at,
-          published_at: n.publicationDate || n.published_at,
-          expires_at: null,
-          representation_deadline: n.repsDeadline || null,
-          proof_pdf_url: n.proof_pdf_url || null
+        const transformedNotices = await Promise.all(allNotices.map(async (n: any) => {
+          // Fetch representation counts from Supabase
+          let representationsCount = 0;
+          let objectionsCount = 0;
+          let supportCount = 0;
+
+          try {
+            const { data: reps, error } = await supabase
+              .from('representations')
+              .select('type')
+              .eq('notice_id', n.id);
+
+            if (!error && reps) {
+              representationsCount = reps.length;
+              objectionsCount = reps.filter(r => r.type === 'objection').length;
+              supportCount = reps.filter(r => r.type === 'support').length;
+            }
+          } catch (err) {
+            console.error('Failed to fetch representation counts for notice', n.id, err);
+          }
+
+          return {
+            id: n.id,
+            title: n.premisesName || n.title || 'Untitled Notice',
+            notice_type: n.noticeType || 'Unknown',
+            status: n.status || 'published',
+            created_at: n.publicationDate || n.created_at,
+            published_at: n.publicationDate || n.published_at,
+            expires_at: null,
+            representation_deadline: n.repsDeadline || null,
+            proof_pdf_url: n.proof_pdf_url || null,
+            representations_count: representationsCount,
+            objections_count: objectionsCount,
+            support_count: supportCount
+          };
         }));
 
         setNotices(transformedNotices);
@@ -111,7 +139,26 @@ export default function Notices() {
 
         if (error) throw error;
 
-        setNotices(data || []);
+        // Fetch representation counts for each notice
+        const noticesWithReps = await Promise.all((data || []).map(async (notice) => {
+          const { data: reps } = await supabase
+            .from('representations')
+            .select('type')
+            .eq('notice_id', notice.id);
+
+          const representationsCount = reps?.length || 0;
+          const objectionsCount = reps?.filter(r => r.type === 'objection').length || 0;
+          const supportCount = reps?.filter(r => r.type === 'support').length || 0;
+
+          return {
+            ...notice,
+            representations_count: representationsCount,
+            objections_count: objectionsCount,
+            support_count: supportCount
+          };
+        }));
+
+        setNotices(noticesWithReps);
         setLoading(false);
       }
     } catch (err) {
@@ -146,8 +193,6 @@ export default function Notices() {
         return 'bg-green-100 text-green-800';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
-      case 'pending_approval':
-        return 'bg-yellow-100 text-yellow-800';
       case 'expired':
         return 'bg-red-100 text-red-800';
       default:
@@ -344,15 +389,14 @@ export default function Notices() {
   const statusCounts = {
     all: notices.length,
     draft: notices.filter(n => n.status === 'draft').length,
-    pending_approval: notices.filter(n => n.status === 'pending_approval').length,
     published: notices.filter(n => n.status === 'published').length,
     expired: notices.filter(n => n.status === 'expired').length
   };
 
   // Filter out draft status for non-publishing departments
   const availableStatuses: FilterStatus[] = deptConfig.showDraftsCard
-    ? ['all', 'draft', 'pending_approval', 'published', 'expired']
-    : ['all', 'pending_approval', 'published', 'expired'];
+    ? ['all', 'draft', 'published', 'expired']
+    : ['all', 'published', 'expired'];
 
   if (loading) {
     return (
@@ -543,13 +587,25 @@ export default function Notices() {
                   className="flex-1 flex items-start justify-between hover:opacity-80 transition-opacity"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className="text-lg font-semibold text-gray-900">
                         {notice.title}
                       </h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(notice.status)}`}>
                         {formatStatus(notice.status)}
                       </span>
+                      {(notice.representations_count !== undefined && notice.representations_count > 0) && (
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                            {notice.representations_count} rep{notice.representations_count !== 1 ? 's' : ''}
+                          </span>
+                          {notice.objections_count && notice.objections_count > 0 && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                              {notice.objections_count} objection{notice.objections_count !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                   <p className="text-sm text-gray-600 mb-3">
@@ -612,7 +668,7 @@ export default function Notices() {
                       </div>
                     )}
 
-                    {!notice.proof_pdf_url && (notice.status === 'published' || notice.status === 'pending' || notice.status === 'pending_approval') && (
+                    {!notice.proof_pdf_url && notice.status === 'published' && (
                       <div className="flex items-center gap-1">
                         <span>•</span>
                         <span className="text-amber-600 font-medium" title="Proof not yet available">

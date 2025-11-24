@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { NEW_PUBLISH_FLOW } from "@/env";
 import NewPublishFlow from "@/next/publish/flow/NewPublishFlow";
 import Home from "./pages/Home";
@@ -43,15 +44,34 @@ import EmailAlerts from "@/pages/EmailAlerts";
 import ApiDocs from "@/pages/ApiDocs";
 import ConferenceLanding from "@/pages/ConferenceLanding";
 import ShowcaseLanding from "@/pages/ShowcaseLanding";
+import ShowcaseSegment from "@/pages/ShowcaseSegment";
+import SampleNotice from "@/pages/SampleNotice";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function App() {
+  // Demo mode toggle: Cmd+Shift+D (Mac) or Ctrl+Shift+D (Windows/Linux)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        document.body.classList.toggle('demo-mode');
+        const isEnabled = document.body.classList.contains('demo-mode');
+        console.log(`🎥 Demo mode ${isEnabled ? 'enabled' : 'disabled'}`);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/conference" element={<ConferenceLanding />} />
         <Route path="/showcase" element={<ShowcaseLanding />} />
+        <Route path="/showcase/:segmentId" element={<ShowcaseSegment />} />
+        <Route path="/sample-notice" element={<SampleNotice />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notices" element={<NoticesPage />} />
         <Route path="/notices/:id" element={<NoticeDetailPage />} />

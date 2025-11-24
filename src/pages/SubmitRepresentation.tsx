@@ -210,11 +210,40 @@ export default function SubmitRepresentation() {
             /* Success State */
             <div className="rounded-3xl border border-white/70 bg-white p-12 shadow-[0_2px_12px_rgba(0,0,0,0.04)] text-center">
                 <CheckCircle className="mx-auto h-20 w-20 text-green-600 mb-6" />
-                <h2 className="text-3xl font-bold text-slate-900 mb-4">Email Client Opened</h2>
+                <h2 className="text-3xl font-bold text-slate-900 mb-4">Representation Submitted</h2>
                 <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
-                  Your email client should have opened with a pre-filled representation.
-                  Please review and send the email to submit your representation to {authorityName}.
+                  Your representation has been successfully submitted to {authorityName}.
+                  They will review your submission and may contact you if additional information is needed.
                 </p>
+
+                {/* Subscribe to Notices Banner */}
+                <div className="mb-8 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">
+                        Stay informed about your area
+                      </h3>
+                      <p className="text-sm text-slate-700 mb-4 leading-relaxed">
+                        Get weekly email updates about new planning applications, licensing notices, and traffic orders in your neighbourhood. Never miss an opportunity to have your say.
+                      </p>
+                      <button
+                        onClick={() => navigate('/email-alerts')}
+                        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 hover:shadow-lg"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Subscribe to Notices in Your Area
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-center gap-4">
                   <button
                     onClick={() => navigate(`/notices/${id}`)}
@@ -284,18 +313,16 @@ export default function SubmitRepresentation() {
               <div className="rounded-3xl border border-white/70 bg-white p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3 mb-6">
                   <Building2 className="h-6 w-6 text-blue-600" />
-                  <h2 className="text-2xl font-bold text-slate-900">Send Representation To</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">Licensing Authority</h2>
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Licensing Authority</p>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Authority Name</p>
                     <p className="text-lg text-slate-900">{authorityName}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Email</p>
-                    <a href={`mailto:${authorityEmail}`} className="text-lg text-blue-600 hover:text-blue-700 transition">
-                      {authorityEmail}
-                    </a>
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Contact Email</p>
+                    <p className="text-lg text-slate-900">{authorityEmail}</p>
                   </div>
                   {representationAddress && (
                     <div>
@@ -321,7 +348,9 @@ export default function SubmitRepresentation() {
                     <input
                       type="text"
                       id="fullName"
+                      name="full-name-field"
                       required
+                      autoComplete="new-password"
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
@@ -336,7 +365,9 @@ export default function SubmitRepresentation() {
                     <input
                       type="email"
                       id="email"
+                      name="email-field"
                       required
+                      autoComplete="new-password"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
@@ -350,7 +381,9 @@ export default function SubmitRepresentation() {
                     </label>
                     <textarea
                       id="address"
+                      name="address-field"
                       required
+                      autoComplete="new-password"
                       rows={3}
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -469,17 +502,23 @@ export default function SubmitRepresentation() {
 
                   <div>
                     <label htmlFor="comments" className="block text-sm font-semibold text-slate-700 mb-2">
-                      Your Comments *
+                      Your Comments * (minimum 10 characters)
                     </label>
                     <textarea
                       id="comments"
                       required
+                      minLength={10}
                       rows={8}
                       value={formData.comments}
                       onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       placeholder="Explain your representation in detail. Include any relevant concerns or reasons for your position."
                     />
+                    {formData.comments.length > 0 && formData.comments.length < 10 && (
+                      <p className="mt-2 text-sm text-rose-600">
+                        Please enter at least 10 characters ({formData.comments.length}/10)
+                      </p>
+                    )}
                   </div>
 
                   <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6">
@@ -488,8 +527,8 @@ export default function SubmitRepresentation() {
                       <div>
                         <p className="text-sm font-semibold text-blue-900 mb-2">How This Works</p>
                         <p className="text-sm text-blue-800">
-                          When you submit this form, your email client will open with a pre-filled email to {authorityName}.
-                          Review the email and click send to submit your representation. Make sure to send it before the deadline.
+                          When you submit this form, your representation will be sent directly to {authorityName}.
+                          You'll receive a confirmation once your submission is complete. Make sure to submit before the deadline.
                         </p>
                       </div>
                     </div>
@@ -511,12 +550,12 @@ export default function SubmitRepresentation() {
                       {submitting ? (
                         <>
                           <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          Opening Email...
+                          Submitting...
                         </>
                       ) : (
                         <>
                           <Send className="h-5 w-5" />
-                          Open Email to Submit
+                          Submit Representation
                         </>
                       )}
                     </button>

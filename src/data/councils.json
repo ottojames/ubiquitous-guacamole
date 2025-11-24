@@ -449,6 +449,15 @@
     ]
   },
   {
+    "name": "Westminster City Council",
+    "email": "licensing@westminster.gov.uk",
+    "address": "Licensing Team, 64 Victoria Street, London, SW1E 6QP",
+    "aliases": [
+      "Westminster",
+      "City of Westminster"
+    ]
+  },
+  {
     "name": "Worcester City Council",
     "email": "wrsenquiries@worcsregservices.gov.uk",
     "address": "",

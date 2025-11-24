@@ -34,7 +34,7 @@ const upload = (multer as any)({
 
 const router = Router();
 const PAGE_LIMIT = Number(process.env.PAGE_LIMIT || 4);
-const seenHashes = new Map<string, string>();
+const seenHashes = new Map<string, { path: string; text: string; meta: any }>();
 
 // Simple in-memory rate limiter: 20/min per IP
 const hits = new Map<string, { count: number; reset: number }>();
@@ -124,19 +124,25 @@ export async function handleUploadCore(
     };
   }
 
+  // Check for duplicate and return cached text if available
   if (seenHashes.has(sha256)) {
+    const cached = seenHashes.get(sha256)!;
+    console.log('[upload] 🔄 Duplicate detected, returning cached text:', {
+      textLength: cached.text.length,
+      path: cached.path
+    });
+
     return {
-      ok: false,
-      error: {
-        code: "DUPLICATE",
-        message: "Duplicate notice uploaded",
-        existing: seenHashes.get(sha256),
-      },
-      meta: mimeMeta,
+      ok: true,
+      text: cached.text,
+      ocr_text: cached.text,
+      meta: { ...mimeMeta, ...cached.meta, cached: true },
+      info: "This file was already processed. Returning cached result.",
     };
   }
 
-  seenHashes.set(sha256, path);
+  // Store hash with text and meta for future duplicate uploads
+  seenHashes.set(sha256, { path, text: ocr_text, meta });
 
   if (!hasSupabase) {
     if (!ocr_text.trim()) {

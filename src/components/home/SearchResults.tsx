@@ -74,7 +74,7 @@ export default function SearchResults({
   const hasMore = maxResults && results.length > maxResults;
 
   const containerClass = layout === 'list'
-    ? 'space-y-3'
+    ? 'space-y-4'
     : 'grid gap-6 md:grid-cols-2 lg:grid-cols-3';
 
   const handleCardClick = (item: NoticeSearchItem) => {
@@ -86,6 +86,19 @@ export default function SearchResults({
     }
   };
 
+  const getCardClasses = (isActive: boolean) => {
+    if (layout === 'list') {
+      return `group relative overflow-hidden rounded-xl bg-white p-3 shadow-sm border transition-all hover:shadow-md cursor-pointer ${
+        isActive
+          ? 'border-blue-600 bg-blue-50/30 shadow-blue-100'
+          : 'border-slate-200 hover:border-blue-400'
+      }`;
+    }
+    return `group relative overflow-hidden rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-200/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-slate-300 cursor-pointer ${
+      isActive ? 'ring-2 ring-blue-600' : ''
+    }`;
+  };
+
   return (
     <>
       <div className={containerClass}>
@@ -94,7 +107,7 @@ export default function SearchResults({
           return (
             <article
               key={item.id}
-              className={`group relative overflow-hidden rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-200/60 transition-all hover:-translate-y-1 hover:shadow-xl hover:ring-slate-300 cursor-pointer ${isActive ? 'ring-2 ring-blue-600' : ''}`}
+              className={getCardClasses(isActive)}
               onClick={() => handleCardClick(item)}
               onMouseEnter={() => {
                 if (onHoverNotice) onHoverNotice(item.id);
@@ -104,59 +117,65 @@ export default function SearchResults({
               }}
             >
               {/* Background gradient accent */}
-              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-100/20 blur-2xl transition-all group-hover:scale-150" />
+              {layout !== 'list' && (
+                <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-100/20 blur-2xl transition-all group-hover:scale-150" />
+              )}
 
               <div className="relative">
                 {/* Notice type badge */}
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900">
+                <div className={`${layout === 'list' ? 'mb-1.5' : 'mb-4'} inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm`}>
                   {item.noticeType}
                 </div>
 
                 {/* Premises name */}
-                <h3 className="mb-2 text-xl font-bold leading-snug text-slate-900">
+                <h3 className={`${layout === 'list' ? 'mb-0.5 text-sm' : 'mb-2 text-xl'} font-bold leading-tight text-slate-900`}>
                   {item.premisesName || 'Unnamed premises'}
                 </h3>
 
                 {/* Address */}
-                <p className="mb-4 text-sm leading-relaxed text-slate-600">
+                <p className={`${layout === 'list' ? 'mb-1.5 text-xs line-clamp-1' : 'mb-4 text-sm'} leading-relaxed text-slate-600`}>
                   {formatAddress(item.premisesAddress) || 'Address not provided'}
                 </p>
 
                 {/* Metadata grid */}
-                <div className="mb-6 space-y-2 border-t border-slate-100 pt-4">
+                <div className={`${layout === 'list' ? 'space-y-0.5 pt-1.5' : 'mb-6 space-y-2 pt-4'} border-t border-slate-100`}>
                   {item.publicationDate && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Published</span>
-                      <span className="font-medium text-slate-700">{formatShortDate(item.publicationDate)}</span>
+                    <div className={`flex items-center justify-between ${layout === 'list' ? 'text-xs' : 'text-xs'}`}>
+                      <span className="text-slate-500 font-medium">Published</span>
+                      <span className="font-semibold text-slate-800">{formatShortDate(item.publicationDate)}</span>
                     </div>
                   )}
                   {item.repsDeadline && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Deadline</span>
-                      <span className="font-medium text-slate-700">{formatShortDate(item.repsDeadline)}</span>
+                    <div className={`flex items-center justify-between ${layout === 'list' ? 'text-xs' : 'text-xs'}`}>
+                      <span className="text-slate-500 font-medium">Deadline</span>
+                      <span className="font-semibold text-slate-800">{formatShortDate(item.repsDeadline)}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Status</span>
-                    <span className="inline-flex items-center gap-1.5 capitalize font-medium text-slate-700">
-                      <span className={`h-1.5 w-1.5 rounded-full ${item.status === 'published' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      {item.status}
-                    </span>
-                  </div>
+                  {layout !== 'list' && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-medium">Status</span>
+                      <span className="inline-flex items-center gap-1.5 capitalize font-semibold text-slate-800">
+                        <span className={`h-2 w-2 rounded-full ${item.status === 'published' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        {item.status}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* View link */}
-                <button
-                  type="button"
-                  className="group/link inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:gap-3"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/notices/${item.id}`);
-                  }}
-                >
-                  View full notice
-                  <ArrowRight className="h-4 w-4 transition-transform" aria-hidden="true" />
-                </button>
+                {/* View link - only show in grid layout */}
+                {layout !== 'list' && (
+                  <button
+                    type="button"
+                    className="group/link inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:gap-3"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/notices/${item.id}`);
+                    }}
+                  >
+                    View full notice
+                    <ArrowRight className="h-4 w-4 transition-transform" aria-hidden="true" />
+                  </button>
+                )}
               </div>
             </article>
           );
@@ -167,7 +186,7 @@ export default function SearchResults({
         <button
           type="button"
           onClick={onShowMore}
-          className="mt-4 w-full rounded-lg border-2 border-blue-600 bg-white px-4 py-3 font-semibold text-blue-600 transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+          className="mt-6 w-full rounded-xl border-2 border-blue-600 bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3.5 font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-200"
         >
           Show all {results.length} notices
         </button>

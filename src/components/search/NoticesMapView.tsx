@@ -289,6 +289,9 @@ function NoticesMapViewComponent({
   const [mapLoading, setMapLoading] = useState(true);
   const [hoveredCluster, setHoveredCluster] = useState<HoveredClusterState | null>(null);
   const [pingedNoticeId, setPingedNoticeId] = useState<string | null>(null);
+  const isAnimatingRef = useRef(false);
+  const animationTimeoutRef = useRef<number | null>(null);
+  const lastAnimatedNoticeRef = useRef<string | null>(null);
 
   const noticeLookup = useMemo(() => {
     return new Map(notices.map((notice) => [notice.id, notice]));
@@ -377,6 +380,18 @@ function NoticesMapViewComponent({
     lastViewportBoundsKeyRef.current = boundsKey;
     const zoom = mapRef.current.getZoom();
 
+    console.log('[NoticesMapView] 📍 handleMoveEnd fired:', {
+      zoom: zoom?.toFixed(2),
+      isAnimating: isAnimatingRef.current,
+      userAdjusted: userAdjustedViewportRef.current,
+    });
+
+    // CRITICAL: Block during programmatic animations - check FIRST
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔ BLOCKED by animation flag');
+      return;
+    }
+
     if (suppressNextMoveEndRef.current) {
       suppressNextMoveEndRef.current = false;
       return;
@@ -388,10 +403,17 @@ function NoticesMapViewComponent({
     if (moveEndTimeoutRef.current) {
       window.clearTimeout(moveEndTimeoutRef.current);
     }
+
     moveEndTimeoutRef.current = window.setTimeout(() => {
       moveEndTimeoutRef.current = null;
+      // Triple-check: NEVER call bounds change during animation
+      if (isAnimatingRef.current) {
+        console.log('[NoticesMapView] ⛔ BLOCKED in timeout');
+        return;
+      }
+      console.log('[NoticesMapView] ✅ Calling onBoundsChange');
       onBoundsChange(bbox, zoom);
-    }, 220);
+    }, 500); // Increased delay to 500ms
   }, [onBoundsChange]);
 
   const getClusterSource = useCallback((): GeoJSONSourceWithClusters | null => {
@@ -462,6 +484,19 @@ function NoticesMapViewComponent({
         return;
       }
 
+      // Check for notice pin clicks first (higher priority)
+      const clickedNoticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
+      if (clickedNoticeFeature) {
+        const noticeId = clickedNoticeFeature.properties?.noticeId;
+        if (typeof noticeId === 'string') {
+          console.log('[NoticesMapView] 🎯🎯🎯 PIN CLICKED ON MAP:', noticeId);
+
+          // Just set the active notice - the useEffect will handle the zoom
+          setActiveNotice(noticeId);
+          return;
+        }
+      }
+
       const clusterFeature = features.find((feature) => feature.layer.id === CLUSTER_LAYER_ID);
       console.log('[NoticesMapView] Cluster feature found:', !!clusterFeature);
 
@@ -511,13 +546,31 @@ function NoticesMapViewComponent({
           const currentZoom = mapRef.current.getZoom();
           const targetZoom = Math.min(Math.max(expansionZoom, currentZoom + 2), 18);
 
-          console.log('[NoticesMapView] 🎯 About to zoom:', {
+          console.log('[NoticesMapView] 🎯 Cluster clicked - zooming in:', {
             clusterId,
             coordinates: [lng, lat],
             currentZoom,
             expansionZoom,
             targetZoom,
           });
+
+          // CRITICAL: Clear any pending bounds change callbacks
+          if (moveEndTimeoutRef.current) {
+            window.clearTimeout(moveEndTimeoutRef.current);
+            moveEndTimeoutRef.current = null;
+            console.log('[NoticesMapView] Cleared pending bounds change callback');
+          }
+
+          // CRITICAL: Clear any existing animation timeout to prevent premature clearing
+          if (animationTimeoutRef.current) {
+            window.clearTimeout(animationTimeoutRef.current);
+            animationTimeoutRef.current = null;
+            console.log('[NoticesMapView] Cleared previous animation timeout');
+          }
+
+          // Set animation flag to prevent bounds change during zoom
+          isAnimatingRef.current = true;
+          console.log('[NoticesMapView] 🔒 Animation flag SET (cluster)');
 
           // Use flyTo with validated coordinates
           mapRef.current.flyTo({
@@ -527,29 +580,38 @@ function NoticesMapViewComponent({
             essential: true,
           });
 
+          // Clear animation flag after EXTENDED duration (10 seconds total)
+          animationTimeoutRef.current = window.setTimeout(() => {
+            isAnimatingRef.current = false;
+            animationTimeoutRef.current = null;
+            lastAnimatedNoticeRef.current = null; // Clear for consistency
+            console.log('[NoticesMapView] 🔓 Animation flag CLEARED (cluster)');
+          }, 10000);
+
           console.log('[NoticesMapView] ✅ flyTo called successfully');
         } catch (error) {
           console.error('[NoticesMapView] ❌ Error during zoom:', error);
+          isAnimatingRef.current = false;
         }
         return;
       }
-
-      const noticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
-      if (!noticeFeature) return;
-      const noticeId = noticeFeature.properties?.noticeId;
-      if (typeof noticeId !== 'string') return;
-      setActiveNotice(noticeId);
     },
     [getClusterSource, setActiveNotice]
   );
 
   const handleMouseMove = useCallback(
     (event: MapLayerMouseEvent) => {
+      // BLOCK all hover interactions during animations
+      if (isAnimatingRef.current) {
+        console.log('[NoticesMapView] ⛔ Hover blocked during animation');
+        return;
+      }
+
       const features = event.features ?? [];
       if (!mapRef.current) return;
       const canvas = mapRef.current.getCanvas?.();
       const clusterFeature = features.find((feature) => feature.layer.id === CLUSTER_LAYER_ID);
-      const noticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
+      const hoveredNoticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
 
       if (clusterFeature) {
         const clusterId = clusterFeature.properties?.cluster_id;
@@ -583,8 +645,8 @@ function NoticesMapViewComponent({
         return;
       }
 
-      if (noticeFeature) {
-        const noticeId = noticeFeature.properties?.noticeId;
+      if (hoveredNoticeFeature) {
+        const noticeId = hoveredNoticeFeature.properties?.noticeId;
         if (typeof noticeId === 'string') {
           if (lastHoverNoticeRef.current !== noticeId) {
             onHoverNoticeChange?.(noticeId);
@@ -618,6 +680,12 @@ function NoticesMapViewComponent({
   }, [onHoverNoticeChange]);
 
   useEffect(() => {
+    // BLOCK hover state changes during animations
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔ Hover state change blocked during animation');
+      return;
+    }
+
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
 
@@ -703,21 +771,105 @@ function NoticesMapViewComponent({
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !mergedActiveId) return;
+
+    // CRITICAL: Skip if we're already animating to this same notice (prevents re-render loops!)
+    if (lastAnimatedNoticeRef.current === mergedActiveId && isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⏭️ Skipping - already animating to this notice:', mergedActiveId);
+      return;
+    }
+
     const notice = noticeLookup.get(mergedActiveId);
     if (!notice) return;
     if (typeof notice.longitude !== 'number' || typeof notice.latitude !== 'number') return;
 
     const currentZoom = mapRef.current.getZoom();
-    const targetZoom = Math.max(currentZoom ?? DEFAULT_VIEW_STATE.zoom, 13);
-    suppressNextMoveEndRef.current = true;
+
+    // NEVER zoom out - ALWAYS either zoom in or stay at current zoom
+    // Target: zoom 18 (street level detail)
+    // But if already more zoomed in than 18, STAY THERE
+    const targetZoom = Math.max(currentZoom, 18);
+
+    console.log('[NoticesMapView] 🎯🎯🎯 CENTERING ON PIN:', {
+      noticeId: mergedActiveId,
+      premisesName: notice.premisesName,
+      currentZoom: currentZoom?.toFixed(2),
+      targetZoom: targetZoom.toFixed(2),
+      zoomDifference: (targetZoom - currentZoom).toFixed(2),
+      action: targetZoom > currentZoom ? '🔼 ZOOM IN' : '📍 CENTER ONLY',
+      coords: [notice.longitude, notice.latitude],
+      lastAnimated: lastAnimatedNoticeRef.current,
+    });
+
+    // Mark this notice as the one we're animating to
+    lastAnimatedNoticeRef.current = mergedActiveId;
+
+    // CRITICAL: Mark this as a user adjustment to prevent auto-fit from interfering
+    userAdjustedViewportRef.current = true;
+    console.log('[NoticesMapView] 📌 Marked as user-adjusted viewport');
+
+    // CRITICAL: Set animation protection HERE so it works for BOTH map clicks AND sidebar clicks
+    // Clear any pending bounds change callbacks
+    if (moveEndTimeoutRef.current) {
+      window.clearTimeout(moveEndTimeoutRef.current);
+      moveEndTimeoutRef.current = null;
+      console.log('[NoticesMapView] Cleared pending bounds change callback (from useEffect)');
+    }
+
+    // Clear any existing animation timeout to prevent premature clearing
+    if (animationTimeoutRef.current) {
+      window.clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = null;
+      console.log('[NoticesMapView] Cleared previous animation timeout (from useEffect)');
+    }
+
+    // Set animation flag to block ALL competing updates during zoom
+    isAnimatingRef.current = true;
+    console.log('[NoticesMapView] 🔒 Animation flag SET (from useEffect)');
+
+    // Do the flyTo animation
+    console.log('[NoticesMapView] 🚀 Animating to pin with flyTo:', {
+      center: [notice.longitude, notice.latitude],
+      zoom: targetZoom,
+      duration: 800,
+    });
+
     mapRef.current.flyTo({
       center: [notice.longitude, notice.latitude],
       zoom: targetZoom,
-      duration: 600,
+      duration: 800,
+      essential: true,
     });
+
+    // Add a listener to track when the animation completes
+    const checkFinalZoom = () => {
+      setTimeout(() => {
+        if (mapRef.current) {
+          const finalZoom = mapRef.current.getZoom();
+          console.log('[NoticesMapView] ✅ Animation completed. Final zoom:', finalZoom?.toFixed(2), 'Expected:', targetZoom.toFixed(2));
+          if (Math.abs(finalZoom - targetZoom) > 0.1) {
+            console.error('[NoticesMapView] ❌❌❌ ZOOM MISMATCH! Something changed the zoom after flyTo!');
+          }
+        }
+      }, 1000); // Check 1 second after flyTo starts
+    };
+    checkFinalZoom();
+
+    // Keep the flag set for EXTENDED duration (10 seconds total) to prevent ANY bouncing
+    animationTimeoutRef.current = window.setTimeout(() => {
+      isAnimatingRef.current = false;
+      animationTimeoutRef.current = null;
+      lastAnimatedNoticeRef.current = null; // Clear so we can re-animate to the same notice later
+      console.log('[NoticesMapView] 🔓 Animation flag CLEARED (from useEffect)');
+    }, 10000);
   }, [mapReady, mergedActiveId, noticeLookup]);
 
   useEffect(() => {
+    // CRITICAL: BLOCK auto-fit during animations to prevent snap-back!
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔⛔⛔ AUTO-FIT BLOCKED DURING ANIMATION');
+      return;
+    }
+
     if (!mapReady || !mapRef.current) return;
     if (!initialBounds && (!autoFitToNotices || !featureCoordinates.length)) return;
 
@@ -820,6 +972,12 @@ function NoticesMapViewComponent({
 
   // Zoom to searched location when provided
   useEffect(() => {
+    // CRITICAL: BLOCK during animations to prevent interference with pin clicks
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔ Searched location zoom blocked during animation');
+      return;
+    }
+
     if (!mapReady || !mapRef.current || !searchedLocation) return;
 
     const { latitude, longitude } = searchedLocation;
@@ -838,6 +996,11 @@ function NoticesMapViewComponent({
   }, [searchedLocation, mapReady, initialBounds]);
 
   useEffect(() => {
+    // BLOCK cluster updates during animations for smooth transitions
+    if (isAnimatingRef.current) {
+      return;
+    }
+
     if (!hoveredCluster || !mapReady || !mapRef.current) return;
     const map = mapRef.current.getMap();
     const renderedClusters = map.queryRenderedFeatures(undefined, { layers: [CLUSTER_LAYER_ID] });

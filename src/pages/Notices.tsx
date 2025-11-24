@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -64,6 +64,7 @@ export default function NoticesPage() {
   const [councils, setCouncils] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [searchedLocation, setSearchedLocation] = useState<{ latitude: number; longitude: number; postcode: string } | null>(null);
   const toastMessage = useToastController();
+  const mapSectionRef = useRef<HTMLDivElement>(null);
 
   const queryParam = (searchParams.get('query') ?? '').trim();
   const postcodeParam = sanitizePostcode(searchParams.get('postcode') ?? '');
@@ -194,6 +195,20 @@ export default function NoticesPage() {
   }, [postcodeParam]);
 
   const hasSearchTerm = Boolean(postcodeParam || councilParam || queryParam);
+
+  // Auto-scroll to map when switching to map view with search results
+  useEffect(() => {
+    if (mapView && mapSectionRef.current && hasSearchTerm) {
+      // Small delay to ensure the map has rendered
+      const timer = setTimeout(() => {
+        mapSectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [mapView, hasSearchTerm]);
 
   const { notices, loading, error, refetch } = useNoticeSearch({
     enabled: hasSearchTerm,
@@ -437,17 +452,17 @@ export default function NoticesPage() {
     className?: string;
   }) => {
     const stack = layout === 'column';
-    const containerClass = `${stack ? 'flex flex-col gap-4' : 'flex flex-col gap-3'} ${className}`;
+    const containerClass = `${stack ? 'flex flex-col gap-3' : 'flex flex-col gap-3'} ${className}`;
     const chipBase =
-      'rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-150 backdrop-blur-sm shadow-[0_0_0_1px_rgba(14,23,42,0.04)]';
+      'rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 backdrop-blur-sm transform hover:scale-105 active:scale-95';
     const chipActive =
-      'border-transparent bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] text-white shadow-[0_10px_24px_rgba(37,99,235,0.26)]';
+      'border-blue-600 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_2px_8px_rgba(37,99,235,0.3)]';
     const chipInactive =
-      'border-transparent bg-white/80 text-slate-600 hover:border-slate-200 hover:text-slate-900';
+      'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-400 hover:text-blue-700';
 
     return (
       <div className={containerClass}>
-        <div className={`flex flex-wrap items-center gap-2 ${stack ? '' : ''}`}>
+        <div className="flex flex-wrap items-center gap-2">
           {TYPE_OPTIONS.map((option) => {
             const active = typeFilter === option;
             return (
@@ -476,27 +491,30 @@ export default function NoticesPage() {
           })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-700">From</span>
-            <input
-              type="date"
-              value={startFilter}
-              onChange={(event) => handleDateChange('start', event.target.value)}
-              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-700">To</span>
-            <input
-              type="date"
-              value={endFilter}
-              onChange={(event) => handleDateChange('end', event.target.value)}
-              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-700">Traffic Area</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs">
+              <span className="font-semibold text-slate-700 w-10">From</span>
+              <input
+                type="date"
+                value={startFilter}
+                onChange={(event) => handleDateChange('start', event.target.value)}
+                className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs">
+              <span className="font-semibold text-slate-700 w-10">To</span>
+              <input
+                type="date"
+                value={endFilter}
+                onChange={(event) => handleDateChange('end', event.target.value)}
+                className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-slate-700">Traffic Area</span>
             <select
               value={trafficAreaFilter}
               onChange={(event) => {
@@ -509,7 +527,7 @@ export default function NoticesPage() {
                   }
                 }, true);
               }}
-              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               <option value="">All Areas</option>
               {TRAFFIC_AREAS.map((area) => (
@@ -519,8 +537,9 @@ export default function NoticesPage() {
               ))}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-700">Council</span>
+
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-slate-700">Council</span>
             <select
               value={councilParam}
               onChange={(event) => {
@@ -533,7 +552,7 @@ export default function NoticesPage() {
                   }
                 }, true);
               }}
-              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             >
               <option value="">All Councils</option>
               {councils.map((council) => (
@@ -543,9 +562,10 @@ export default function NoticesPage() {
               ))}
             </select>
           </label>
+
           {postcodeParam && (
-            <label className="flex items-center gap-2 text-sm text-slate-600">
-              <span className="font-medium text-slate-700">Radius</span>
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="font-semibold text-slate-700">Radius</span>
               <select
                 value={radiusValue}
                 onChange={(event) => {
@@ -558,7 +578,7 @@ export default function NoticesPage() {
                     }
                   }, true);
                 }}
-                className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               >
                 <option value="1">1 km</option>
                 <option value="2">2 km</option>
@@ -736,6 +756,7 @@ export default function NoticesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
+                ref={mapSectionRef}
               >
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                   <section className="relative">
@@ -764,21 +785,24 @@ export default function NoticesPage() {
                     </div>
                   </section>
 
-                  <aside className="flex h-[340px] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] backdrop-blur sm:h-[420px] md:h-[520px] lg:h-[70vh]">
-                    <div className="space-y-3 border-b border-slate-200/60 px-6 py-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-700">
+                  <aside className="flex h-[340px] flex-col overflow-hidden rounded-2xl border border-slate-200/40 bg-gradient-to-b from-white to-slate-50/30 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur sm:h-[420px] md:h-[520px] lg:h-[70vh]">
+                    {/* Header Section - Enhanced */}
+                    <div className="space-y-3 border-b border-slate-200/60 bg-white px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xl font-bold text-slate-900 tracking-tight">
                             {loading
-                              ? 'Updating results…'
+                              ? 'Updating…'
                               : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
                           </p>
-                          <p className="text-xs text-slate-500">For {searchLabel}</p>
+                          <p className="text-xs text-slate-600 font-medium">
+                            For <span className="text-blue-600">{searchLabel}</span>
+                          </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setFiltersOpen(true)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 lg:hidden"
+                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:shadow-md lg:hidden"
                         >
                           Filters
                         </button>
@@ -787,7 +811,7 @@ export default function NoticesPage() {
                         <FilterControls layout="column" className="w-full" />
                       </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 overflow-y-auto px-4 py-4">
                       <SearchResults
                         results={filteredResults}
                         query={searchLabel}

@@ -77,25 +77,49 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
       }
 
       const data = await response.json();
-      const text = data?.text || "";
+      console.log('[UploadDropzone] ✅ Server response:', {
+        hasText: Boolean(data?.text),
+        hasOcrText: Boolean(data?.ocr_text),
+        textLength: (data?.text ?? data?.ocr_text ?? "").length,
+        cached: data?.meta?.cached,
+        info: data?.info,
+        fullResponse: data
+      });
 
-      console.log('[UploadDropzone] OCR complete:', { textLength: text.length, hasText: Boolean(text.trim()), text: text.substring(0, 100) });
-      console.log('[UploadDropzone] Calling onText callback with text');
+      const text = data?.text ?? data?.ocr_text ?? "";
+
+      // Show info message if file was cached
+      if (data?.meta?.cached) {
+        console.log('[UploadDropzone] ℹ️ Using cached result from previous upload');
+      }
+
+      if (!text || text.trim().length === 0) {
+        console.warn('[UploadDropzone] ⚠️ NO TEXT EXTRACTED - OCR returned empty');
+        setError("No text could be extracted from this document. Please complete the form fields manually.");
+        setLocalText("");
+        onText(""); // Call with empty string to trigger form display
+        onMeta?.(data?.meta || {});
+        setStatus("ready");
+        return;
+      }
+
+      console.log('[UploadDropzone] ✅ OCR extracted text:', {
+        textLength: text.length,
+        preview: text.substring(0, 150) + '...'
+      });
 
       setLocalText(text);
       onText(text);
-      console.log('[UploadDropzone] onText callback called');
-
       onMeta?.(data?.meta || {});
 
       if (data?.error === "OCR_EMPTY") {
         setError("We couldn't read this file. Build from details instead.");
-        setStatus("ready"); // Still set to ready so form can be filled manually
+        setStatus("ready");
       } else {
         setStatus("ready");
       }
 
-      console.log('[UploadDropzone] Status set to ready');
+      console.log('[UploadDropzone] ✅ Upload complete, status set to ready');
     } catch (err) {
       if ((err as DOMException)?.name === "AbortError") {
         return;
@@ -316,6 +340,40 @@ export default function UploadDropzone({ onText, onMeta, onStatusChange, heading
       </div>
 
       <textarea data-testid="notice-editor" className="sr-only" aria-hidden value={localText} readOnly />
+
+      {/* Extracted Text Preview */}
+      {status === "ready" && (
+        <div className="mt-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[13px] font-semibold text-slate-900">Extracted Text Preview</h4>
+            <span className="text-[12px] text-slate-500">
+              {localText ? `${localText.length} characters` : 'No text extracted'}
+            </span>
+          </div>
+          <div className="rounded-xl border border-slate-200/70 bg-slate-50/40 p-4 max-h-64 overflow-y-auto">
+            {localText && localText.trim().length > 0 ? (
+              <pre className="text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap font-mono">
+                {localText}
+              </pre>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <svg className="h-12 w-12 text-slate-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-[13px] font-medium text-slate-600 mb-1">No text could be extracted</p>
+                <p className="text-[12px] text-slate-500">
+                  The document may be an image or scanned file. Please fill in the form manually below.
+                </p>
+              </div>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-500 italic">
+            {localText && localText.trim().length > 0
+              ? 'This preview is for reference only. Please fill in the required fields below using the form.'
+              : 'Use the "Load Sample Data" button below to quickly fill the form for demonstration purposes.'}
+          </p>
+        </div>
+      )}
     </section>
   );
 }
