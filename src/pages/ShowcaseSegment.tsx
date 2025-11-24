@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ArrowLeft, Users, Briefcase, Shield, TrendingUp, FileText } from 'lucide-react';
 
 interface SegmentInfo {
@@ -59,6 +60,11 @@ const segmentData: Record<string, SegmentInfo> = {
 export default function ShowcaseSegment() {
   const { segmentId } = useParams<{ segmentId: string }>();
   const segment = segmentId ? segmentData[segmentId] : null;
+
+  // Scroll to top when segment changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [segmentId]);
 
   if (!segment) {
     return (
