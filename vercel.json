@@ -1,13 +1,18 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "devCommand": "npm run dev:web",
-  "installCommand": "npm install",
   "framework": "vite",
   "redirects": [
     {
       "source": "/",
-      "destination": "/showcase"
+      "destination": "/showcase",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
     }
   ]
 }
