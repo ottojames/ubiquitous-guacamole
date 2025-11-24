@@ -38,24 +38,24 @@ Done. It's live immediately. The client gets a confirmation email. No payment st
 
 ---
 
-## Segment 3: Council Officer Journey - Managing Applications
-**Duration**: ~1 minute | **Persona**: Emma Martinez, Senior Licensing Officer at Westminster
+## Segment 3: Council Officer Journey - Managing Representations
+**Duration**: ~1:30 minutes | **Persona**: Emma Martinez, Senior Licensing Officer at Westminster
 
 ---
 
-"Now the council side. I'm logged in as a licensing officer at Westminster Council. Different departments use this - we've got licensing, planning, highways - they each manage their own notice types.
+"Now the council side. I'm logged in as a licensing officer at Westminster Council. Different departments use this - licensing, planning, highways - each managing their own statutory notices.
 
-This is my dashboard. I can see how many notices are published, what's pending review, and how many representations have come in from residents that I need to review.
+This is my dashboard. I can see all the active notices that have been published, and critically - how many representations have come in from residents. That's what I'm here to manage.
 
-Let me check the pending submissions. These are applications that solicitors or agents have submitted through the platform that need council verification before going live. Here's one from Wilson & Partners.
+Let me go to the notices list. These are all the published notices currently in consultation. You can see each one shows how many representations it's received - this one here has 14 representations with 11 objections, so that needs attention.
 
-I can verify all the details are correct, make sure the consultation period is calculated properly. Everything's in one place - no more chasing emails. Looks good, so I'll approve it for publication.
+I can sort by deadline - soonest first - so I know which consultations are closing soon and need my immediate focus. I can also filter to show only notices with objections, or notices with high activity.
 
-Now it's live and the public consultation period starts.
+Let me click into this one - Parliament View Wine Bar. I can see all the representations that have come in. Some are objections about noise concerns, public safety. Some are supporting the application.
 
-Over here in representations - this is where I can see all the feedback residents have submitted. I can filter them, mark them as read, and manage the whole consultation process in one place.
+As a licensing officer, I need to review all of these before the committee hearing. I can see who submitted them, what their concerns are, everything documented in one place.
 
-Everything's tracked, it's all auditable, and I can't miss deadlines because they're flagged right here. It makes the whole regulatory process much more manageable."
+Back on the dashboard - I can track deadline compliance, see which notices are getting the most public engagement, and make sure nothing falls through the cracks. Everything's auditable, everything's tracked. That's what matters when you're managing statutory consultations."
 
 ---
 

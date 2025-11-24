@@ -18,8 +18,28 @@ const AVAILABLE_PLACEHOLDERS = [
   { value: 'INSPECTION_TIMES', label: 'Inspection Times' },
   { value: 'REPRESENTATION_ADDRESS', label: 'Representation Address' },
   { value: 'REPRESENTATION_EMAIL', label: 'Representation Email' },
-  { value: 'DEADLINE_DATE', label: 'Deadline Date' },
+  { value: 'APPLICATION_DATE', label: 'Application Date' },
+  { value: 'DEADLINE_DATE', label: 'Deadline Date (auto-calculated)' },
   { value: 'ONLINE_REGISTER_URL', label: 'Online Register URL' },
+];
+
+// Fields that users can manually fill in (excluding auto-calculated fields)
+const MANUAL_INPUT_FIELDS = [
+  'APPLICANT_NAME',
+  'APPLICANT_TRADING_AS',
+  'AUTHORITY_NAME',
+  'PREMISES_NAME',
+  'PREMISES_ADDRESS',
+  'LICENSABLE_ACTIVITIES',
+  'ACTIVITY_SCHEDULE',
+  'OPENING_HOURS',
+  'DPS_NAME',
+  'INSPECTION_LOCATION',
+  'INSPECTION_TIMES',
+  'REPRESENTATION_ADDRESS',
+  'REPRESENTATION_EMAIL',
+  'APPLICATION_DATE',
+  'ONLINE_REGISTER_URL',
 ];
 
 // Default sample data
@@ -38,7 +58,7 @@ const DEFAULT_DATA = {
   INSPECTION_TIMES: 'Monday–Friday 9:00 AM – 5:00 PM',
   REPRESENTATION_ADDRESS: 'Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA',
   REPRESENTATION_EMAIL: 'licensing@sampleton.gov.uk',
-  DEADLINE_DATE: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
+  APPLICATION_DATE: new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -47,10 +67,42 @@ const DEFAULT_DATA = {
   HAS_MULTIPLE_AUTHORITIES: false,
 };
 
+// Calculate deadline date from application date (28 days later)
+function calculateDeadlineDate(applicationDateStr: string): string {
+  try {
+    // Parse the UK date format (e.g., "24 November 2025")
+    const parts = applicationDateStr.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/);
+    if (!parts) return '';
+
+    const day = parseInt(parts[1]);
+    const monthName = parts[2];
+    const year = parseInt(parts[3]);
+
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+    const month = months.indexOf(monthName);
+
+    if (month === -1) return '';
+
+    const appDate = new Date(year, month, day);
+    const deadlineDate = new Date(appDate.getTime() + 28 * 24 * 60 * 60 * 1000);
+
+    return deadlineDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return '';
+  }
+}
+
 const DEFAULT_TEMPLATE = `LICENSING ACT 2003
 APPLICATION FOR A NEW PREMISES LICENCE
 
 Notice is hereby given that {{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} has applied to {{AUTHORITY_NAME}} for a new premises licence for {{PREMISES_NAME}}, {{PREMISES_ADDRESS}}.
+
+Application date: {{APPLICATION_DATE}}.
 
 Licensable activities applied for: {{LICENSABLE_ACTIVITIES}}.
 Proposed hours: {{ACTIVITY_SCHEDULE}}.{{#if OPENING_HOURS}} Opening hours: {{OPENING_HOURS}}.{{/if}}{{#if DPS_NAME}} The proposed designated premises supervisor is {{DPS_NAME}}.{{/if}}
@@ -68,7 +120,13 @@ export default function SampleNotice() {
   const [showPlaceholderMenu, setShowPlaceholderMenu] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
 
-  const renderedNotice = renderNoticeTemplate(template, testData);
+  // Auto-calculate deadline date from application date
+  const dataWithCalculatedFields = {
+    ...testData,
+    DEADLINE_DATE: calculateDeadlineDate(testData.APPLICATION_DATE || ''),
+  };
+
+  const renderedNotice = renderNoticeTemplate(template, dataWithCalculatedFields);
 
   const insertPlaceholder = (placeholder: string) => {
     const before = template.substring(0, cursorPosition);
@@ -166,7 +224,7 @@ export default function SampleNotice() {
                   <Calendar className="w-4 h-4 mr-2" />
                   <span className="text-sm font-medium">Deadline</span>
                 </div>
-                <p className="font-semibold text-slate-900">{testData.DEADLINE_DATE}</p>
+                <p className="font-semibold text-slate-900">{dataWithCalculatedFields.DEADLINE_DATE}</p>
               </div>
             </div>
 
@@ -272,7 +330,7 @@ export default function SampleNotice() {
                 </div>
                 <div className="p-6 max-h-[400px] overflow-y-auto">
                   <div className="space-y-4">
-                    {AVAILABLE_PLACEHOLDERS.map((placeholder) => (
+                    {AVAILABLE_PLACEHOLDERS.filter(p => MANUAL_INPUT_FIELDS.includes(p.value)).map((placeholder) => (
                       <div key={placeholder.value}>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           {placeholder.label}
@@ -286,6 +344,26 @@ export default function SampleNotice() {
                         />
                       </div>
                     ))}
+
+                    {/* Auto-calculated Deadline Date - Read Only */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
+                        <span>Deadline Date</span>
+                        <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                          Auto-calculated
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={dataWithCalculatedFields.DEADLINE_DATE}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-600 text-sm cursor-not-allowed"
+                        placeholder="Calculated from application date + 28 days"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Automatically calculated as Application Date + 28 days
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

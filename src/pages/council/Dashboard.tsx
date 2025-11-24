@@ -98,33 +98,42 @@ export default function Dashboard() {
           const allNotices = responseData.items || [];
           console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
 
-          // Map API response to notice format
-          notices = allNotices.map((n: any) => ({
-            id: n.id,
-            status: n.status || 'published',
-            premises: { name: n.premisesName },
-            notice_type: n.noticeType,
-            created_at: n.publicationDate || new Date().toISOString(),
-            published_at: n.publicationDate || null,
-            representation_deadline: n.repsDeadline,
-            proof_pdf_url: null
-          }));
-
-          // Get recent notices with full details
-          recent = allNotices.slice(0, 5).map((n: any) => {
-            const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
-
-            return {
-              id: n.id,
-              title: title,
-              status: n.status || 'published',
-              created_at: n.publicationDate || new Date().toISOString(),
-              published_at: n.publicationDate || null,
-              proof_pdf_url: null,
-              repsDeadline: n.repsDeadline,
-              premisesName: n.premisesName
-            };
+          // Map API response to notice format and deduplicate by ID
+          const noticesMap = new Map();
+          allNotices.forEach((n: any) => {
+            if (!noticesMap.has(n.id)) {
+              noticesMap.set(n.id, {
+                id: n.id,
+                status: n.status || 'published',
+                premises: { name: n.premisesName },
+                notice_type: n.noticeType,
+                created_at: n.publicationDate || new Date().toISOString(),
+                published_at: n.publicationDate || null,
+                representation_deadline: n.repsDeadline,
+                proof_pdf_url: null
+              });
+            }
           });
+          notices = Array.from(noticesMap.values());
+
+          // Get recent notices with full details (deduplicated)
+          const recentMap = new Map();
+          allNotices.forEach((n: any) => {
+            if (!recentMap.has(n.id)) {
+              const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
+              recentMap.set(n.id, {
+                id: n.id,
+                title: title,
+                status: n.status || 'published',
+                created_at: n.publicationDate || new Date().toISOString(),
+                published_at: n.publicationDate || null,
+                proof_pdf_url: null,
+                repsDeadline: n.repsDeadline,
+                premisesName: n.premisesName
+              });
+            }
+          });
+          recent = Array.from(recentMap.values()).slice(0, 5);
 
           console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
         } catch (err) {
@@ -493,12 +502,6 @@ export default function Dashboard() {
                             <span>• Requires attention</span>
                           </>
                         )}
-                        {priority.type === 'pending_approval' && (
-                          <>
-                            <span className="font-medium">Action required</span>
-                            <span>• Review and approve submissions</span>
-                          </>
-                        )}
                       </div>
                     </div>
 
@@ -606,7 +609,7 @@ export default function Dashboard() {
                             </span>
                           </>
                         )}
-                        {!notice.proof_pdf_url && (notice.status === 'published' || notice.status === 'pending' || notice.status === 'pending_approval') && (
+                        {!notice.proof_pdf_url && notice.status === 'published' && (
                           <>
                             <span>•</span>
                             <span className="text-amber-600 font-medium" title="Proof not yet available">

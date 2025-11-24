@@ -50,6 +50,9 @@ export default function Notices() {
   const [filteredNotices, setFilteredNotices] = useState<Notice[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasObjectionsFilter, setHasObjectionsFilter] = useState(false);
+  const [highActivityFilter, setHighActivityFilter] = useState(false);
+  const [sortBy, setSortBy] = useState<'deadline-asc' | 'deadline-desc' | 'recent' | 'title'>('deadline-asc');
 
   // Bulk operations state
   const [selectedNotices, setSelectedNotices] = useState<Set<string>>(new Set());
@@ -75,7 +78,7 @@ export default function Notices() {
 
   useEffect(() => {
     filterNotices();
-  }, [notices, filterStatus, searchQuery]);
+  }, [notices, filterStatus, searchQuery, hasObjectionsFilter, highActivityFilter, sortBy]);
 
   const loadNotices = async () => {
     try {
@@ -183,6 +186,46 @@ export default function Notices() {
         n.notice_type.toLowerCase().includes(query)
       );
     }
+
+    // Filter by objections
+    if (hasObjectionsFilter) {
+      filtered = filtered.filter(n => (n.objections_count ?? 0) > 0);
+    }
+
+    // Filter by high activity (5+ representations)
+    if (highActivityFilter) {
+      filtered = filtered.filter(n => (n.representations_count ?? 0) >= 5);
+    }
+
+    // Apply sorting
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'deadline-asc': {
+          // Soonest deadline first (urgent notices at top)
+          if (!a.representation_deadline) return 1;
+          if (!b.representation_deadline) return -1;
+          return new Date(a.representation_deadline).getTime() - new Date(b.representation_deadline).getTime();
+        }
+        case 'deadline-desc': {
+          // Latest deadline first
+          if (!a.representation_deadline) return 1;
+          if (!b.representation_deadline) return -1;
+          return new Date(b.representation_deadline).getTime() - new Date(a.representation_deadline).getTime();
+        }
+        case 'recent': {
+          // Most recently published first
+          const aDate = a.published_at || a.created_at;
+          const bDate = b.published_at || b.created_at;
+          return new Date(bDate).getTime() - new Date(aDate).getTime();
+        }
+        case 'title': {
+          // Alphabetical by title
+          return a.title.localeCompare(b.title);
+        }
+        default:
+          return 0;
+      }
+    });
 
     setFilteredNotices(filtered);
   };
@@ -512,6 +555,21 @@ export default function Notices() {
             />
           </div>
 
+          {/* Sort Dropdown */}
+          <div className="min-w-[200px]">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700 font-medium"
+              title="Sort notices by deadline or publication date"
+            >
+              <option value="deadline-asc">Deadline: Soonest first</option>
+              <option value="deadline-desc">Deadline: Latest first</option>
+              <option value="recent">Recently published</option>
+              <option value="title">Title (A-Z)</option>
+            </select>
+          </div>
+
           {/* Status Filter */}
           <div className="flex gap-2 flex-wrap">
             {availableStatuses.map(status => (
@@ -528,6 +586,52 @@ export default function Notices() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Additional Filters */}
+        <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={() => setHasObjectionsFilter(!hasObjectionsFilter)}
+            className={`px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2 ${
+              hasObjectionsFilter
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            title="Filter notices that have objections"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Has objections
+            {hasObjectionsFilter && ` (${filteredNotices.length})`}
+          </button>
+          <button
+            onClick={() => setHighActivityFilter(!highActivityFilter)}
+            className={`px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2 ${
+              highActivityFilter
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            title="Filter notices with 5+ representations"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            High activity (5+)
+            {highActivityFilter && ` (${filteredNotices.length})`}
+          </button>
+          {(hasObjectionsFilter || highActivityFilter) && (
+            <button
+              onClick={() => {
+                setHasObjectionsFilter(false);
+                setHighActivityFilter(false);
+              }}
+              className="px-4 py-2 rounded-xl font-medium text-gray-600 hover:text-gray-900 underline"
+              title="Clear all additional filters"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
 

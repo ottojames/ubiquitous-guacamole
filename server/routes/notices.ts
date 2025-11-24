@@ -1043,7 +1043,26 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
     // Don't apply limit for radius search or bbox - show all results
     const limitedRows = (bbox || radiusSearchReady) ? sortedRows : sortedRows.slice(0, limitParam);
 
-    const items = limitedRows.map((row: any) => {
+    // Deduplicate by notice ID to prevent duplicate entries
+    const seenIds = new Set<string>();
+    const duplicateIds: string[] = [];
+    const deduplicatedRows = limitedRows.filter((row: any) => {
+      if (!row.id) {
+        return true; // Keep rows without IDs for now
+      }
+      if (seenIds.has(row.id)) {
+        duplicateIds.push(row.id);
+        return false;
+      }
+      seenIds.add(row.id);
+      return true;
+    });
+
+    if (duplicateIds.length > 0) {
+      console.log(`[notice-search] Removed ${duplicateIds.length} duplicate notices:`, [...new Set(duplicateIds)].slice(0, 5));
+    }
+
+    const items = deduplicatedRows.map((row: any) => {
       const premises = row?.premises && typeof row.premises === 'object' ? row.premises : {};
       const consultation = row?.consultation && typeof row.consultation === 'object' ? row.consultation : {};
       const publication = row?.publication && typeof row.publication === 'object' ? row.publication : {};
