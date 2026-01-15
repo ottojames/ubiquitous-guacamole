@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOutletContext, Link, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import QuickPublishWidget from '@/components/firm/QuickPublishWidget';
+import RecentRepresentations from '@/components/firm/RecentRepresentations';
 
 interface FirmContext {
   firm: {
@@ -428,6 +429,11 @@ export default function FirmDashboard() {
         </div>
       </div>
         </div>
+      </div>
+
+      {/* Recent Representations Widget */}
+      <div className="mb-6">
+        <RecentRepresentations firmId={firm.id} firmSlug={firmSlug!} />
       </div>
 
       {/* Recent Notices */}
