@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Calendar, Search, Filter, Eye, FileText, MapPin } from 'lucide-react';
+import ConsultationCountdown from '@/components/notice/ConsultationCountdown';
 
 interface Organization {
   id: string;
@@ -347,9 +348,10 @@ export default function FirmNotices() {
                     )}
 
                     {notice.representation_deadline && (
-                      <div className="flex items-center gap-1.5">
-                        Deadline: {formatDate(notice.representation_deadline)}
-                      </div>
+                      <ConsultationCountdown
+                        deadline={notice.representation_deadline}
+                        variant="compact"
+                      />
                     )}
                   </div>
                 </div>

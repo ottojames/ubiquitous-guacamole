@@ -3,6 +3,7 @@ import { useOutletContext, Link, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import QuickPublishWidget from '@/components/firm/QuickPublishWidget';
 import RecentRepresentations from '@/components/firm/RecentRepresentations';
+import UpcomingDeadlines from '@/components/firm/UpcomingDeadlines';
 
 interface FirmContext {
   firm: {
@@ -429,6 +430,11 @@ export default function FirmDashboard() {
         </div>
       </div>
         </div>
+      </div>
+
+      {/* Upcoming Deadlines Widget */}
+      <div className="mb-6">
+        <UpcomingDeadlines firmId={firm.id} firmSlug={firmSlug!} />
       </div>
 
       {/* Recent Representations Widget */}

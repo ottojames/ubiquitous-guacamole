@@ -47,8 +47,9 @@ export default function ConsultationCountdown({
   }, [deadline]);
 
   const deadlineDate = new Date(deadline);
-  const isUrgent = timeRemaining.days <= 3 && !timeRemaining.expired;
-  const isWarning = timeRemaining.days <= 7 && timeRemaining.days > 3 && !timeRemaining.expired;
+  // Updated color thresholds per requirements: red <7, amber <14, green >14
+  const isUrgent = timeRemaining.days < 7 && !timeRemaining.expired;  // Red
+  const isWarning = timeRemaining.days >= 7 && timeRemaining.days < 14 && !timeRemaining.expired; // Amber
 
   if (variant === 'compact') {
     if (timeRemaining.expired) {
@@ -63,13 +64,13 @@ export default function ConsultationCountdown({
     return (
       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
         isUrgent ? 'bg-red-100 text-red-700' :
-        isWarning ? 'bg-yellow-100 text-yellow-700' :
+        isWarning ? 'bg-amber-100 text-amber-700' :
         'bg-green-100 text-green-700'
       } ${className}`}>
         <Clock className="h-3.5 w-3.5" />
         <span>
           {timeRemaining.days > 0 ? (
-            `${timeRemaining.days} day${timeRemaining.days !== 1 ? 's' : ''} left`
+            `${timeRemaining.days} day${timeRemaining.days !== 1 ? 's' : ''} remaining`
           ) : timeRemaining.hours > 0 ? (
             `${timeRemaining.hours} hour${timeRemaining.hours !== 1 ? 's' : ''} left`
           ) : (
@@ -85,14 +86,14 @@ export default function ConsultationCountdown({
     <div className={`rounded-lg border ${
       timeRemaining.expired ? 'border-gray-200 bg-gray-50' :
       isUrgent ? 'border-red-200 bg-red-50' :
-      isWarning ? 'border-yellow-200 bg-yellow-50' :
+      isWarning ? 'border-amber-200 bg-amber-50' :
       'border-green-200 bg-green-50'
     } p-4 ${className}`}>
       <div className="flex items-start gap-3">
         <div className={`p-2 rounded-lg ${
           timeRemaining.expired ? 'bg-gray-200' :
           isUrgent ? 'bg-red-200' :
-          isWarning ? 'bg-yellow-200' :
+          isWarning ? 'bg-amber-200' :
           'bg-green-200'
         }`}>
           {timeRemaining.expired ? (
@@ -123,7 +124,7 @@ export default function ConsultationCountdown({
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${
                       isUrgent ? 'text-red-700' :
-                      isWarning ? 'text-yellow-700' :
+                      isWarning ? 'text-amber-700' :
                       'text-green-700'
                     }`}>
                       {timeRemaining.days}
@@ -138,7 +139,7 @@ export default function ConsultationCountdown({
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${
                       isUrgent ? 'text-red-700' :
-                      isWarning ? 'text-yellow-700' :
+                      isWarning ? 'text-amber-700' :
                       'text-green-700'
                     }`}>
                       {timeRemaining.hours}
@@ -153,7 +154,7 @@ export default function ConsultationCountdown({
                   <div className="text-center">
                     <div className={`text-2xl font-bold ${
                       isUrgent ? 'text-red-700' :
-                      isWarning ? 'text-yellow-700' :
+                      isWarning ? 'text-amber-700' :
                       'text-green-700'
                     }`}>
                       {timeRemaining.minutes}
