@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -63,6 +64,42 @@ export default function SignIn() {
                   </a>
                 </p>
               </div>
+
+              {/* Demo Accounts - Only shown when demo mode is enabled */}
+              {isDemoModeEnabled() && (
+                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <p className="text-sm font-medium text-amber-900 mb-3">
+                    Demo Mode - Development Only
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-xs text-amber-700 font-medium">Council Accounts:</p>
+                    {DEMO_ACCOUNTS.council.map(account => (
+                      <button
+                        key={account.email}
+                        type="button"
+                        onClick={() => setEmail(account.email)}
+                        className="block text-sm text-amber-800 hover:underline"
+                      >
+                        {account.name} - {account.email}
+                      </button>
+                    ))}
+                    <p className="text-xs text-amber-700 font-medium mt-3">Firm Accounts:</p>
+                    {DEMO_ACCOUNTS.firm.map(account => (
+                      <button
+                        key={account.email}
+                        type="button"
+                        onClick={() => setEmail(account.email)}
+                        className="block text-sm text-amber-800 hover:underline"
+                      >
+                        {account.name} - {account.email}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-amber-600 mt-3">
+                    Click an email to auto-fill, then click "Send magic link"
+                  </p>
+                </div>
+              )}
 
               <form onSubmit={handleSignIn} className="space-y-6">
                 <div>

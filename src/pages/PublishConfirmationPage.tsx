@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, FileText, ExternalLink, ArrowRight, Calendar, Clock } from 'lucide-react';
+import { CheckCircle, FileText, ExternalLink, ArrowRight, Calendar, Clock, Download } from 'lucide-react';
 import * as UI from '@/styles/ui';
 
 type NoticeDetail = {
@@ -98,6 +98,40 @@ export default function PublishConfirmationPage() {
   }
 
   const daysRemaining = getDaysRemaining(notice.repsDeadline);
+
+  // Check if this is a licensing notice that supports blue notice PDFs
+  const licensingTypes = [
+    'premises-licence',
+    'premises-licence-variation',
+    'premises-licence-transfer',
+    'premises-licence-review',
+    'club-premises-certificate',
+    'temporary-event-notice'
+  ];
+  const isLicensingNotice = licensingTypes.includes(notice.noticeType);
+
+  const handleDownloadBlueNotice = async () => {
+    try {
+      const response = await fetch(`/api/blue-notices/${notice.id}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to generate blue notice PDF');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `blue-notice-${notice.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading blue notice:', error);
+      alert('Failed to download blue notice PDF. Please try again or contact support.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -216,23 +250,40 @@ export default function PublishConfirmationPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate(`/notices/${notice.id}`)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-semibold text-white shadow-lg transition hover:from-blue-700 hover:to-blue-800"
-            >
-              <FileText className="h-5 w-5" />
-              View Public Notice
-              <ExternalLink className="h-4 w-4" />
-            </button>
+          <div className="flex flex-col gap-4">
+            {/* Primary Actions Row */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => navigate(`/notices/${notice.id}`)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 font-semibold text-white shadow-lg transition hover:from-blue-700 hover:to-blue-800"
+              >
+                <FileText className="h-5 w-5" />
+                View Public Notice
+                <ExternalLink className="h-4 w-4" />
+              </button>
 
-            <button
-              onClick={() => navigate('/')}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-6 py-4 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              Go to Dashboard
-              <ArrowRight className="h-5 w-5" />
-            </button>
+              <button
+                onClick={() => navigate('/')}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-6 py-4 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              >
+                Go to Dashboard
+                <ArrowRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Blue Notice PDF Download - only for licensing notices */}
+            {isLicensingNotice && (
+              <button
+                onClick={handleDownloadBlueNotice}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-4 font-semibold text-white shadow-lg transition hover:from-blue-600 hover:to-cyan-700"
+              >
+                <Download className="h-5 w-5" />
+                Download Blue Notice PDF
+                <span className="ml-2 rounded-full bg-white/20 px-3 py-1 text-xs">
+                  For display at premises
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Notice ID */}

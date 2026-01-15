@@ -1,8 +1,46 @@
 #!/bin/bash
 
-# Quick Ralph Loop runner
-cd "/Users/ottoclarke/projects/Ralph's Civic Notices"
+# Simple runner for Ralph Loop
+# Usage: ./run_ralph.sh [max_iterations] [sleep_seconds]
 
-echo "🚀 Starting Ralph Loop (10 iterations max)"
+# Default values
+MAX_ITERATIONS=${1:-5}
+SLEEP_SECONDS=${2:-2}
 
-claude -p "/ralph-loop:ralph-loop 'You are Ralph. Each iteration: Read PRD.md for TOPMOST [ ] task, progress.txt for learnings. Implement task. Run npm run typecheck, lint, test. Browser test localhost:5173. ALWAYS append to progress.txt: Iteration N, Task ID, PASS/FAIL, what happened, learnings. If pass: mark [x] in PRD.md, commit. Check if all done: grep \[ \] PRD.md. If none, say: All PRD tasks complete' --max-iterations 10 --completion-promise 'All PRD tasks complete'"
+# Make sure the main script is executable
+chmod +x ralph_loop.sh
+
+# Clear screen for clean start
+clear
+
+echo "🚀 Starting Ralph Loop for Civic Notices"
+echo "----------------------------------------"
+echo "📁 Project: Ralph's Civic Notices"
+echo "📋 Task list: PRD.md"
+echo "📝 Progress log: progress.txt"
+echo "🔄 Max iterations: $MAX_ITERATIONS"
+echo "⏱️  Pause between: ${SLEEP_SECONDS}s"
+echo "----------------------------------------"
+echo ""
+
+# Create backup of PRD.md and progress.txt
+cp PRD.md PRD.md.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+cp progress.txt progress.txt.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+
+# Run the main loop
+./ralph_loop.sh "$MAX_ITERATIONS" "$SLEEP_SECONDS"
+
+# Capture exit code
+EXIT_CODE=$?
+
+# Show summary
+echo ""
+echo "----------------------------------------"
+if [ $EXIT_CODE -eq 0 ]; then
+    echo "✅ Ralph completed successfully!"
+else
+    echo "⚠️  Ralph stopped (exit code: $EXIT_CODE)"
+fi
+echo "----------------------------------------"
+
+exit $EXIT_CODE

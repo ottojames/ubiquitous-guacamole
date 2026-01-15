@@ -1501,7 +1501,28 @@ export default function NewPublishFlow() {
 
     } catch (error: any) {
       console.error("✗ Failed to publish notice:", error);
-      const errorMsg = error.message || "Failed to publish notice. Please try again.";
+
+      // Provide specific error messages based on error type
+      let errorMsg: string;
+
+      // Check for specific error scenarios
+      if (error.message?.includes('Stripe') || error.message?.includes('payment')) {
+        errorMsg = "Payment configuration error. Please contact support to complete your submission.";
+      } else if (error.message?.includes('validation')) {
+        errorMsg = "Some required fields are missing or invalid. Please check your details and try again.";
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMsg = "Network error. Please check your connection and try again.";
+      } else if (error.status === 400) {
+        errorMsg = "Invalid submission data. Please review your information and try again.";
+      } else if (error.status === 500) {
+        errorMsg = "Server error. Our team has been notified. Please try again later.";
+      } else if (error.message?.includes('Supabase configuration')) {
+        errorMsg = "Database configuration error. Please contact support.";
+      } else {
+        // Fallback to original error message or generic
+        errorMsg = error.message || "Failed to publish notice. Please try again.";
+      }
+
       toast("✗ " + errorMsg);
     }
   });

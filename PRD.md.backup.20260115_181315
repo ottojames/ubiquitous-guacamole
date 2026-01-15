@@ -592,7 +592,7 @@
 
 ---
 
-### [x] US-0129: Export Reps For Idox
+### [ ] US-0129: Export Reps For Idox
 
 **Description:** Export representations as CSV for Idox import
 
@@ -611,7 +611,7 @@
 - MUST verify in Chrome browser - evidence must say "BROWSER TESTED: [steps] - [result]"
 - Quality checks must pass: typecheck, lint, test, dev server starts
 
-**Evidence:** BROWSER TESTED: Opened http://localhost:5173/ with VITE_DEMO_MODE=true, Council Portal → Westminster Licensing → Representations. Export for Idox button present with indigo background, white text, positioned next to Export to CSV button. exportForIdox() function implemented (lines 194-226) with all required Idox fields. Uses filteredRepresentations to respect current filters. CSV filename: idox-representations-{date}.csv. Quality checks: dev server starts ✓, tests run (400 pass)
+**Evidence:** Needs proper browser testing per PRD_SUCCESS_CRITERIA.md - previous evidence only showed code changes, not actual feature working in browser
 
 ---
 

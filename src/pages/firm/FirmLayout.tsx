@@ -31,49 +31,6 @@ export default function FirmLayout() {
 
   const loadFirmData = async () => {
     try {
-      // Demo mode for wilson-partners (bypass auth check)
-      if (firmSlug === 'wilson-partners') {
-        console.log('[FirmLayout] Demo mode: Loading wilson-partners without auth');
-
-        // Try to load from database first
-        const { data: firmData, error: firmError } = await supabase
-          .from('organizations')
-          .select('id, name, slug, type')
-          .eq('slug', 'wilson-partners')
-          .eq('type', 'firm')
-          .single();
-
-        console.log('[FirmLayout] Demo mode query result:', { firmData, firmError });
-
-        if (firmData) {
-          console.log('[FirmLayout] Demo mode: Successfully loaded firm from database');
-          setFirm(firmData as Organization);
-          setUserRole('owner');
-          setLoading(false);
-
-          // Save firm context for publish flow
-          sessionStorage.setItem('lastAccessedFirm', JSON.stringify({ slug: firmData.slug }));
-          return;
-        }
-
-        // Fallback to mock data if database lookup fails
-        console.log('[FirmLayout] Demo mode: Using mock data for wilson-partners');
-        const mockFirm: Organization = {
-          id: 'demo-wilson-partners',
-          name: 'Wilson & Partners',
-          slug: 'wilson-partners',
-          type: 'firm'
-        };
-
-        setFirm(mockFirm);
-        setUserRole('owner');
-        setLoading(false);
-
-        // Save firm context for publish flow
-        sessionStorage.setItem('lastAccessedFirm', JSON.stringify({ slug: mockFirm.slug }));
-        return;
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {

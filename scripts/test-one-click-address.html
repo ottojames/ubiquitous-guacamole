@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>US-0108: One Click Address Select Test</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .pass { background: #d4edda; border-color: #c3e6cb; }
+        .fail { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        .warning { background: #fff3cd; border-color: #ffeeba; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        iframe { width: 100%; height: 700px; border: 2px solid #ccc; border-radius: 8px; }
+        .results { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .api-test { background: #f8f9fa; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 US-0108: One Click Address Select - Test Suite</h1>
+
+    <div class="test info">
+        <h2>Test Setup</h2>
+        <p><strong>Acceptance Criteria:</strong></p>
+        <ul>
+            <li>✓ When user types postcode (e.g. SW1A 1AA), dropdown appears with matching addresses</li>
+            <li>✓ Clicking an address IMMEDIATELY shows map with notices (NO confirm button needed)</li>
+            <li>✓ Dropdown should appear within 500ms of typing valid postcode</li>
+            <li>✓ oneClickSelect prop is enabled in AddressSearchBar</li>
+        </ul>
+    </div>
+
+    <div class="test" id="api-test">
+        <h2>Test 1: API Address Endpoint</h2>
+        <p>Testing if address API returns suggestions for postcodes...</p>
+        <div class="api-test">
+            <input type="text" id="postcode-input" placeholder="Enter postcode" value="SW1A 1AA" />
+            <button onclick="testAPI()">Test API</button>
+        </div>
+        <pre id="api-result">Click "Test API" to check endpoint...</pre>
+    </div>
+
+    <div class="test" id="dropdown-test">
+        <h2>Test 2: Dropdown Appearance</h2>
+        <p><strong>Manual Test Steps:</strong></p>
+        <ol>
+            <li>Navigate to <a href="http://localhost:5173/notices" target="_blank">http://localhost:5173/notices</a></li>
+            <li>Type "SW1A 1AA" in the address search box</li>
+            <li>✅ VERIFY: Dropdown appears within ~500ms with address suggestions</li>
+            <li>✅ VERIFY: Addresses include "Buckingham Palace" and other SW1A 1AA locations</li>
+            <li>✅ VERIFY: No "Search" button visible (oneClickSelect mode)</li>
+        </ol>
+        <pre id="dropdown-result">Requires manual browser testing</pre>
+    </div>
+
+    <div class="test" id="click-test">
+        <h2>Test 3: One-Click Selection</h2>
+        <p><strong>Manual Test Steps:</strong></p>
+        <ol>
+            <li>With dropdown visible (from Test 2)</li>
+            <li>Click on any address in the dropdown</li>
+            <li>✅ VERIFY: Map loads IMMEDIATELY (no extra click needed)</li>
+            <li>✅ VERIFY: Address bar shows selected address</li>
+            <li>✅ VERIFY: Notices appear on map (if any exist for that area)</li>
+            <li>✅ VERIFY: Search results update below the map</li>
+        </ol>
+        <pre id="click-result">Requires manual browser testing</pre>
+    </div>
+
+    <h2>Live Testing Interface:</h2>
+    <iframe src="http://localhost:5173/notices" id="test-frame"></iframe>
+
+    <script>
+        // Test API endpoint
+        async function testAPI() {
+            const postcode = document.getElementById('postcode-input').value;
+            const resultEl = document.getElementById('api-result');
+            const testEl = document.getElementById('api-test');
+
+            try {
+                const response = await fetch(`http://localhost:5174/api/addresses?q=${encodeURIComponent(postcode)}`);
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    resultEl.textContent = `✅ API returned ${data.items.length} addresses:\n\n` +
+                        data.items.slice(0, 5).map(item => `• ${item.label}`).join('\n') +
+                        (data.items.length > 5 ? `\n... and ${data.items.length - 5} more` : '');
+                    testEl.className = 'test pass';
+                } else {
+                    resultEl.textContent = `⚠️ API returned no addresses for "${postcode}"\nSource: ${data.source || 'unknown'}`;
+                    testEl.className = 'test warning';
+                }
+            } catch (error) {
+                resultEl.textContent = `❌ API Error: ${error.message}`;
+                testEl.className = 'test fail';
+            }
+        }
+
+        // Auto-test API on page load
+        setTimeout(() => testAPI(), 1000);
+
+        // Check for oneClickSelect prop in code
+        fetch('/src/pages/Notices.tsx')
+            .then(r => r.text())
+            .then(content => {
+                if (content.includes('oneClickSelect={true}')) {
+                    console.log('✅ oneClickSelect is enabled in Notices.tsx');
+                }
+            })
+            .catch(() => {});
+    </script>
+</body>
+</html>

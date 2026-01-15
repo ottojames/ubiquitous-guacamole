@@ -18,7 +18,9 @@ export function useStripePayment() {
 
   const createCheckoutSession = async (params: CreateCheckoutSessionParams) => {
     if (!stripePromise) {
-      setError('Payment system not configured. Please contact support.');
+      const errorMsg = 'Stripe payment system not configured. Please contact support to complete your submission.';
+      setError(errorMsg);
+      console.error('[useStripePayment] Stripe not configured - missing VITE_STRIPE_PUBLISHABLE_KEY');
       return;
     }
 

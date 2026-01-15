@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import InternalComments from '@/components/council/InternalComments';
+import AssignRepresentationModal from '@/components/council/AssignRepresentationModal';
 import {
   MessageCircle,
   ThumbsUp,
@@ -11,7 +12,8 @@ import {
   Filter,
   Calendar,
   User,
-  FileText
+  FileText,
+  UserPlus
 } from 'lucide-react';
 
 interface Representation {
@@ -25,6 +27,12 @@ interface Representation {
   attachments?: string[];
   is_anonymous: boolean;
   ip_address?: string;
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  assigned_at?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+  reviewed_by_name?: string | null;
   notice?: {
     id: string;
     application_type: string;
@@ -60,11 +68,13 @@ export default function CouncilRepresentations() {
   const [representations, setRepresentations] = useState<Representation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'support' | 'object' | 'comment'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'support' | 'object' | 'comment' | 'reviewed' | 'not_reviewed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRep, setSelectedRep] = useState<Representation | null>(null);
   const [userName, setUserName] = useState('');
   const [userId, setUserId] = useState('');
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assigningRep, setAssigningRep] = useState<Representation | null>(null);
 
   useEffect(() => {
     loadRepresentations();
@@ -181,7 +191,49 @@ export default function CouncilRepresentations() {
     URL.revokeObjectURL(url);
   };
 
+  const exportForIdox = () => {
+    // Export only filtered representations for Idox with specific fields
+    const dataToExport = filteredRepresentations;
+
+    const csvContent = [
+      // Idox-specific header fields
+      ['Representation ID', 'Notice Reference', 'Submitter Name', 'Submitter Email', 'Stance', 'Representation Text', 'Date Submitted', 'Reviewed Status', 'Reviewed By', 'Reviewed Date', 'Assigned To', 'Application Type', 'Premises Name', 'Premises Address'],
+      ...dataToExport.map(rep => [
+        rep.id,
+        rep.notice_id,
+        rep.respondent_name || 'Anonymous',
+        rep.respondent_email || '',
+        getStanceLabel(rep.stance),
+        rep.representation_text.replace(/"/g, '""'), // Escape quotes for CSV
+        new Date(rep.created_at).toISOString(),
+        rep.reviewed_at ? 'Reviewed' : 'Not Reviewed',
+        rep.reviewed_by_name || '',
+        rep.reviewed_at ? new Date(rep.reviewed_at).toISOString() : '',
+        rep.assigned_to_name || '',
+        rep.notice?.application_type || '',
+        rep.notice?.premises_name || rep.notice?.trading_name || '',
+        rep.notice?.premises_address ? JSON.stringify(rep.notice.premises_address) : ''
+      ])
+    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `idox-representations-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const filteredRepresentations = representations.filter(rep => {
+    // Apply filter type
+    if (filter === 'support' && rep.stance !== 'support') return false;
+    if (filter === 'object' && rep.stance !== 'object') return false;
+    if (filter === 'comment' && rep.stance !== 'comment') return false;
+    if (filter === 'reviewed' && !rep.reviewed_at) return false;
+    if (filter === 'not_reviewed' && rep.reviewed_at) return false;
+
+    // Apply search term
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -210,13 +262,22 @@ export default function CouncilRepresentations() {
             Manage representations across all notices in your department
           </p>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <Download className="h-4 w-4" />
-          Export to CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportToCSV}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Download className="h-4 w-4" />
+            Export to CSV
+          </button>
+          <button
+            onClick={exportForIdox}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <FileText className="h-4 w-4" />
+            Export for Idox
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -300,6 +361,8 @@ export default function CouncilRepresentations() {
                   <option value="support">Support Only</option>
                   <option value="object">Objections Only</option>
                   <option value="comment">Comments Only</option>
+                  <option value="reviewed">Reviewed</option>
+                  <option value="not_reviewed">Not Reviewed</option>
                 </select>
               </div>
               <input
@@ -325,11 +388,13 @@ export default function CouncilRepresentations() {
             filteredRepresentations.map((rep) => (
               <div
                 key={rep.id}
-                className="p-4 hover:bg-gray-50 cursor-pointer"
-                onClick={() => setSelectedRep(rep)}
+                className="p-4 hover:bg-gray-50"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
+                  <div
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => setSelectedRep(rep)}
+                  >
                     <div className="flex items-center gap-2">
                       {getStanceIcon(rep.stance)}
                       <p className="text-sm font-medium text-gray-900">
@@ -337,6 +402,17 @@ export default function CouncilRepresentations() {
                       </p>
                       {rep.respondent_email && (
                         <p className="text-sm text-gray-500">({rep.respondent_email})</p>
+                      )}
+                      {rep.assigned_to_name && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <User className="h-3 w-3" />
+                          {rep.assigned_to_name}
+                        </span>
+                      )}
+                      {rep.reviewed_at && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ✓ Reviewed
+                        </span>
                       )}
                     </div>
                     <p className="mt-1 text-sm text-gray-600 line-clamp-2">
@@ -355,6 +431,29 @@ export default function CouncilRepresentations() {
                         <span>{rep.notice.premises_name}</span>
                       )}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAssigningRep(rep);
+                        setAssignModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <UserPlus className="h-3 w-3" />
+                      {rep.assigned_to ? 'Reassign' : 'Assign'}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedRep(rep);
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <Eye className="h-3 w-3" />
+                      View
+                    </button>
                   </div>
                 </div>
               </div>
@@ -412,6 +511,15 @@ export default function CouncilRepresentations() {
                   </p>
                 </div>
 
+                {selectedRep.reviewed_at && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-green-900">Review Status</h4>
+                    <p className="mt-1 text-sm text-green-700">
+                      Reviewed by {selectedRep.reviewed_by_name} on {new Date(selectedRep.reviewed_at).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">Submitted</h4>
                   <p className="mt-1 text-sm text-gray-600">
@@ -431,7 +539,30 @@ export default function CouncilRepresentations() {
                 />
               )}
 
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex justify-between">
+                {!selectedRep.reviewed_at && (
+                  <button
+                    onClick={() => {
+                      // Mark as reviewed with current user and timestamp
+                      const updatedRep = {
+                        ...selectedRep,
+                        reviewed_at: new Date().toISOString(),
+                        reviewed_by: userId,
+                        reviewed_by_name: userName || 'Officer'
+                      };
+                      setRepresentations(prev => prev.map(rep =>
+                        rep.id === selectedRep.id ? updatedRep : rep
+                      ));
+                      setSelectedRep(updatedRep);
+                      // Audit trail would be created here in a real implementation
+                      console.log(`Marked representation ${selectedRep.id} as reviewed by ${userName}`);
+                    }}
+                    className="bg-green-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    Mark as Reviewed
+                  </button>
+                )}
+                {selectedRep.reviewed_at && <div />}
                 <button
                   onClick={() => setSelectedRep(null)}
                   className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -442,6 +573,35 @@ export default function CouncilRepresentations() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Assign Representation Modal */}
+      {assigningRep && department && (
+        <AssignRepresentationModal
+          isOpen={assignModalOpen}
+          onClose={() => {
+            setAssignModalOpen(false);
+            setAssigningRep(null);
+          }}
+          representationId={assigningRep.id}
+          departmentId={department.id}
+          currentAssignee={assigningRep.assigned_to}
+          onAssigned={(assigneeId: string, assigneeName: string) => {
+            // Update the local state with the assignment
+            setRepresentations(prev => prev.map(rep =>
+              rep.id === assigningRep.id
+                ? {
+                    ...rep,
+                    assigned_to: assigneeId,
+                    assigned_to_name: assigneeName,
+                    assigned_at: new Date().toISOString()
+                  }
+                : rep
+            ));
+            setAssignModalOpen(false);
+            setAssigningRep(null);
+          }}
+        />
       )}
     </div>
   );

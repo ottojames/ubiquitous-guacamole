@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Demo Mode Verification - US-0027</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .pass { background: #d4edda; border-color: #c3e6cb; }
+        .fail { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>US-0027: Implement Safe Demo Access - Verification</h1>
+
+    <div class="test info">
+        <h2>Test Setup</h2>
+        <p><strong>Current Environment:</strong></p>
+        <pre id="env-info">Checking environment...</pre>
+    </div>
+
+    <div class="test" id="test1">
+        <h2>Test 1: Check Demo Mode Function</h2>
+        <p>Testing if isDemoModeEnabled() function works correctly...</p>
+        <pre id="test1-result">Running...</pre>
+    </div>
+
+    <div class="test" id="test2">
+        <h2>Test 2: Check Login Page with DEMO_MODE=true</h2>
+        <p>Verifying demo accounts appear when DEMO_MODE is enabled...</p>
+        <pre id="test2-result">Running...</pre>
+    </div>
+
+    <div class="test" id="test3">
+        <h2>Test 3: Check SignIn Page with DEMO_MODE=true</h2>
+        <p>Verifying demo accounts appear on alternate login page...</p>
+        <pre id="test3-result">Running...</pre>
+    </div>
+
+    <h2>Manual Browser Tests:</h2>
+    <ol>
+        <li><strong>With DEMO_MODE=true (current):</strong>
+            <ul>
+                <li>Navigate to <a href="http://localhost:5173/login" target="_blank">http://localhost:5173/login</a></li>
+                <li>Click "Council Portal" or "Professional Portal"</li>
+                <li>✅ Should see amber "Demo Mode - Development Only" section</li>
+                <li>✅ Should see clickable demo accounts</li>
+            </ul>
+        </li>
+        <li><strong>Without DEMO_MODE (restart server without env var):</strong>
+            <ul>
+                <li>Kill server: <code>kill -9 $(lsof -ti tcp:5173)</code></li>
+                <li>Start without demo: <code>npm run dev:web</code></li>
+                <li>Navigate to login page</li>
+                <li>❌ Should NOT see any demo accounts section</li>
+                <li>✅ Should only see support contact</li>
+            </ul>
+        </li>
+    </ol>
+
+    <script>
+        // Check environment info
+        fetch('http://localhost:5173/')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('env-info').textContent =
+                    `Server running on http://localhost:5173
+VITE_DEMO_MODE=${process.env.VITE_DEMO_MODE || 'not set'}
+NODE_ENV=${process.env.NODE_ENV || 'development'}`;
+            })
+            .catch(err => {
+                document.getElementById('env-info').textContent =
+                    `Server check: ${err.message}`;
+            });
+
+        // Test 1: Check if demo mode detection works
+        const isDemoMode = window.location.hostname === 'localhost' &&
+                          (process.env.VITE_DEMO_MODE === 'true' ||
+                           localStorage.getItem('DEMO_MODE_TEST') === 'true');
+
+        document.getElementById('test1-result').textContent =
+            `Demo mode function would return: ${isDemoMode}
+(Note: This is a simulation - actual function runs in React app)`;
+        document.getElementById('test1').className = 'test info';
+
+        // Test 2: Check login page
+        fetch('http://localhost:5173/login')
+            .then(response => response.text())
+            .then(html => {
+                const hasDemoSection = html.includes('Demo Mode') ||
+                                      html.includes('demo@example.com') ||
+                                      html.includes('isDemoModeEnabled');
+                document.getElementById('test2-result').textContent =
+                    `Login page has demo code: ${hasDemoSection ? 'YES' : 'NO'}
+(Check browser to see if it's actually rendered)`;
+                document.getElementById('test2').className = hasDemoSection ? 'test pass' : 'test info';
+            })
+            .catch(err => {
+                document.getElementById('test2-result').textContent = `Error: ${err.message}`;
+                document.getElementById('test2').className = 'test fail';
+            });
+
+        // Test 3: Check signin page
+        fetch('http://localhost:5173/auth/signin')
+            .then(response => response.text())
+            .then(html => {
+                const hasDemoSection = html.includes('Demo Mode') ||
+                                      html.includes('demo@example.com') ||
+                                      html.includes('isDemoModeEnabled');
+                document.getElementById('test3-result').textContent =
+                    `SignIn page has demo code: ${hasDemoSection ? 'YES' : 'NO'}
+(Check browser to see if it's actually rendered)`;
+                document.getElementById('test3').className = hasDemoSection ? 'test pass' : 'test info';
+            })
+            .catch(err => {
+                document.getElementById('test3-result').textContent = `Error: ${err.message}`;
+                document.getElementById('test3').className = 'test fail';
+            });
+    </script>
+</body>
+</html>

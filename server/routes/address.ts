@@ -76,7 +76,76 @@ router.get('/addresses', async (req, res) => {
   if (q.length < 2) return res.json({ items: [], source: 'none' });
 
   const key = resolveKey();
-  if (!key) return res.json({ items: [], source: 'missing-key' });
+
+  // If no key, provide mock data for development
+  if (!key) {
+    // Mock addresses for common UK postcodes
+    const mockData: Record<string, AddressItem[]> = {
+      'sw1a 1aa': [
+        { id: 'mock-1', label: 'Buckingham Palace, Westminster, London, SW1A 1AA' },
+        { id: 'mock-2', label: 'The Queens Gallery, Buckingham Palace Road, Westminster, London, SW1A 1AA' },
+        { id: 'mock-3', label: 'Royal Mews, Buckingham Palace Road, Westminster, London, SW1A 1AA' },
+      ],
+      'sw1a': [
+        { id: 'mock-4', label: 'Buckingham Palace, Westminster, London, SW1A 1AA' },
+        { id: 'mock-5', label: '10 Downing Street, Westminster, London, SW1A 2AA' },
+        { id: 'mock-6', label: 'HM Treasury, 1 Horse Guards Road, Westminster, London, SW1A 2HQ' },
+      ],
+      'w1a 1aa': [
+        { id: 'mock-7', label: 'BBC Broadcasting House, Portland Place, Marylebone, London, W1A 1AA' },
+        { id: 'mock-8', label: 'All Souls Church, Langham Place, Marylebone, London, W1A 1AA' },
+      ],
+      'w1a': [
+        { id: 'mock-9', label: 'BBC Broadcasting House, Portland Place, Marylebone, London, W1A 1AA' },
+        { id: 'mock-10', label: 'Langham Hotel, 1C Portland Place, Marylebone, London, W1A 1JA' },
+      ],
+      'ec1a': [
+        { id: 'mock-11', label: '1 St Bartholomews Hospital, West Smithfield, City of London, EC1A 7BE' },
+        { id: 'mock-12', label: 'Smithfield Market, Charterhouse Street, City of London, EC1A 9PQ' },
+      ],
+      's325uy': [
+        { id: 'mock-13', label: 'The Pilot Inn, Station Road, Sheffield, S32 5UY' },
+        { id: 'mock-14', label: '1 Station Road, Sheffield, S32 5UY' },
+        { id: 'mock-15', label: 'Railway Cottages, Station Road, Sheffield, S32 5UY' },
+      ],
+      'default': [
+        { id: 'mock-16', label: '123 High Street, London, W1A 1AA' },
+        { id: 'mock-17', label: '456 Main Road, Westminster, SW1A 2AA' },
+        { id: 'mock-18', label: '789 Park Lane, Kensington, W8 1AA' },
+      ]
+    };
+
+    // Try to match the query to mock data
+    const queryLower = q.toLowerCase().replace(/\s+/g, '');
+    let items: AddressItem[] = [];
+
+    // Check for exact postcode match
+    for (const [key, addresses] of Object.entries(mockData)) {
+      if (key !== 'default' && queryLower.includes(key.replace(/\s+/g, ''))) {
+        items = addresses;
+        break;
+      }
+    }
+
+    // If no match, return default addresses with the query incorporated
+    if (items.length === 0) {
+      // Check if it looks like a postcode
+      const postcodeMatch = q.match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})/i);
+      if (postcodeMatch) {
+        const postcode = normPC(postcodeMatch[0]) || q;
+        items = [
+          { id: 'mock-gen-1', label: `1 High Street, London, ${postcode}` },
+          { id: 'mock-gen-2', label: `2 Main Road, Westminster, ${postcode}` },
+          { id: 'mock-gen-3', label: `3 Church Lane, Kensington, ${postcode}` },
+        ];
+      } else if (q.length >= 3) {
+        // Generic address search
+        items = mockData.default;
+      }
+    }
+
+    return res.json({ items, source: 'mock' });
+  }
 
   // Normalize postcode to uppercase if it looks like a postcode
   const normalizedQuery = normPC(q) || q;

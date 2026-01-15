@@ -13,24 +13,15 @@ router.get('/:noticeId', async (req, res) => {
     const { noticeId } = req.params;
     const supabase = getServiceSupabaseClient();
 
-    // Fetch the notice details
+    // Fetch the notice details (without department join for now as it may be null)
     const { data: notice, error: noticeError } = await supabase
       .from('notices')
-      .select(`
-        *,
-        department:departments (
-          id,
-          name,
-          organization:organizations (
-            id,
-            name
-          )
-        )
-      `)
+      .select('*')
       .eq('id', noticeId)
       .single();
 
     if (noticeError || !notice) {
+      console.error('Notice lookup error:', noticeError);
       return res.status(404).json({ error: 'Notice not found' });
     }
 
@@ -84,12 +75,12 @@ router.get('/:noticeId', async (req, res) => {
       noticeType: notice.notice_type,
       applicantName: notice.applicant?.name || notice.extras?.applicant_name,
       premisesName: notice.premises?.name || notice.location_name || notice.extras?.premises_name,
-      premisesAddress: notice.premises?.address || notice.address || notice.extras?.premises_address,
+      premisesAddress: notice.premises?.address || notice.location_name || notice.extras?.premises_address,
       publishedDate: new Date(notice.created_at),
-      representationsDeadline: new Date(notice.deadline_date),
+      representationsDeadline: new Date(notice.reps_deadline || notice.deadline_date || notice.created_at),
       publicationUrl,
-      councilName: notice.department?.organization?.name,
-      departmentName: notice.department?.name || 'Licensing Department',
+      councilName: notice.council?.name || 'Local Council',
+      departmentName: 'Licensing Department',
       noticeText: notice.notice_text,
       licensableActivities,
       operatingHours
@@ -130,7 +121,7 @@ router.get('/:noticeId/preview', async (req, res) => {
         notice_type,
         notice_text,
         created_at,
-        deadline_date,
+        reps_deadline,
         department:departments (
           name,
           organization:organizations (
@@ -162,7 +153,7 @@ router.get('/:noticeId/preview', async (req, res) => {
       councilName: notice.department?.organization?.name,
       departmentName: notice.department?.name,
       publishedDate: notice.created_at,
-      deadline: notice.deadline_date
+      deadline: notice.reps_deadline
     });
   } catch (error) {
     console.error('Error checking blue notice eligibility:', error);

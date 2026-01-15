@@ -480,6 +480,9 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) {
+      console.error('❌ [notice-submit] ERROR: Supabase configuration missing');
+      console.error('   - SUPABASE_URL:', url ? 'configured' : 'MISSING');
+      console.error('   - SUPABASE_SERVICE_ROLE_KEY:', key ? 'configured' : 'MISSING');
       return res.status(500).json({ error: 'Supabase configuration missing' });
     }
 
@@ -487,7 +490,23 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
     const payload = req.body;
 
     if (!payload || typeof payload !== 'object') {
+      console.error('❌ [notice-submit] ERROR: Invalid payload');
+      console.error('   - Payload type:', typeof payload);
+      console.error('   - Payload:', payload);
       return res.status(400).json({ error: 'Invalid payload' });
+    }
+
+    // Validate required fields
+    const requiredFields = ['notice_type', 'applicant', 'premises'];
+    const missingFields = requiredFields.filter(field => !payload[field]);
+
+    if (missingFields.length > 0) {
+      console.error('❌ [notice-submit] ERROR: Missing required fields');
+      console.error('   - Missing:', missingFields.join(', '));
+      return res.status(400).json({
+        error: 'validation',
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
     }
 
     // Extract postcode from premises address for geocoding
@@ -562,8 +581,12 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
           .single();
 
         if (error) {
-          console.error('[notice-submit] Supabase update failed', error);
-          return res.status(500).json({ error: 'Failed to submit notice' });
+          console.error('❌ [notice-submit] ERROR: Supabase update failed');
+          console.error('   - Error code:', error.code);
+          console.error('   - Error message:', error.message);
+          console.error('   - Error details:', error.details);
+          console.error('   - Notice ID:', payload.id);
+          return res.status(500).json({ error: 'Failed to submit notice', details: error.message });
         }
 
         return res.status(200).json({ id: data.id, success: true });
@@ -580,7 +603,12 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       .single();
 
     if (error) {
-      console.error('[notice-submit] Supabase insert failed', error);
+      console.error('❌ [notice-submit] ERROR: Supabase insert failed');
+      console.error('   - Error code:', error.code);
+      console.error('   - Error message:', error.message);
+      console.error('   - Error details:', error.details);
+      console.error('   - Notice type:', noticeData.notice_type);
+      console.error('   - Applicant:', noticeData.applicant?.name);
       return res.status(500).json({ error: 'Failed to submit notice', details: error.message });
     }
 
@@ -636,8 +664,12 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
 
     return res.status(201).json({ id: data.id, success: true });
   } catch (error: any) {
-    console.error('❌ [notice-submit] Unexpected server error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ [notice-submit] UNEXPECTED SERVER ERROR');
+    console.error('   - Error type:', error.constructor.name);
+    console.error('   - Error message:', error.message);
+    console.error('   - Error stack:', error.stack);
+    console.error('   - Request body:', JSON.stringify(req.body, null, 2));
+    return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 });
 

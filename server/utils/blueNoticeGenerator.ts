@@ -79,7 +79,7 @@ export async function generateBlueNoticePDF(data: BlueNoticeData): Promise<Buffe
 
       doc.moveDown(1);
 
-      // Main title
+      // Main title - varies by notice type
       doc.fontSize(22)
         .font('Helvetica-Bold')
         .fillColor('#0066CC')
@@ -87,10 +87,20 @@ export async function generateBlueNoticePDF(data: BlueNoticeData): Promise<Buffe
           align: 'center'
         });
 
+      // Different titles based on notice type
+      let noticeTitle = 'NOTICE OF APPLICATION';
+      if (data.noticeType.includes('variation')) {
+        noticeTitle = 'NOTICE OF VARIATION';
+      } else if (data.noticeType.includes('transfer')) {
+        noticeTitle = 'NOTICE OF TRANSFER';
+      } else if (data.noticeType.includes('review')) {
+        noticeTitle = 'NOTICE OF REVIEW';
+      }
+
       doc.fontSize(16)
         .font('Helvetica-Bold')
         .fillColor('black')
-        .text('NOTICE OF APPLICATION', {
+        .text(noticeTitle, {
           align: 'center'
         });
 
@@ -134,10 +144,22 @@ export async function generateBlueNoticePDF(data: BlueNoticeData): Promise<Buffe
 
       doc.moveDown(1.5);
 
-      // Main notice text
+      // Main notice text - varies by notice type
+      let noticeIntroText = 'TAKE NOTICE that an application has been made to the Licensing Authority for:';
+
+      if (data.noticeType.includes('variation')) {
+        noticeIntroText = 'TAKE NOTICE that an application has been made to vary the premises licence for:';
+      } else if (data.noticeType.includes('transfer')) {
+        noticeIntroText = 'TAKE NOTICE that an application has been made to transfer the premises licence for:';
+      } else if (data.noticeType.includes('review')) {
+        noticeIntroText = 'TAKE NOTICE that a review of the premises licence has been requested for:';
+      } else if (data.noticeType === 'premises-licence') {
+        noticeIntroText = 'TAKE NOTICE that an application has been made for a new premises licence for:';
+      }
+
       doc.fontSize(11)
         .font('Helvetica')
-        .text('TAKE NOTICE that an application has been made to the Licensing Authority for:', contentX + 20, doc.y, {
+        .text(noticeIntroText, contentX + 20, doc.y, {
           width: contentWidth - 40,
           align: 'justify'
         });
@@ -185,14 +207,30 @@ export async function generateBlueNoticePDF(data: BlueNoticeData): Promise<Buffe
 
       doc.moveDown(1);
 
-      // Legal text
+      // Legal text - varies by notice type
+      let legalText = 'Any person wishing to make representations in relation to this application may do so by writing to the Licensing Authority. ' +
+        'Representations must be received no later than the date shown above. ' +
+        'The full application can be viewed online or at the council offices during normal office hours.';
+
+      if (data.noticeType.includes('variation')) {
+        legalText = 'Any person wishing to make representations in relation to this variation application may do so by writing to the Licensing Authority. ' +
+          'Representations must be received no later than the date shown above. ' +
+          'The full variation application can be viewed online or at the council offices during normal office hours.';
+      } else if (data.noticeType.includes('transfer')) {
+        legalText = 'Any person wishing to make representations in relation to this transfer application may do so by writing to the Licensing Authority. ' +
+          'The Police may object to this application within 14 days. ' +
+          'The application can be viewed online or at the council offices during normal office hours.';
+      } else if (data.noticeType.includes('review')) {
+        legalText = 'Interested parties and responsible authorities may make representations in relation to this review. ' +
+          'Representations must be received no later than the date shown above. ' +
+          'A hearing will be held to determine the review. Details of the review can be viewed online or at the council offices.';
+      }
+
       doc.fontSize(10)
         .font('Helvetica')
         .fillColor('black')
         .text(
-          'Any person wishing to make representations in relation to this application may do so by writing to the Licensing Authority. ' +
-          'Representations must be received no later than the date shown above. ' +
-          'The full application can be viewed online or at the council offices during normal office hours.',
+          legalText,
           contentX + 20,
           doc.y,
           {
