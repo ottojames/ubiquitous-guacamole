@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase.js';
 
 // Lazy initialization - only create Supabase client when actually needed
 let supabaseAdmin: SupabaseClient | null = null;

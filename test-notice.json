@@ -1,0 +1,18 @@
+{
+  "notice_type": "premises-licence",
+  "status": "published",
+  "applicant_name": "Test Applicant Ltd",
+  "applicant_email": "test@example.com",
+  "premises": {
+    "name": "The Test Pub",
+    "address": "123 Test Street, London",
+    "postcode": "SW1A 1AA"
+  },
+  "council_id": null,
+  "notice_text": "NOTICE OF APPLICATION\n\nPREMISES LICENCE\n\nPREMISES\nThe Test Pub\n123 Test Street, London\nSW1A 1AA\n\nAPPLICANT\nTest Applicant Ltd\n\nLICENSABLE ACTIVITIES\n• Sale of alcohol by retail\n• Provision of regulated entertainment\n• Late night refreshment\n\nOPENING HOURS\nMonday to Sunday: 11:00 - 23:00\n\nREPRESENTATIONS\nRepresentations concerning this application must be made in writing to the licensing authority by 14 February 2026.\n\nThe register and application records may be inspected at the licensing authority during normal office hours.\n\nLicensing Authority: Westminster City Council",
+  "reps_deadline": "2026-02-14T23:59:59Z",
+  "payment_status": "completed",
+  "payment_amount": 49.99,
+  "organization_id": null,
+  "department_id": null
+}

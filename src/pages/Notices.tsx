@@ -15,6 +15,8 @@ import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
 import { TRAFFIC_AREAS } from '@/next/publish/config/trafficAreas';
 import { supabase } from '@/lib/supabase';
+import { EmailAlertSubscriptionForm } from '@/components/alerts/EmailAlertSubscriptionForm';
+import { Bell } from 'lucide-react';
 
 const TYPE_OPTIONS = [
   'Licensing Act 2003',
@@ -63,6 +65,7 @@ export default function NoticesPage() {
   const [addressInlineError, setAddressInlineError] = useState<string | null>(null);
   const [councils, setCouncils] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [searchedLocation, setSearchedLocation] = useState<{ latitude: number; longitude: number; postcode: string } | null>(null);
+  const [showSubscriptionForm, setShowSubscriptionForm] = useState(false);
   const toastMessage = useToastController();
 
   const queryParam = (searchParams.get('query') ?? '').trim();
@@ -84,9 +87,10 @@ export default function NoticesPage() {
   const radiusValue = (() => {
     const numeric = Number(radiusParam);
     if (!Number.isNaN(numeric) && numeric > 0) {
-      return Math.min(Math.max(Math.round(numeric), 1), 50);
+      // Allow decimal values like 0.5 for 500m
+      return Math.min(Math.max(numeric, 0.5), 50);
     }
-    return 5;
+    return 1; // Default to 1km instead of 5km
   })();
 
   // Pagination values
@@ -551,8 +555,8 @@ export default function NoticesPage() {
                 onChange={(event) => {
                   updateParams((params) => {
                     const value = event.target.value;
-                    if (value === '5') {
-                      params.delete('radius_km'); // 5km is default
+                    if (value === '1') {
+                      params.delete('radius_km'); // 1km is default
                     } else {
                       params.set('radius_km', value);
                     }
@@ -560,12 +564,10 @@ export default function NoticesPage() {
                 }}
                 className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
               >
+                <option value="0.5">500 m</option>
                 <option value="1">1 km</option>
                 <option value="2">2 km</option>
                 <option value="5">5 km</option>
-                <option value="10">10 km</option>
-                <option value="20">20 km</option>
-                <option value="50">50 km</option>
               </select>
             </label>
           )}
@@ -599,6 +601,41 @@ export default function NoticesPage() {
               </p>
             </div>
             <div className="w-full max-w-3xl">
+              {/* Pre-search radius selector */}
+              <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+                <span className="text-sm font-medium text-slate-700">Search radius:</span>
+                <div className="inline-flex items-center rounded-lg bg-white/80 p-1 shadow-sm backdrop-blur-sm">
+                  {[
+                    { value: '0.5', label: '500m' },
+                    { value: '1', label: '1km' },
+                    { value: '2', label: '2km' },
+                    { value: '5', label: '5km' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        updateParams((params) => {
+                          if (option.value === '1') {
+                            params.delete('radius_km'); // 1km is default
+                          } else {
+                            params.set('radius_km', option.value);
+                          }
+                        }, false); // Don't trigger search yet
+                      }}
+                      className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
+                        radiusValue === Number(option.value)
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                      aria-pressed={radiusValue === Number(option.value)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <AddressSearchBar
                 value={addressValue}
                 onValueChange={(next) => {
@@ -608,6 +645,7 @@ export default function NoticesPage() {
                 onSubmit={handleAddressSubmit}
                 onFreeText={handleFreeText}
                 testIdPrefix="notices"
+                oneClickSelect={true}
               />
               {addressInlineError && (
                 <p role="alert" className="mt-2 text-sm font-medium text-rose-600">
@@ -923,6 +961,51 @@ export default function NoticesPage() {
           {toastMessage}
         </div>
       )}
+
+      {/* Email Alert Subscription Section */}
+      <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-12">
+          <div className="mx-auto max-w-2xl text-center">
+            {!showSubscriptionForm ? (
+              <>
+                <Bell className="mx-auto h-12 w-12 text-blue-600 mb-4" />
+                <h2 className="text-2xl font-semibold text-slate-800 mb-3">
+                  Stay informed about new notices
+                </h2>
+                <p className="text-base text-slate-600 mb-6">
+                  Get email alerts when new notices are published near you. Choose your preferred radius and we'll keep you updated.
+                </p>
+                <button
+                  onClick={() => setShowSubscriptionForm(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                >
+                  <Bell className="h-4 w-4" />
+                  Set up email alerts
+                </button>
+              </>
+            ) : (
+              <div className="max-w-md mx-auto">
+                <h2 className="text-xl font-semibold text-slate-800 mb-6">
+                  Set up email alerts
+                </h2>
+                <EmailAlertSubscriptionForm
+                  postcode={postcodeParam ? formatPostcodeForDisplay(postcodeParam) : undefined}
+                  onSuccess={() => {
+                    setShowSubscriptionForm(false);
+                    toast('Email alert created! Check your inbox to verify.');
+                  }}
+                />
+                <button
+                  onClick={() => setShowSubscriptionForm(false)}
+                  className="mt-4 text-sm text-slate-600 hover:text-slate-900 underline"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>

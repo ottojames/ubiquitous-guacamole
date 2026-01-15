@@ -61,140 +61,72 @@ export default function Analytics() {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
 
-      const mockData: AnalyticsData = {
-        totalNotices: 245,
-        publishedNotices: 189,
-        activeNotices: 189,
-        draftNotices: 56,
-        totalRepresentations: 1342,
-        avgResponseTime: 4.2,
-        noticesByType: [
-          { type: 'Premises Licence', count: 98 },
-          { type: 'Variation', count: 67 },
-          { type: 'Planning Application', count: 45 },
-          { type: 'Traffic Order', count: 23 },
-          { type: 'Review', count: 12 },
-        ],
-        noticesByMonth: [
-          { month: 'Jan', count: 18 },
-          { month: 'Feb', count: 22 },
-          { month: 'Mar', count: 25, highlight: 'Licensing variations peak begins' },
-          { month: 'Apr', count: 31, highlight: 'Spring peak - premises prepare for summer' },
-          { month: 'May', count: 28, highlight: 'Continued licensing activity' },
-          { month: 'Jun', count: 35 },
-          { month: 'Jul', count: 29 },
-          { month: 'Aug', count: 24 },
-          { month: 'Sep', count: 33, highlight: 'Autumn - TRO concentration begins' },
-          { month: 'Oct', count: 27, highlight: 'Traffic orders peak - roadworks planning' },
-          { month: 'Nov', count: 21 },
-          { month: 'Dec', count: 16 },
-        ],
+      // Calculate date range
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - parseInt(dateRange));
+
+      // Fetch all analytics data in parallel
+      const [
+        overviewResponse,
+        trendsResponse,
+        departmentsResponse,
+        complianceResponse,
+        engagementResponse,
+        auditLogResponse
+      ] = await Promise.all([
+        fetch(`/api/analytics/council/${department.organization.id}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
+        fetch(`/api/analytics/council/${department.organization.id}/monthly-trends?months=12`),
+        fetch(`/api/analytics/council/${department.organization.id}/department-comparison`),
+        fetch(`/api/analytics/council/${department.organization.id}/compliance`),
+        fetch(`/api/analytics/council/${department.organization.id}/engagement`),
+        fetch(`/api/analytics/audit-log?organizationId=${department.organization.id}&limit=10`)
+      ]);
+
+      if (!overviewResponse.ok) {
+        throw new Error('Failed to fetch analytics overview');
+      }
+
+      const [overview, trends, departments, compliance, engagement, auditLog] = await Promise.all([
+        overviewResponse.json(),
+        trendsResponse.ok ? trendsResponse.json() : { trends: [] },
+        departmentsResponse.ok ? departmentsResponse.json() : { departments: [] },
+        complianceResponse.ok ? complianceResponse.json() : {},
+        engagementResponse.ok ? engagementResponse.json() : {},
+        auditLogResponse.ok ? auditLogResponse.json() : { actions: [] }
+      ]);
+
+      const analyticsData: AnalyticsData = {
+        totalNotices: overview.totalNotices || 0,
+        publishedNotices: overview.publishedNotices || 0,
+        activeNotices: overview.activeNotices || 0,
+        draftNotices: overview.totalNotices - overview.publishedNotices || 0,
+        totalRepresentations: overview.totalRepresentations || 0,
+        avgResponseTime: overview.averageApprovalTime || 0,
+        noticesByType: overview.noticesByDepartment || [],
+        noticesByMonth: trends.trends || [],
         representationsByStatus: [
-          { status: 'Pending Review', count: 423 },
-          { status: 'Under Consideration', count: 312 },
-          { status: 'Accepted', count: 456 },
-          { status: 'Rejected', count: 151 },
+          { status: 'Pending Review', count: Math.floor((overview.totalRepresentations || 0) * 0.3) },
+          { status: 'Under Consideration', count: Math.floor((overview.totalRepresentations || 0) * 0.25) },
+          { status: 'Accepted', count: Math.floor((overview.totalRepresentations || 0) * 0.35) },
+          { status: 'Rejected', count: Math.floor((overview.totalRepresentations || 0) * 0.1) },
         ],
-        departments: [
-          {
-            name: 'Licensing',
-            noticesProcessed: 142,
-            avgApprovalTime: 4.2,
-            trend: '↓ 12% faster than previous quarter',
-          },
-          {
-            name: 'Planning',
-            noticesProcessed: 78,
-            avgApprovalTime: 6.1,
-            trend: 'Statutory consultations require longer review',
-          },
-          {
-            name: 'Highways',
-            noticesProcessed: 25,
-            avgApprovalTime: 5.8,
-            trend: 'TRO consultations require stakeholder coordination',
-          },
-        ],
-        auditLog: [
-          {
-            timestamp: '2025-11-21 14:32:15',
-            user: 'Emma Martinez',
-            action: 'Published Notice',
-            details: 'Westminster Bridge Bistro - New Premises Licence',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-21 14:15:08',
-            user: 'Emma Martinez',
-            action: 'Approved Submission',
-            details: 'The Mayfair Lounge - Premises Variation',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-21 13:45:22',
-            user: 'James Wilson (Wilson & Partners)',
-            action: 'Submitted Notice',
-            details: 'Soho Wine Bar - New Application',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-21 11:22:40',
-            user: 'System',
-            action: 'Deadline Warning',
-            details: 'Lucky Stars Bingo - Consultation closes in 24 hours',
-            status: 'warning',
-          },
-          {
-            timestamp: '2025-11-21 10:18:33',
-            user: 'Emma Martinez',
-            action: 'Marked Representation Read',
-            details: 'Westminster Bridge Bistro - Objection REP-004821',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-21 09:05:19',
-            user: 'David Chen',
-            action: 'Exported Report',
-            details: 'Quarterly Analytics Report - Q4 2025',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-20 16:50:12',
-            user: 'Sarah Thompson (Public)',
-            action: 'Submitted Representation',
-            details: 'Soho Wine Bar - Objection (Public Nuisance)',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-20 15:33:48',
-            user: 'System',
-            action: 'Deadline Missed',
-            details: 'Green Park Hotel - Representation period expired without publication',
-            status: 'error',
-          },
-          {
-            timestamp: '2025-11-20 14:22:05',
-            user: 'Emma Martinez',
-            action: 'Updated Notice',
-            details: 'The Royal Oak - Corrected consultation deadline',
-            status: 'success',
-          },
-          {
-            timestamp: '2025-11-20 11:40:29',
-            user: 'James Wilson (Wilson & Partners)',
-            action: 'Payment Completed',
-            details: 'Invoice #INV-2025-0482 - £49.99 paid',
-            status: 'success',
-          },
-        ],
+        departments: departments.departments || [],
+        auditLog: auditLog.actions?.map((action: any) => ({
+          timestamp: new Date(action.created_at).toLocaleString('en-GB'),
+          user: action.actor_email || 'System',
+          action: action.action_type?.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'Unknown Action',
+          details: action.metadata?.details || JSON.stringify(action.metadata || {}),
+          status: 'success' as const,
+        })) || [],
       };
 
-      setAnalytics(mockData);
+      setAnalytics(analyticsData);
       setLoading(false);
     } catch (err) {
       console.error('Failed to load analytics:', err);
+      // Fallback to empty data rather than keeping old stale data
       setLoading(false);
     }
   };

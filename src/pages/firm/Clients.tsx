@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext, useParams, Link } from 'react-router-dom';
+import { useOutletContext, useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 interface Organization {
@@ -26,21 +26,13 @@ interface Client {
   notes: string | null;
   created_at: string;
   active: boolean;
-  notice_count?: number;
-}
-
-interface ClientRelationship {
-  id: string;
-  firm_id: string;
-  client_id: string;
-  status: 'active' | 'inactive' | 'pending';
-  created_at: string;
-  notes: string | null;
+  notice_count: number;
 }
 
 export default function Clients() {
   const { firm, userRole } = useOutletContext<ContextType>();
   const { firmSlug } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -446,7 +438,16 @@ export default function Clients() {
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-2">
                         <Link
-                          to={`/f/${firmSlug}/clients/${client.slug}/notices`}
+                          to={`/f/${firmSlug}/publish/step-1?client=${client.slug}`}
+                          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          Quick Publish
+                        </Link>
+                        <Link
+                          to={`/f/${firmSlug}/notices?client=${client.slug}`}
                           className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-semibold"
                         >
                           View Notices

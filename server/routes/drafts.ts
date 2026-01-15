@@ -4,7 +4,7 @@
  */
 
 import express, { Request, Response } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase.js';
 import { z } from 'zod';
 
 const router = express.Router();
@@ -35,11 +35,9 @@ router.get('/', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Missing authorization header' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getServiceSupabaseClient().auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -94,11 +92,9 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Missing authorization header' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getServiceSupabaseClient().auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -134,11 +130,9 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Missing authorization header' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getServiceSupabaseClient().auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -195,11 +189,9 @@ router.put('/:id', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Missing authorization header' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getServiceSupabaseClient().auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -277,11 +269,9 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Missing authorization header' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getServiceSupabaseClient().auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -316,11 +306,9 @@ router.post('/:id/publish', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Missing authorization header' });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getServiceSupabaseClient().auth.getUser();
     if (authError || !user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }

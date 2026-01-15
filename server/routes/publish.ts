@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase.js';
 import crypto from 'crypto';
 import { requireAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
 import { sendNoticeConfirmation } from '../services/email';
@@ -14,7 +15,7 @@ function getAuthenticatedClient(authHeader: string | undefined) {
 
   const token = authHeader.substring(7);
   return createClient(
-    process.env.VITE_SUPABASE_URL!,
+    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       global: {
@@ -75,10 +76,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: title, notice_type' });
     }
 
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getServiceSupabaseClient();
 
     // Get user's organization (must be a firm)
     const { data: memberships } = await supabase
@@ -257,10 +255,7 @@ router.get('/billing/account', requireAuth, async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getServiceSupabaseClient();
 
     const { data: membership } = await supabase
       .from('organization_memberships')
@@ -316,10 +311,7 @@ router.post('/billing/pay', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: amount, payment_method' });
     }
 
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getServiceSupabaseClient();
 
     const { data: membership } = await supabase
       .from('organization_memberships')
@@ -403,10 +395,7 @@ router.get('/representations/:noticeId', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Notice ID required' });
     }
 
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getServiceSupabaseClient();
 
     // Check if user has access to this notice
     const { data: notice } = await supabase

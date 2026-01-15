@@ -21,6 +21,7 @@ export interface NoticeConfirmationData {
   applicantName?: string;
   noticeText: string;
   viewUrl: string;
+  trackingUrl?: string;
 }
 
 export interface RepresentationConfirmationData {
@@ -44,6 +45,26 @@ export interface DeadlineReminderData {
   hoursRemaining: number;
   noticeUrl: string;
   recipientEmail: string;
+}
+
+export interface SubscriptionVerificationData {
+  verificationToken: string;
+  postcode: string;
+  radius: number;
+}
+
+export interface AlertEmailData {
+  notices: Array<{
+    id: string;
+    noticeType: string;
+    premisesName?: string;
+    premisesAddress?: string;
+    distance: number;
+    viewUrl: string;
+  }>;
+  postcode: string;
+  radius: number;
+  unsubscribeToken: string;
 }
 
 export interface DailySummaryData {
@@ -368,6 +389,25 @@ export async function sendNoticeConfirmation(
                 </tr>
               </table>
 
+              ${data.trackingUrl ? `
+              <!-- Tracking Link -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 16px 20px; margin: 24px 0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af;">
+                      📊 Track Representations
+                    </p>
+                    <p style="margin: 0 0 12px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #1e3a8a; line-height: 1.6;">
+                      Use this private link to view representations submitted on your notice. Keep it secure - anyone with this link can view representations.
+                    </p>
+                    <a href="${data.trackingUrl}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 500; line-height: 1.5;">
+                      View Representations →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
               <!-- Info Box -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 6px; padding: 16px 20px; margin: 24px 0;">
                 <tr>
@@ -420,7 +460,13 @@ ${data.applicantName ? `- Applicant: ${data.applicantName}` : ''}
 
 View your published notice: ${data.viewUrl}
 
-What happens next?
+${data.trackingUrl ? `📊 Track Representations
+Use this private link to view representations submitted on your notice:
+${data.trackingUrl}
+
+Keep this link secure - anyone with this link can view representations.
+
+` : ''}What happens next?
 Your notice is now live on CivicNotices and searchable by the public. If you've arranged for newspaper publication, you'll receive separate confirmation from the publisher.
 
 If you have any questions or need assistance, please don't hesitate to contact our support team.
@@ -1118,6 +1164,269 @@ The CivicNotices Team
 
   } catch (error: any) {
     console.error('[Email] Failed to send daily summary:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send subscription verification email
+ */
+export async function sendSubscriptionVerification(
+  to: string,
+  data: SubscriptionVerificationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] Resend not configured. Skipping subscription verification email.');
+      return { success: true };
+    }
+
+    const verifyUrl = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/api/subscriptions/verify/${data.verificationToken}`;
+
+    const subject = 'Verify your CivicNotices alert subscription';
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); overflow: hidden; margin: 20px auto;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: 600;">
+                Confirm Your Email Alerts
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="font-size: 16px; color: #333; line-height: 1.6; margin: 0 0 24px;">
+                You're almost set to receive email alerts when new notices are published near <strong>${data.postcode}</strong>.
+              </p>
+
+              <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 24px 0;">
+                <h3 style="margin: 0 0 12px; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Your Alert Settings
+                </h3>
+                <p style="margin: 8px 0; font-size: 15px; color: #333;">
+                  <strong>Location:</strong> ${data.postcode}<br>
+                  <strong>Radius:</strong> ${data.radius}km<br>
+                  <strong>Frequency:</strong> As notices are published
+                </p>
+              </div>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${verifyUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Verify Email Address
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 14px; color: #666; line-height: 1.6; margin: 24px 0 0;">
+                If you didn't request this, you can safely ignore this email. We won't send you any alerts until you verify your email address.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; text-align: center; border-top: 1px solid #e5e5e5; background: #f8f9fa;">
+              <p style="margin: 0; font-size: 13px; color: #888;">
+                CivicNotices - Public notices made accessible<br>
+                This is an automated email. Please do not reply.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Verify your CivicNotices alert subscription
+
+You're almost set to receive email alerts when new notices are published near ${data.postcode}.
+
+Your Alert Settings:
+- Location: ${data.postcode}
+- Radius: ${data.radius}km
+- Frequency: As notices are published
+
+Click here to verify your email address: ${verifyUrl}
+
+If you didn't request this, you can safely ignore this email.
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending subscription verification to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Subscription verification sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send subscription verification:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send alert email with new notices
+ */
+export async function sendAlertEmail(
+  to: string,
+  data: AlertEmailData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] Resend not configured. Skipping alert email.');
+      return { success: true };
+    }
+
+    const unsubscribeUrl = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/api/subscriptions/unsubscribe/${data.unsubscribeToken}`;
+
+    const subject = `${data.notices.length} new notice${data.notices.length !== 1 ? 's' : ''} near ${data.postcode}`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); overflow: hidden; margin: 20px auto;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: 600;">
+                New Notices Near You
+              </h1>
+              <p style="margin: 8px 0 0; font-size: 16px; color: rgba(255,255,255,0.9);">
+                ${data.notices.length} notice${data.notices.length !== 1 ? 's' : ''} within ${data.radius}km of ${data.postcode}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+
+              <!-- Notices List -->
+              ${data.notices.map(notice => `
+              <div style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+                <h3 style="margin: 0 0 8px; font-size: 18px; color: #333;">
+                  ${notice.premisesName || notice.noticeType}
+                </h3>
+                <p style="margin: 0 0 12px; font-size: 14px; color: #666;">
+                  ${notice.noticeType} • ${notice.distance.toFixed(1)}km away
+                </p>
+                ${notice.premisesAddress ? `
+                <p style="margin: 0 0 16px; font-size: 14px; color: #666;">
+                  📍 ${notice.premisesAddress}
+                </p>
+                ` : ''}
+                <a href="${notice.viewUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                  View Notice →
+                </a>
+              </div>
+              `).join('')}
+
+              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5; text-align: center;">
+                <p style="margin: 0 0 12px; font-size: 13px; color: #888;">
+                  Don't want these alerts?
+                </p>
+                <a href="${unsubscribeUrl}" style="color: #888; font-size: 13px; text-decoration: underline;">
+                  Unsubscribe from alerts
+                </a>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; text-align: center; border-top: 1px solid #e5e5e5; background: #f8f9fa;">
+              <p style="margin: 0; font-size: 13px; color: #888;">
+                CivicNotices - Public notices made accessible<br>
+                You're receiving this because you subscribed to alerts for ${data.postcode}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+New Notices Near You
+
+${data.notices.length} notice${data.notices.length !== 1 ? 's' : ''} within ${data.radius}km of ${data.postcode}
+
+${data.notices.map(notice => `
+${notice.premisesName || notice.noticeType}
+${notice.noticeType} • ${notice.distance.toFixed(1)}km away
+${notice.premisesAddress ? `📍 ${notice.premisesAddress}` : ''}
+View: ${notice.viewUrl}
+`).join('\n---\n')}
+
+Don't want these alerts? Unsubscribe: ${unsubscribeUrl}
+
+You're receiving this because you subscribed to alerts for ${data.postcode}
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending alert email to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Alert email sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send alert email:', error);
     return { success: false, error: error.message };
   }
 }

@@ -32,6 +32,8 @@ interface Notice {
   expires_at: string | null;
   representation_deadline: string | null;
   proof_pdf_url?: string | null;
+  view_count?: number;
+  representation_count?: number;
 }
 
 type FilterStatus = 'all' | 'draft' | 'pending_approval' | 'published' | 'expired';
@@ -47,6 +49,8 @@ export default function Notices() {
   const [filteredNotices, setFilteredNotices] = useState<Notice[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewCountFilter, setViewCountFilter] = useState<'all' | '10+' | '50+' | '100+' | '500+'>('all');
+  const [sortBy, setSortBy] = useState<'created' | 'views' | 'representations'>('created');
 
   // Bulk operations state
   const [selectedNotices, setSelectedNotices] = useState<Set<string>>(new Set());
@@ -72,7 +76,7 @@ export default function Notices() {
 
   useEffect(() => {
     filterNotices();
-  }, [notices, filterStatus, searchQuery]);
+  }, [notices, filterStatus, searchQuery, viewCountFilter, sortBy]);
 
   const loadNotices = async () => {
     try {
@@ -103,9 +107,22 @@ export default function Notices() {
         setLoading(false);
       } else {
         // Production mode: filter by department_id
+        // Include view_count and count of representations
         const { data, error } = await supabase
           .from('notices')
-          .select('id, title, notice_type, status, created_at, published_at, expires_at, representation_deadline, proof_pdf_url')
+          .select(`
+            id,
+            title,
+            notice_type,
+            status,
+            created_at,
+            published_at,
+            expires_at,
+            representation_deadline,
+            proof_pdf_url,
+            view_count,
+            representations(count)
+          `)
           .eq('department_id', department.id)
           .order('created_at', { ascending: false });
 
@@ -136,6 +153,32 @@ export default function Notices() {
         n.notice_type.toLowerCase().includes(query)
       );
     }
+
+    // Filter by view count
+    if (viewCountFilter !== 'all') {
+      const minViews = parseInt(viewCountFilter.replace('+', ''));
+      filtered = filtered.filter(n => (n.view_count || 0) >= minViews);
+    }
+
+    // Sort results
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'views':
+          return (b.view_count || 0) - (a.view_count || 0);
+        case 'representations':
+          // If representations is an object with count, extract the count
+          const aCount = typeof a.representation_count === 'number'
+            ? a.representation_count
+            : (a as any).representations?.count || 0;
+          const bCount = typeof b.representation_count === 'number'
+            ? b.representation_count
+            : (b as any).representations?.count || 0;
+          return bCount - aCount;
+        case 'created':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
 
     setFilteredNotices(filtered);
   };
@@ -485,6 +528,43 @@ export default function Notices() {
             ))}
           </div>
         </div>
+
+        {/* Advanced Filters Row */}
+        <div className="flex flex-col md:flex-row gap-4 mt-4 pt-4 border-t border-gray-200">
+          {/* View Count Filter */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Views
+            </label>
+            <select
+              value={viewCountFilter}
+              onChange={(e) => setViewCountFilter(e.target.value as any)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All views</option>
+              <option value="10+">10+ views</option>
+              <option value="50+">50+ views</option>
+              <option value="100+">100+ views</option>
+              <option value="500+">500+ views</option>
+            </select>
+          </div>
+
+          {/* Sort By */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sort By
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="created">Date Created</option>
+              <option value="views">View Count</option>
+              <option value="representations">Representations</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Notices List */}
@@ -619,6 +699,45 @@ export default function Notices() {
                           Awaiting proof.
                         </span>
                       </div>
+                    )}
+
+                    {/* View and Representation Counts */}
+                    {(notice.view_count !== undefined || notice.representation_count !== undefined) && (
+                      <>
+                        {notice.view_count !== undefined && (
+                          <div className="flex items-center gap-1">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>{notice.view_count} views</span>
+                          </div>
+                        )}
+                        {(notice.representation_count !== undefined || (notice as any).representations?.count !== undefined) && (
+                          <div className="flex items-center gap-1">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <span>{(notice as any).representations?.count || notice.representation_count || 0} representations</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

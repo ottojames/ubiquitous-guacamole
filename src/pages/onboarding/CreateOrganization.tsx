@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 type OrgType = 'council' | 'firm';
-type Step = 'type' | 'info' | 'departments' | 'review';
+type Step = 'type' | 'info' | 'departments' | 'subscription' | 'review';
 
 interface Department {
   name: string;
@@ -13,6 +13,20 @@ interface Department {
   description?: string;
 }
 
+interface SubscriptionTier {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  monthly_price_gbp: number;
+  annual_price_gbp: number;
+  notices_per_month: number;
+  additional_notice_price_gbp: number;
+  features: string[];
+  max_users: number | null;
+  priority_support: boolean;
+}
+
 interface OrgData {
   type: OrgType | null;
   name: string;
@@ -20,6 +34,8 @@ interface OrgData {
   contactEmail: string;
   registrationNumber?: string;
   departments: Department[];
+  selectedTier?: SubscriptionTier;
+  billingCycle: 'monthly' | 'annual';
 }
 
 export default function CreateOrganization() {
@@ -34,8 +50,12 @@ export default function CreateOrganization() {
     domain: '',
     contactEmail: '',
     registrationNumber: '',
-    departments: []
+    departments: [],
+    billingCycle: 'monthly'
   });
+
+  const [tiers, setTiers] = useState<SubscriptionTier[]>([]);
+  const [loadingTiers, setLoadingTiers] = useState(false);
 
   const [currentDept, setCurrentDept] = useState<Department>({
     name: '',
@@ -50,7 +70,7 @@ export default function CreateOrganization() {
     setStep('info');
   };
 
-  const handleInfoNext = () => {
+  const handleInfoNext = async () => {
     if (!orgData.name || !orgData.domain || !orgData.contactEmail) {
       setError('Please fill in all required fields');
       return;
@@ -60,7 +80,24 @@ export default function CreateOrganization() {
     if (orgData.type === 'council') {
       setStep('departments');
     } else {
-      setStep('review');
+      // For firms, load subscription tiers and go to subscription selection
+      await fetchSubscriptionTiers();
+      setStep('subscription');
+    }
+  };
+
+  const fetchSubscriptionTiers = async () => {
+    setLoadingTiers(true);
+    try {
+      const response = await fetch('/api/firm-subscriptions/tiers');
+      if (!response.ok) throw new Error('Failed to fetch subscription tiers');
+      const data = await response.json();
+      setTiers(data.tiers || []);
+    } catch (err) {
+      console.error('Error fetching tiers:', err);
+      setError('Failed to load subscription plans. Please try again.');
+    } finally {
+      setLoadingTiers(false);
     }
   };
 
@@ -148,6 +185,21 @@ export default function CreateOrganization() {
         if (deptError) throw deptError;
       }
 
+      // For firms, create subscription
+      if (orgData.type === 'firm' && orgData.selectedTier) {
+        const { error: subError } = await supabase.rpc('create_firm_subscription', {
+          p_organization_id: org.id,
+          p_tier_id: orgData.selectedTier.id,
+          p_billing_cycle: orgData.billingCycle,
+          p_trial_days: 14 // 14-day free trial
+        });
+
+        if (subError) {
+          console.error('Failed to create subscription:', subError);
+          // Don't throw - organization was created, just log the error
+        }
+      }
+
       // Organization membership will be auto-created by trigger
       // Wait a moment for trigger to complete
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -186,6 +238,7 @@ export default function CreateOrganization() {
             {step === 'type' && 'Choose the type of organization you want to create'}
             {step === 'info' && 'Tell us about your organization'}
             {step === 'departments' && 'Add departments to your council'}
+            {step === 'subscription' && 'Choose your subscription plan'}
             {step === 'review' && 'Review and confirm your organization details'}
           </p>
         </div>
@@ -196,6 +249,9 @@ export default function CreateOrganization() {
           <div className={`w-3 h-3 rounded-full ${step === 'info' ? 'bg-blue-600' : 'bg-gray-300'}`} />
           {orgData.type === 'council' && (
             <div className={`w-3 h-3 rounded-full ${step === 'departments' ? 'bg-blue-600' : 'bg-gray-300'}`} />
+          )}
+          {orgData.type === 'firm' && (
+            <div className={`w-3 h-3 rounded-full ${step === 'subscription' ? 'bg-blue-600' : 'bg-gray-300'}`} />
           )}
           <div className={`w-3 h-3 rounded-full ${step === 'review' ? 'bg-blue-600' : 'bg-gray-300'}`} />
         </div>
@@ -511,7 +567,177 @@ export default function CreateOrganization() {
           </div>
         )}
 
-        {/* Step 4: Review */}
+        {/* Step 4: Subscription Selection (firms only) */}
+        {step === 'subscription' && (
+          <div className="space-y-6">
+            {loadingTiers ? (
+              <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-12 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+                <p className="text-gray-600">Loading subscription plans...</p>
+              </div>
+            ) : (
+              <>
+                {/* Billing Cycle Toggle */}
+                <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+                  <div className="flex items-center justify-center space-x-4">
+                    <span className={`text-sm font-medium ${orgData.billingCycle === 'monthly' ? 'text-blue-600' : 'text-gray-600'}`}>
+                      Monthly
+                    </span>
+                    <button
+                      onClick={() => setOrgData({ ...orgData, billingCycle: orgData.billingCycle === 'monthly' ? 'annual' : 'monthly' })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        orgData.billingCycle === 'annual' ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          orgData.billingCycle === 'annual' ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className={`text-sm font-medium ${orgData.billingCycle === 'annual' ? 'text-blue-600' : 'text-gray-600'}`}>
+                      Annual
+                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                        Save 17%
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Subscription Tiers */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {tiers.map((tier) => {
+                    const isSelected = orgData.selectedTier?.id === tier.id;
+                    const price = orgData.billingCycle === 'monthly' ? tier.monthly_price_gbp : tier.annual_price_gbp;
+                    const pricePerMonth = orgData.billingCycle === 'annual' ? tier.annual_price_gbp / 12 : tier.monthly_price_gbp;
+
+                    return (
+                      <button
+                        key={tier.id}
+                        onClick={() => setOrgData({ ...orgData, selectedTier: tier })}
+                        className={`bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 hover:shadow-xl hover:scale-[1.02] transition-all duration-200 text-left relative ${
+                          isSelected ? 'ring-2 ring-blue-600' : ''
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-4 right-4 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+
+                        {tier.slug === 'professional' && (
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
+                            Most Popular
+                          </div>
+                        )}
+
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          {tier.name}
+                        </h3>
+
+                        <div className="mb-4">
+                          <span className="text-4xl font-bold text-gray-900">
+                            £{pricePerMonth.toFixed(0)}
+                          </span>
+                          <span className="text-gray-600 text-sm">/month</span>
+                          {orgData.billingCycle === 'annual' && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              £{price.toFixed(0)} billed annually
+                            </p>
+                          )}
+                        </div>
+
+                        <p className="text-gray-600 text-sm mb-6">
+                          {tier.description}
+                        </p>
+
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-baseline">
+                            <span className="text-2xl font-bold text-blue-600">{tier.notices_per_month}</span>
+                            <span className="text-gray-600 text-sm ml-2">notices per month</span>
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Additional notices: £{tier.additional_notice_price_gbp.toFixed(2)} each
+                          </p>
+                        </div>
+
+                        <ul className="space-y-3">
+                          {tier.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-start text-sm">
+                              <svg
+                                className="w-5 h-5 text-green-600 mr-2 flex-shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="text-gray-700">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        {tier.priority_support && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <span className="inline-flex items-center text-sm text-blue-600 font-semibold">
+                              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              Priority Support
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 14-Day Trial Notice */}
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-semibold text-green-900 mb-1">14-Day Free Trial</p>
+                      <p className="text-sm text-green-800">
+                        Start with a free 14-day trial on any plan. No credit card required during trial period.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setStep('info')}
+                    className="text-gray-600 hover:text-gray-900 font-semibold"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!orgData.selectedTier) {
+                        setError('Please select a subscription plan');
+                        return;
+                      }
+                      setError(null);
+                      setStep('review');
+                    }}
+                    disabled={!orgData.selectedTier}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Continue to Review →
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Step 5: Review */}
         {step === 'review' && (
           <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-6">
@@ -546,6 +772,47 @@ export default function CreateOrganization() {
                 </div>
               )}
 
+              {orgData.type === 'firm' && orgData.selectedTier && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">Subscription Plan</h4>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-gray-900 text-lg">{orgData.selectedTier.name}</p>
+                        <p className="text-sm text-gray-600">{orgData.selectedTier.description}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-gray-900">
+                          £{(orgData.billingCycle === 'monthly'
+                            ? orgData.selectedTier.monthly_price_gbp
+                            : orgData.selectedTier.annual_price_gbp / 12).toFixed(0)}
+                        </p>
+                        <p className="text-sm text-gray-600">/month</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-700 mt-3 pt-3 border-t border-blue-200">
+                      <div>
+                        <span className="font-semibold">{orgData.selectedTier.notices_per_month}</span> notices/month
+                      </div>
+                      <div>
+                        <span className="font-semibold">£{orgData.selectedTier.additional_notice_price_gbp.toFixed(2)}</span> per extra notice
+                      </div>
+                      <div className="col-span-2">
+                        <span className="font-semibold capitalize">{orgData.billingCycle}</span> billing
+                        {orgData.billingCycle === 'annual' && (
+                          <span className="ml-2 text-green-600 font-semibold">(£{(orgData.selectedTier.monthly_price_gbp * 12 - orgData.selectedTier.annual_price_gbp).toFixed(0)} saved)</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-blue-200">
+                      <p className="text-sm text-green-700 font-semibold">
+                        ✓ 14-day free trial included
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {orgData.type === 'council' && orgData.departments.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-2">
@@ -577,7 +844,7 @@ export default function CreateOrganization() {
 
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
               <button
-                onClick={() => setStep(orgData.type === 'council' ? 'departments' : 'info')}
+                onClick={() => setStep(orgData.type === 'council' ? 'departments' : 'subscription')}
                 className="text-gray-600 hover:text-gray-900 font-semibold"
                 disabled={loading}
               >

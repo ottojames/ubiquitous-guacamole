@@ -35,6 +35,7 @@ import {
 } from "@/next/publish/flow/lib/legalDetails";
 const LazyTemplateBuilderForm = React.lazy(() => import("./TemplateBuilderForm"));
 const LazyNoticePreview = React.lazy(() => import("./NoticePreview"));
+const LazyEditableNoticePreview = React.lazy(() => import("./EditableNoticePreview"));
 import ReviewCard from "./components/ReviewCard";
 import ProgressBar from "./components/ProgressBar";
 import StickyRailLayout from "./components/StickyRailLayout";
@@ -1622,12 +1623,21 @@ export default function NewPublishFlow() {
                       </div>
                     }
                   >
-                    <LazyNoticePreview
+                    <LazyEditableNoticePreview
                       text={
                         uploadMethod === "template"
                           ? templateText
                           : String((templateDraft as any)?.ocrText ?? "")
                       }
+                      onTextChange={(newText) => {
+                        if (uploadMethod === "notice") {
+                          handleOcrTextChange(newText);
+                        } else if (uploadMethod === "template" && templateDraft) {
+                          // Update template text - you may need to add this handler
+                          setTemplateText(newText);
+                        }
+                      }}
+                      editable={true}
                     />
                   </React.Suspense>
                 </div>
@@ -1653,6 +1663,7 @@ export default function NewPublishFlow() {
               onBack={() => goToStep(3)}
               onSubmit={handleSubmit}
               submitting={paymentPending}
+              firmSlug={firmSlug}
             />
             </div>
           )}

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { createClient } from "@supabase/supabase-js";
+import { getServiceSupabaseClient } from "../lib/supabase.js";
 import { createHash } from "node:crypto";
 import slugify from "slugify";
 import { extractTextFromBuffer } from "../utils/extractText";
@@ -156,10 +156,7 @@ export async function handleUploadCore(
     };
   }
 
-  const supabase = createClient(
-    env.SUPABASE_URL!,
-    env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = getServiceSupabaseClient();
 
   const uploaded = await supabase.storage
     .from(bucket)

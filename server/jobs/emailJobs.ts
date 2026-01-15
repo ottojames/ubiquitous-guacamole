@@ -1,19 +1,10 @@
 import cron from 'node-cron';
-import { createClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase';
 import { sendDeadlineReminder, sendDailySummary } from '../services/email';
-
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-let supabase: ReturnType<typeof createClient> | null = null;
+import { startAlertDeliveryJob } from './alertDeliveryJob';
 
 function getSupabase() {
-  if (!supabase) {
-    supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
-  }
-  return supabase;
+  return getServiceSupabaseClient();
 }
 
 /**
@@ -258,5 +249,6 @@ export function startDailySummaryJob() {
 export function startAllEmailJobs() {
   startDeadlineReminderJob();
   startDailySummaryJob();
-  console.log('[Cron] All email jobs started');
+  startAlertDeliveryJob();
+  console.log('[Cron] All email jobs started (includes alert delivery)');
 }

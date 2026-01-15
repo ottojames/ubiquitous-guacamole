@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth';
 import { sendTeamInvitation } from '../services/email';
 
@@ -7,10 +7,7 @@ const router = Router();
 
 // Helper to get Supabase admin client
 function getAdminClient() {
-  return createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  return getServiceSupabaseClient();
 }
 
 /**

@@ -29,20 +29,7 @@ export default function Login() {
       return;
     }
 
-    // Demo council logins - Use real auth with database permissions
-    // For Westminster demo, use: westminster-demo@civicnotices.co.uk / WestminsterDemo123!
-    // (This account has been granted Westminster Licensing Department access in database)
-
-    // Demo firm login (temporary bypass for testing)
-    if (portalType === 'professional') {
-      if (email === "solicitor@wilsonpartners.com" && password === "SolicitorTest123!") {
-        console.log("Wilson & Partners login successful!");
-        window.location.href = "/f/wilson-partners/dashboard";
-        return;
-      }
-    }
-
-    // All other logins use real Supabase authentication
+    // All logins use real Supabase authentication
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -123,7 +110,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Invalid credentials. Try: licensing@sample.gov.uk / sample123");
+      setError("Invalid credentials. Please check your email and password.");
     } finally {
       setLoading(false);
     }
@@ -249,67 +236,15 @@ export default function Login() {
               </button>
 
               <div className="rounded-xl bg-white border border-slate-200/60 p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-                {/* Demo Credentials Banner - Council */}
-                {portalType === 'council' && (
-                  <div className="mb-6 rounded-xl bg-blue-50 border border-blue-200 p-4">
-                    <div className="flex items-start gap-3">
-                      <svg className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-blue-900 mb-2">Council Test Accounts</p>
-                        <div className="space-y-2 mb-3">
-                          <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
-                            <p className="text-xs font-semibold text-blue-900 mb-1">Sample Borough Council (Demo)</p>
-                            <p className="text-xs text-blue-700">
-                              <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">licensing@sample.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">sample123</code>
-                            </p>
-                          </div>
-                          <div className="bg-white/60 rounded-lg p-2 border border-blue-100">
-                            <p className="text-xs font-semibold text-blue-900 mb-1">Westminster Council (Demo)</p>
-                            <p className="text-xs text-blue-700">
-                              <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo@council.gov.uk</code> / <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo123</code>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="pt-2 border-t border-blue-200 space-y-1.5">
-                          <p className="text-xs font-semibold text-blue-900">RBAC Test Users:</p>
-                          <div className="grid grid-cols-1 gap-1.5 text-xs text-blue-700">
-                            <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">viewer@test.civicnotices.co.uk</code> - Read-only (4 permissions)</p>
-                            <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">officer@test.civicnotices.co.uk</code> - Officer (12 permissions)</p>
-                            <p><code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">admin@test.civicnotices.co.uk</code> - Admin (21 permissions)</p>
-                            <p className="text-blue-600 mt-1">Password: <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">TestPassword123!</code></p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Demo Credentials Banner - Professional */}
-                {portalType === 'professional' && (
-                  <div className="mb-6 rounded-xl bg-purple-50 border border-purple-200 p-4">
-                    <div className="flex items-start gap-3">
-                      <svg className="h-5 w-5 flex-shrink-0 text-purple-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-purple-900 mb-2">Professional Test Accounts</p>
-                        <div className="space-y-2">
-                          <div className="bg-white/60 rounded-lg p-2 border border-purple-100">
-                            <p className="text-xs font-semibold text-purple-900 mb-1">Wilson & Partners (Solicitors)</p>
-                            <p className="text-xs text-purple-700 mb-1">
-                              <code className="bg-purple-100 px-1.5 py-0.5 rounded font-mono">solicitor@wilsonpartners.com</code>
-                            </p>
-                            <p className="text-xs text-purple-600">
-                              Password: <code className="bg-purple-100 px-1.5 py-0.5 rounded font-mono">SolicitorTest123!</code>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Help Text - Production */}
+                <div className="mb-6 text-center">
+                  <p className="text-sm text-slate-600">
+                    Need access? Contact{" "}
+                    <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
+                      support@civicnotices.co.uk
+                    </a>
+                  </p>
+                </div>
 
               <form onSubmit={handleSubmit} className="space-y-7">
                 {/* Email Field */}

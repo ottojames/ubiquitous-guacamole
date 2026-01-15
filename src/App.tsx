@@ -24,15 +24,21 @@ import CouncilNotices from "@/pages/council/Notices";
 import CouncilDrafts from "@/pages/council/Drafts";
 import NoticeEditor from "@/pages/council/NoticeEditor";
 import NoticeDetail from "@/pages/council/NoticeDetail";
+import PendingSubmissions from "@/pages/council/PendingSubmissions";
 import Team from "@/pages/council/Team";
 import Templates from "@/pages/council/Templates";
 import Settings from "@/pages/council/Settings";
 import Billing from "@/pages/council/Billing";
 import AuditLog from "@/pages/council/AuditLog";
 import Analytics from "@/pages/council/Analytics";
+import CouncilRepresentations from "@/pages/council/Representations";
+import TrackNotice from "@/pages/TrackNotice";
 import FirmLayout from "@/pages/firm/FirmLayout";
 import FirmDashboard from "@/pages/firm/Dashboard";
 import FirmClients from "@/pages/firm/Clients";
+import FirmNotices from "@/pages/firm/Notices";
+import FirmBilling from "@/pages/firm/Billing";
+import FirmBulkUpload from "@/pages/firm/BulkUpload";
 import FirmSettings from "@/pages/firm/Settings";
 import FirmTeam from "@/pages/firm/Team";
 import Privacy from "@/pages/legal/Privacy";
@@ -57,6 +63,7 @@ export default function App() {
         <Route path="/notices/:id" element={<NoticeDetailPage />} />
         <Route path="/notices/:id/confirmation" element={<PublishConfirmationPage />} />
         <Route path="/notices/:id/respond" element={<SubmitRepresentation />} />
+        <Route path="/track" element={<TrackNotice />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/publish/*" element={<PublishPage />} />
@@ -86,6 +93,8 @@ export default function App() {
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
           <Route path="notices/:noticeId" element={<NoticeDetail />} />
+          <Route path="representations" element={<CouncilRepresentations />} />
+          <Route path="pending" element={<PendingSubmissions />} />
           <Route path="drafts" element={<CouncilDrafts />} />
           <Route path="team" element={<Team />} />
           <Route path="templates" element={<Templates />} />
@@ -99,8 +108,9 @@ export default function App() {
         <Route path="/f/:firmSlug" element={<FirmLayout />}>
           <Route path="dashboard" element={<FirmDashboard />} />
           <Route path="clients" element={<FirmClients />} />
-          <Route path="notices" element={<div className="p-6">Notices page coming soon</div>} />
-          <Route path="billing" element={<div className="p-6">Billing page coming soon</div>} />
+          <Route path="notices" element={<FirmNotices />} />
+          <Route path="bulk-upload" element={<FirmBulkUpload />} />
+          <Route path="billing" element={<FirmBilling />} />
           <Route path="team" element={<FirmTeam />} />
           <Route path="settings" element={<FirmSettings />} />
           {/* Comprehensive publish wizard - maintains firm portal context */}

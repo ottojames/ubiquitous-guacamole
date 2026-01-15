@@ -115,6 +115,22 @@ export default function NoticeDetailPage() {
       .then((data) => {
         setNotice(data);
         setLoading(false);
+
+        // Track view for this notice
+        fetch(`/api/notices/${id}/view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ timestamp: new Date().toISOString() })
+        })
+          .then(res => res.json())
+          .then(result => {
+            if (result.success) {
+              console.log(`[notice-detail] View tracked: ${result.is_new_view ? 'new' : 'duplicate'} view, total: ${result.view_count}`);
+            }
+          })
+          .catch(err => {
+            console.error('[notice-detail] Failed to track view:', err);
+          });
       })
       .catch((err) => {
         console.error('[notice-detail] Error loading notice:', err);
@@ -183,6 +199,60 @@ export default function NoticeDetailPage() {
             )
           )
           .addTo(map);
+
+        // Add 1km radius circle
+        map.on('load', () => {
+          // Add source for the circle
+          map.addSource('radius-circle', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [notice.longitude!, notice.latitude!]
+              },
+              properties: {}
+            }
+          });
+
+          // Add circle layer - 1km radius
+          map.addLayer({
+            id: 'radius-circle-fill',
+            type: 'circle',
+            source: 'radius-circle',
+            paint: {
+              'circle-radius': {
+                stops: [
+                  [0, 0],
+                  [20, 8000] // Adjust based on zoom for 1km at zoom 14
+                ],
+                base: 2
+              },
+              'circle-color': '#3B82F6',
+              'circle-opacity': 0.15
+            }
+          });
+
+          // Add circle border
+          map.addLayer({
+            id: 'radius-circle-border',
+            type: 'circle',
+            source: 'radius-circle',
+            paint: {
+              'circle-radius': {
+                stops: [
+                  [0, 0],
+                  [20, 8000]
+                ],
+                base: 2
+              },
+              'circle-color': '#2563EB',
+              'circle-opacity': 0.5,
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#2563EB'
+            }
+          });
+        });
 
       } catch (err) {
         console.error('[map] Failed to initialize map:', err);
@@ -546,13 +616,17 @@ export default function NoticeDetailPage() {
 
           {/* Right Column - Map & Actions */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Map */}
+            {/* Mini-Map with 1km Radius */}
             {notice.latitude && notice.longitude && (
-              <div className="rounded-3xl border border-white/70 bg-white p-2 shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+              <div className="rounded-3xl border border-white/70 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-slate-900">Location Map</h3>
+                </div>
                 <div className="relative">
                   <div
                     ref={setMapContainer}
-                    className="h-[400px] rounded-2xl bg-slate-100"
+                    className="h-[300px] rounded-2xl bg-slate-100"
                     style={{ width: '100%' }}
                   />
                   {/* Map loading overlay */}
@@ -575,12 +649,21 @@ export default function NoticeDetailPage() {
                     </div>
                   )}
                 </div>
-                <div className="p-4">
-                  <p className="text-sm font-medium text-slate-900 mb-1">Location</p>
-                  <p className="text-sm text-slate-600">{notice.premisesPostcode}</p>
-                  <p className="text-xs text-slate-500 mt-2">
-                    {notice.latitude.toFixed(6)}, {notice.longitude.toFixed(6)}
-                  </p>
+                <div className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-900">Premises Location</p>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+                      1km radius shown
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-700">{notice.premisesAddress}</p>
+                    <p className="text-sm text-slate-600">{notice.premisesPostcode}</p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {notice.latitude.toFixed(6)}, {notice.longitude.toFixed(6)}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

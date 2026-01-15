@@ -27,7 +27,7 @@ export default function DepartmentSwitcher() {
 
   const loadDepartments = async () => {
     try {
-      // Demo mode: Show Westminster departments with Licensing access only
+      // Demo mode: Show Westminster departments with multi-department access for testing
       const westminsterOrg = {
         id: 'fb76a8aa-4e3d-40ac-9c61-e9217ed930a4',
         name: 'Westminster (City of) Council',
@@ -49,10 +49,13 @@ export default function DepartmentSwitcher() {
               .select('*', { count: 'exact', head: true })
               .eq('council_id', '02cb9c23-92bb-4f51-9e1a-30698dccffb6');
 
+            // For US-0012 testing: Allow access to Licensing and Planning departments
+            const hasAccess = dept.slug === 'licensing' || dept.slug === 'planning' || dept.type === 'planning';
+
             return {
               ...dept,
               notice_count: count || 0,
-              has_access: dept.slug === 'licensing', // Only Licensing access
+              has_access: hasAccess,
               organization: westminsterOrg
             };
           })
@@ -133,7 +136,7 @@ export default function DepartmentSwitcher() {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span className="font-semibold">Licensing Officer</span>
+            <span className="font-semibold">Multi-Department Officer</span>
           </div>
         </div>
 

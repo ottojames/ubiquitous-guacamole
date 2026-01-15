@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase.js';
 import { matchCouncil, getOrCreateDepartment, handleGVOLNotice } from '../../services/councilMatcher';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;

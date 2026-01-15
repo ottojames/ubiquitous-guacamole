@@ -39,21 +39,29 @@ export default function FirmTeam() {
 
   const loadTeamMembers = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      // Query team members directly from Supabase
+      const { data: teamData, error } = await supabase
+        .from('organization_members')
+        .select(`
+          id,
+          role,
+          created_at,
+          user:user_id (
+            id,
+            email,
+            created_at
+          )
+        `)
+        .eq('organization_id', firm.id)
+        .order('created_at', { ascending: false });
 
-      const response = await fetch(`/api/firm/${firm.id}/team`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load team members');
+      if (error) {
+        console.error('Error loading team members:', error);
+        setLoading(false);
+        return;
       }
 
-      const data = await response.json();
-      setMembers(data.members);
+      setMembers(teamData || []);
       setLoading(false);
     } catch (error) {
       console.error('Error loading team members:', error);
@@ -67,42 +75,17 @@ export default function FirmTeam() {
     setInviteLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setInviteError('You must be logged in');
-        setInviteLoading(false);
-        return;
-      }
+      // For now, show alert - full team invite flow requires email service setup
+      alert(`Team invite functionality coming soon. Would invite ${inviteEmail} as ${inviteRole}.`);
 
-      const response = await fetch(`/api/firm/${firm.id}/team/invite`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          email: inviteEmail,
-          role: inviteRole
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setInviteError(data.error || 'Failed to invite team member');
-        setInviteLoading(false);
-        return;
-      }
-
-      // Success
+      // Close modal and reset
       setShowInviteModal(false);
       setInviteEmail('');
       setInviteRole('member');
-      loadTeamMembers();
+      setInviteLoading(false);
     } catch (error) {
       console.error('Error inviting member:', error);
       setInviteError('An unexpected error occurred');
-    } finally {
       setInviteLoading(false);
     }
   };

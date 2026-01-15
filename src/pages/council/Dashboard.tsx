@@ -5,6 +5,7 @@ import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { PERMISSIONS } from '@/types/permissions';
+import LicensingDashboardWidgets from '@/components/council/LicensingDashboardWidgets';
 
 interface Department {
   id: string;
@@ -304,6 +305,13 @@ export default function Dashboard() {
           </Link>
         )}
       </div>
+
+      {/* Department-Specific Widgets */}
+      {department.type === 'licensing' && (
+        <div className="mb-8">
+          <LicensingDashboardWidgets departmentId={department.id} />
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${deptConfig.showDraftsCard ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>

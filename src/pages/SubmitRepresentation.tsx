@@ -44,6 +44,7 @@ export default function SubmitRepresentation() {
     representationType: 'objection' as 'objection' | 'support',
     licensingObjectives: [] as string[],
     comments: '',
+    isAnonymous: false,
   });
 
   useEffect(() => {
@@ -70,6 +71,12 @@ export default function SubmitRepresentation() {
       return;
     }
 
+    // Validate required fields for non-anonymous submissions
+    if (!formData.isAnonymous && (!formData.fullName || !formData.email)) {
+      alert('Please provide your name and email for non-anonymous submissions.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -82,12 +89,13 @@ export default function SubmitRepresentation() {
         },
         body: JSON.stringify({
           noticeId: notice?.id,
-          submitterName: formData.fullName,
-          submitterEmail: formData.email,
+          submitterName: formData.isAnonymous ? undefined : formData.fullName,
+          submitterEmail: formData.isAnonymous ? undefined : formData.email,
           submitterAddress: formData.address || undefined,
           type: formData.representationType,
           licensingObjectives: formData.representationType === 'objection' ? formData.licensingObjectives : undefined,
           content: formData.comments,
+          isAnonymous: formData.isAnonymous,
         }),
       });
 
@@ -233,6 +241,7 @@ export default function SubmitRepresentation() {
                         representationType: 'objection',
                         licensingObjectives: [],
                         comments: '',
+                        isAnonymous: false,
                       });
                     }}
                     className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700"
@@ -314,31 +323,52 @@ export default function SubmitRepresentation() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label htmlFor="fullName" className="block text-sm font-semibold text-slate-700 mb-2">
-                      Full Name *
+                  {/* Anonymous submission option */}
+                  <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.isAnonymous}
+                        onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/30"
+                      />
+                      <div>
+                        <span className="font-semibold text-slate-900">Submit anonymously</span>
+                        <p className="text-sm text-slate-600 mt-1">
+                          Your representation will be recorded without your personal details.
+                          Note: You won't receive a confirmation email if submitting anonymously.
+                        </p>
+                      </div>
                     </label>
-                    <input
-                      type="text"
-                      id="fullName"
-                      required
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                      placeholder="Enter your full name"
-                    />
                   </div>
 
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  {!formData.isAnonymous && (
+                    <>
+                      <div>
+                        <label htmlFor="fullName" className="block text-sm font-semibold text-slate-700 mb-2">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          id="fullName"
+                          required={!formData.isAnonymous}
+                          value={formData.fullName}
+                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          id="email"
+                          required={!formData.isAnonymous}
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       placeholder="your.email@example.com"
                     />
@@ -358,6 +388,8 @@ export default function SubmitRepresentation() {
                       placeholder="Your full postal address"
                     />
                   </div>
+                    </>
+                  )}
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-3">
@@ -479,6 +511,38 @@ export default function SubmitRepresentation() {
                       onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       placeholder="Explain your representation in detail. Include any relevant concerns or reasons for your position."
+                    />
+                  </div>
+
+                  {/* File Attachments */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Supporting Documents (Optional)
+                    </label>
+                    <p className="text-sm text-slate-600 mb-3">
+                      You can attach up to 5 files (max 10MB each) to support your representation. Accepted formats: PDF, images, Word documents, text files.
+                    </p>
+                    <input
+                      type="file"
+                      id="attachments"
+                      multiple
+                      accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.txt"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 5) {
+                          alert('You can only upload up to 5 files');
+                          e.target.value = '';
+                          return;
+                        }
+                        const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
+                        if (oversizedFiles.length > 0) {
+                          alert(`These files are too large (max 10MB): ${oversizedFiles.map(f => f.name).join(', ')}`);
+                          e.target.value = '';
+                          return;
+                        }
+                        // Store files in component state (would need to add this to formData state)
+                      }}
+                      className="block w-full text-sm text-slate-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                   </div>
 

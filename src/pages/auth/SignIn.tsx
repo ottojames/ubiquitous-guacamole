@@ -16,10 +16,14 @@ export default function SignIn() {
 
     // Check for demo credentials first
     if (email === 'licensing@sample.gov.uk') {
+      // Clear any existing session for demo mode
+      await supabase.auth.signOut();
       setLoading(false);
       window.location.href = '/c/sample-borough/licensing';
       return;
     } else if (email === 'demo@council.gov.uk') {
+      // Clear any existing session for demo mode
+      await supabase.auth.signOut();
       setLoading(false);
       window.location.href = '/c/westminster/licensing';
       return;

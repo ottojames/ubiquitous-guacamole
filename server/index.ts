@@ -20,6 +20,19 @@ import templatesRouter from './routes/templates';
 import firmRouter from './routes/firm';
 import draftsRouter from './routes/drafts';
 import councilsRouter from './routes/councils';
+import councilRouter from './routes/council';
+import analyticsRouter from './routes/analytics';
+import stripeRouter from './routes/stripe';
+import subscriptionsRouter from './routes/subscriptions';
+import representationUploadsRouter from './routes/representationUploads';
+import certificatesRouter from './routes/certificates';
+import evidencePacksRouter from './routes/evidencePacks';
+import versionsRouter from './routes/versions';
+import firmSubscriptionsRouter from './routes/firmSubscriptions';
+import testCertificateRouter from './routes/test-certificate';
+import testEmailRouter from './routes/test-email';
+import applyMigrationRouter from './routes/apply-migration';
+import blueNoticesRouter from './routes/blueNotices';
 
 export const app = express();
 
@@ -49,6 +62,19 @@ app.use('/api', templatesRouter);
 app.use('/api/firm', firmRouter);
 app.use('/api/drafts', draftsRouter);
 app.use('/api/councils', councilsRouter);
+app.use('/api/council', councilRouter);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/stripe', stripeRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
+app.use('/api/representation-uploads', representationUploadsRouter);
+app.use('/api/certificates', certificatesRouter);
+app.use('/api/evidence-packs', evidencePacksRouter);
+app.use('/api/notices', versionsRouter);
+app.use('/api/firm-subscriptions', firmSubscriptionsRouter);
+app.use('/api/blue-notices', blueNoticesRouter);
+app.use('/api', testCertificateRouter);
+app.use('/api', testEmailRouter);
+app.use('/api/migration', applyMigrationRouter);
 
 // Sentry error handler MUST be after routes but BEFORE other error handlers
 app.use(sentryErrorHandler());

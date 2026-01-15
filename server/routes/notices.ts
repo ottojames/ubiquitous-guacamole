@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { getServiceSupabaseClient } from '../lib/supabase.js';
 
 import { ensurePostcodeCoordinates, normalisePostcode as geocodeNormalisePostcode } from '../lib/geocode';
 import { requireAuth, loadUserPermissions, requirePermission, optionalAuth } from '../middleware/auth';
@@ -428,7 +428,7 @@ router.post('/notices/draft', requireAuth, loadUserPermissions, requirePermissio
       return res.status(500).json({ error: 'Supabase configuration missing' });
     }
 
-    const client = createClient(url, key);
+    const client = getServiceSupabaseClient();
 
     let latitude: number | null = null;
     let longitude: number | null = null;
@@ -483,7 +483,7 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       return res.status(500).json({ error: 'Supabase configuration missing' });
     }
 
-    const client = createClient(url, key);
+    const client = getServiceSupabaseClient();
     const payload = req.body;
 
     if (!payload || typeof payload !== 'object') {
@@ -601,7 +601,7 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
         const noticeTypeLabel = noticeTypeLabels[noticeData.notice_type] || noticeData.notice_type;
 
         // Generate view URL
-        const baseUrl = process.env.VITE_SUPABASE_URL?.replace('.supabase.co', '') || 'http://localhost:5173';
+        const baseUrl = process.env.VITE_SUPABASE_URL?.replace('.getServiceSupabaseClient().co', '') || 'http://localhost:5173';
         const viewUrl = `${baseUrl}/notices/${data.id}`;
 
         // Format premises address as string
@@ -624,6 +624,7 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
           applicantName: noticeData.applicant?.name || noticeData.applicant?.fullName,
           noticeText: '', // We'll generate PDF later
           viewUrl,
+          trackingUrl: data.tracking_token ? `${baseUrl}/track?token=${data.tracking_token}` : undefined,
         });
 
         console.log('[notice-submit] Confirmation email sent to:', noticeData.contact_email);
@@ -705,7 +706,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
       return res.status(500).json({ error: 'Supabase configuration missing' });
     }
 
-    const client = createClient(url, key);
+    const client = getServiceSupabaseClient();
     const selectColumns = '*';
 
     const postcodeFromParam = postcodeParam ? normalisePostcode(postcodeParam) : null;
@@ -1101,10 +1102,7 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
     return res.status(400).json({ error: 'Invalid notice ID' });
   }
 
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = getServiceSupabaseClient();
 
   try {
     const { data, error } = await supabase
@@ -1191,10 +1189,7 @@ router.get('/notices/:id/representations', optionalAuth, async (req, res) => {
     return res.status(400).json({ error: 'Invalid notice ID' });
   }
 
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = getServiceSupabaseClient();
 
   try {
     // Fetch representations using service role to bypass RLS
@@ -1239,10 +1234,7 @@ router.post('/notices/:id/representations/:repId/mark-read', optionalAuth, async
     return res.status(400).json({ error: 'Invalid parameters' });
   }
 
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  
 
   try {
     // For now, just return success
@@ -1253,6 +1245,71 @@ router.post('/notices/:id/representations/:repId/mark-read', optionalAuth, async
   } catch (error: any) {
     console.error('[rep-mark-read] Unexpected error:', error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /notices/:id/view - Track view for a notice
+router.post('/notices/:id/view', async (req, res) => {
+  const { id } = req.params;
+  const clientIp = req.ip || req.connection.remoteAddress || '127.0.0.1';
+  const userAgent = req.headers['user-agent'] || '';
+  const referrer = req.headers['referer'] || req.headers['referrer'] || '';
+
+  if (!id) {
+    return res.status(400).json({ error: 'Notice ID is required' });
+  }
+
+  const supabase = getServiceSupabaseClient();
+
+  try {
+    // Check if notice exists and get current view count
+    const { data: notice, error: noticeError } = await supabase
+      .from('notices')
+      .select('id, view_count')
+      .eq('id', id)
+      .single();
+
+    if (noticeError || !notice) {
+      console.error('[view-track] Notice not found:', noticeError);
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    // Try to record the view (will fail silently if duplicate IP)
+    const { error: viewError } = await supabase
+      .from('notice_views')
+      .insert({
+        notice_id: id,
+        viewer_ip: clientIp,
+        user_agent: userAgent,
+        referrer: referrer
+      });
+
+    // If view was recorded (not duplicate), the trigger will increment view_count
+    // Get updated view count
+    const { data: updatedNotice, error: updateError } = await supabase
+      .from('notices')
+      .select('view_count')
+      .eq('id', id)
+      .single();
+
+    if (updateError) {
+      console.error('[view-track] Failed to get updated view count:', updateError);
+      return res.json({
+        success: true,
+        view_count: notice.view_count || 0,
+        is_new_view: !viewError
+      });
+    }
+
+    return res.json({
+      success: true,
+      view_count: updatedNotice?.view_count || notice.view_count || 0,
+      is_new_view: !viewError // true if view was recorded, false if duplicate
+    });
+
+  } catch (error: any) {
+    console.error('[view-track] Unexpected error:', error);
+    return res.status(500).json({ error: 'Failed to track view' });
   }
 });
 

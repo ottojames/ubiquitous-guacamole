@@ -23,9 +23,11 @@ type AddressSearchBarProps = {
   disabled?: boolean;
   autoFocus?: boolean;
   testIdPrefix?: string;
+  oneClickSelect?: boolean; // Enable one-click address selection
 };
 
 const DEFAULT_HINT = 'Pick an address to view statutory notices nearby.';
+const ONE_CLICK_HINT = 'Start typing an address or postcode, then click to search instantly.';
 
 export function AddressSearchBar({
   value,
@@ -33,11 +35,14 @@ export function AddressSearchBar({
   onSubmit,
   onFreeText,
   placeholder = 'Enter an address or postcode',
-  hint = DEFAULT_HINT,
+  hint,
   disabled,
   autoFocus,
   testIdPrefix = 'address',
+  oneClickSelect = false,
 }: AddressSearchBarProps) {
+  // Use appropriate hint based on mode
+  const effectiveHint = hint ?? (oneClickSelect ? ONE_CLICK_HINT : DEFAULT_HINT);
   const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [fetchError, setFetchError] = React.useState<string | null>(null);
@@ -376,16 +381,18 @@ export function AddressSearchBar({
             </ul>
           )}
         </div>
-        <button
-          type="submit"
-          data-testid={`${testIdPrefix}-search-btn`}
-          disabled={disabled}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-base font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 md:h-12 md:w-auto"
-        >
-          Search
-        </button>
+        {!oneClickSelect && (
+          <button
+            type="submit"
+            data-testid={`${testIdPrefix}-search-btn`}
+            disabled={disabled}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-base font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 md:h-12 md:w-auto"
+          >
+            Search
+          </button>
+        )}
       </div>
-      {hint && <p className="text-xs text-slate-500">{hint}</p>}
+      {effectiveHint && <p className="text-xs text-slate-500">{effectiveHint}</p>}
     </form>
   );
 }

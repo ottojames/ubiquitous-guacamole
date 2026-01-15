@@ -11,6 +11,28 @@ interface FirmContext {
   userRole: string;
 }
 
+interface SubscriptionInfo {
+  id: string;
+  status: string;
+  billing_cycle: string;
+  trial_ends_at: string | null;
+  tier: {
+    name: string;
+    slug: string;
+    notices_per_month: number;
+    additional_notice_price_gbp: number;
+    monthly_price_gbp: number;
+    annual_price_gbp: number;
+  };
+}
+
+interface UsageInfo {
+  total_notices: number;
+  notices_in_allowance: number;
+  notices_overage: number;
+  overage_amount_gbp: number;
+}
+
 interface DashboardStats {
   totalNotices: number;
   activeNotices: number;
@@ -40,6 +62,8 @@ export default function FirmDashboard() {
     outstandingBalance: 0,
     pendingPayment: 0,
   });
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
+  const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [recentNotices, setRecentNotices] = useState<RecentNotice[]>([]);
 
   // Save firm context to session storage for publish flow
@@ -51,7 +75,30 @@ export default function FirmDashboard() {
 
   useEffect(() => {
     loadDashboardData();
+    loadSubscriptionData();
   }, [firm.id]);
+
+  const loadSubscriptionData = async () => {
+    try {
+      // Fetch subscription info
+      const subResponse = await fetch(`/api/firm-subscriptions/organization/${firm.id}`);
+      if (subResponse.ok) {
+        const subData = await subResponse.json();
+        setSubscription(subData);
+
+        // Fetch usage info if subscription exists
+        if (subData && subData.id) {
+          const usageResponse = await fetch(`/api/firm-subscriptions/${subData.id}/usage`);
+          if (usageResponse.ok) {
+            const usageData = await usageResponse.json();
+            setUsage(usageData);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading subscription data:', error);
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -177,6 +224,98 @@ export default function FirmDashboard() {
           Publish Notice
         </Link>
       </div>
+
+      {/* Subscription Allowance Card */}
+      {subscription && usage && (
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl shadow-xl p-8 text-white">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">{subscription.tier.name} Plan</h2>
+              <p className="text-purple-100">
+                {subscription.billing_cycle === 'monthly' ? 'Monthly' : 'Annual'} Billing
+                {subscription.status === 'trialing' && subscription.trial_ends_at && (
+                  <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-sm">
+                    Trial until {new Date(subscription.trial_ends_at).toLocaleDateString('en-GB')}
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold">
+                £{subscription.billing_cycle === 'monthly'
+                  ? subscription.tier.monthly_price_gbp.toFixed(0)
+                  : (subscription.tier.annual_price_gbp / 12).toFixed(0)}
+              </div>
+              <div className="text-purple-100 text-sm">/month</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Notices Used */}
+            <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="text-purple-100 text-sm mb-1">Notices This Month</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl font-bold">{usage.notices_in_allowance}</div>
+                <div className="text-purple-200">/ {subscription.tier.notices_per_month}</div>
+              </div>
+              <div className="mt-2">
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div
+                    className="bg-white rounded-full h-2 transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, (usage.notices_in_allowance / subscription.tier.notices_per_month) * 100)}%`
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Remaining */}
+            <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="text-purple-100 text-sm mb-1">Notices Remaining</div>
+              <div className="text-3xl font-bold">
+                {Math.max(0, subscription.tier.notices_per_month - usage.notices_in_allowance)}
+              </div>
+              <div className="text-purple-200 text-sm mt-1">
+                {usage.notices_in_allowance >= subscription.tier.notices_per_month
+                  ? `Overage: £${subscription.tier.additional_notice_price_gbp.toFixed(2)}/notice`
+                  : 'Within allowance'
+                }
+              </div>
+            </div>
+
+            {/* Overage */}
+            <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+              <div className="text-purple-100 text-sm mb-1">Overage This Month</div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl font-bold">{usage.notices_overage}</div>
+                <div className="text-purple-200">notices</div>
+              </div>
+              <div className="text-purple-200 text-sm mt-1">
+                {formatCurrency(usage.overage_amount_gbp)} additional
+              </div>
+            </div>
+          </div>
+
+          {usage.notices_in_allowance >= subscription.tier.notices_per_month * 0.8 && (
+            <div className="bg-white/10 border border-white/20 rounded-xl p-4 flex items-start gap-3">
+              <svg className="w-5 h-5 text-white flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="font-semibold text-white mb-1">Notice Allowance Alert</p>
+                <p className="text-purple-100 text-sm">
+                  You've used {Math.round((usage.notices_in_allowance / subscription.tier.notices_per_month) * 100)}% of your monthly allowance.
+                  {usage.notices_in_allowance >= subscription.tier.notices_per_month
+                    ? ' Additional notices will incur overage charges.'
+                    : ' Consider upgrading your plan if you need more notices.'
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

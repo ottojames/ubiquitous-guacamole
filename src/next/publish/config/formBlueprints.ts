@@ -173,22 +173,9 @@ function applicantSection(options: ApplicantSectionOptions = {}): SectionBluepri
         hint: "e.g., individual, company, LLP",
         span: 12,
       }),
-      field("APPLICANT_TRADING_AS", {
-        label: tradingAsLabel,
-        span: 12,
-      }),
-      field("APPLICANT_ADDRESS", {
-        label: "Applicant address",
-        type: "textarea",
-        rows: 3,
-        required: addressRequired,
-        span: 12,
-        hint: "Include postcode and country if outside the UK.",
-      }),
-      field("APPLICANT_COMPANY_NUMBER", {
-        label: "Company number (optional)",
-        span: 12,
-      }),
+      // Removed APPLICANT_TRADING_AS as per US-0011
+      // Removed APPLICANT_ADDRESS as per US-0011
+      // Removed APPLICANT_COMPANY_NUMBER as per US-0011
     ],
   };
 }

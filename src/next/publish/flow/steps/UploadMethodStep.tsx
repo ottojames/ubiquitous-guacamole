@@ -52,7 +52,7 @@ export default function UploadMethodStep({
   };
   console.log('[UploadMethodStep] rightRail:', rightRail ? 'EXISTS' : 'NULL', 'method:', method);
   const inferredDefaultMethod = React.useMemo<UploadMethod>(
-    () => (definition?.id?.includes("premises") ? "notice" : "template"),
+    () => "template",
     [definition?.id]
   );
   const [active, setActive] = React.useState<UploadMethod>(method ?? inferredDefaultMethod);

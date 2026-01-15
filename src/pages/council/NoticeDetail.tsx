@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom
 import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon, formatCouncilDate } from '@/lib/dateUtils';
 import RepresentationsList from '@/components/council/RepresentationsList';
+import EvidencePackDownload from '@/components/council/EvidencePackDownload';
 
 interface Department {
   id: string;
@@ -653,6 +654,15 @@ export default function NoticeDetail() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Evidence Pack Download */}
+            <div className="mt-6">
+              <EvidencePackDownload
+                noticeId={notice.id}
+                noticeType={notice.noticeType}
+                variant="card"
+              />
             </div>
 
             {/* Document Info Notice */}
