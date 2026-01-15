@@ -86,6 +86,7 @@ export default function App() {
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/switch-department" element={<DepartmentSwitcher />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
+        <Route path="/register/firm" element={<CreateOrganization />} />
 
         {/* Council Portal Routes - Auth handled by CouncilLayout (supports demo mode) */}
         <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>

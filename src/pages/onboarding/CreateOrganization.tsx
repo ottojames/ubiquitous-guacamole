@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 type OrgType = 'council' | 'firm';
-type Step = 'type' | 'info' | 'departments' | 'subscription' | 'review';
+type Step = 'type' | 'info' | 'departments' | 'practice-areas' | 'subscription' | 'review';
 
 interface Department {
   name: string;
@@ -34,6 +34,7 @@ interface OrgData {
   contactEmail: string;
   registrationNumber?: string;
   departments: Department[];
+  practiceAreas: string[];
   selectedTier?: SubscriptionTier;
   billingCycle: 'monthly' | 'annual';
 }
@@ -51,6 +52,7 @@ export default function CreateOrganization() {
     contactEmail: '',
     registrationNumber: '',
     departments: [],
+    practiceAreas: [],
     billingCycle: 'monthly'
   });
 
@@ -80,9 +82,8 @@ export default function CreateOrganization() {
     if (orgData.type === 'council') {
       setStep('departments');
     } else {
-      // For firms, load subscription tiers and go to subscription selection
-      await fetchSubscriptionTiers();
-      setStep('subscription');
+      // For firms, go to practice areas selection first
+      setStep('practice-areas');
     }
   };
 
@@ -160,6 +161,7 @@ export default function CreateOrganization() {
           domain: orgData.domain,
           contact_email: orgData.contactEmail,
           registration_number: orgData.registrationNumber || null,
+          practice_areas: orgData.type === 'firm' ? orgData.practiceAreas : null,
           status: 'pending_approval'
         })
         .select()
@@ -238,6 +240,7 @@ export default function CreateOrganization() {
             {step === 'type' && 'Choose the type of organization you want to create'}
             {step === 'info' && 'Tell us about your organization'}
             {step === 'departments' && 'Add departments to your council'}
+            {step === 'practice-areas' && 'Select your practice areas'}
             {step === 'subscription' && 'Choose your subscription plan'}
             {step === 'review' && 'Review and confirm your organization details'}
           </p>
@@ -251,7 +254,10 @@ export default function CreateOrganization() {
             <div className={`w-3 h-3 rounded-full ${step === 'departments' ? 'bg-blue-600' : 'bg-gray-300'}`} />
           )}
           {orgData.type === 'firm' && (
-            <div className={`w-3 h-3 rounded-full ${step === 'subscription' ? 'bg-blue-600' : 'bg-gray-300'}`} />
+            <>
+              <div className={`w-3 h-3 rounded-full ${step === 'practice-areas' ? 'bg-blue-600' : 'bg-gray-300'}`} />
+              <div className={`w-3 h-3 rounded-full ${step === 'subscription' ? 'bg-blue-600' : 'bg-gray-300'}`} />
+            </>
           )}
           <div className={`w-3 h-3 rounded-full ${step === 'review' ? 'bg-blue-600' : 'bg-gray-300'}`} />
         </div>
@@ -567,7 +573,105 @@ export default function CreateOrganization() {
           </div>
         )}
 
-        {/* Step 4: Subscription Selection (firms only) */}
+        {/* Step 4: Practice Areas (firms only) */}
+        {step === 'practice-areas' && (
+          <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Select Your Practice Areas
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Choose the areas of law your firm specializes in. This will customize which notice types appear in your dashboard.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: 'licensing', label: 'Licensing', description: 'Premises licences, variations, reviews' },
+                  { id: 'planning', label: 'Planning', description: 'Planning applications, appeals, developments' },
+                  { id: 'environmental', label: 'Environmental Health', description: 'Environmental permits, pollution control' },
+                  { id: 'highways', label: 'Highways', description: 'Traffic orders, road closures' },
+                  { id: 'building', label: 'Building Control', description: 'Building regulations, dangerous structures' }
+                ].map((area) => (
+                  <label
+                    key={area.id}
+                    className={`relative flex items-start p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                      orgData.practiceAreas.includes(area.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      value={area.id}
+                      checked={orgData.practiceAreas.includes(area.id)}
+                      onChange={(e) => {
+                        const newPracticeAreas = e.target.checked
+                          ? [...orgData.practiceAreas, area.id]
+                          : orgData.practiceAreas.filter(id => id !== area.id);
+                        setOrgData({ ...orgData, practiceAreas: newPracticeAreas });
+                      }}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center h-5">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        orgData.practiceAreas.includes(area.id)
+                          ? 'bg-blue-500 border-blue-500'
+                          : 'bg-white border-gray-300'
+                      }`}>
+                        {orgData.practiceAreas.includes(area.id) && (
+                          <svg className="w-3 h-3 text-white" viewBox="0 0 12 9">
+                            <path fill="currentColor" d="M4.5 7.5L1.5 4.5L0 6L4.5 10.5L12 3L10.5 1.5L4.5 7.5Z"/>
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-900">{area.label}</div>
+                      <div className="text-xs text-gray-500">{area.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {orgData.practiceAreas.length === 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <p className="text-sm text-amber-800">
+                    Please select at least one practice area to continue.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => setStep('info')}
+                className="text-gray-600 hover:text-gray-900 font-semibold"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={async () => {
+                  if (orgData.practiceAreas.length === 0) {
+                    setError('Please select at least one practice area');
+                    return;
+                  }
+                  setError(null);
+                  // Load subscription tiers and continue
+                  await fetchSubscriptionTiers();
+                  setStep('subscription');
+                }}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={orgData.practiceAreas.length === 0}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Subscription Selection (firms only) */}
         {step === 'subscription' && (
           <div className="space-y-6">
             {loadingTiers ? (
