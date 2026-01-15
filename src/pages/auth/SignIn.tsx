@@ -14,22 +14,7 @@ export default function SignIn() {
     setLoading(true);
     setError(null);
 
-    // Check for demo credentials first
-    if (email === 'licensing@sample.gov.uk') {
-      // Clear any existing session for demo mode
-      await supabase.auth.signOut();
-      setLoading(false);
-      window.location.href = '/c/sample-borough/licensing';
-      return;
-    } else if (email === 'demo@council.gov.uk') {
-      // Clear any existing session for demo mode
-      await supabase.auth.signOut();
-      setLoading(false);
-      window.location.href = '/c/westminster/licensing';
-      return;
-    }
-
-    // Otherwise use magic link
+    // Use magic link authentication
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -69,25 +54,14 @@ export default function SignIn() {
                 Sign In
               </h2>
 
-              {/* Demo Credentials */}
-              <div className="mb-6 rounded-xl bg-blue-50 border border-blue-200 p-4">
-                <div className="flex items-start gap-3">
-                  <svg className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-900 mb-2">Demo Access</p>
-                    <div className="space-y-1.5 text-xs text-blue-700">
-                      <p>
-                        <strong>Sample Borough:</strong> <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">licensing@sample.gov.uk</code>
-                      </p>
-                      <p>
-                        <strong>Westminster:</strong> <code className="bg-blue-100 px-1.5 py-0.5 rounded font-mono">demo@council.gov.uk</code>
-                      </p>
-                      <p className="text-blue-600 mt-2">Just enter the email above (no password needed)</p>
-                    </div>
-                  </div>
-                </div>
+              {/* Support Contact */}
+              <div className="mb-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Need access? Contact{" "}
+                  <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
+                    support@civicnotices.co.uk
+                  </a>
+                </p>
               </div>
 
               <form onSubmit={handleSignIn} className="space-y-6">

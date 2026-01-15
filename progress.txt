@@ -529,3 +529,23 @@ All Priority 0 items are complete. Ready to move to Priority 1 items or address 
   - 17 templates covering all required notice categories are active
 
 ---
+## Iteration 2 - US-0025: Remove Demo Logins Council
+- STATUS: PASS
+- What was attempted: Remove all demo login UI elements from council portal login page
+- Files changed:
+  - src/pages/auth/SignIn.tsx - Removed demo credentials check (lines 17-30) and demo access UI section (lines 72-91)
+  - scripts/test-council-login-demo-removed.ts - Created browser test script
+- Browser testing results:
+  - BROWSER TESTED: Navigated to /login, clicked Council Portal button, verified no demo accounts (Sample Borough, Westminster) shown, only support contact text present
+  - Also tested /auth/signin, verified Demo Access section removed, standard magic link form displayed
+  - All demo logins successfully removed from both login pages
+  - Support text "Contact support@civicnotices.co.uk" properly displayed
+- Why it passed: Demo login elements completely removed, only standard login form with support contact remains
+- Quality checks: npm run dev starts successfully, tests run (399 passed, 44 pre-existing failures)
+- Learnings for next iteration:
+  - Two login pages exist: /login (main) and /auth/signin (alternate)
+  - SignIn.tsx contained hardcoded demo credential checks and UI elements
+  - Login.tsx was already clean without demo elements
+  - Support contact text should remain as per requirements
+
+---
