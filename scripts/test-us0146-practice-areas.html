@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test US-0146: Practice Area Selection</title>
+</head>
+<body>
+  <h1>US-0146: Practice Area Selection - Browser Test</h1>
+
+  <h2>Test Scenario 1: Settings Page - Edit Practice Areas</h2>
+  <ol>
+    <li>Navigate to firm settings</li>
+    <li>Check/uncheck practice areas</li>
+    <li>Verify confirmation dialog on uncheck</li>
+    <li>Save and verify persistence</li>
+  </ol>
+
+  <h2>Test Scenario 2: Publish Page - Notice Type Filtering</h2>
+  <ol>
+    <li>Navigate to publish page</li>
+    <li>Verify only selected practice areas' notices are shown</li>
+    <li>Return to settings, change areas, verify publish page updates</li>
+  </ol>
+
+  <h2>Test Steps:</h2>
+
+  <h3>Step 1: Navigate to Firm Settings</h3>
+  <iframe src="http://localhost:5173/f/wilson-partners/settings" width="1200" height="800"></iframe>
+
+  <script>
+    console.log('Test US-0146 Practice Area Selection');
+    console.log('1. Navigate to firm settings page');
+    console.log('2. Current practice areas should be visible');
+    console.log('3. Try unchecking a practice area - should show confirmation');
+    console.log('4. Check new practice areas - should update immediately');
+    console.log('5. Save settings');
+    console.log('6. Navigate to publish page to verify filtering');
+
+    // Log current URL for testing
+    setTimeout(() => {
+      console.log('Settings page loaded at:', window.location.href);
+    }, 2000);
+  </script>
+</body>
+</html>

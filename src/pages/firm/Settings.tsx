@@ -126,11 +126,21 @@ export default function Settings() {
   };
 
   const handleToggleArea = (areaId: string) => {
-    setSelectedAreas(prev =>
-      prev.includes(areaId)
-        ? prev.filter(id => id !== areaId)
-        : [...prev, areaId]
-    );
+    setSelectedAreas(prev => {
+      if (prev.includes(areaId)) {
+        // Unchecking - show confirmation
+        const areaName = PRACTICE_AREAS.find(a => a.id === areaId)?.name;
+        const confirmMsg = `This will hide all ${areaName} notices from your firm's dashboard and publish options. Are you sure you want to remove ${areaName} from your practice areas?`;
+
+        if (window.confirm(confirmMsg)) {
+          return prev.filter(id => id !== areaId);
+        }
+        return prev; // User cancelled, keep the area selected
+      } else {
+        // Checking - just add it
+        return [...prev, areaId];
+      }
+    });
   };
 
   const handleSave = async () => {

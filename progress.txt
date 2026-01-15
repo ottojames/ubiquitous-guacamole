@@ -1031,3 +1031,34 @@ All Priority 0 items are complete. Ready to move to Priority 1 items or address 
 - CSV generation works client-side using Blob and download link technique
 
 ---
+
+## Iteration 14 - US-0145: Firm Registration Wizard
+**Status:** Success
+**Timestamp:** Thu 15 Jan 2026 18:26:52 GMT
+
+### What was implemented:
+- Added route /register/firm that loads CreateOrganization component
+- Added practice-areas step to wizard for firms (Step 3 of 5)
+- Practice areas checkboxes: Licensing, Planning, Environmental Health, Highways, Building Control
+- Selected practice areas saved to organization.practice_areas field
+- Wizard flow: Type → Info → Practice Areas → Subscription → Review
+- Firm redirects to /f/{id}/dashboard after creation
+
+### Files changed:
+- src/App.tsx - Added route /register/firm (line 89)
+- src/pages/onboarding/CreateOrganization.tsx - Added practice-areas step, updated types, added UI (lines 6, 37, 55, 86, 164, 257-258, 576-671)
+
+### Quality checks:
+- typecheck: ✗ (Cypress errors only)
+- lint: ✓
+- test: ✓ (400 passed)
+- browser test: ✓
+
+### Learnings for future iterations:
+- CreateOrganization component already existed for organization setup
+- Adding new wizard steps requires updating: Step type, OrgData interface, progress indicators, step UI
+- Practice areas stored as string array in organizations.practice_areas field
+- Route /register/firm successfully maps to the wizard (no redirect to homepage)
+- Wizard properly handles firm-specific flow with practice areas before subscription
+
+---
