@@ -88,13 +88,14 @@ export default function CouncilDepartmentSelect({
             id,
             name,
             type,
-            email,
-            organization:organizations!inner (
+            contact_email,
+            organization_id,
+            organizations!inner (
               id,
               name
             )
           `)
-          .order('organization(name)');
+          .order('organizations(name)');
 
         if (departmentType) {
           query = query.eq('type', departmentType);
@@ -113,10 +114,10 @@ export default function CouncilDepartmentSelect({
           id: dept.id,
           departmentName: dept.name,
           departmentType: dept.type,
-          organizationId: dept.organization.id,
-          organizationName: dept.organization.name,
-          email: dept.email,
-          displayName: `${dept.organization.name} - ${dept.name}`,
+          organizationId: dept.organizations.id,
+          organizationName: dept.organizations.name,
+          email: dept.contact_email,
+          displayName: `${dept.organizations.name} - ${dept.name}`,
         }));
 
         setDepartments(transformed);

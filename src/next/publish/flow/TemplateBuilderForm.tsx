@@ -15,6 +15,7 @@ import ActivitiesHoursSection, { type ActivitiesHoursData } from "@/components/p
 import GamblingActivitiesSection, { type GamblingActivitiesHoursData } from "@/components/publish/GamblingActivitiesSection";
 import CouncilDepartmentSelect, { type CouncilDepartment } from "@/components/CouncilDepartmentSelect";
 import { getDepartmentTypeForCategory } from "@/next/publish/config/categoryToDepartment";
+import { supabase } from "@/lib/supabase";
 
 export type TemplateBuilderFormProps = {
   definition: NoticeDefinition;
@@ -609,7 +610,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
     // Get department type from notice definition category
     const departmentType = definition?.category ? getDepartmentTypeForCategory(definition.category) : undefined;
 
-    const handleCouncilDepartmentSelect = React.useCallback((department: CouncilDepartment) => {
+    const handleCouncilDepartmentSelect = React.useCallback(async (department: CouncilDepartment) => {
       onChange(department.organizationName, { fromUser: true });
       // Auto-populate related fields
       if (setValue) {
@@ -619,6 +620,38 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
         // Store department ID for template lookup
         // @ts-ignore - DEPARTMENT_ID is not a PlaceholderKey but needed for template matching
         setValue("DEPARTMENT_ID", department.id, { fromAuto: true });
+
+        // Fetch and auto-populate council settings
+        try {
+          const { data: councilSettings, error } = await supabase
+            .from('council_settings')
+            .select('*')
+            .eq('department_id', department.id)
+            .single();
+
+          if (councilSettings && !error) {
+            console.log("[CouncilSettings] Auto-populating from council settings:", councilSettings);
+
+            // Auto-populate authority fields from council settings
+            if (councilSettings.authority_address) {
+              setValue("AUTHORITY_ADDRESS", councilSettings.authority_address, { fromAuto: true });
+            }
+            if (councilSettings.authority_email) {
+              setValue("AUTHORITY_EMAIL", councilSettings.authority_email, { fromAuto: true });
+            }
+            if (councilSettings.authority_phone) {
+              // Authority phone field was removed in FIX-004, skip this
+              // setValue("AUTHORITY_PHONE", councilSettings.authority_phone, { fromAuto: true });
+            }
+            if (councilSettings.online_register_url) {
+              setValue("ONLINE_REGISTER_URL", councilSettings.online_register_url, { fromAuto: true });
+            }
+          } else {
+            console.log("[CouncilSettings] No settings found for department:", department.id);
+          }
+        } catch (err) {
+          console.error("[CouncilSettings] Error fetching council settings:", err);
+        }
       }
     }, [onChange, setValue]);
 

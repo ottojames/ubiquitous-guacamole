@@ -44,6 +44,46 @@ export default function Settings() {
     ...initialDepartment.settings
   });
 
+  // Council settings for auto-population
+  const [councilSettings, setCouncilSettings] = useState({
+    authority_address: '',
+    authority_email: '',
+    authority_phone: '',
+    online_register_url: '',
+    authority_name: '',
+    licensing_manager_name: '',
+    licensing_manager_email: ''
+  });
+
+  // Load council settings on mount
+  useEffect(() => {
+    loadCouncilSettings();
+  }, [initialDepartment.id]);
+
+  const loadCouncilSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('council_settings')
+        .select('*')
+        .eq('department_id', initialDepartment.id)
+        .single();
+
+      if (data) {
+        setCouncilSettings({
+          authority_address: data.authority_address || '',
+          authority_email: data.authority_email || '',
+          authority_phone: data.authority_phone || '',
+          online_register_url: data.online_register_url || '',
+          authority_name: data.authority_name || '',
+          licensing_manager_name: data.licensing_manager_name || '',
+          licensing_manager_email: data.licensing_manager_email || ''
+        });
+      }
+    } catch (err) {
+      console.log('No council settings found, using defaults');
+    }
+  };
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -121,6 +161,21 @@ export default function Settings() {
         .eq('id', department.id);
 
       if (updateError) throw updateError;
+
+      // Save or update council settings
+      const { error: councilError } = await supabase
+        .from('council_settings')
+        .upsert({
+          department_id: department.id,
+          ...councilSettings,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'department_id'
+        });
+
+      if (councilError) {
+        console.error('Failed to save council settings:', councilError);
+      }
 
       // Update organization logo if provided
       if (logoUrl) {
@@ -248,6 +303,108 @@ export default function Settings() {
               rows={3}
               placeholder="Brief description of the department's responsibilities"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Council Settings for Auto-Population */}
+      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Authority Details for Auto-Population</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          These details will automatically populate in the publish wizard when creating notices.
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Authority Address <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={councilSettings.authority_address}
+              onChange={(e) => setCouncilSettings({ ...councilSettings, authority_address: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              placeholder="e.g., 64 Victoria Street, London SW1E 6QP"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Authority Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={councilSettings.authority_email}
+                onChange={(e) => setCouncilSettings({ ...councilSettings, authority_email: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., licensing@westminster.gov.uk"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Authority Phone <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={councilSettings.authority_phone}
+                onChange={(e) => setCouncilSettings({ ...councilSettings, authority_phone: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., 020 7641 2500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Online Register URL <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="url"
+              value={councilSettings.online_register_url}
+              onChange={(e) => setCouncilSettings({ ...councilSettings, online_register_url: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., https://www.westminster.gov.uk/licensing/register"
+              required
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              URL where public can view the licensing register
+            </p>
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Optional Contact Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Licensing Manager Name
+                </label>
+                <input
+                  type="text"
+                  value={councilSettings.licensing_manager_name}
+                  onChange={(e) => setCouncilSettings({ ...councilSettings, licensing_manager_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., Sarah Thompson"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Licensing Manager Email
+                </label>
+                <input
+                  type="email"
+                  value={councilSettings.licensing_manager_email}
+                  onChange={(e) => setCouncilSettings({ ...councilSettings, licensing_manager_email: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., sarah.thompson@westminster.gov.uk"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
