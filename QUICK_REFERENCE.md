@@ -1,207 +1,77 @@
-# CivicNotices - Quick Reference Guide
+# 🎯 Quick Testing Reference Card
 
-## Navigation
+## Navigation Mapping: Guide → Log
 
-### All Routes (src/App.tsx)
-**Public:**
-- `/` - Home (search)
-- `/notices` - Search/map
-- `/notices/:id` - Detail
-- `/notices/:id/respond` - Submit representation
-- `/login` - Demo login
+The sections in **TESTING_GUIDE.md** match exactly with **TESTING_LOG.md**:
 
-**Council Portal:**
-- `/c/:orgSlug/:deptSlug/dashboard` - Dashboard
-- `/c/:orgSlug/:deptSlug/notices` - List
-- `/c/:orgSlug/:deptSlug/notices/new` - Create
-- `/c/:orgSlug/:deptSlug/notices/:id` - Detail
-- `/c/:orgSlug/:deptSlug/team` - Team
-- `/c/:orgSlug/:deptSlug/templates` - Templates
-- `/c/:orgSlug/:deptSlug/settings` - Settings
-- `/c/:orgSlug/:deptSlug/audit` - Audit log
+| Section | What to Test | User Stories | Quick Access URL |
+|---------|-------------|--------------|------------------|
+| **1.1** | Start servers | Setup | N/A |
+| **1.2** | Verify running | Setup | http://localhost:5174/api/health |
+| **2.1** | One-click address search | US-0108 | /notices |
+| **2.2** | Radius filters | US-0109 | /notices |
+| **2.3** | Notice details | US-0001 | /notices → click notice |
+| **3.1** | Council login | US-0025 | /login → Council Portal |
+| **3.2** | Licensing dashboard | US-0125 | /c/[org]/[dept]/dashboard |
+| **3.3** | Department switch | US-0012 | Sidebar → Switch Department |
+| **3.4** | Notice retrieval | US-0002 | /c/[org]/[dept]/notices |
+| **3.5** | Representations | US-0003, 0126-0129 | /c/[org]/[dept]/representations |
+| **3.6** | Analytics | US-0004 | /c/[org]/[dept]/analytics |
+| **3.7** | Templates | US-0014-0015 | /c/[org]/[dept]/templates |
+| **4.1** | Firm login | US-0026 | /login → Professional Portal |
+| **4.2** | Firm dashboard | US-0148, 0150-0151 | /f/[firm]/dashboard |
+| **4.3** | Payment button | US-0005 | Dashboard → Make Payment |
+| **4.4** | Clients | US-0006, 0149 | /f/[firm]/clients |
+| **4.5** | Firm notices | US-0007, 0151 | /f/[firm]/notices |
+| **4.6** | Billing | US-0008 | /f/[firm]/billing |
+| **4.7** | Team | US-0009 | /f/[firm]/team |
+| **4.8** | Settings/filters | US-0010, 0146 | /f/[firm]/settings |
+| **5.1** | Publish wizard | US-0011, 0028-0029 | /publish/step-1 |
+| **6.1** | Demo OFF | US-0027 | Restart without VITE_DEMO_MODE |
+| **6.2** | Demo ON | US-0027 | Restart with VITE_DEMO_MODE=true |
+| **7.1** | Blue notice PDF | US-0117-0120 | /notices/[id]/confirmation |
+| **8.1** | Firm registration | US-0145 | /register/firm |
 
-## Key Components by Function
-
-### Public Portal (src/pages/)
-| File | Purpose | Size | Status |
-|------|---------|------|--------|
-| Home.tsx | Address search | 48KB | ✅ Complete |
-| Notices.tsx | Search + map | 32KB | ✅ Complete |
-| NoticeDetailPage.tsx | Read notice | 22KB | ✅ Complete |
-| SubmitRepresentation.tsx | Submit rep | 21KB | ✅ Complete |
-| Pricing.tsx | Pricing | 26KB | ✅ Complete |
-
-### Council Portal (src/pages/council/)
-| File | Purpose | Size | Status |
-|------|---------|------|--------|
-| CouncilLayout.tsx | Parent layout | 11KB | ✅ Complete |
-| Dashboard.tsx | Stats + recent | 20KB | ✅ Partial |
-| Notices.tsx | List notices | 14KB | ✅ Partial |
-| NoticeDetail.tsx | Read-only detail | 13KB | ✅ Partial |
-| NoticeEditor.tsx | Create/edit | 22KB | 🚧 Incomplete |
-| Team.tsx | Manage team | 12KB | 🚧 UI only |
-| Templates.tsx | Manage templates | 15KB | 🚧 UI only |
-| Settings.tsx | Settings | 12KB | 🚧 UI only |
-| AuditLog.tsx | Activity log | 11KB | 🚧 UI only |
-
-## Database (supabase/migrations/)
-
-### Critical Tables
-- `organizations` - Councils and firms
-- `departments` - Functional divisions (licensing, planning, etc)
-- `notices` - Statutory notices
-- `representations` - Public submissions on notices
-- `submissions` - Firm-to-council notice submissions
-
-### Membership & Roles
-- `organization_memberships` - Org-level roles (owner, org_admin)
-- `department_memberships` - Dept-level roles (dept_admin, editor, viewer)
-
-### Functions (representation tracking)
-- `get_representation_counts(notice_id, user_id)` - Total + unread
-- `mark_representation_read(rep_id, user_id)` - Mark as read
-- `get_bulk_representation_counts(notice_ids[], user_id)` - Bulk fetch
-
-## Backend API (server/routes/)
-
-```
-/api/notices/*          - Search, CRUD, geospatial
-/api/representations/*  - ❌ NOT IMPLEMENTED
-/api/submissions/*      - ❌ NOT IMPLEMENTED
-/api/addresses/*        - Address lookup
-/api/upload/*           - File + OCR
-/api/publish/*          - Publishing
-```
-
-## Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `src/env.ts` | Feature flags (VITE_NEW_PUBLISH_FLOW) |
-| `src/config/departmentConfig.ts` | Department types + labels |
-| `src/lib/dateUtils.ts` | Date helpers (isClosingSoon, isExpired) |
-| `src/lib/supabase.ts` | Supabase client init |
-| `/src/lib/councils.ts` | Council directory |
-
-## Demo Credentials
-
-**Email:** `licensing@sample.gov.uk`  
-**Password:** `sample123`  
-Routes to: `/c/sample-borough/licensing`
-
-**OR**
-
-**Email:** `demo@council.gov.uk`  
-**Password:** `demo123`  
-Routes to: `/c/westminster/licensing`
-
-## Department Types (7)
-
-| Type | Publish? | Rep Label | Example |
-|------|----------|-----------|---------|
-| licensing | ❌ No | Representations | Monitor premises licences |
-| planning | ✅ Yes | Public Comments | Create planning notices |
-| traffic | ✅ Yes | Objections | Create traffic orders |
-| GVOL | ❌ No | Representations | Monitor GVOL notices |
-| environmental | ❌ No | Consultation Responses | Monitor environmental |
-| probate | ❌ No | Representations | Monitor probate notices |
-| procurement | ✅ Yes | Supplier Questions | Create procurement notices |
-
-## Key Missing Pieces
-
-### Backend (High Priority)
-```
-❌ /api/representations/:noticeId         [GET list, POST create]
-❌ /api/representations/:repId/mark-read  [mark as read]
-❌ /api/submissions/:deptId                [inbox management]
-❌ /api/templates/:deptId                  [CRUD templates]
-❌ /api/audit-logs/:deptId                 [audit queries]
-```
-
-### Frontend (High Priority)
-```
-❌ Representations tab content (NoticeDetail)
-❌ Submissions inbox page
-❌ Team management integration
-❌ Real publish workflow
-❌ Real authentication (auth UI only)
-```
-
-## Audit Issues (37 total)
-
-**Critical (7):** Keyboard navigation, AI disclosure, deadline validation, ARIA labels
-**High (12):** Bank holidays, focus management, error handling, mobile responsive
-**Medium (13):** Various UX/content issues
-**Low (5):** Minor enhancements
-
-See: `/audit-report.md`
-
-## Development Commands
+## 🚀 Quick Test Commands
 
 ```bash
-npm run dev              # Frontend + backend
-npm run dev:web         # Frontend only (5173)
-npm run dev:server      # Backend only (5174)
-npm test                # Run tests
-npm run lint            # ESLint
-npm run typecheck       # TypeScript
-npm run coverage        # Coverage report
+# Test with demo mode (recommended)
+./start-testing.sh
+
+# Test without demo mode
+npm run dev
+
+# Check API health
+curl http://localhost:5174/api/health
+
+# Test notice search API
+curl "http://localhost:5174/api/notices/search?postcode=SW1A1AA"
 ```
 
-## File Structure Summary
+## 📝 How to Use
 
-```
-src/
-├── App.tsx                 - Main router
-├── pages/                  - Page components
-│   ├── Home.tsx
-│   ├── Notices.tsx
-│   ├── NoticeDetailPage.tsx
-│   ├── SubmitRepresentation.tsx
-│   ├── auth/              - Auth pages
-│   └── council/           - Council portal pages
-├── config/
-│   └── departmentConfig.ts - Department configuration
-├── lib/
-│   ├── supabase.ts
-│   ├── councils.ts
-│   ├── dateUtils.ts
-│   └── notices.ts
-├── components/
-│   ├── search/            - Search components
-│   └── layout/            - Layout components
-└── env.ts                 - Feature flags
+1. Open **TESTING_GUIDE.md** for detailed instructions
+2. Open **TESTING_LOG.md** to record results
+3. Follow the section numbers (e.g., 2.1, 3.5) - they match exactly
+4. Check off items in the log as you complete them
+5. Add your comments, issues, and observations
 
-server/
-├── routes/
-│   ├── notices.ts
-│   ├── publish.ts
-│   ├── upload.ts
-│   ├── address.ts
-│   └── ai-summary.ts
-└── lib/
-    ├── supabase.ts
-    └── geocode.ts
+## ✅ Status Legend
 
-supabase/migrations/
-├── 20251021000000_multi_tenant_foundation.sql
-├── 20251021000001_memberships.sql
-├── 20251021000002_notices_enhanced.sql
-├── 20251021000005_submissions_representations.sql
-└── 20251025000001_representation_reads_tracking.sql
-```
+- **✅ PASS** - Feature works as expected
+- **❌ FAIL** - Feature doesn't work
+- **⚠️ PARTIAL** - Works with issues
+- **🔄 BLOCKED** - Can't test due to dependency
+- **⏭️ SKIPPED** - Intentionally not tested
 
-## Status Summary
+## 🎯 Priority Testing Order
 
-- ✅ **Production Ready**: Public notice search, representations form, geospatial queries
-- 🚧 **In Development**: Dashboard, notices management, new publish wizard
-- ❌ **Not Started**: Representation management UI, submissions workflow, real auth
+If short on time, test these critical paths:
 
-## Next Steps
+1. **2.1** - One-click address search
+2. **3.2** - Council licensing dashboard
+3. **4.2** - Firm dashboard widgets
+4. **5.1** - Publish wizard flow
+5. **3.5** - Representations management
 
-1. **Implement representation endpoints** - Enable council staff to view/manage representations
-2. **Build submissions inbox** - For monitor-only departments
-3. **Complete publish workflow** - New notice creation for publishing departments
-4. **Add real authentication** - Replace demo mode
-5. **Implement representations tab** - Show reps on NoticeDetail
-
+These cover the core functionality and most complex features.

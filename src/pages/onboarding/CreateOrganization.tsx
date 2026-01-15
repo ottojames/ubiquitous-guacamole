@@ -32,7 +32,7 @@ interface OrgData {
   name: string;
   domain: string;
   contactEmail: string;
-  registrationNumber?: string;
+  // registrationNumber removed as per FIX-004
   departments: Department[];
   practiceAreas: string[];
   selectedTier?: SubscriptionTier;
@@ -50,7 +50,7 @@ export default function CreateOrganization() {
     name: '',
     domain: '',
     contactEmail: '',
-    registrationNumber: '',
+    // registrationNumber removed as per FIX-004
     departments: [],
     practiceAreas: [],
     billingCycle: 'monthly'
@@ -160,7 +160,7 @@ export default function CreateOrganization() {
           name: orgData.name,
           domain: orgData.domain,
           contact_email: orgData.contactEmail,
-          registration_number: orgData.registrationNumber || null,
+          // registration_number removed as per FIX-004
           practice_areas: orgData.type === 'firm' ? orgData.practiceAreas : null,
           status: 'pending_approval'
         })
@@ -400,23 +400,7 @@ export default function CreateOrganization() {
                 />
               </div>
 
-              {orgData.type === 'firm' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Registration Number
-                  </label>
-                  <input
-                    type="text"
-                    value={orgData.registrationNumber}
-                    onChange={(e) => setOrgData({ ...orgData, registrationNumber: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., OC123456"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Companies House or SRA registration number
-                  </p>
-                </div>
-              )}
+              {/* Removed Registration Number field as per FIX-004 */}
             </div>
 
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
@@ -869,12 +853,7 @@ export default function CreateOrganization() {
                 <p className="text-lg text-gray-900">{orgData.contactEmail}</p>
               </div>
 
-              {orgData.registrationNumber && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Registration Number</h4>
-                  <p className="text-lg text-gray-900">{orgData.registrationNumber}</p>
-                </div>
-              )}
+              {/* Removed Registration Number display as per FIX-004 */}
 
               {orgData.type === 'firm' && orgData.selectedTier && (
                 <div>

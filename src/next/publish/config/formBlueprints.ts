@@ -168,11 +168,7 @@ function applicantSection(options: ApplicantSectionOptions = {}): SectionBluepri
         required: true,
         span: 12,
       }),
-      field("APPLICANT_STATUS", {
-        label: "Applicant status",
-        hint: "e.g., individual, company, LLP",
-        span: 12,
-      }),
+      // Removed APPLICANT_STATUS as per FIX-004
       // Removed APPLICANT_TRADING_AS as per US-0011
       // Removed APPLICANT_ADDRESS as per US-0011
       // Removed APPLICANT_COMPANY_NUMBER as per US-0011
@@ -353,18 +349,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               span: 12,
               hint: "Times shown are when the activity may take place. Opening hours may differ.",
             }),
-            field("DPS_NAME", {
-              label: "Designated premises supervisor (DPS)",
-              required: isPremises,
-              span: 12,
-              showIf: () => isPremises,
-              hint: "Only required if alcohol is included.",
-            }),
-            field("DPS_LICENSING_AUTHORITY", {
-              label: "DPS licensing authority",
-              span: 12,
-              showIf: () => isPremises,
-            }),
+            // Removed DPS_NAME and DPS_LICENSING_AUTHORITY as per FIX-004
             field("NATURE_OF_VARIATION", {
               label: "Nature of variation",
               type: "textarea",
@@ -410,11 +395,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               required: true,
               span: 12,
             }),
-            field("PUBLICATION_DATE", {
-              label: "Publication date (optional)",
-              type: "date",
-              span: 12,
-            }),
+            // Removed PUBLICATION_DATE as per FIX-004
             field("DEADLINE_DATE", {
               label: "Representation deadline",
               type: "date",
@@ -444,10 +425,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "email",
               span: 12,
             }),
-            field("AUTHORITY_PHONE", {
-              label: "Authority phone (optional)",
-              span: 12,
-            }),
+            // Removed AUTHORITY_PHONE as per FIX-004
             field("ONLINE_REGISTER_URL", {
               label: "Online register URL (optional)",
               type: "url",
@@ -667,13 +645,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               span: 4,
               showIf: () => !isTransfer,
             }),
-            field("PUBLICATION_DATE", {
-              label: "Publication date",
-              type: "date",
-              required: true,
-              span: 4,
-              hint: "Date this notice will be published.",
-            }),
+            // Removed PUBLICATION_DATE as per FIX-004
             field("DEADLINE_DATE", {
               label: "Representation deadline",
               type: "date",
@@ -704,11 +676,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "email",
               span: 12,
             }),
-            field("AUTHORITY_PHONE", {
-              label: "Authority phone (optional)",
-              type: "tel",
-              span: 12,
-            }),
+            // Removed AUTHORITY_PHONE as per FIX-004
             field("REPRESENTATION_ADDRESS", {
               label: "Representation address",
               type: "textarea",
@@ -803,12 +771,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
           id: "dates",
           title: "Statutory dates",
           fields: [
-            field("PUBLICATION_DATE", {
-              label: "Publication date",
-              type: "date",
-              required: true,
-              span: 6,
-            }),
+            // Removed PUBLICATION_DATE as per FIX-004
             field("DEADLINE_DATE", {
               label: "Objection deadline",
               type: "date",
@@ -961,12 +924,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               showIf: () => isEIA,
               hint: "Date LPA directed publication.",
             }),
-            field("PUBLICATION_DATE", {
-              label: "Publication date",
-              type: "date",
-              required: true,
-              span: 6,
-            }),
+            // Removed PUBLICATION_DATE as per FIX-004
             field("DEADLINE_DATE", {
               label: "Comment deadline",
               type: "date",
@@ -1085,12 +1043,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
           id: "dates",
           title: "Statutory dates",
           fields: [
-            field("PUBLICATION_DATE", {
-              label: "Publication date",
-              type: "date",
-              required: true,
-              span: 6,
-            }),
+            // Removed PUBLICATION_DATE as per FIX-004
             field("DEADLINE_DATE", {
               label: "Claims deadline",
               type: "date",
@@ -1180,12 +1133,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
           id: "dates",
           title: "Key dates",
           fields: [
-            field("PUBLICATION_DATE", {
-              label: "Publication date",
-              type: "date",
-              required: true,
-              span: 6,
-            }),
+            // Removed PUBLICATION_DATE as per FIX-004
             field("EFFECTIVE_DATE", {
               label: "Effective date",
               type: "date",

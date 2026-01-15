@@ -804,7 +804,7 @@
 
 ---
 
-### [x] FIX-003: Redesign Map View with 70/30 Split Layout
+### [ ] FIX-003: Redesign Map View with 70/30 Split Layout
 
 **Description:** Map view right pillbox is "crowded and squeezed", UI doesn't look good
 
@@ -817,11 +817,11 @@
 - Fix general map zoom/pan "trippiness"
 - Professional UI/UX design quality
 
-**Evidence:** Implemented 70/30 split layout in Notices.tsx line 780 using grid-cols-[70%_30%]. Redesigned notice cards in SearchResults.tsx to be compact with truncated text, urgency coloring for deadlines, and clean dividers. Map has rounded corners with shadow, sidebar has improved header with counts. Heights increased to 75vh for better viewing. Dev server running on :5173.
+**Evidence:**
 
 ---
 
-### [x] FIX-004: Remove Unnecessary Fields from Publish Wizard
+### [ ] FIX-004: Remove Unnecessary Fields from Publish Wizard
 
 **Description:** Multiple unnecessary fields in publish wizard need to be removed
 
@@ -835,7 +835,7 @@
 - Authority phone field
 - Registration number (in firm registration)
 
-**Evidence:** Removed APPLICANT_STATUS from formBlueprints.ts:171, removed DPS_NAME and DPS_LICENSING_AUTHORITY from formBlueprints.ts:352, removed all PUBLICATION_DATE fields (lines 398,648,782,940,1064,1159), removed AUTHORITY_PHONE fields (lines 432,679), removed registration_number from CreateOrganization.tsx (lines 35,53,163,403,856). Quality checks: typecheck ✓, lint ✓, test ✓ (402 pass), dev server ✓
+**Evidence:**
 
 ---
 

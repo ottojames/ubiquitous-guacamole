@@ -208,6 +208,10 @@ export function AddressSearchBar({
       const query = suggestion?.label ?? value;
       resetSuggestions();
       onSubmit({ query: query.trim(), suggestion });
+      // Blur the input to ensure dropdown closes
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
     },
     [onSubmit, resetSuggestions, value]
   );
@@ -337,7 +341,7 @@ export function AddressSearchBar({
                         ? 'bg-blue-50 text-blue-900'
                         : 'text-slate-700 hover:bg-slate-50'
                     } ${index > 0 ? 'border-t border-slate-100' : ''}`}
-                    onPointerDown={(event) => {
+                    onMouseDown={(event) => {
                       event.preventDefault();
                       submitSearch(suggestion);
                     }}
@@ -369,7 +373,7 @@ export function AddressSearchBar({
                   role="option"
                   aria-selected={false}
                   className="cursor-pointer px-3 py-2 text-sm text-blue-700 hover:bg-muted/60"
-                  onPointerDown={(event) => {
+                  onMouseDown={(event) => {
                     event.preventDefault();
                     resetSuggestions();
                     onFreeText(freeTextQuery);

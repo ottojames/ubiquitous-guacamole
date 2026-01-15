@@ -313,6 +313,8 @@ export default function NoticesPage() {
         // else params.delete('council');
         params.delete('council'); // Remove any existing council filter
         params.delete('radius_km');
+        // Default to map view after address selection
+        params.set('view', 'map');
       });
 
       const displayPostcode = formatPostcodeForDisplay(resolvedPostcode);
@@ -775,9 +777,9 @@ export default function NoticesPage() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
               >
-                <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                  <section className="relative">
-                    <div className="relative h-[340px] overflow-hidden sm:h-[420px] md:h-[520px] lg:h-[70vh]">
+                <div className="grid gap-4 lg:grid-cols-[70%_30%]">
+                  <section className="relative order-2 lg:order-1">
+                    <div className="relative h-[340px] overflow-hidden rounded-xl shadow-lg sm:h-[420px] md:h-[520px] lg:h-[75vh]">
                       <NoticesMapView
                         notices={filteredResults}
                         loading={loading}
@@ -792,8 +794,8 @@ export default function NoticesPage() {
                         searchedLocation={searchedLocation}
                         className="h-full"
                       />
-                      <div className="pointer-events-none absolute left-6 top-6 z-10">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700 shadow-sm backdrop-blur">
+                      <div className="pointer-events-none absolute left-4 top-4 z-10">
+                        <span className="inline-flex items-center gap-2 rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-800 shadow-md backdrop-blur">
                           {loading
                             ? 'Loading notices…'
                             : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
@@ -802,36 +804,36 @@ export default function NoticesPage() {
                     </div>
                   </section>
 
-                  <aside className="flex h-[340px] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] backdrop-blur sm:h-[420px] md:h-[520px] lg:h-[70vh]">
-                    <div className="space-y-3 border-b border-slate-200/60 px-6 py-5">
-                      <div className="flex items-center justify-between gap-3">
+                  <aside className="order-1 flex h-[340px] flex-col overflow-hidden rounded-xl bg-white shadow-lg sm:h-[420px] md:h-[520px] lg:order-2 lg:h-[75vh]">
+                    <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                      <div className="flex items-center justify-between gap-2">
                         <div>
-                          <p className="text-sm font-semibold text-slate-700">
+                          <p className="text-sm font-semibold text-slate-800">
                             {loading
                               ? 'Updating results…'
                               : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
                           </p>
-                          <p className="text-xs text-slate-500">For {searchLabel}</p>
+                          <p className="text-xs text-slate-600">For {searchLabel}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setFiltersOpen(true)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 lg:hidden"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
                         >
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                          </svg>
                           Filters
                         </button>
                       </div>
-                      <div className="hidden lg:block">
-                        <FilterControls layout="column" className="w-full" />
-                      </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 overflow-y-auto">
                       <SearchResults
                         results={filteredResults}
                         query={searchLabel}
                         loading={loading}
                         loadingMessage="Loading notices…"
-                        emptyMessage="No notices located in this map view yet."
+                        emptyMessage="No notices found in this area."
                         activeNoticeId={activeNoticeId}
                         onSelectNotice={handleListSelectNotice}
                         onHoverNotice={setHoveredNoticeId}
