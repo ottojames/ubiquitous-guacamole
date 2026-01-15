@@ -882,7 +882,7 @@
 
 ---
 
-### [ ] FIX-008: Add Representation Forms to ALL Notices
+### [x] FIX-008: Add Representation Forms to ALL Notices
 
 **Description:** Some notices (like The Pilot Inn) don't have representation forms - this is non-negotiable, ALL must have them
 
@@ -898,6 +898,20 @@
 - Comments field mandatory
 
 **Evidence:**
+- Created comprehensive `RepresentationForm.tsx` component at `/src/components/notice/RepresentationForm.tsx`
+- Form automatically detects notice type and shows appropriate grounds/objectives:
+  - Licensing: 4 licensing objectives (crime prevention, public safety, nuisance, child protection)
+  - Planning: 11 material planning considerations
+  - Gambling: 3 gambling objectives
+  - Traffic/TRO: 9 traffic concerns
+  - GVOL: 8 operating centre concerns
+  - Environmental: 9 environmental concerns
+  - Generic fallback for other notice types
+- Integrated form into `/notices/:id/respond` route via `SubmitRepresentation.tsx`
+- Added API endpoint `POST /notices/:id/representations` in `server/routes/notices.ts`
+- Form supports anonymous submissions, validates required fields, checks deadline
+- "Submit Your Representation" button visible on all notice detail pages (line 730 in NoticeDetailPage.tsx)
+- Form submission creates representation in database with reference number
 
 ---
 

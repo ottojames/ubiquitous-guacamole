@@ -1257,6 +1257,101 @@ router.get('/notices/:id/representations', optionalAuth, async (req, res) => {
   }
 });
 
+// POST /notices/:id/representations - Submit a representation for a notice
+router.post('/notices/:id/representations', async (req, res) => {
+  const { id } = req.params;
+  const {
+    type,
+    representor_name,
+    representor_email,
+    representor_phone,
+    representor_address,
+    grounds,
+    representation_text,
+    is_anonymous,
+    reference_number
+  } = req.body;
+
+  // Validate required fields
+  if (!id || !representation_text || !type) {
+    return res.status(400).json({
+      error: 'Missing required fields',
+      details: 'Notice ID, representation text, and type are required'
+    });
+  }
+
+  // Validate email if provided (required for non-anonymous)
+  if (!is_anonymous && !representor_email) {
+    return res.status(400).json({
+      error: 'Email is required for non-anonymous submissions'
+    });
+  }
+
+  try {
+    const supabase = getServiceSupabaseClient();
+
+    // Check if notice exists
+    const { data: notice, error: noticeError } = await supabase
+      .from('notices')
+      .select('id, reps_deadline')
+      .eq('id', id)
+      .single();
+
+    if (noticeError || !notice) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    // Check if deadline has passed
+    if (notice.reps_deadline && new Date(notice.reps_deadline) < new Date()) {
+      return res.status(400).json({
+        error: 'Deadline passed',
+        details: 'The deadline for submitting representations has passed'
+      });
+    }
+
+    // Generate reference number if not provided
+    const refNumber = reference_number || `REP-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+    // Create representation
+    const { data: representation, error: repError } = await supabase
+      .from('representations')
+      .insert({
+        notice_id: id,
+        type: type,
+        representor_name: is_anonymous ? 'Anonymous' : representor_name,
+        representor_email: representor_email,
+        representor_phone: representor_phone,
+        representor_address: is_anonymous ? null : representor_address,
+        grounds: grounds,
+        representation_text: representation_text,
+        submitted_at: new Date().toISOString(),
+        is_anonymous: is_anonymous || false,
+        reference_number: refNumber
+      })
+      .select()
+      .single();
+
+    if (repError) {
+      console.error('[rep-submit] Database error:', repError);
+      return res.status(500).json({ error: 'Failed to submit representation' });
+    }
+
+    console.log(`[rep-submit] Successfully submitted representation ${refNumber} for notice ${id}`);
+
+    // TODO: Send confirmation email if email provided
+
+    return res.status(201).json({
+      success: true,
+      representation_id: representation.id,
+      reference_number: refNumber,
+      message: 'Your representation has been submitted successfully'
+    });
+  } catch (error: any) {
+    console.error('[rep-submit] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /notices/:id/representations/:repId/mark-read - Mark a representation as read
 router.post('/notices/:id/representations/:repId/mark-read', optionalAuth, async (req, res) => {
   const { id, repId } = req.params;

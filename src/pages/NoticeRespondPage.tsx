@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import * as UI from '@/styles/ui';
@@ -21,7 +21,7 @@ interface Notice {
   };
 }
 
-export default function SubmitRepresentation() {
+export default function NoticeRespondPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -52,28 +52,6 @@ export default function SubmitRepresentation() {
         setLoading(false);
       });
   }, [id]);
-
-  // Determine notice category from notice type
-  const getNoticeCategory = () => {
-    if (!notice) return 'general';
-    const type = notice.noticeType?.toLowerCase() || '';
-
-    if (type.includes('licensing') || type.includes('premises') || type.includes('club')) {
-      return 'licensing';
-    } else if (type.includes('planning') || type.includes('development') || type.includes('conservation')) {
-      return 'planning';
-    } else if (type.includes('gambling') || type.includes('betting') || type.includes('gaming')) {
-      return 'gambling';
-    } else if (type.includes('tro') || type.includes('traffic')) {
-      return 'tro';
-    } else if (type.includes('gvol') || type.includes('goods vehicle') || type.includes('operating centre')) {
-      return 'gvol';
-    } else if (type.includes('environmental') || type.includes('noise') || type.includes('pollution')) {
-      return 'environmental';
-    }
-
-    return notice.extras?.noticeCategory || 'general';
-  };
 
   if (loading) {
     return (
@@ -108,6 +86,27 @@ export default function SubmitRepresentation() {
       </div>
     );
   }
+
+  // Determine notice category from notice type
+  const getNoticeCategory = () => {
+    const type = notice.noticeType?.toLowerCase() || '';
+
+    if (type.includes('licensing') || type.includes('premises') || type.includes('club')) {
+      return 'licensing';
+    } else if (type.includes('planning') || type.includes('development') || type.includes('conservation')) {
+      return 'planning';
+    } else if (type.includes('gambling') || type.includes('betting') || type.includes('gaming')) {
+      return 'gambling';
+    } else if (type.includes('tro') || type.includes('traffic')) {
+      return 'tro';
+    } else if (type.includes('gvol') || type.includes('goods vehicle') || type.includes('operating centre')) {
+      return 'gvol';
+    } else if (type.includes('environmental') || type.includes('noise') || type.includes('pollution')) {
+      return 'environmental';
+    }
+
+    return notice.extras?.noticeCategory || 'general';
+  };
 
   return (
     <div className={`${UI.pageWrap} min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50`}>
