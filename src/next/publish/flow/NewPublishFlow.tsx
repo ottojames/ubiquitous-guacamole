@@ -332,7 +332,41 @@ export default function NewPublishFlow() {
     [definitionId]
   );
   const [uploadMethod, setUploadMethod] = useState<UploadMethod | null>(null);
-  const [templateDraft, setTemplateDraft] = useState<TemplateDraft>(null);
+  const [templateDraft, setTemplateDraft] = useState<TemplateDraft>(() => {
+    // Check for quick publish data from firm dashboard
+    const quickPublishDataStr = sessionStorage.getItem('quickPublishData');
+    if (quickPublishDataStr) {
+      try {
+        const quickData = JSON.parse(quickPublishDataStr);
+        // Clear it after reading to avoid stale data
+        sessionStorage.removeItem('quickPublishData');
+
+        // Map quick publish data to template draft format
+        return {
+          applicant: {
+            fullName: quickData.applicantName || '',
+            companyName: quickData.applicantCompany || '',
+            contactEmail: quickData.applicantEmail || '',
+            contactPhone: quickData.applicantPhone || '',
+            serviceAddress: {
+              line1: quickData.premisesAddress || '',
+              postcode: quickData.premisesPostcode || ''
+            }
+          },
+          premises: {
+            name: quickData.premisesName || '',
+            address: {
+              line1: quickData.premisesAddress || '',
+              postcode: quickData.premisesPostcode || ''
+            }
+          }
+        };
+      } catch (e) {
+        console.error('Failed to parse quick publish data:', e);
+      }
+    }
+    return null;
+  });
   const [previewSource, setPreviewSource] = useState<"ocr" | "structured">("structured");
   const [guardMessage, setGuardMessage] = useState<string | null>(null);
   const [legalDetails, setLegalDetails] = useState<LegalDetails>(() => createInitialLegalDetails());

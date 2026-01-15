@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext, Link, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import QuickPublishWidget from '@/components/firm/QuickPublishWidget';
 
 interface FirmContext {
   firm: {
@@ -368,8 +369,16 @@ export default function FirmDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-gray-100">
+      {/* Quick Publish Widget and Quick Actions Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Publish Widget */}
+        <div className="lg:col-span-1">
+          <QuickPublishWidget firmId={firm.id} firmSlug={firmSlug} />
+        </div>
+
+        {/* Quick Actions - now spans 2 columns */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-gray-100 h-full">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
@@ -416,6 +425,8 @@ export default function FirmDashboard() {
               <div className="text-sm text-gray-600">Manage notices</div>
             </div>
           </Link>
+        </div>
+      </div>
         </div>
       </div>
 
