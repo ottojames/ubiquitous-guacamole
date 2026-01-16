@@ -915,7 +915,7 @@
 
 ---
 
-### [ ] FIX-009: Remove Radius Circle from Notice Detail Map
+### [x] FIX-009: Remove Radius Circle from Notice Detail Map
 
 **Description:** Radius circle on individual notice detail page is unnecessary
 
@@ -926,7 +926,7 @@
 - Set appropriate default zoom level
 - Map should focus on the notice location
 
-**Evidence:**
+**Evidence:** Removed radius circle code from NoticeDetailPage.tsx (lines 203-255), changed marker color from blue (#2563eb) to red (#DC2626) as required. Map remains interactive with zoom/pan controls, default zoom level kept at 14 for appropriate detail view. Quality checks: dev server running on :5173, API server on :5174
 
 ---
 

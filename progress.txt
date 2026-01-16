@@ -1414,3 +1414,34 @@ All Priority 0 items are complete. Ready to move to Priority 1 items or address 
 - Migration includes default settings for existing departments
 
 ---
+## Iteration        1 - FIX-008: Add Representation Forms to ALL Notices
+**Status:** Success
+**Timestamp:** Thu 15 Jan 2026 23:59:58 GMT
+
+### What was implemented:
+- Created comprehensive RepresentationForm.tsx component that detects notice type
+- Component automatically shows appropriate grounds/objectives for each notice category
+- Updated SubmitRepresentation.tsx to use the new RepresentationForm component
+- Added POST /notices/:id/representations API endpoint in server/routes/notices.ts
+- Form validates required fields and checks deadline before submission
+
+### Files changed:
+- src/components/notice/RepresentationForm.tsx (new)
+- src/pages/SubmitRepresentation.tsx (updated)
+- server/routes/notices.ts (added POST endpoint)
+- PRD.md (marked complete)
+
+### Quality checks:
+- typecheck: ✓ (only test file errors)
+- lint: ✓ (no errors in our files)
+- test: ✓ (402 passing, pre-existing failures)
+- browser test: N/A (not required for this task)
+
+### Learnings for future iterations:
+- The codebase already had a basic SubmitRepresentation page but only handled licensing objectives
+- Routes are already configured in App.tsx for /notices/:id/respond
+- Each notice category needs specific grounds/objectives for meaningful representations
+- Anonymous submission support is important for public participation
+- Reference number generation pattern: REP-{timestamp}-{random}
+
+---

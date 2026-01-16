@@ -187,8 +187,8 @@ export default function NoticeDetailPage() {
         map.addControl(new maplibregl.NavigationControl(), 'top-right');
         map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-        // Add marker
-        new maplibregl.Marker({ color: '#2563eb' })
+        // Add red marker for notice location
+        new maplibregl.Marker({ color: '#DC2626' }) // Red color for the pin
           .setLngLat([notice.longitude!, notice.latitude!])
           .setPopup(
             new maplibregl.Popup({ offset: 25 }).setHTML(
@@ -199,60 +199,6 @@ export default function NoticeDetailPage() {
             )
           )
           .addTo(map);
-
-        // Add 1km radius circle
-        map.on('load', () => {
-          // Add source for the circle
-          map.addSource('radius-circle', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'Point',
-                coordinates: [notice.longitude!, notice.latitude!]
-              },
-              properties: {}
-            }
-          });
-
-          // Add circle layer - 1km radius
-          map.addLayer({
-            id: 'radius-circle-fill',
-            type: 'circle',
-            source: 'radius-circle',
-            paint: {
-              'circle-radius': {
-                stops: [
-                  [0, 0],
-                  [20, 8000] // Adjust based on zoom for 1km at zoom 14
-                ],
-                base: 2
-              },
-              'circle-color': '#3B82F6',
-              'circle-opacity': 0.15
-            }
-          });
-
-          // Add circle border
-          map.addLayer({
-            id: 'radius-circle-border',
-            type: 'circle',
-            source: 'radius-circle',
-            paint: {
-              'circle-radius': {
-                stops: [
-                  [0, 0],
-                  [20, 8000]
-                ],
-                base: 2
-              },
-              'circle-color': '#2563EB',
-              'circle-opacity': 0.5,
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#2563EB'
-            }
-          });
-        });
 
       } catch (err) {
         console.error('[map] Failed to initialize map:', err);
