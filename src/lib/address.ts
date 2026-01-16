@@ -1071,7 +1071,7 @@ function safeToSuggestion(it: any): AddressSuggestion | null {
   let line1 = normaliseLine(it?.line1 ?? it?.address_line_1 ?? it?.ADDRESS_LINE_1);
   const line2 = normaliseOptional(it?.line2 ?? it?.address_line_2 ?? it?.ADDRESS_LINE_2);
   let town = normaliseLine(it?.town ?? it?.post_town ?? it?.city);
-  const postcode = normalisePostcode(it?.postcode ?? it?.post_code ?? it?.POSTCODE ?? it?.postal_code) ?? '';
+  let postcode = normalisePostcode(it?.postcode ?? it?.post_code ?? it?.POSTCODE ?? it?.postal_code) ?? '';
 
   const explicitLabel =
     typeof it?.label === 'string'
@@ -1084,6 +1084,18 @@ function safeToSuggestion(it: any): AddressSuggestion | null {
 
   const label = explicitLabel?.trim() || buildLabel({ ...it, line1, line2, town, postcode });
   if (!label) return null;
+
+  // If we don't have a postcode, try to extract it from the label
+  if (!postcode && label) {
+    const parts = label.split(',').map(p => p.trim());
+    for (const part of parts) {
+      const extractedPostcode = normalisePostcode(part);
+      if (extractedPostcode) {
+        postcode = extractedPostcode;
+        break;
+      }
+    }
+  }
 
   if (!line1) {
     line1 = label.split(',')[0]?.trim() || '';

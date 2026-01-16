@@ -341,7 +341,8 @@ export function AddressSearchBar({
                         ? 'bg-blue-50 text-blue-900'
                         : 'text-slate-700 hover:bg-slate-50'
                     } ${index > 0 ? 'border-t border-slate-100' : ''}`}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();  // Prevent blur event from firing
                       submitSearch(suggestion);
                     }}
                   >
