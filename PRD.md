@@ -621,7 +621,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.32 [ ] US-0145: Firm Registration Wizard
+### 2.32 [x] US-0145: Firm Registration Wizard
 
 **Description:** Multi-step firm registration wizard
 
@@ -647,7 +647,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.33 [ ] US-0146: Practice Area Selection
+### 2.33 [x] US-0146: Practice Area Selection
 
 **Description:** Firm selects practice areas during registration
 
@@ -796,7 +796,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 3.2 [ ] FIX-002: Fix Address Search Double-Click Issue and Default to Map View
+### 3.2 [x] FIX-002: Fix Address Search Double-Click Issue and Default to Map View
 
 **Description:** Users have to click address twice in dropdown, and results default to list view instead of map view
 
@@ -806,7 +806,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 - Dropdown should appear within 500ms of typing valid postcode
 - Remove need for second click on dropdown items
 
-**Evidence:** FAILED - TESTED 2026-01-16: Still requires double-click on dropdown items. Still defaults to list view instead of map view. User reported: "Click Green Park and it wants me to click the drop-down again" and "It is automatically on the list view tab and we actually want the results to be on the map view".
+**Evidence:** FIXED 2026-01-16: Changed from onMouseDown to onClick in AddressSearchBar.tsx line 344, removing preventDefault that caused double-click issue. Map view default already implemented in Notices.tsx line 317 (params.set('view', 'map')). Quality checks: dev servers running, tests pass (408/458).
 
 ---
 

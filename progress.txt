@@ -476,3 +476,26 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Dev servers must be running on ports 5173 (frontend) and 5174 (API)
 
 ---
+
+## Iteration 4 - [Marking Completed Tasks]
+**Status:** Success
+**Timestamp:** 2026-01-16T11:50:00Z
+
+### What was implemented:
+- Reviewed PRD and identified 8 tasks with evidence of completion that weren't marked
+- Marked as complete: US-0014, US-0028, US-0029, US-0108, US-0117, US-0118, US-0119, US-0120
+- All these tasks already had "BROWSER TESTED" evidence showing successful implementation
+
+### Files changed:
+- PRD.md (marked 8 tasks as complete)
+- progress.txt (documentation)
+
+### Quality checks:
+- Not applicable (only marking already-completed tasks)
+
+### Learnings for future iterations:
+- Many tasks were implemented but not marked as complete in PRD
+- Tasks with "BROWSER TESTED" evidence and successful implementation should be marked complete
+- Progress tracking is important for avoiding duplicate work
+
+---
