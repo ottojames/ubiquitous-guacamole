@@ -258,10 +258,12 @@ export default function FirmRegistration() {
 
     try {
       // Create organization
+      const firmSlug = firmData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const { data: org, error: orgError } = await supabase
         .from('organizations')
         .insert([{
           name: firmData.name,
+          slug: firmSlug,
           type: 'firm',
           contact_email: firmData.adminEmail,
           practice_areas: firmData.practiceAreas
@@ -287,12 +289,12 @@ export default function FirmRegistration() {
       if (authError) throw authError;
 
       // Success! Redirect to firm dashboard
-      const firmSlug = firmData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      navigate(`/f/${firmSlug}/dashboard`);
+      navigate(`/f/${org.slug || firmSlug}/dashboard`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setError('Registration failed. Please try again.');
+      const errorMessage = err?.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

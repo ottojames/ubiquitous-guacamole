@@ -201,10 +201,12 @@ export default function CouncilRegistration() {
 
     try {
       // Create organization
+      const councilSlug = councilData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^the-/, '');
       const { data: org, error: orgError } = await supabase
         .from('organizations')
         .insert([{
           name: councilData.name,
+          slug: councilSlug,
           type: 'council',
           contact_email: councilData.authorityEmail
         }])
@@ -260,9 +262,10 @@ export default function CouncilRegistration() {
       // Success! Redirect to council dashboard
       navigate(`/c/${org.id}/${councilData.departments[0].slug}/dashboard`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setError('Registration failed. Please try again.');
+      const errorMessage = err?.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
