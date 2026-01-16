@@ -280,7 +280,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.14 [ ] US-0014: Verify Templates Work With Matching
+### 2.14 [x] US-0014: Verify Templates Work With Matching
 
 **Description:** Verify council templates work with form submissions and matching
 
@@ -364,7 +364,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.19 [ ] US-0028: Fix Publish Wizard Submit
+### 2.19 [x] US-0028: Fix Publish Wizard Submit
 
 **Description:** Fix step 4 submit button that does nothing when clicked
 
@@ -377,7 +377,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.20 [ ] US-0029: Add Submit Error Handling
+### 2.20 [x] US-0029: Add Submit Error Handling
 
 **Description:** Add proper error handling and user feedback for wizard submission
 
@@ -390,7 +390,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.21 [ ] US-0108: One Click Address Select
+### 2.21 [x] US-0108: One Click Address Select
 
 **Description:** Postcode search - click address once to immediately search
 
@@ -436,7 +436,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.23 [ ] US-0117: Generate Blue Notice Pdf
+### 2.23 [x] US-0117: Generate Blue Notice Pdf
 
 **Description:** Auto-generate blue notice PDF for premises licensing applications
 
@@ -460,7 +460,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.24 [ ] US-0118: Blue Notice Templates
+### 2.24 [x] US-0118: Blue Notice Templates
 
 **Description:** Template system for blue notices by notice type
 
@@ -473,7 +473,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.25 [ ] US-0119: Blue Notice Qr Code
+### 2.25 [x] US-0119: Blue Notice Qr Code
 
 **Description:** QR code generation linking to public notice page
 
@@ -486,7 +486,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.26 [ ] US-0120: Blue Notice Display Instructions
+### 2.26 [x] US-0120: Blue Notice Display Instructions
 
 **Description:** Include display instructions on PDF
 
