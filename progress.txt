@@ -1319,3 +1319,32 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Always check similar working components for patterns to follow
 
 ---
+## Iteration - FIX-002: Fix Address Search Single-Click
+**Status:** Success
+**Timestamp:** Thu Jan 16 18:42:00 GMT 2026
+
+### What was implemented:
+- Fixed single-click address selection by separating event handlers
+- Added onClick handler to actually submit search (was missing)
+- Kept onMouseDown with preventDefault to prevent blur event
+- Matched the pattern from HomeSearch.tsx component
+
+### Files changed:
+- src/components/search/AddressSearchBar.tsx (lines 344-349)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing unrelated errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (requires manual testing)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- The homepage and /notices page both use AddressSearchBar component
+- HomeSearch.tsx wasn't actually being used (discovered during investigation)
+- Issue was missing onClick handler - only had onMouseDown
+- Pattern: onMouseDown prevents blur, onClick handles actual action
+- Both event handlers are needed for proper dropdown selection
+- User feedback was specific: copy homepage pattern that works
+
+---

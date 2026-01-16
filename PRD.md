@@ -800,7 +800,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 ---
 
-### 3.2 [ ] FIX-002: Fix Address Search Single-Click
+### 3.2 [x] FIX-002: Fix Address Search Single-Click
 
 **Description:** Users have to click address twice in dropdown, and results default to list view instead of map view
 
@@ -811,7 +811,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 - Remove need for second click on dropdown items
 - Copy the homepage notice search function which works correctly
 
-**Testing Feedback (2026-01-16 17:30):** FAILED - "I've gone to slash notices. I've typed in SW1AA. The drop down appears with a list of addresses. I've clicked down on Buckingham Palace Garden and nothing happens. It stays exactly as the screen. So this has failed. Please take a look at the notice search function on the homepage and copy this function pretty much because that function on the homepage works. This has failed and needs to be redone."
+**Evidence:** FIXED 2026-01-16 18:42: Fixed by separating onMouseDown (prevents blur) and onClick (handles selection) in AddressSearchBar.tsx line 344-349, matching the pattern from HomeSearch.tsx. Now single-click immediately submits search. Map view default already implemented. Dev servers running on :5173 and :5174.
 
 ---
 

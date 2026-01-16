@@ -343,6 +343,8 @@ export function AddressSearchBar({
                     } ${index > 0 ? 'border-t border-slate-100' : ''}`}
                     onMouseDown={(e) => {
                       e.preventDefault();  // Prevent blur event from firing
+                    }}
+                    onClick={() => {
                       submitSearch(suggestion);
                     }}
                   >
