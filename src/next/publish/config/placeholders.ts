@@ -194,22 +194,6 @@ export const LICENSING_PREMISES_NEW_PLACEHOLDERS: PlaceholderDefinition[] = [
     required: false,
     category: 'licensing',
   },
-  {
-    token: 'DPS_NAME',
-    label: 'DPS Name',
-    description: 'Name of the Designated Premises Supervisor',
-    example: 'Sarah Johnson',
-    required: true,
-    category: 'licensing',
-  },
-  {
-    token: 'DPS_LICENSING_AUTHORITY',
-    label: 'DPS Licensing Authority',
-    description: 'Authority that issued the DPS personal licence',
-    example: 'Bath and North East Somerset Council',
-    required: false,
-    category: 'licensing',
-  },
   ...COMMON_DEADLINE_PLACEHOLDERS,
   ...COMMON_AUTHORITY_PLACEHOLDERS,
   {

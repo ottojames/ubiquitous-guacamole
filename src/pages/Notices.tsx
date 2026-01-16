@@ -780,7 +780,7 @@ export default function NoticesPage() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
               >
-                <div className="grid gap-4 lg:grid-cols-[60%_40%]">
+                <div className="grid gap-4 lg:grid-cols-[70%_30%]">
                   <section className="relative order-2 lg:order-1">
                     <div className="relative h-[400px] overflow-hidden rounded-xl shadow-lg sm:h-[480px] md:h-[580px] lg:h-[80vh]">
                       <NoticesMapView

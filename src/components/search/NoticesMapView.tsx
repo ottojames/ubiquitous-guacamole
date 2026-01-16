@@ -871,6 +871,13 @@ function NoticesMapViewComponent({
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ width: '100%', height: '100%' }}
+        dragRotate={false}
+        touchZoomRotate={false}
+        touchPitch={false}
+        maxZoom={18}
+        minZoom={5}
+        scrollZoom={{ speed: 0.5, smooth: true }}
+        dragPan={{ inertia: 300 }}
       >
         <Source
           id={SOURCE_ID}

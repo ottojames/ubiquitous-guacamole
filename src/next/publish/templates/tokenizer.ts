@@ -233,11 +233,6 @@ export function generateTokensFromNotice(notice: NoticeBase): Record<string, str
     tokens.OPERATING_HOURS = formatOperatingHours(extras.hours);
   }
 
-  // Designated Premises Supervisor
-  if (extras.dps_name) {
-    tokens.DPS_NAME = extras.dps_name;
-  }
-
   // Variation-specific
   if (extras.nature_of_variation) {
     tokens.NATURE_OF_VARIATION = extras.nature_of_variation;

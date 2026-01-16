@@ -1046,6 +1046,11 @@ export default function NewPublishFlow() {
     return `${Math.floor(diff / 3600000)}h ago`;
   };
 
+  // Create a setValue function for the template form to enable auto-population
+  const setTemplateValue = React.useCallback((token: string, value: string) => {
+    updateTemplateDraftPath([token], value);
+  }, [updateTemplateDraftPath]);
+
   const templateFormContent = builder ? (
     <div className="space-y-4 p-0">
       <React.Suspense
@@ -1061,6 +1066,7 @@ export default function NewPublishFlow() {
           draft={templateDraft}
           onChange={updateTemplateDraftPath}
           errors={templateFieldErrors}
+          setValue={setTemplateValue}
         />
       </React.Suspense>
       {sampleTemplateDraft && (

@@ -105,8 +105,8 @@ export default function SearchResults({
             return (
               <article
                 key={item.id}
-                className={`group relative cursor-pointer px-5 py-4 transition-all hover:bg-gradient-to-r hover:from-slate-50 hover:to-white ${
-                  isActive ? 'bg-gradient-to-r from-blue-50 to-white border-l-4 border-blue-600 shadow-sm' : ''
+                className={`group relative cursor-pointer border-b border-slate-100 px-4 py-5 transition-all last:border-b-0 hover:bg-gradient-to-r hover:from-blue-50/40 hover:to-white ${
+                  isActive ? 'bg-gradient-to-r from-blue-50 to-white border-l-4 border-l-blue-600 shadow-sm' : ''
                 }`}
                 onClick={() => handleCardClick(item)}
                 onMouseEnter={() => {
@@ -116,14 +116,14 @@ export default function SearchResults({
                   if (onHoverNotice) onHoverNotice(null);
                 }}
               >
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {/* Top row: Type badge and deadline */}
                   <div className="flex items-start justify-between gap-2">
-                    <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-900">
                       {item.noticeType}
                     </span>
                     {item.repsDeadline && (
-                      <span className={`text-xs font-medium ${urgencyClass}`}>
+                      <span className={`text-[11px] font-bold uppercase ${urgencyClass}`}>
                         {daysUntilDeadline !== null && daysUntilDeadline >= 0
                           ? `${daysUntilDeadline}d left`
                           : 'Expired'}
@@ -131,29 +131,21 @@ export default function SearchResults({
                     )}
                   </div>
 
-                  {/* Premises name - larger and not truncated */}
-                  <h3 className="font-semibold text-base text-slate-900 leading-tight">
+                  {/* Premises name - more prominent */}
+                  <h3 className="font-bold text-sm text-slate-900 leading-tight line-clamp-2">
                     {item.premisesName || 'Unnamed premises'}
                   </h3>
 
-                  {/* Address - more visible */}
-                  <p className="text-sm text-slate-600 leading-snug">
+                  {/* Address - compact */}
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
                     {formatAddress(item.premisesAddress) || 'Address not provided'}
                   </p>
 
-                  {/* View action */}
+                  {/* View action - more subtle */}
                   <div className="flex items-center justify-between pt-1">
-                    <button
-                      type="button"
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/notices/${item.id}`);
-                      }}
-                    >
-                      View Notice
-                    </button>
-                    <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                    <span className="text-[11px] font-semibold text-blue-600 group-hover:text-blue-700">
+                      View Details →
+                    </span>
                   </div>
                 </div>
               </article>

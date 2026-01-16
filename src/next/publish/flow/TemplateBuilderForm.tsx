@@ -22,6 +22,7 @@ export type TemplateBuilderFormProps = {
   draft: Record<string, unknown> | null;
   onChange: (path: (string | number)[], value: unknown) => void;
   errors?: Record<string, string[] | undefined>;
+  setValue?: (token: string, value: string) => void;
 };
 
 type SetValueOptions = {
@@ -84,13 +85,14 @@ export default function TemplateBuilderForm({
   draft,
   onChange,
   errors,
+  setValue: setValueProp,
 }: TemplateBuilderFormProps) {
   console.log('🔥🔥🔥 [TemplateBuilderForm] v2025-11-17-18:28 LOADED - Using CouncilDepartmentSelect from line 16');
   const blueprint = React.useMemo(() => getFormBlueprint(definition), [definition]);
   const aliasMap = React.useMemo(() => buildAliasMap(blueprint), [blueprint]);
   const context = React.useMemo(() => ({ definition }), [definition]);
 
-  // Track whether alcohol is selected to show/hide DPS fields
+  // Track whether alcohol is selected (no longer needed for DPS)
   const [hasAlcohol, setHasAlcohol] = React.useState(false);
 
   // Check on mount and when draft changes
@@ -125,7 +127,12 @@ export default function TemplateBuilderForm({
           lastAutoDeadlineRef.current = value || null;
         }
       }
-      onChange([token], value);
+      // Use the prop setValue if available, otherwise fall back to onChange
+      if (setValueProp) {
+        setValueProp(token as string, value);
+      } else {
+        onChange([token], value);
+      }
       const aliases = aliasMap.get(token);
       if (aliases?.length) {
         for (const alias of aliases) {
@@ -133,7 +140,7 @@ export default function TemplateBuilderForm({
         }
       }
     },
-    [aliasMap, onChange]
+    [aliasMap, onChange, setValueProp]
   );
 
   // Apply automatic values when they change or when draft is empty
@@ -456,9 +463,7 @@ export default function TemplateBuilderForm({
         if (section.id === "activities-hours" &&
             (field.token === "LICENSABLE_ACTIVITIES" ||
              field.token === "ACTIVITY_SCHEDULE" ||
-             field.token === "OPENING_HOURS" ||
-             field.token === "DPS_NAME" ||
-             field.token === "DPS_LICENSING_AUTHORITY")) {
+             field.token === "OPENING_HOURS")) {
           return false;
         }
 
