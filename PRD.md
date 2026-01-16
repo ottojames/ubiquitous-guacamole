@@ -212,7 +212,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.11 [ ] US-0011: Fix Wizard Step4 Upload
+### 2.11 [x] US-0011: Fix Wizard Step4 Upload
 
 **Description:** Publish wizard step 4 submit button passes to next page but nothing gets uploaded/published
 
