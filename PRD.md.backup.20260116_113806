@@ -14,7 +14,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ## 2. User Stories (Priority 0)
 
-### 2.1 [x] US-0001: Fix Public Notice Detail Page
+### 2.1 [ ] US-0001: Fix Public Notice Detail Page
 
 **Description:** Public notice detail page shows 'notice not found' error when clicking from search results
 
@@ -31,7 +31,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 - MUST verify in Chrome browser - evidence must say "BROWSER TESTED: [steps] - [result]"
 - Quality checks must pass: typecheck, lint, test, dev server starts
 
-**Evidence:** PASSED - TESTED 2026-01-16: BROWSER TESTED - Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The Pilot Inn), notice details load successfully, "Have Your Say" representation form section always visible with "Submit Your Representation" button, shows "30 days left to respond" deadline message. Fixed by removing conditional rendering in NoticeDetailPage.tsx lines 617-695 to ensure representation form ALWAYS shows regardless of deadline.
+**Evidence:** FAILED - TESTED 2026-01-16: User reported: "failed, no representation form on this notice. Needs to be a representation section CTA on every single notice on our site." The Pilot Inn notice loads but missing required representation form.
 
 ---
 

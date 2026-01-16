@@ -19,6 +19,8 @@ import Callback from "@/pages/auth/Callback";
 import SwitchContext from "@/pages/auth/SwitchContext";
 import DepartmentSwitcher from "@/pages/council/DepartmentSwitcher";
 import CreateOrganization from "@/pages/onboarding/CreateOrganization";
+import CouncilRegistration from "@/pages/onboarding/CouncilRegistration";
+import FirmRegistration from "@/pages/onboarding/FirmRegistration";
 import CouncilLayout from "@/pages/council/CouncilLayout";
 import CouncilDashboard from "@/pages/council/Dashboard";
 import CouncilNotices from "@/pages/council/Notices";
@@ -42,6 +44,7 @@ import FirmBilling from "@/pages/firm/Billing";
 import FirmBulkUpload from "@/pages/firm/BulkUpload";
 import FirmSettings from "@/pages/firm/Settings";
 import FirmTeam from "@/pages/firm/Team";
+import Register from "@/pages/Register";
 import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
 import Accessibility from "@/pages/legal/Accessibility";
@@ -89,7 +92,9 @@ export default function App() {
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/switch-department" element={<DepartmentSwitcher />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />
-        <Route path="/register/firm" element={<CreateOrganization />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/register/council" element={<CouncilRegistration />} />
+        <Route path="/register/firm" element={<FirmRegistration />} />
 
         {/* Council Portal Routes - Auth handled by CouncilLayout (supports demo mode) */}
         <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
