@@ -14,6 +14,7 @@ import PublishConfirmationPage from "@/pages/PublishConfirmationPage";
 import SubmitRepresentation from "@/pages/SubmitRepresentation";
 import AddressLookupDebug from "@/pages/debug/AddressLookupDebug";
 import SignIn from "@/pages/auth/SignIn";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
 import Callback from "@/pages/auth/Callback";
 import SwitchContext from "@/pages/auth/SwitchContext";
 import DepartmentSwitcher from "@/pages/council/DepartmentSwitcher";
@@ -82,7 +83,9 @@ export default function App() {
 
         {/* Auth & Onboarding Routes */}
         <Route path="/auth/sign-in" element={<SignIn />} />
+        <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/callback" element={<Callback />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/switch-department" element={<DepartmentSwitcher />} />
         <Route path="/onboarding/create-organization" element={<CreateOrganization />} />

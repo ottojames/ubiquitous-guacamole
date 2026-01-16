@@ -5,9 +5,10 @@ import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -15,23 +16,71 @@ export default function SignIn() {
     setLoading(true);
     setError(null);
 
-    // Use magic link authentication
+    // Validate password complexity
+    if (!validatePassword(password)) {
+      setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+      setLoading(false);
+      return;
+    }
+
+    // Use email/password authentication
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        password,
       });
 
       if (error) throw error;
 
-      setSent(true);
+      // Handle remember me - set session persistence
+      if (rememberMe && data.session) {
+        // Store session with 30-day expiry
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        document.cookie = `sb-auth-token=${data.session.access_token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+      }
+
+      // Redirect based on user type
+      if (data.user) {
+        // Check if user is part of a council or firm
+        const { data: membership } = await supabase
+          .from('department_memberships')
+          .select('department:departments(slug, organization:organizations(slug, type))')
+          .eq('user_id', data.user.id)
+          .limit(1)
+          .single();
+
+        if (membership) {
+          const dept = (membership as any).department;
+          if (dept.organization.type === 'council') {
+            navigate(`/c/${dept.organization.slug}/${dept.slug}/dashboard`);
+          } else {
+            navigate(`/f/${dept.organization.slug}/dashboard`);
+          }
+        } else {
+          navigate('/dashboard');
+        }
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send magic link');
+      setError(err instanceof Error ? err.message : 'Invalid email or password');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Password validation function
+  const validatePassword = (pwd: string): boolean => {
+    // Minimum 8 characters
+    if (pwd.length < 8) return false;
+    // At least one uppercase letter
+    if (!/[A-Z]/.test(pwd)) return false;
+    // At least one lowercase letter
+    if (!/[a-z]/.test(pwd)) return false;
+    // At least one number
+    if (!/[0-9]/.test(pwd)) return false;
+    // At least one special character
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) return false;
+    return true;
   };
 
   return (
@@ -49,142 +98,155 @@ export default function SignIn() {
 
         {/* Sign In Card */}
         <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-          {!sent ? (
-            <>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-                Sign In
-              </h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            Sign In
+          </h2>
 
-              {/* Support Contact */}
-              <div className="mb-6 text-center">
-                <p className="text-sm text-gray-600">
-                  Need access? Contact{" "}
-                  <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
-                    support@civicnotices.co.uk
-                  </a>
-                </p>
-              </div>
+          {/* Support Contact */}
+          <div className="mb-6 text-center">
+            <p className="text-sm text-gray-600">
+              Need access? Contact{" "}
+              <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
+                support@civicnotices.co.uk
+              </a>
+            </p>
+          </div>
 
-              {/* Demo Accounts - Only shown when demo mode is enabled */}
-              {isDemoModeEnabled() && (
-                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <p className="text-sm font-medium text-amber-900 mb-3">
-                    Demo Mode - Development Only
-                  </p>
-                  <div className="space-y-2">
-                    <p className="text-xs text-amber-700 font-medium">Council Accounts:</p>
-                    {DEMO_ACCOUNTS.council.map(account => (
-                      <button
-                        key={account.email}
-                        type="button"
-                        onClick={() => setEmail(account.email)}
-                        className="block text-sm text-amber-800 hover:underline"
-                      >
-                        {account.name} - {account.email}
-                      </button>
-                    ))}
-                    <p className="text-xs text-amber-700 font-medium mt-3">Firm Accounts:</p>
-                    {DEMO_ACCOUNTS.firm.map(account => (
-                      <button
-                        key={account.email}
-                        type="button"
-                        onClick={() => setEmail(account.email)}
-                        className="block text-sm text-amber-800 hover:underline"
-                      >
-                        {account.name} - {account.email}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-amber-600 mt-3">
-                    Click an email to auto-fill, then click "Send magic link"
-                  </p>
-                </div>
-              )}
-
-              <form onSubmit={handleSignIn} className="space-y-6">
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="you@example.com"
-                    disabled={loading}
-                  />
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Sending...' : 'Send Magic Link'}
-                </button>
-              </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
-                  Don't have an account?{' '}
+          {/* Demo Accounts - Only shown when demo mode is enabled */}
+          {isDemoModeEnabled() && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <p className="text-sm font-medium text-amber-900 mb-3">
+                Demo Mode - Development Only
+              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-amber-700 font-medium">Council Accounts:</p>
+                {DEMO_ACCOUNTS.council.map(account => (
                   <button
-                    onClick={() => navigate('/onboarding/create-organization')}
-                    className="text-blue-600 hover:text-blue-700 font-semibold"
+                    key={account.email}
+                    type="button"
+                    onClick={() => {
+                      setEmail(account.email);
+                      setPassword('testpass123');
+                    }}
+                    className="block text-sm text-amber-800 hover:underline"
                   >
-                    Create Organization
+                    {account.name} - {account.email}
                   </button>
-                </p>
+                ))}
+                <p className="text-xs text-amber-700 font-medium mt-3">Firm Accounts:</p>
+                {DEMO_ACCOUNTS.firm.map(account => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    onClick={() => {
+                      setEmail(account.email);
+                      setPassword('testpass123');
+                    }}
+                    className="block text-sm text-amber-800 hover:underline"
+                  >
+                    {account.name} - {account.email}
+                  </button>
+                ))}
               </div>
-            </>
-          ) : (
-            <div className="text-center py-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-green-600"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Check your email
-              </h3>
-              <p className="text-gray-600 mb-6">
-                We've sent a magic link to <strong>{email}</strong>
+              <p className="text-xs text-amber-600 mt-3">
+                Click an account to auto-fill, then click "Sign In"
               </p>
-              <p className="text-sm text-gray-500 mb-6">
-                Click the link in the email to sign in. The link will expire in 15 minutes.
-              </p>
-
-              <button
-                onClick={() => {
-                  setSent(false);
-                  setEmail('');
-                }}
-                className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
-              >
-                Use a different email
-              </button>
             </div>
           )}
+
+          <form onSubmit={handleSignIn} className="space-y-6">
+            {/* Email Field */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="you@example.com"
+                disabled={loading}
+              />
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="••••••••"
+                disabled={loading}
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Min 8 characters with uppercase, lowercase, number, and special character
+              </p>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <input
+                id="remember"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+                Remember me for 30 days
+              </label>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <button
+                onClick={() => navigate('/onboarding/create-organization')}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                Create Organization
+              </button>
+            </p>
+          </div>
         </div>
 
         {/* Public Access Link */}

@@ -30,6 +30,13 @@ export default function Login() {
       return;
     }
 
+    // Validate password complexity
+    if (!validatePassword(password)) {
+      setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
+      setLoading(false);
+      return;
+    }
+
     // All logins use real Supabase authentication
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -115,6 +122,21 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Password validation function
+  const validatePassword = (pwd: string): boolean => {
+    // Minimum 8 characters
+    if (pwd.length < 8) return false;
+    // At least one uppercase letter
+    if (!/[A-Z]/.test(pwd)) return false;
+    // At least one lowercase letter
+    if (!/[a-z]/.test(pwd)) return false;
+    // At least one number
+    if (!/[0-9]/.test(pwd)) return false;
+    // At least one special character
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) return false;
+    return true;
   };
 
   return (
@@ -346,6 +368,9 @@ export default function Login() {
                       required
                     />
                   </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Min 8 characters with uppercase, lowercase, number, and special character
+                  </p>
                 </div>
 
                 {/* Remember Me */}
