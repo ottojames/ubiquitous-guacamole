@@ -17,7 +17,14 @@ export default function SignIn() {
     setError(null);
 
     // Validate password complexity
-    if (!validatePassword(password)) {
+    // Validate password complexity (skip for demo accounts in demo mode)
+    const isDemoAccount = isDemoModeEnabled() && (
+      DEMO_ACCOUNTS.council.some(acc => acc.email === email) ||
+      DEMO_ACCOUNTS.firm.some(acc => acc.email === email) ||
+      email === DEMO_ACCOUNTS.public.email
+    );
+
+    if (!isDemoAccount && !validatePassword(password)) {
       setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
       setLoading(false);
       return;
