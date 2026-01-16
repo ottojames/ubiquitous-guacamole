@@ -626,7 +626,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
           const { data: councilSettings, error } = await supabase
             .from('council_settings')
             .select('*')
-            .eq('department_id', department.id)
+            .eq('organization_id', department.organizationId)
             .single();
 
           if (councilSettings && !error) {
@@ -647,7 +647,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
               setValue("ONLINE_REGISTER_URL", councilSettings.online_register_url, { fromAuto: true });
             }
           } else {
-            console.log("[CouncilSettings] No settings found for department:", department.id);
+            console.log("[CouncilSettings] No settings found for organization:", department.organizationId);
           }
         } catch (err) {
           console.error("[CouncilSettings] Error fetching council settings:", err);

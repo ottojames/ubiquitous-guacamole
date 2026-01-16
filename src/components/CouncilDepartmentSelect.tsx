@@ -331,7 +331,6 @@ export default function CouncilDepartmentSelect({
           id={`${id}-listbox`}
           role="listbox"
           className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-64 overflow-y-auto"
-          onMouseDown={handleOptionMouseDown}
         >
           {options.map((option, idx) => (
             <li
@@ -343,8 +342,11 @@ export default function CouncilDepartmentSelect({
                 px-4 py-3 cursor-pointer border-b border-gray-100 last:border-0
                 ${idx === activeIdx ? 'bg-blue-50' : 'hover:bg-gray-50'}
               `}
-              onMouseDown={handleOptionMouseDown}
-              onClick={() => select(option)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                select(option);
+              }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">

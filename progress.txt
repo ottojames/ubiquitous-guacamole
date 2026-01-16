@@ -584,3 +584,31 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - All statutory fields included with {{PLACEHOLDER}} syntax
 
 ---
+
+## Iteration 8 - FIX-005: Fix Field Ordering in Activities Section
+**Status:** Success
+**Timestamp:** 2026-01-16T12:09:00Z
+
+### What was implemented:
+- Reordered alcohol activities in LicensableActivitiesSelector.tsx to place "On & off the premises" first
+- Reordered alcohol activities in ActivitiesHoursSection.tsx to match the same ordering
+- Ensured consistent ordering across both components
+
+### Files changed:
+- src/components/publish/LicensableActivitiesSelector.tsx (line 21-23)
+- src/components/publish/ActivitiesHoursSection.tsx (line 33-50)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing unrelated errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (component ordering change)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- Activity ordering was defined in two separate components that needed to be synchronized
+- LicensableActivitiesSelector is used in one flow, ActivitiesHoursSection in another
+- Both components needed the same reordering to ensure consistency
+- "On & off the premises" option is most commonly selected so should be first
+
+---
