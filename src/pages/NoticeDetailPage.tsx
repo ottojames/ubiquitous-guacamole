@@ -562,60 +562,9 @@ export default function NoticeDetailPage() {
 
           {/* Right Column - Map & Actions */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Mini-Map with 1km Radius */}
-            {notice.latitude && notice.longitude && (
-              <div className="rounded-3xl border border-white/70 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
-                <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-slate-900">Location Map</h3>
-                </div>
-                <div className="relative">
-                  <div
-                    ref={setMapContainer}
-                    className="h-[300px] rounded-2xl bg-slate-100"
-                    style={{ width: '100%' }}
-                  />
-                  {/* Map loading overlay */}
-                  {mapLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-2xl">
-                      <div className="text-center">
-                        <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-2 border-blue-100 border-t-blue-600" />
-                        <p className="text-xs text-slate-600">Loading map...</p>
-                      </div>
-                    </div>
-                  )}
-                  {/* Map error state */}
-                  {mapError && !mapLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 rounded-2xl">
-                      <div className="text-center px-4">
-                        <MapPin className="mx-auto h-8 w-8 text-slate-400 mb-2" />
-                        <p className="text-xs text-slate-600">Unable to load map</p>
-                        <p className="text-xs text-slate-500 mt-1">Location data available below</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="pt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-900">Premises Location</p>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
-                      1km radius shown
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-700">{notice.premisesAddress}</p>
-                    <p className="text-sm text-slate-600">{notice.premisesPostcode}</p>
-                    <p className="text-xs text-slate-500 font-mono">
-                      {notice.latitude.toFixed(6)}, {notice.longitude.toFixed(6)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* RESIDENT ACTION CARD - THIS IS FOR RESIDENTS! */}
-            <div className="sticky top-24 rounded-3xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100/50 p-8 shadow-2xl">
+            {/* IMPORTANT: This form MUST be visible on ALL notices - PLACED FIRST FOR MAXIMUM VISIBILITY */}
+            <div className="rounded-3xl border-4 border-blue-600 bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 p-8 shadow-2xl ring-4 ring-blue-200 ring-opacity-50">
               <div className="mb-4 flex items-start gap-3">
                 <div className="rounded-full bg-blue-600 p-3">
                   <FileText className="h-6 w-6 text-white" />
@@ -693,6 +642,54 @@ export default function NoticeDetailPage() {
                 Your submission will be considered by the licensing authority
               </p>
             </div>
+
+            {/* Mini-Map with 1km Radius */}
+            {notice.latitude && notice.longitude && (
+              <div className="rounded-3xl border border-white/70 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-slate-900">Location Map</h3>
+                </div>
+                <div className="relative">
+                  <div
+                    ref={setMapContainer}
+                    className="h-[300px] rounded-2xl bg-slate-100"
+                    style={{ width: '100%' }}
+                  />
+                  {/* Map loading overlay */}
+                  {mapLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-2xl">
+                      <div className="text-center">
+                        <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-2 border-blue-100 border-t-blue-600" />
+                        <p className="text-xs text-slate-600">Loading map...</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Map error state */}
+                  {mapError && !mapLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 rounded-2xl">
+                      <div className="text-center px-4">
+                        <MapPin className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+                        <p className="text-xs text-slate-600">Unable to load map</p>
+                        <p className="text-xs text-slate-500 mt-1">Location data available below</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-900">Premises Location</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-700">{notice.premisesAddress}</p>
+                    <p className="text-sm text-slate-600">{notice.premisesPostcode}</p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {notice.latitude.toFixed(6)}, {notice.longitude.toFixed(6)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
