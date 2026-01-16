@@ -312,7 +312,10 @@ export default function NoticesPage() {
         // if (councilId) params.set('council', councilId);
         // else params.delete('council');
         params.delete('council'); // Remove any existing council filter
-        params.delete('radius_km');
+        // Keep the existing radius or use the current radiusValue
+        if (!params.get('radius_km')) {
+          params.set('radius_km', radiusValue.toString());
+        }
         // Default to map view after address selection
         params.set('view', 'map');
       });
@@ -777,9 +780,9 @@ export default function NoticesPage() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
               >
-                <div className="grid gap-4 lg:grid-cols-[70%_30%]">
+                <div className="grid gap-4 lg:grid-cols-[60%_40%]">
                   <section className="relative order-2 lg:order-1">
-                    <div className="relative h-[340px] overflow-hidden rounded-xl shadow-lg sm:h-[420px] md:h-[520px] lg:h-[75vh]">
+                    <div className="relative h-[400px] overflow-hidden rounded-xl shadow-lg sm:h-[480px] md:h-[580px] lg:h-[80vh]">
                       <NoticesMapView
                         notices={filteredResults}
                         loading={loading}
@@ -804,30 +807,30 @@ export default function NoticesPage() {
                     </div>
                   </section>
 
-                  <aside className="order-1 flex h-[340px] flex-col overflow-hidden rounded-xl bg-white shadow-lg sm:h-[420px] md:h-[520px] lg:order-2 lg:h-[75vh]">
-                    <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                  <aside className="order-1 flex h-[400px] flex-col overflow-hidden rounded-xl bg-white shadow-lg sm:h-[480px] md:h-[580px] lg:order-2 lg:h-[80vh]">
+                    <div className="flex-shrink-0 border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white px-5 py-4">
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">
+                          <p className="text-base font-bold text-slate-900">
                             {loading
                               ? 'Updating results…'
-                              : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
+                              : `${filteredResults.length} Notice${filteredResults.length === 1 ? '' : 's'} Found`}
                           </p>
-                          <p className="text-xs text-slate-600">For {searchLabel}</p>
+                          <p className="text-sm text-slate-600 mt-0.5">{searchLabel}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setFiltersOpen(true)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
                         >
-                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                           </svg>
                           Filters
                         </button>
                       </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
                       <SearchResults
                         results={filteredResults}
                         query={searchLabel}

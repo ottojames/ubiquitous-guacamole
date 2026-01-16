@@ -74,7 +74,7 @@ export default function SearchResults({
   const hasMore = maxResults && results.length > maxResults;
 
   const containerClass = layout === 'list'
-    ? 'divide-y divide-slate-100'
+    ? 'divide-y divide-slate-200'
     : 'grid gap-6 md:grid-cols-2 lg:grid-cols-3';
 
   const handleCardClick = (item: NoticeSearchItem) => {
@@ -105,8 +105,8 @@ export default function SearchResults({
             return (
               <article
                 key={item.id}
-                className={`group relative cursor-pointer px-4 py-3 transition-colors hover:bg-slate-50 ${
-                  isActive ? 'bg-blue-50 border-l-4 border-blue-600 -ml-px' : ''
+                className={`group relative cursor-pointer px-5 py-4 transition-all hover:bg-gradient-to-r hover:from-slate-50 hover:to-white ${
+                  isActive ? 'bg-gradient-to-r from-blue-50 to-white border-l-4 border-blue-600 shadow-sm' : ''
                 }`}
                 onClick={() => handleCardClick(item)}
                 onMouseEnter={() => {
@@ -116,35 +116,45 @@ export default function SearchResults({
                   if (onHoverNotice) onHoverNotice(null);
                 }}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    {/* Notice type badge */}
-                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-blue-100 text-blue-800 mb-1">
+                <div className="space-y-2">
+                  {/* Top row: Type badge and deadline */}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800">
                       {item.noticeType}
                     </span>
-
-                    {/* Premises name */}
-                    <h3 className="font-semibold text-sm text-slate-900 truncate">
-                      {item.premisesName || 'Unnamed premises'}
-                    </h3>
-
-                    {/* Address */}
-                    <p className="text-xs text-slate-600 truncate mt-0.5">
-                      {formatAddress(item.premisesAddress) || 'Address not provided'}
-                    </p>
-
-                    {/* Deadline info */}
                     {item.repsDeadline && (
-                      <p className={`text-xs mt-1.5 ${urgencyClass}`}>
+                      <span className={`text-xs font-medium ${urgencyClass}`}>
                         {daysUntilDeadline !== null && daysUntilDeadline >= 0
-                          ? `${daysUntilDeadline} days remaining`
-                          : 'Deadline passed'}
-                      </p>
+                          ? `${daysUntilDeadline}d left`
+                          : 'Expired'}
+                      </span>
                     )}
                   </div>
 
-                  {/* Arrow icon */}
-                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-slate-400 group-hover:text-blue-600 transition-colors mt-1" />
+                  {/* Premises name - larger and not truncated */}
+                  <h3 className="font-semibold text-base text-slate-900 leading-tight">
+                    {item.premisesName || 'Unnamed premises'}
+                  </h3>
+
+                  {/* Address - more visible */}
+                  <p className="text-sm text-slate-600 leading-snug">
+                    {formatAddress(item.premisesAddress) || 'Address not provided'}
+                  </p>
+
+                  {/* View action */}
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/notices/${item.id}`);
+                      }}
+                    >
+                      View Notice
+                    </button>
+                    <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                  </div>
                 </div>
               </article>
             );
