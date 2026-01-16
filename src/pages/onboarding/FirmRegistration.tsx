@@ -24,7 +24,7 @@ interface FirmData {
   // Step 1: Welcome (no data)
   // Step 2: Firm Information
   name: string;
-  sraNumber: string;
+  // sraNumber removed as per FIX-004
   // Step 3: Practice Areas
   practiceAreas: string[];
   // Step 4: Office Details
@@ -86,7 +86,7 @@ export default function FirmRegistration() {
 
   const [firmData, setFirmData] = useState<FirmData>({
     name: '',
-    sraNumber: '',
+    // sraNumber removed as per FIX-004
     practiceAreas: [],
     address: '',
     city: '',
@@ -194,7 +194,7 @@ export default function FirmRegistration() {
         break;
 
       case 'info':
-        if (!firmData.name || !firmData.sraNumber) {
+        if (!firmData.name) {
           setError('Please fill in all required fields');
           return;
         }
@@ -405,21 +405,7 @@ export default function FirmRegistration() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SRA Number *
-                </label>
-                <input
-                  type="text"
-                  value={firmData.sraNumber}
-                  onChange={(e) => setFirmData({ ...firmData, sraNumber: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="e.g., 123456"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Your Solicitors Regulation Authority registration number
-                </p>
-              </div>
+              {/* Removed SRA Number field as per FIX-004 */}
             </div>
           )}
 
@@ -758,10 +744,7 @@ export default function FirmRegistration() {
                       <dt className="text-gray-600">Name:</dt>
                       <dd className="font-medium">{firmData.name}</dd>
                     </div>
-                    <div className="flex justify-between">
-                      <dt className="text-gray-600">SRA Number:</dt>
-                      <dd className="font-medium">{firmData.sraNumber}</dd>
-                    </div>
+                    {/* SRA Number removed as per FIX-004 */}
                   </dl>
                 </div>
 

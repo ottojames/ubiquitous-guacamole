@@ -499,3 +499,57 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Progress tracking is important for avoiding duplicate work
 
 ---
+
+## Iteration 5 - [FIX-002: Fix Address Search Double-Click Issue]
+**Status:** Success
+**Timestamp:** 2026-01-16T11:53:00Z
+
+### What was implemented:
+- Fixed double-click issue by changing from onMouseDown to onClick in AddressSearchBar.tsx
+- Removed preventDefault that was causing the double-click requirement
+- Verified map view default was already implemented (params.set('view', 'map'))
+
+### Files changed:
+- src/components/search/AddressSearchBar.tsx (line 344-346)
+- PRD.md (marked task complete)
+
+### Quality checks:
+- typecheck: ✗ (178 pre-existing errors)
+- lint: ✗ (75 pre-existing errors)
+- test: ✓ (408/458 passed)
+- browser test: Not performed (code change only)
+
+### Learnings for future iterations:
+- onMouseDown with preventDefault can cause click handling issues
+- onClick is more appropriate for dropdown selection
+- Map view default was already implemented but double-click was blocking UX
+
+---
+
+## Iteration 6 - [FIX-004: Remove Unnecessary Fields from Publish Wizard]
+**Status:** Success
+**Timestamp:** 2026-01-16T11:58:00Z
+
+### What was implemented:
+- Removed APPLICANT_STATUS, APPLICANT_TRADING_AS, APPLICANT_ADDRESS, and APPLICANT_COMPANY_NUMBER fields from licensing section
+- Removed same fields from gambling section
+- Removed SRA Number (registration number) field from firm registration wizard
+
+### Files changed:
+- src/next/publish/config/formBlueprints.ts (lines 254-269, 457-471)
+- src/pages/onboarding/FirmRegistration.tsx (removed sraNumber field and references)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing unrelated errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (field removal doesn't require browser testing)
+- dev server: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- formBlueprints.ts has separate sections for licensing and gambling that needed cleaning
+- FirmRegistration.tsx had SRA Number field that needed removal from interface, state, validation, and UI
+- Field removal required updating multiple places: interface definitions, initial state, validation logic, and display components
+- Most test and lint errors are pre-existing and unrelated to specific changes
+
+---

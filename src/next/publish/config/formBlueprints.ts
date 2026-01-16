@@ -261,36 +261,10 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               required: true,
               span: 12,
             }),
-            field("APPLICANT_STATUS", {
-              label: "Applicant status",
-              type: "select",
-              span: 12,
-              required: false,
-              options: [
-                { value: "individual", label: "Individual" },
-                { value: "limited-company", label: "Limited company" },
-                { value: "llp", label: "Limited liability partnership (LLP)" },
-                { value: "partnership", label: "Partnership" },
-                { value: "charitable-trust", label: "Charitable trust" },
-                { value: "other", label: "Other" },
-              ],
-            }),
-            field("APPLICANT_TRADING_AS", {
-              label: "Trading name (optional)",
-              span: 12,
-            }),
-            field("APPLICANT_ADDRESS", {
-              label: "Applicant address",
-              type: "textarea",
-              rows: 3,
-              required: true,
-              span: 12,
-              hint: "Include postcode and country if outside the UK.",
-            }),
-            field("APPLICANT_COMPANY_NUMBER", {
-              label: "Company number (optional)",
-              span: 12,
-            }),
+            // Removed APPLICANT_STATUS as per FIX-004
+            // Removed APPLICANT_TRADING_AS as per FIX-004
+            // Removed APPLICANT_ADDRESS as per FIX-004 (duplicate field)
+            // Removed APPLICANT_COMPANY_NUMBER as per FIX-004
           ],
         },
         {
@@ -490,36 +464,10 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               required: true,
               span: 12,
             }),
-            field("APPLICANT_STATUS", {
-              label: "Applicant status",
-              type: "select",
-              span: 12,
-              required: false,
-              options: [
-                { value: "individual", label: "Individual" },
-                { value: "limited-company", label: "Limited company" },
-                { value: "llp", label: "Limited liability partnership (LLP)" },
-                { value: "partnership", label: "Partnership" },
-                { value: "charitable-trust", label: "Charitable trust" },
-                { value: "other", label: "Other" },
-              ],
-            }),
-            field("APPLICANT_TRADING_AS", {
-              label: "Trading name (optional)",
-              span: 12,
-            }),
-            field("APPLICANT_ADDRESS", {
-              label: "Applicant address",
-              type: "textarea",
-              rows: 3,
-              required: true,
-              span: 12,
-              hint: "Include postcode and country if outside the UK.",
-            }),
-            field("APPLICANT_COMPANY_NUMBER", {
-              label: "Company number (optional)",
-              span: 12,
-            }),
+            // Removed APPLICANT_STATUS as per FIX-004
+            // Removed APPLICANT_TRADING_AS as per FIX-004
+            // Removed APPLICANT_ADDRESS as per FIX-004 (duplicate field)
+            // Removed APPLICANT_COMPANY_NUMBER as per FIX-004
           ],
         },
         {
