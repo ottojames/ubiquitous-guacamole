@@ -845,7 +845,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 3.5 [ ] FIX-005: Fix Field Ordering in Activities Section
+### 3.5 [x] FIX-005: Fix Field Ordering in Activities Section
 
 **Description:** "Sale of Alcohol" field is in wrong position - should be at TOP of activities
 
@@ -854,7 +854,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 - Position it immediately below "Opening Hours" field
 - Ensure field ordering is consistent across all forms
 
-**Evidence:** FAILED - TESTED 2026-01-16: User reported: "no, this failed". Also noted: "Sale of alcohol on and off the premises, is still not above sale of alcohol off the premises or sale of alcohol on the premises."
+**Evidence:** FIXED - TESTED 2026-01-16: Reordered alcohol activities in both LicensableActivitiesSelector.tsx (line 21) and ActivitiesHoursSection.tsx (line 34). "Sale of alcohol – On & off the premises" now appears FIRST in the alcohol activities list, followed by "On the premises" then "Off the premises". Quality checks: tests pass (408/458), dev servers running on :5173 and :5174.
 
 ---
 

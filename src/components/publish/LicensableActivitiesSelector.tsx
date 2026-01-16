@@ -18,9 +18,9 @@ const LICENSABLE_ACTIVITIES: ActivityGroup[] = [
     id: "alcohol",
     label: "Sale of alcohol",
     children: [
+      { id: "alcohol_on_off", label: "On & off the premises" },
       { id: "alcohol_on", label: "On the premises (on-sales)", description: "Consumption on the premises" },
       { id: "alcohol_off", label: "Off the premises (off-sales)", description: "Takeaway or delivery" },
-      { id: "alcohol_on_off", label: "On & off the premises" },
     ],
   },
   {

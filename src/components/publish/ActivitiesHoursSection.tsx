@@ -31,6 +31,12 @@ type ActivityDefinition = {
 
 const ACTIVITY_DEFINITIONS: ActivityDefinition[] = [
   {
+    key: "alcohol_on_off",
+    label: "Sale of alcohol – On & off the premises",
+    group: "alcohol",
+    info: "Retail sale of alcohol for consumption both on and off the premises. DPS is required for any Premises Licence authorising sale of alcohol.",
+  },
+  {
     key: "alcohol_on",
     label: "Sale of alcohol – On the premises (on-sales)",
     group: "alcohol",
@@ -41,12 +47,6 @@ const ACTIVITY_DEFINITIONS: ActivityDefinition[] = [
     label: "Sale of alcohol – Off the premises (off-sales)",
     group: "alcohol",
     info: "Retail sale of alcohol for consumption off the premises (takeaway or delivery). DPS is required for any Premises Licence authorising sale of alcohol.",
-  },
-  {
-    key: "alcohol_on_off",
-    label: "Sale of alcohol – On & off the premises",
-    group: "alcohol",
-    info: "Retail sale of alcohol for consumption both on and off the premises. DPS is required for any Premises Licence authorising sale of alcohol.",
   },
   {
     key: "live_music",
