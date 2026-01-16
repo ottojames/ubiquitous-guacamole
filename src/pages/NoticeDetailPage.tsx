@@ -300,6 +300,37 @@ export default function NoticeDetailPage() {
 
       {/* Main Content */}
       <main className={`${UI.container} py-12`}>
+        {/* PROMINENT REPRESENTATION BANNER - IMPOSSIBLE TO MISS */}
+        <div className="mb-8 animate-pulse">
+          <div className="rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-1">
+            <div className="rounded-3xl bg-white p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-blue-600 p-3">
+                    <MessageSquare className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Submit Your Representation</h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                      {notice.repsDeadline ? (
+                        <>Deadline: {formatDate(notice.repsDeadline)} • {getDaysRemaining(notice.repsDeadline)?.days || 0} days remaining</>
+                      ) : (
+                        <>This notice is open for public representations</>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate(`/notices/${id}/respond`)}
+                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-lg whitespace-nowrap"
+                >
+                  Submit Representation →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -897,6 +928,39 @@ export default function NoticeDetailPage() {
             </div>
           </div>
         )}
+
+        {/* FLOATING ACTION BUTTON - ALWAYS VISIBLE */}
+        <div className="fixed bottom-8 right-8 z-50 lg:hidden">
+          <button
+            onClick={() => navigate(`/notices/${id}/respond`)}
+            className="group flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200"
+          >
+            <MessageSquare className="h-6 w-6" />
+            <span className="font-bold text-lg">Submit Representation</span>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full animate-ping"></div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full"></div>
+          </button>
+        </div>
+
+        {/* DESKTOP FLOATING ACTION BUTTON - Bottom Left */}
+        <div className="hidden lg:block fixed bottom-8 left-8 z-50">
+          <button
+            onClick={() => navigate(`/notices/${id}/respond`)}
+            className="group flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-5 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-200"
+          >
+            <MessageSquare className="h-7 w-7" />
+            <div>
+              <span className="block font-bold text-lg">Submit Your Representation</span>
+              {notice.repsDeadline && (
+                <span className="block text-sm opacity-90">
+                  {getDaysRemaining(notice.repsDeadline)?.days || 0} days remaining
+                </span>
+              )}
+            </div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full animate-ping"></div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xs">!</div>
+          </button>
+        </div>
       </main>
 
       {/* Footer */}

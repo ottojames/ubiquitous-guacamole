@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test FIX-008: Representation Form Visibility</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { color: #1e40af; }
+        .test-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            background: #f9fafb;
+        }
+        .success { color: #059669; font-weight: bold; }
+        .fail { color: #dc2626; font-weight: bold; }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>FIX-008: Test Representation Form Visibility</h1>
+
+    <div class="test-section">
+        <h2>Test URL: The Pilot Inn</h2>
+        <p>Direct link to The Pilot Inn notice detail page:</p>
+        <a href="http://localhost:5173/notices/550e8400-e29b-41d4-a716-446655440001" target="_blank">
+            http://localhost:5173/notices/550e8400-e29b-41d4-a716-446655440001
+        </a>
+    </div>
+
+    <div class="test-section">
+        <h2>What to Look For:</h2>
+        <ul>
+            <li><span class="success">✓</span> Animated banner at top of page saying "Submit Your Representation"</li>
+            <li><span class="success">✓</span> "Have Your Say" card in right column (desktop) or below content (mobile)</li>
+            <li><span class="success">✓</span> Floating action button (bottom-right on mobile, bottom-left on desktop)</li>
+            <li><span class="success">✓</span> All three should link to /notices/550e8400-e29b-41d4-a716-446655440001/respond</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Live Preview:</h2>
+        <iframe src="http://localhost:5173/notices/550e8400-e29b-41d4-a716-446655440001"></iframe>
+    </div>
+
+    <script>
+        console.log('Test page loaded. Click the link above to test representation form visibility.');
+    </script>
+</body>
+</html>

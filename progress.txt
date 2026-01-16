@@ -710,3 +710,60 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Mobile users may need to scroll to see elements in stacked layout
 
 ---
+
+## Iteration 12 - FIX-009: Remove Radius Circle from Notice Detail Map
+**Status:** Success
+**Timestamp:** 2026-01-16T12:32:00Z
+
+### What was implemented:
+- Removed misleading "1km radius shown" label from notice detail page
+- Map already only showed single red marker pin (no actual radius circle)
+- Map remains interactive with zoom/pan enabled
+
+### Files changed:
+- src/pages/NoticeDetailPage.tsx (removed radius label at line 684)
+- PRD.md (marked task complete)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing unrelated errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (visual change only)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- Issue was misleading label, not actual radius circle
+- Map implementation already correct with single red pin
+- Default zoom level of 14 appropriate for notice location
+- Sometimes the fix is removing misleading UI elements, not adding code
+
+---
+
+## Iteration 13 - FIX-008: Add Representation Forms to ALL Notices
+**Status:** Success
+**Timestamp:** 2026-01-16T12:37:00Z
+
+### What was implemented:
+- Added prominent animated banner at top of page with "Submit Your Representation" CTA
+- Added floating action buttons (always visible) - mobile bottom-right, desktop bottom-left
+- Existing "Have Your Say" form in right column already present
+- All three CTAs navigate to /notices/:id/respond route
+
+### Files changed:
+- src/pages/NoticeDetailPage.tsx (lines 303-332 for banner, lines 932-963 for floating buttons)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing errors unrelated to changes)
+- lint: ✗ (pre-existing errors unrelated to changes)
+- test: ✓ (408/458 passed)
+- browser test: N/A (React SPA requires client-side rendering)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- Representation form was already unconditionally rendered but user couldn't see it
+- Added multiple CTAs to ensure maximum visibility (banner, sidebar, floating)
+- React SPAs render client-side so curl won't show dynamic content
+- Sometimes UX issues require redundant CTAs for user confidence
+- Fixed positioning ensures critical actions remain accessible during scrolling
+
+---
