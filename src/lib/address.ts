@@ -654,10 +654,12 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
       .map((item, index): AddressSuggestion | null => {
         if (!item || typeof item !== 'object') return null;
 
-        // Backend returns { id, label } format - parse the label
+        // Backend returns { id, label, postcode? } format
         if (item.label && typeof item.label === 'string') {
           const parts = item.label.split(',').map((p: string) => p.trim());
-          const postcode = parts.find((p: string) => normalisePostcode(p));
+          // Use postcode from item if available, otherwise extract from label
+          const postcodeFromLabel = parts.find((p: string) => normalisePostcode(p));
+          const postcode = item.postcode || postcodeFromLabel;
           const line1 = parts[0] || '';
           const town = parts[parts.length - 1] || '';
 
@@ -940,6 +942,21 @@ export async function resolveToPostcodeOrNull(
   const suggestion = typeof inputOrSuggestion === 'object' ? inputOrSuggestion : null;
   if (suggestion?.postcode) {
     return compressPostcode(suggestion.postcode);
+  }
+
+  // If we have a GetAddress suggestion with an ID, resolve it first
+  if (suggestion?.id && !suggestion?.postcode) {
+    try {
+      const response = await fetch(`/api/address/resolve?id=${encodeURIComponent(suggestion.id)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.result?.postcode) {
+          return compressPostcode(data.result.postcode);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to resolve address:', error);
+    }
   }
 
   const text = typeof inputOrSuggestion === 'string'

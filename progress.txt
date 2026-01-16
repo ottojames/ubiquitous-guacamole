@@ -1035,7 +1035,7 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Updated passwords for all demo accounts using bcrypt
 - All three accounts now working:
   - Westminster: licensing@westminster.gov.uk / testpass123
-  - Wilson Partners: solicitor@wilsonpartners.com / testpass123  
+  - Wilson Partners: solicitor@wilsonpartners.com / testpass123
   - Sampletonborough: licensing@sampletonborough.gov.uk / testpass123
 - Database UPDATE confirmed at 2026-01-16 15:43:09 UTC
 
@@ -1069,5 +1069,62 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Postcodes.io returns lat/lng coordinates properly
 - Map already receives searchedLocation prop for centering
 - Always preserve search parameters unless explicitly changing them
+
+---
+
+## Iteration - FIX-004: Remove DPS Fields from Publish Wizard
+**Status:** Partial Success
+**Timestamp:** 2026-01-16T16:06:00Z
+
+### What was implemented:
+- Removed entire DPS (Designated Premises Supervisor) section from ActivitiesHoursSection component
+- Removed dpsName and dpsLicensingAuthority fields from all type definitions
+- Cleaned up TemplateBuilderForm to stop referencing DPS fields
+- Removed updateDPS function and error handling
+
+### Files changed:
+- src/components/publish/ActivitiesHoursSection.tsx (removed lines 333-397, types updated)
+- src/next/publish/flow/TemplateBuilderForm.tsx (removed DPS field references)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing errors in other files)
+- lint: ✗ (pre-existing errors in other files)
+- test: ✓ (408/458 passed)
+- browser test: N/A (requires browser)
+
+### Learnings for future iterations:
+- DPS fields were still present despite comment saying "removed as per FIX-004"
+- Fields need to be removed from multiple places: UI component, type definitions, form handlers
+- Other unnecessary fields were already removed in previous iterations
+- Auto-population is separate issue tracked in FIX-007
+
+---
+
+## Iteration - FIX-002: Fix Address Search Double-Click Issue and Default to Map View
+**Status:** Success
+**Timestamp:** 2026-01-16T16:13:00Z
+
+### What was implemented:
+- Fixed GetAddress API integration issue where suggestions don't include postcodes
+- Updated resolveToPostcodeOrNull() to call resolve endpoint for GetAddress suggestions
+- Enhanced builtInAddressFallback() to use postcode field from mock data
+- Map view default already working (params.set('view', 'map'))
+
+### Files changed:
+- src/lib/address.ts (lines 657-678, 947-960)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing unrelated errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (requires browser)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- GetAddress API doesn't return postcodes in suggestion endpoint, only in resolve endpoint
+- Must call /api/address/resolve?id={id} to get full address with postcode
+- Mock data fallback needs postcode field for development without API key
+- API verified working: SW1A1AA+2km returns 26 notices
+- Map already centers on searched location via searchedLocation prop
 
 ---

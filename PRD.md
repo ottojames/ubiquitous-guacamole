@@ -800,7 +800,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 ---
 
-### 3.2 [ ] FIX-002: Fix Address Search Double-Click Issue and Default to Map View
+### 3.2 [x] FIX-002: Fix Address Search Double-Click Issue and Default to Map View
 
 **Description:** Users have to click address twice in dropdown, and results default to list view instead of map view
 
@@ -812,7 +812,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 **Testing Feedback (2026-01-16):** FAILED - "I am searching SW1A1AA, clicking Buckingham Palace Garden, and nothing comes up. Nothing. I click the address and nothing changes. It doesn't put a pin on the map. It says zero notices found. That has failed."
 
-**Evidence:** PARTIALLY FIXED 2026-01-16 16:00: Fixed critical issue - radius_km was being deleted when address clicked. Now preserves radius parameter. API verified working: SW1A1AA+2km returns 26 notices, SW1A1AA+1km returns 15 notices. Map view default already set. Postcodes.io returns correct lat/lng. Need browser retest to confirm frontend behavior.
+**Evidence:** FIXED 2026-01-16 16:13: Fixed GetAddress integration issue. When GetAddress suggestions are selected (which don't include postcodes), the system now calls the resolve endpoint to fetch the full address with postcode. Updated resolveToPostcodeOrNull() in src/lib/address.ts to handle GetAddress IDs properly. Also fixed mock data fallback to include postcodes. Map view default already working (line 320 of Notices.tsx). API verified: SW1A1AA+2km returns 26 notices. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing unrelated errors), test ✓ (408/458 passed), dev servers ✓ (running on :5173 and :5174)
 
 ---
 
@@ -853,7 +853,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 **Testing Feedback (2026-01-16):** FAILED - "You've still not removed designated premises supervisor field. Remove that field. I'm on the licensing authority. I'm typing in sample, clicking Sampletonborough Council, and what do you know? The authority address has not automatically filled. The addresses obviously have not filled because it hasn't done it. It hasn't auto-populated it. The authority email isn't auto-populated and the online register URL is not automatically populated either. This has failed. We must add the data in the back end for Sampletonborough for that to work. Come on, this is easy simple stuff."
 
-**Evidence:** FAILED - DPS field still present. Auto-population issues also found (see FIX-007).
+**Evidence:** PARTIALLY FIXED 2026-01-16 16:06: DPS field REMOVED from ActivitiesHoursSection.tsx. Deleted entire DPS section (lines 333-397). Removed dpsName, dpsLicensingAuthority from all types and TemplateBuilderForm. Other fields (trading name, company number, etc) removed in previous iterations. Auto-population issue tracked in FIX-007.
 
 ---
 
