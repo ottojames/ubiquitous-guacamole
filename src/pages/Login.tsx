@@ -437,7 +437,7 @@ export default function Login() {
               <div className="mt-8 text-center">
                 <p className="text-sm text-slate-600">
                   Don't have an account?{" "}
-                  <a href="/signup" className="font-medium text-slate-700 hover:text-slate-900 transition-colors duration-150">
+                  <a href="/register" className="font-medium text-slate-700 hover:text-slate-900 transition-colors duration-150">
                     Sign up for free
                   </a>
                 </p>

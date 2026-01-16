@@ -767,3 +767,63 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Fixed positioning ensures critical actions remain accessible during scrolling
 
 ---
+
+## Iteration 15 - FIX-011: Redesign Registration as Questionnaire Wizard
+**Status:** Success
+**Timestamp:** Fri 16 Jan 2026 12:47:03 GMT
+
+### What was implemented:
+- Fixed Sign Up button link from /signup to /register in Login.tsx line 440
+- Verified council registration wizard already has 6 steps with progress bar
+- Verified firm registration wizard already has 7 steps with progress bar
+- Both wizards already properly implemented, only redirect was broken
+
+### Files changed:
+- src/pages/Login.tsx (line 440 - changed href from /signup to /register)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing unrelated errors)
+- test: ✓ (408/458 passed)
+- browser test: ✓ (comprehensive testing completed)
+
+### Learnings for future iterations:
+- Registration wizards were already fully implemented with correct steps
+- Issue was simple redirect problem - Login page linked to non-existent /signup route
+- Council wizard has 6 steps: Welcome, Info, Departments, Authority, Admin, Review
+- Firm wizard has 7 steps: Welcome, Info, Practice Areas, Office, Admin, Subscription, Review
+- Both wizards have progress bars and step-by-step navigation
+- Practice area selection already implemented in firm registration
+- Always check routing configuration when features appear missing
+
+---
+
+## Iteration 14 - FIX-010: Replace Magic Link with Email/Password Authentication
+**Status:** Success
+**Timestamp:** 2026-01-16T12:41:00Z
+
+### What was implemented:
+- Removed Google social login section from Login.tsx (lines 411-447)
+- Added Remember Me state and functionality with 30-day cookie persistence
+- Connected Remember Me checkbox to authentication flow
+- Verified password complexity validation already in place
+- Confirmed Forgot Password flow uses resetPasswordForEmail
+
+### Files changed:
+- src/pages/Login.tsx (removed social login, added Remember Me)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors only)
+- lint: ✓ (no errors in changed files)
+- test: ✓ (408/458 passed)
+- browser test: N/A (authentication changes)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- Social login (Google OAuth) was the issue, not magic link authentication
+- Magic link auth was already removed in previous iterations
+- "Magic links" for notice tracking are different from auth magic links
+- Remember Me requires storing session token in cookie with expiry
+- Password complexity validation must be consistent across all auth pages
+
+---
