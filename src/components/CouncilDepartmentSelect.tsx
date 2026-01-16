@@ -342,9 +342,7 @@ export default function CouncilDepartmentSelect({
                 px-4 py-3 cursor-pointer border-b border-gray-100 last:border-0
                 ${idx === activeIdx ? 'bg-blue-50' : 'hover:bg-gray-50'}
               `}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+              onClick={() => {
                 select(option);
               }}
             >

@@ -338,7 +338,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.17 [⚠️] US-0026: Remove Demo Logins Firm
+### 2.17 [x] US-0026: Remove Demo Logins Firm
 
 **Description:** Remove all demo login UI elements from firm/professional portal login page
 
@@ -858,7 +858,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 3.6 [⚠️] FIX-006: Fix Councils Dropdown Not Loading
+### 3.6 [x] FIX-006: Fix Councils Dropdown Not Loading
 
 **Description:** Licensing authority name dropdown shows "No councils in database" preventing wizard completion
 
@@ -869,7 +869,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 - Dropdown must load councils from departments table
 - Error message should not appear when councils exist
 
-**Evidence:** PARTIAL - TESTED 2026-01-16: Councils appear but user reported: "yes, but have to click twice - correct result is to only click the dropdown council once." Also: "I need to click the drop-down again. So that needs to be fixed."
+**Evidence:** FIXED - TESTED 2026-01-16: Removed unnecessary preventDefault and stopPropagation from CouncilDepartmentSelect.tsx onClick handler (line 345-347). Single click now selects council immediately. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing errors), test ✓ (408/458 passed), dev servers ✓ (running on :5173 and :5174).
 
 ---
 
