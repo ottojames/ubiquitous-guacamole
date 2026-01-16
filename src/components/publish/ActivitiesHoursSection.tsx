@@ -115,8 +115,6 @@ export type ActivitySchedule = {
 export type ActivitiesHoursData = {
   openingHours: Record<DayKey, DayHours>;
   activities: Partial<Record<ActivityKey, ActivitySchedule>>;
-  dpsName?: string;
-  dpsLicensingAuthority?: string;
 };
 
 // ============================================================================
@@ -130,8 +128,6 @@ export interface ActivitiesHoursSectionProps {
   errors?: {
     openingHours?: string[];
     activities?: Record<ActivityKey, string[]>;
-    dpsName?: string[];
-    dpsLicensingAuthority?: string[];
   };
 }
 
@@ -282,9 +278,6 @@ export default function ActivitiesHoursSection({
     });
   };
 
-  const updateDPS = (field: "dpsName" | "dpsLicensingAuthority", val: string) => {
-    onChange({ ...value, [field]: val });
-  };
 
   return (
     <div className="space-y-6">
@@ -330,71 +323,7 @@ export default function ActivitiesHoursSection({
         ))}
       </div>
 
-      {/* DPS fields (show only when alcohol is selected) */}
-      {hasAlcohol && (
-        <div className="space-y-4 rounded-xl border border-blue-200/70 bg-blue-50/50 p-5">
-          <div className="space-y-1">
-            <h4 className="text-[13px] font-semibold text-blue-900">
-              Designated Premises Supervisor (DPS)
-            </h4>
-            <p className="text-[12px] leading-relaxed text-blue-700">
-              Required when alcohol is supplied under a Premises Licence.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="dps-name" className="block text-[13px] font-medium text-slate-700">
-                DPS name <span className="text-rose-500">*</span>
-              </label>
-              <input
-                id="dps-name"
-                type="text"
-                value={value.dpsName || ""}
-                onChange={(e) => updateDPS("dpsName", e.target.value)}
-                className={`w-full rounded-lg border ${
-                  errors?.dpsName?.length
-                    ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
-                    : "border-slate-300 focus:border-blue-500 focus:ring-blue-500/10"
-                } bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-400 focus:outline-none focus:ring-4`}
-                maxLength={200}
-                placeholder="e.g., John Smith"
-                required
-                aria-required="true"
-                aria-invalid={!!errors?.dpsName?.length}
-              />
-              {errors?.dpsName?.map((error, i) => (
-                <p key={i} className="text-[12px] leading-relaxed text-rose-600">
-                  {error}
-                </p>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="dps-authority" className="block text-[13px] font-medium text-slate-700">
-                DPS licensing authority
-              </label>
-              <input
-                id="dps-authority"
-                type="text"
-                value={value.dpsLicensingAuthority || ""}
-                onChange={(e) => updateDPS("dpsLicensingAuthority", e.target.value)}
-                className={`w-full rounded-lg border ${
-                  errors?.dpsLicensingAuthority?.length
-                    ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
-                    : "border-slate-300 focus:border-blue-500 focus:ring-blue-500/10"
-                } bg-white px-3.5 py-2.5 text-[14px] text-slate-900 placeholder:text-slate-400 transition-all duration-150 hover:border-slate-400 focus:outline-none focus:ring-4`}
-                maxLength={200}
-              />
-              {errors?.dpsLicensingAuthority?.map((error, i) => (
-                <p key={i} className="text-[12px] leading-relaxed text-rose-600">
-                  {error}
-                </p>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* DPS fields removed as per FIX-004 - Designated Premises Supervisor no longer required */}
     </div>
   );
 }

@@ -182,8 +182,6 @@ export default function TemplateBuilderForm({
         Sun: null,
       },
       activities: {},
-      dpsName: getValue("DPS_NAME"),
-      dpsLicensingAuthority: getValue("DPS_LICENSING_AUTHORITY"),
     };
 
     // Parse stored JSON if exists
@@ -207,9 +205,7 @@ export default function TemplateBuilderForm({
       // Store as JSON in ACTIVITIES_HOURS_DATA field
       onChange(["ACTIVITIES_HOURS_DATA"], JSON.stringify(data));
 
-      // Also update individual fields for compatibility
-      setValue("DPS_NAME", data.dpsName || "", { fromUser: true });
-      setValue("DPS_LICENSING_AUTHORITY", data.dpsLicensingAuthority || "", { fromUser: true });
+      // DPS fields removed as per FIX-004
 
       // Generate LICENSABLE_ACTIVITIES summary from selected activities
       const selectedActivities = Object.entries(data.activities)
@@ -419,10 +415,7 @@ export default function TemplateBuilderForm({
               value={activitiesHoursData}
               onChange={updateActivitiesHoursData}
               showClubActivities={definition.id.includes("club")}
-              errors={{
-                dpsName: errors?.["DPS_NAME"],
-                dpsLicensingAuthority: errors?.["DPS_LICENSING_AUTHORITY"],
-              }}
+              errors={{}}
             />
           </section>
         );

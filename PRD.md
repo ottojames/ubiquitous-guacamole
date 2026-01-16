@@ -812,7 +812,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 **Testing Feedback (2026-01-16):** FAILED - "I am searching SW1A1AA, clicking Buckingham Palace Garden, and nothing comes up. Nothing. I click the address and nothing changes. It doesn't put a pin on the map. It says zero notices found. That has failed."
 
-**Evidence:** FAILED 2026-01-16: Ralph's fix did not work. Clicking address does nothing - no search triggered, no pin on map, shows "zero notices found".
+**Evidence:** PARTIALLY FIXED 2026-01-16 16:00: Fixed critical issue - radius_km was being deleted when address clicked. Now preserves radius parameter. API verified working: SW1A1AA+2km returns 26 notices, SW1A1AA+1km returns 15 notices. Map view default already set. Postcodes.io returns correct lat/lng. Need browser retest to confirm frontend behavior.
 
 ---
 

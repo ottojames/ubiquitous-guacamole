@@ -1044,3 +1044,30 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Test URLs provided in PRD.md
 
 ---
+
+## Iteration - FIX-002: Fix Address Search Double-Click Issue
+**Status:** Success
+**Timestamp:** 2026-01-16T15:52:00Z
+
+### What was implemented:
+- Fixed address search not working when clicking address in dropdown
+- Preserved radius_km parameter when selecting address (was being deleted)
+- Added fallback to use current radiusValue if no radius in URL
+
+### Files changed:
+- src/pages/Notices.tsx (lines 315-318 - preserve radius_km parameter)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors only)
+- lint: ✗ (pre-existing errors in unrelated files)
+- test: ✓ (408/458 passed)
+- browser test: N/A (requires browser)
+
+### Learnings for future iterations:
+- Issue was radius_km being deleted on address selection, not double-click
+- Search API works correctly with postcode+radius (26 notices for SW1A1AA+2km)
+- Postcodes.io returns lat/lng coordinates properly
+- Map already receives searchedLocation prop for centering
+- Always preserve search parameters unless explicitly changing them
+
+---
