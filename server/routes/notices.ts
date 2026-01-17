@@ -1085,6 +1085,19 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
       const latitude = extractLatitude(row);
       const longitude = extractLongitude(row);
 
+      // Calculate distance if we have search coordinates
+      let distance: number | null = null;
+      if (radiusCoordinates && typeof latitude === 'number' && typeof longitude === 'number') {
+        const R = 6371; // Earth's radius in km
+        const dLat = (latitude - radiusCoordinates.latitude) * Math.PI / 180;
+        const dLon = (longitude - radiusCoordinates.longitude) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                 Math.cos(radiusCoordinates.latitude * Math.PI / 180) * Math.cos(latitude * Math.PI / 180) *
+                 Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        distance = R * c;
+      }
+
       return {
         id: row.id,
         noticeType: row.notice_type,
@@ -1100,6 +1113,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
         viewUrl: firstNonEmptyString(extras.viewUrl, row?.view_url),
         latitude,
         longitude,
+        distance,
       };
     });
 

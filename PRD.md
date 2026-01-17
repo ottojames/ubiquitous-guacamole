@@ -849,7 +849,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 ---
 
-### 3.4 [ ] ENHANCEMENT-001: Add Distance Filter to Notice List
+### 3.4 [x] ENHANCEMENT-001: Add Distance Filter to Notice List
 
 **Description:** Add ability to filter/sort notices by distance in the right-hand rail list when viewing map
 
@@ -861,5 +861,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 - Allow switching between distance sort and date sort
 
 **User Request (2026-01-16 19:00):** "Perfect! there is one change that I want to make. Um I think it'd be really good if you could filter in the list on the right-hand rail by like nearest distance. I think that would be really, really useful as an addition for the, um, for the user who is searching."
+
+**Evidence:** IMPLEMENTED 2026-01-17: Added distance calculation in server API (server/routes/notices.ts lines 1089-1099), distance field to NoticeSearchItem type (src/lib/notices.ts line 31), distance display in both list and grid views (src/components/home/SearchResults.tsx lines 106-114, 160-164, 224-230). Sort dropdown already had "Nearest" option (src/pages/Notices.tsx line 696). API test successful: http://localhost:5174/api/notices/search?postcode=SW1A1AA&radius_km=2&sort=distance.asc returns notices with distance field, sorted nearest first (0km, 0.049km, 0.356km, etc). Dev servers running on :5173 and :5174.
 
 ---

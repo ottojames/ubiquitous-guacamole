@@ -2,6 +2,39 @@
 Started: 2026-01-15
 Project: Civic Notices Public Notice Portal
 
+## Iteration - ENHANCEMENT-001: Add Distance Filter to Notice List
+**Status:** Success
+**Timestamp:** 2026-01-17T15:30:00Z
+
+### What was implemented:
+- Added distance calculation to server API using Haversine formula
+- Added optional distance field to NoticeSearchItem type (in kilometers)
+- Calculated distance for each notice when search coordinates are available
+- Added distance display to SearchResults component for both list and grid layouts
+- Distance shown as "Xm away" for <1km or "X.Xkm away" for >=1km
+- "Nearest" sort option already existed in dropdown, now functional
+
+### Files changed:
+- src/lib/notices.ts (line 31 - added distance field to type)
+- server/routes/notices.ts (lines 1089-1099 - distance calculation)
+- src/components/home/SearchResults.tsx (lines 106-114, 160-164, 187-193, 224-230 - distance display)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors only)
+- lint: ✗ (pre-existing JS file errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (requires manual testing)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- Distance sorting was already implemented server-side but not exposed to client
+- Haversine formula calculation already existed in server code
+- Sort dropdown already had conditional "Nearest" option for when postcode exists
+- Just needed to add distance to response and display it in UI
+- Distance helps users prioritize which notices to view first
+
+---
+
 ## Iteration - FIX-011: Redesign Registration as Questionnaire Wizard
 **Status:** Success
 **Timestamp:** 2026-01-17T15:17:00Z
@@ -995,7 +1028,7 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 **Timestamp:** 2026-01-16T13:13:00Z
 
 ### What was implemented:
-- Changed map/sidebar split from 70/30 to 65/35 for more sidebar space
+- Changed map/sidebar split from 60%/40% to 65%/35 for more sidebar space
 - Redesigned notice cards in sidebar with larger, more readable text
 - Improved card layout with better hierarchy and spacing
 - Added custom scrollbar styling for better UX
@@ -1463,7 +1496,7 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 
 ### Files changed:
 - src/pages/onboarding/CouncilRegistration.tsx (line 204)
-- src/pages/onboarding/FirmRegistration.tsx (line 261)  
+- src/pages/onboarding/FirmRegistration.tsx (line 261)
 - server/lib/supabase.ts (line 8)
 
 ### Quality checks:

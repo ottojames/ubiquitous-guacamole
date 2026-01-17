@@ -102,6 +102,17 @@ export default function SearchResults({
               ? 'text-amber-600 font-medium'
               : 'text-slate-600';
 
+            // Format distance for display
+            const formatDistance = (km?: number | null): string | null => {
+              if (km == null) return null;
+              if (km < 1) {
+                return `${Math.round(km * 1000)}m away`;
+              }
+              return `${km.toFixed(1)}km away`;
+            };
+
+            const distanceText = formatDistance(item.distance);
+
             return (
               <article
                 key={item.id}
@@ -141,11 +152,16 @@ export default function SearchResults({
                     {formatAddress(item.premisesAddress) || 'Address not provided'}
                   </p>
 
-                  {/* View action - more subtle */}
+                  {/* View action and distance - more subtle */}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[11px] font-semibold text-blue-600 group-hover:text-blue-700">
                       View Details →
                     </span>
+                    {distanceText && (
+                      <span className="text-[11px] font-medium text-slate-500">
+                        {distanceText}
+                      </span>
+                    )}
                   </div>
                 </div>
               </article>
@@ -167,12 +183,22 @@ export default function SearchResults({
     );
   }
 
+  // Format distance for display
+  const formatDistance = (km?: number | null): string | null => {
+    if (km == null) return null;
+    if (km < 1) {
+      return `${Math.round(km * 1000)}m`;
+    }
+    return `${km.toFixed(1)}km`;
+  };
+
   // Original grid layout for main view
   return (
     <>
       <div className={containerClass}>
         {displayResults.map((item, idx) => {
           const isActive = activeNoticeId === item.id;
+          const distanceText = formatDistance(item.distance);
           return (
             <article
               key={item.id}
@@ -189,9 +215,20 @@ export default function SearchResults({
               <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-blue-100/20 blur-2xl transition-all group-hover:scale-150" />
 
               <div className="relative">
-                {/* Notice type badge */}
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900">
-                  {item.noticeType}
+                {/* Notice type badge and distance */}
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900">
+                    {item.noticeType}
+                  </div>
+                  {distanceText && (
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                      <svg className="h-3 w-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {distanceText}
+                    </div>
+                  )}
                 </div>
 
                 {/* Premises name */}

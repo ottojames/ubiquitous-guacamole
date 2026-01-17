@@ -28,6 +28,7 @@ export type NoticeSearchItem = {
   viewUrl?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  distance?: number | null; // Distance in kilometers
 };
 
 export type NoticeSearchParams = {
