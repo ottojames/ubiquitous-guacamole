@@ -200,67 +200,62 @@ export default function CouncilRegistration() {
     setError(null);
 
     try {
-      // Create organization
-      const councilSlug = councilData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^the-/, '');
-      const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .insert([{
+      // Use server API to bypass RLS policies
+      const response = await fetch('/api/registration/council', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          // Council Information
           name: councilData.name,
-          slug: councilSlug,
-          type: 'council',
-          contact_email: councilData.authorityEmail
-        }])
-        .select()
-        .single();
-
-      if (orgError) throw orgError;
-
-      // Create departments
-      for (const dept of councilData.departments) {
-        const { error: deptError } = await supabase
-          .from('departments')
-          .insert([{
-            organization_id: org.id,
-            name: dept.name,
-            slug: dept.slug,
-            type: dept.type,
-            contact_email: dept.email,
-            description: dept.description
-          }]);
-
-        if (deptError) throw deptError;
-      }
-
-      // Create council settings
-      const { error: settingsError } = await supabase
-        .from('council_settings')
-        .insert([{
-          organization_id: org.id,
-          authority_address: councilData.authorityAddress,
-          authority_email: councilData.authorityEmail,
-          authority_phone: councilData.authorityPhone,
-          online_register_url: councilData.onlineRegisterUrl
-        }]);
-
-      if (settingsError) throw settingsError;
-
-      // Create admin user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: councilData.adminEmail,
-        password: councilData.adminPassword,
-        options: {
-          data: {
-            name: councilData.adminName,
-            organization_id: org.id,
-            role: councilData.adminRole
-          }
-        }
+          type: councilData.type,
+          region: councilData.region,
+          // Departments
+          departments: councilData.departments,
+          // Authority Details (MANDATORY)
+          authorityAddress: councilData.authorityAddress,
+          authorityEmail: councilData.authorityEmail,
+          authorityPhone: councilData.authorityPhone,
+          onlineRegisterUrl: councilData.onlineRegisterUrl,
+          // Admin Account
+          adminEmail: councilData.adminEmail,
+          adminPassword: councilData.adminPassword,
+          adminName: councilData.adminName,
+          adminRole: councilData.adminRole
+        })
       });
 
-      if (authError) throw authError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Registration failed:', data);
+
+        // Handle specific error types
+        if (data.error === 'duplicate') {
+          throw new Error(data.message);
+        } else if (data.error === 'validation') {
+          throw new Error(data.message || 'Please check all required fields are filled correctly');
+        } else {
+          throw new Error(data.message || 'Registration failed. Please try again.');
+        }
+      }
+
+      console.log('Registration successful:', data);
+
+      // Sign in the user after successful registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: councilData.adminEmail,
+        password: councilData.adminPassword
+      });
+
+      if (signInError) {
+        console.error('Auto sign-in failed:', signInError);
+        // Still redirect even if sign-in fails - they can log in manually
+      }
 
       // Success! Redirect to council dashboard
-      navigate(`/c/${org.id}/${councilData.departments[0].slug}/dashboard`);
+      navigate(data.redirectPath);
 
     } catch (err: any) {
       console.error('Registration error:', err);

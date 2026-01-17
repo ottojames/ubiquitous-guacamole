@@ -253,6 +253,19 @@ export default function Login() {
                   </div>
                 </button>
               </div>
+
+              {/* Sign Up Link */}
+              <div className="mt-8 text-center">
+                <p className="text-sm text-slate-600 mb-2">
+                  Don't have an account?
+                </p>
+                <a
+                  href="/register"
+                  className="text-sm text-blue-600 underline hover:text-blue-700 transition-colors"
+                >
+                  Create one here
+                </a>
+              </div>
             </div>
           ) : (
             /* Login Form */

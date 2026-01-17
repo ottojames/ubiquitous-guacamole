@@ -33,6 +33,7 @@ import testCertificateRouter from './routes/test-certificate';
 import testEmailRouter from './routes/test-email';
 import applyMigrationRouter from './routes/apply-migration';
 import blueNoticesRouter from './routes/blueNotices';
+import registrationRouter from './routes/registration';
 
 export const app = express();
 
@@ -72,6 +73,7 @@ app.use('/api/evidence-packs', evidencePacksRouter);
 app.use('/api/notices', versionsRouter);
 app.use('/api/firm-subscriptions', firmSubscriptionsRouter);
 app.use('/api/blue-notices', blueNoticesRouter);
+app.use('/api/registration', registrationRouter);
 app.use('/api', testCertificateRouter);
 app.use('/api', testEmailRouter);
 app.use('/api/migration', applyMigrationRouter);

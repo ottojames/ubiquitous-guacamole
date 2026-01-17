@@ -257,39 +257,60 @@ export default function FirmRegistration() {
     setError(null);
 
     try {
-      // Create organization
-      const firmSlug = firmData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .insert([{
-          name: firmData.name,
-          slug: firmSlug,
-          type: 'firm',
-          contact_email: firmData.adminEmail,
-          practice_areas: firmData.practiceAreas
-        }])
-        .select()
-        .single();
-
-      if (orgError) throw orgError;
-
-      // Create admin user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: firmData.adminEmail,
-        password: firmData.adminPassword,
-        options: {
-          data: {
-            name: firmData.adminName,
-            organization_id: org.id,
-            role: firmData.adminRole
-          }
-        }
+      // Use server API to bypass RLS policies
+      const response = await fetch('/api/registration/firm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          // Firm Information
+          firmName: firmData.name,
+          practiceAreas: firmData.practiceAreas,
+          // Office Details
+          officeAddress: firmData.officeAddress,
+          officeEmail: firmData.officeEmail,
+          officePhone: firmData.officePhone,
+          // Admin Account
+          adminEmail: firmData.adminEmail,
+          adminPassword: firmData.adminPassword,
+          adminName: firmData.adminName,
+          adminRole: firmData.adminRole,
+          // Subscription
+          subscriptionPlan: firmData.subscriptionPlan
+        })
       });
 
-      if (authError) throw authError;
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Registration failed:', data);
+
+        // Handle specific error types
+        if (data.error === 'duplicate') {
+          throw new Error(data.message);
+        } else if (data.error === 'validation') {
+          throw new Error(data.message || 'Please check all required fields are filled correctly');
+        } else {
+          throw new Error(data.message || 'Registration failed. Please try again.');
+        }
+      }
+
+      console.log('Registration successful:', data);
+
+      // Sign in the user after successful registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: firmData.adminEmail,
+        password: firmData.adminPassword
+      });
+
+      if (signInError) {
+        console.error('Auto sign-in failed:', signInError);
+        // Still redirect even if sign-in fails - they can log in manually
+      }
 
       // Success! Redirect to firm dashboard
-      navigate(`/f/${org.slug || firmSlug}/dashboard`);
+      navigate(data.redirectPath);
 
     } catch (err: any) {
       console.error('Registration error:', err);

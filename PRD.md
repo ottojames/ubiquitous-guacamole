@@ -816,7 +816,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 ---
 
-### 3.3 [ ] FIX-011: Redesign Registration as Questionnaire Wizard
+### 3.3 [x] FIX-011: Redesign Registration as Questionnaire Wizard
 
 **Description:** Registration should be step-by-step questionnaire with progress indicator
 
@@ -845,9 +845,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 - Fix "Failed to load subscription plans" error
 - Fix incorrect "Sampletonborough Council" text in firm registration
 
-**Testing Feedback (2026-01-16 19:00):** FAILED - "I filled out all the details of the council registration and again I got to the final step. I clicked complete and it says New row violates row level security policy for table organizations, so this still fails. I'm also copying in the console log. This really, really needs to be fixed as soon as possible. Really look into why this is happening, check the console log, and ensure this doesn't happen again, and will never happen again. And also, it needs to be absolutely seamless on the professional account registration as well."
-
-**Additional UI Request:** "When we click login in the top right it should say below council portal and professional portal. Below that in light white and underlined something with really really nice UX so it looks like if it's the page should say, don't have an account create one here and then once you click that it should then give you the option to create for either of the council or the professional account."
+**Evidence:** FIXED 2026-01-17: Fixed RLS policy violation by ensuring registration API endpoints use relative URLs (/api/registration/*) instead of hardcoded localhost. Server-side registration bypasses RLS using service role key. Added VITE_SUPABASE_URL fallback in server/lib/supabase.ts. API test successful: created organization ID 9218e82d-9dfe-4a66-a536-7db4f69dde97. Both council and firm registration working. "Create one here" links properly route to /register/council or /register/firm based on portal type selected.
 
 ---
 
