@@ -148,17 +148,33 @@ These items have been removed from the active PRD.md as they are now complete.
 
 ---
 
+## Ralph's Latest Completions (2026-01-16 Latest Run - Iterations 1-4)
+
+### FIX-002: Fix Address Search Single-Click ✅
+**Completed:** 2026-01-16 18:42
+**Tested:** 2026-01-16 19:00
+**Ralph's Fix:** Fixed by separating onMouseDown (prevents blur) and onClick (handles selection) handlers in AddressSearchBar.tsx, matching the HomeSearch pattern. Single-click now immediately submits search and defaults to map view.
+
+**User Testing Result:** SUCCESS - "OK, this is good. This is a lot, lot better. I've navigated to slash notices, typed in SW1A 1AA, the drop-down has appeared, clicked Buckingham Palace Garden, and yes, the map loads immediately with the notices available. Um all perfect, absolutely perfect."
+
+### FIX-003: Redesign Map View with 70/30 Split Layout ✅
+**Completed:** 2026-01-16 18:50
+**Tested:** 2026-01-16 19:00
+**Ralph's Fix:** 70/30 split already implemented at src/pages/Notices.tsx:783, custom scrollbar in src/index.css, smooth map interactions with disabled rotation and slower zoom. Notice cards redesigned with cleaner layout.
+
+**User Testing Result:** SUCCESS - "Perfect! there is one change that I want to make. Um I think it'd be really good if you could filter in the list on the right-hand rail by like nearest distance."
+
+---
+
 ## Final Status
 
-**7 CRITICAL FIXES COMPLETED** ✅
+**9 CRITICAL FIXES COMPLETED** ✅
 
 Completed items verified through user testing:
 - 6 fixes completed in earlier iterations
 - 1 fix completed manually (FIX-001 demo auth)
-- 1 fix completed by Ralph that passed testing (FIX-004 DPS removal)
+- 2 fixes completed by Ralph in latest run (FIX-002 address search, FIX-003 map layout)
 
 Still failing and need to be fixed:
-- FIX-002: Address search single-click
-- FIX-003: Map view 70/30 split
 - FIX-007: Council auto-population
 - FIX-011: Registration wizard

@@ -19,7 +19,7 @@
 ## FIX-003: Map View 70/30 Split
 
 ### Test Steps:
-1. After address search (or go to http://localhost:5173/notices?view=map)
+1. After address search (or go to http://localhost:5173/notices?view=map&lat=51.5074&lng=-0.1278&radius_km=2)
 2. Look at the layout split
 3. **Expected:** Map takes 70% width, list takes 30%
 4. **Expected:** Cards are cleaner, better spacing
@@ -28,28 +28,18 @@
 
 ---
 
-## FIX-004: DPS Field Removal
+## FIX-007: Council Auto-Population
 
 ### Test Steps:
 1. Go to http://localhost:5173/publish/step-1
 2. Select **"New Premises Licence"**
 3. Navigate to Step 3 (fill required fields to proceed)
-4. Look at the activities section
-5. **Expected:** NO "Designated Premises Supervisor" field anywhere
-6. **Write:** Is DPS field completely gone?
-
----
-
-## FIX-007: Council Auto-Population
-
-### Test Steps:
-1. Still in publish wizard Step 3
-2. Under "Licensing Authority", type: **sample**
-3. Click **"Sampletonborough Council"** from dropdown
-4. **Expected:** Authority Address auto-fills: "1 Town Hall Square, Sampletonborough SB1 1AA"
-5. **Expected:** Authority Email auto-fills: "info@sampletonborough.gov.uk"
-6. **Expected:** Online Register URL auto-fills: "https://www.sampletonborough.gov.uk/licensing/register"
-7. **Write:** Did all fields auto-populate?
+4. Under "Licensing Authority", type: **sample**
+5. Click **"Sampletonborough Council"** from dropdown
+6. **Expected:** Authority Address auto-fills: "1 Town Hall Square, Sampletonborough SB1 1AA"
+7. **Expected:** Authority Email auto-fills: "info@sampletonborough.gov.uk"
+8. **Expected:** Online Register URL auto-fills: "https://www.sampletonborough.gov.uk/licensing/register"
+9. **Write:** Did all fields auto-populate?
 
 ---
 
@@ -85,5 +75,13 @@
 
 ✅ **All Working** = Ralph successfully fixed everything
 ❌ **Still Issues** = Note which items still fail
+
+Ralph's latest run claims to have fixed:
+- FIX-002: Address search (matching HomeSearch pattern)
+- FIX-003: Map view 70/30 split (already done, now marked complete)
+
+Still need fixes:
+- FIX-007: Council auto-population
+- FIX-011: Registration wizard
 
 The servers are running - ready to test!

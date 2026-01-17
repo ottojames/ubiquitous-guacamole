@@ -1,63 +1,56 @@
 # FINAL TEST LOG - Ralph's Latest Fixes
 **Date:** 2026-01-16
 **Tester:** Otto
-**Note:** Testing Ralph's fixes from iterations 20-23
+**Note:** Testing Ralph's fixes from latest run (iterations 1-4)
 
 ---
 
 ## FIX-002: Address Search Single-Click ✓
-**Ralph fixed:** GetAddress integration, resolve endpoint for postcodes
+**Ralph fixed:** Separated onMouseDown and onClick handlers to match HomeSearch pattern
 **Test:** Type SW1A 1AA, click address once
 **Comments:**
-Okay, I'm on Fix 002. I've gone to slash notices. I've typed in SW1AA. The drop down appears with a list of addresses. I've clicked down on Buckingham Palace Garden and nothing happens. It stays exactly as the screen. So this has failed. Please take a look at the notice search function on the homepage and copy this function pretty much because that function on the homepage works. This has failed and needs to be redone.
-
+OK, this is good. This is a lot, lot better. I've navigated to slash notices, typed in SW1818A, the drop-down has appeared, clicked Buckingham Palace Garden, and yes, the map loads immediately with the notice is available. Um all perfect, absolutely perfect. 
 
 ---
 
 ## FIX-003: Map View 70/30 Split ✓
-**Ralph fixed:** Changed to 70/30 split, improved card design, better scrolling
+**Ralph fixed:** 70/30 split layout, custom scrollbar, smooth map interactions
 **Test:** Check map layout after search
 **Comments:**
-Okay, I'm now looking at fix 003. I'm going to notices and view map. And I can't do this because fix 002 does not work, so I cannot approve this. This has failed.
-
-
----
-
-## FIX-004: DPS Field Removal ✓
-**Ralph fixed:** Completely removed DPS fields from entire codebase
-**Test:** Check publish wizard Step 3 - NO DPS field should exist
-**Comments:**
-I'm now looking at fix 004 DPS field removal. Success.
+Perfect! there is one change that I want to make. Um I think it'd be really good if you could filter in the list on the right-hand rail by like nearest distance. I think that would be really, really useful as an addition for the, um, for the user who is searching. So if we could add that, that would be amazing. But yeah, well done for sorting that.
 
 ---
 
 ## FIX-007: Council Auto-Population ✓
-**Ralph fixed:** Added setValue prop, fixed auto-population for Sampletonborough
+**Ralph fixed:** Not fixed in this run - still needs work
 **Test:** Select Sampletonborough Council, check if fields auto-fill
 **Comments:**
-I am now looking at the council auto-population. I am typing in Sampleton Borough Council. I'm clicking the drop-down once and nothing at all has auto-populated. Authority address is blank, address one blank, address line two blank, town slash city blank, postcode blank, authority email blank, online register URL in brackets optional also blank. That has failed. Fix it.
+This is still not working. I've clicked Stapleton bar Council on the publishing Wizard on the drop-down and still nothing is auto filling below it. You need to really spend your time on fixing this as this is a critical issue because in the templates we will use these fields to input the template automatically
 
 ---
 
 ## FIX-011: Registration Wizard ✓
-**Ralph fixed:** Direct portal navigation, added slug field, fixed registration backend
-**Test:** Click "Sign up for free" from council/firm portal, complete registration
+**Ralph fixed:** Not fixed in this run - still needs work
+**Test:** Click "Sign up for free" from council portal, complete registration
 **Comments:**
-So I've gone to slash login. I've clicked cancel portal. I've clicked sign up free. It does in fact go to directly to register account. I've done step number five. I've filled all the steps and it does not complete. It fails and in a red box above the review and confirm pill, it says in a red box, new row violates row level security policy for table organizations, so this step has failed and needs to be fixed.
+So fast thing to comment when we click login in the top right it should say below council portal and professional portal below that in white it should light white and unlined something with really really nice you are so it looks like if it's the Paige should say, don't have an account create one here and then once you click that it should then give you the option to create for either of the council or the professional account. 
+
+I then filled out all the details of the council registration and again I got to the final start. I clicked complete and it says New row violates row level security policy for table organizations, so this still fails. I'm also copying in the console log. This really, really needs to be fixed as soon as possible. Really look into why this is happening, check the console log, and ensure this doesn't happen again, and will never happen again. And also, it needs to be absolutely seamless on the professional account registration as well.
 
 
 ---
 
 ## SUMMARY
 
-Ralph's latest run (iterations 20-23) claims to have fixed all 5 remaining critical issues:
-- Address search now works with single click
-- Map view redesigned to 70/30 split
-- DPS field completely removed
-- Council settings auto-populate
-- Registration wizard properly wired up
+Ralph's latest run (iterations 1-4) claims to have fixed:
+- FIX-002: Address search single-click (matching HomeSearch pattern)
+- FIX-003: Map view 70/30 split (already implemented, now marked complete)
+
+Still need to test:
+- FIX-007: Council auto-population (not fixed)
+- FIX-011: Registration wizard (not fixed)
 
 ## HOW TO VERIFY
 
-Say: "Confirm all fixes" if everything works
-Say: "Still issues with [item]" if something doesn't work
+✅ **All Working** = Ralph successfully fixed the critical issues
+❌ **Still Issues** = Note which items still fail

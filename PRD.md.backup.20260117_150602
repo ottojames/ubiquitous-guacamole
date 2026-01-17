@@ -800,7 +800,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 ---
 
-### 3.2 [x] FIX-007: Add Council Settings for Auto-Population
+### 3.2 [ ] FIX-007: Add Council Settings for Auto-Population
 
 **Description:** Authority address, email, and online register URL should auto-populate from council settings
 
@@ -812,7 +812,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 - Remove manual entry of these fields in publish wizard
 - This is CRITICAL for templates to work properly
 
-**Evidence:** FIXED 2026-01-17: Enhanced auto-population logic in TemplateBuilderForm.tsx with detailed logging. Fixed duplicate Sampletonborough entries - removed organization without departments. Database verified: Sampletonborough (ID: 950e8400-e29b-41d4-c002-446655440001) has council_settings with all required fields. Auto-population code calls setValue for AUTHORITY_ADDRESS, AUTHORITY_EMAIL, ONLINE_REGISTER_URL when council selected. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing unrelated errors), test ✓ (running), dev server ✓ (API on :5174)
+**Testing Feedback (2026-01-16 19:00):** FAILED - "This is still not working. I've clicked Sampletonborough Council on the publishing Wizard on the drop-down and still nothing is auto filling below it. You need to really spend your time on fixing this as this is a critical issue because in the templates we will use these fields to input the template automatically"
 
 ---
 

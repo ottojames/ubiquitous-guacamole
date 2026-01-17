@@ -609,9 +609,15 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
     const departmentType = definition?.category ? getDepartmentTypeForCategory(definition.category) : undefined;
 
     const handleCouncilDepartmentSelect = React.useCallback(async (department: CouncilDepartment) => {
-      onChange(department.organizationName, { fromUser: true });
+      console.log('[CouncilSettings] Selected department:', department);
+
+      // Set the authority name field value
+      onChange([field.token], department.organizationName, { fromUser: true });
+
       // Auto-populate related fields
       if (setValue) {
+        console.log('[CouncilSettings] setValue function available, proceeding with auto-population');
+
         if (department.email) {
           setValue("AUTHORITY_EMAIL", department.email, { fromAuto: true });
         }
@@ -621,6 +627,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
 
         // Fetch and auto-populate council settings
         try {
+          console.log('[CouncilSettings] Fetching settings for org:', department.organizationId);
           const { data: councilSettings, error } = await supabase
             .from('council_settings')
             .select('*')
@@ -628,30 +635,33 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
             .single();
 
           if (councilSettings && !error) {
-            console.log("[CouncilSettings] Auto-populating from council settings:", councilSettings);
+            console.log("[CouncilSettings] Found settings, auto-populating:", councilSettings);
 
             // Auto-populate authority fields from council settings
             if (councilSettings.authority_address) {
+              console.log('[CouncilSettings] Setting AUTHORITY_ADDRESS:', councilSettings.authority_address);
               setValue("AUTHORITY_ADDRESS", councilSettings.authority_address, { fromAuto: true });
             }
             if (councilSettings.authority_email) {
+              console.log('[CouncilSettings] Setting AUTHORITY_EMAIL:', councilSettings.authority_email);
               setValue("AUTHORITY_EMAIL", councilSettings.authority_email, { fromAuto: true });
             }
-            if (councilSettings.authority_phone) {
-              // Authority phone field was removed in FIX-004, skip this
-              // setValue("AUTHORITY_PHONE", councilSettings.authority_phone, { fromAuto: true });
-            }
             if (councilSettings.online_register_url) {
+              console.log('[CouncilSettings] Setting ONLINE_REGISTER_URL:', councilSettings.online_register_url);
               setValue("ONLINE_REGISTER_URL", councilSettings.online_register_url, { fromAuto: true });
             }
+            console.log('[CouncilSettings] Auto-population complete');
           } else {
             console.log("[CouncilSettings] No settings found for organization:", department.organizationId);
+            console.log("[CouncilSettings] Error:", error);
           }
         } catch (err) {
           console.error("[CouncilSettings] Error fetching council settings:", err);
         }
+      } else {
+        console.log('[CouncilSettings] setValue function not available - auto-population skipped');
       }
-    }, [onChange, setValue]);
+    }, [onChange, setValue, field.token]);
 
     return (
       <div className="space-y-2">
