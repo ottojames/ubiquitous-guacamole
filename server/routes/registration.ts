@@ -96,7 +96,7 @@ router.post('/council', async (req, res) => {
         name: data.name,
         slug: councilSlug,
         type: 'council',
-        contact_email: data.authorityEmail,
+        email: data.authorityEmail,
         settings: {
           region: data.region,
           councilType: data.type
@@ -256,7 +256,7 @@ router.post('/firm', async (req, res) => {
         name: data.firmName,
         slug: firmSlug,
         type: 'firm',
-        contact_email: data.officeEmail,
+        email: data.officeEmail,
         settings: {
           practice_areas: data.practiceAreas,
           subscription_plan: data.subscriptionPlan,
