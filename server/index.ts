@@ -36,6 +36,7 @@ import blueNoticesRouter from './routes/blueNotices';
 import registrationRouter from './routes/registration';
 import adminAuthRouter from './routes/admin/auth';
 import adminAccountsRouter from './routes/admin/accounts';
+import adminAuditRouter from './routes/admin/audit';
 import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth';
 
 export const app = express();
@@ -86,6 +87,7 @@ app.use('/api/admin/auth', adminAuthRouter);
 
 // Protected admin routes
 app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRouter);
+app.use('/api/admin/audit', requireAdmin, enforceIPAllowlist, adminAuditRouter);
 
 // Sentry error handler MUST be after routes but BEFORE other error handlers
 app.use(sentryErrorHandler());

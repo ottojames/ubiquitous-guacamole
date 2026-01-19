@@ -54,11 +54,20 @@ import ApiDocs from "@/pages/ApiDocs";
 import ConferenceLanding from "@/pages/ConferenceLanding";
 import ShowcaseLanding from "@/pages/ShowcaseLanding";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminLogin from "@/pages/admin/Login";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AccountManagement from "@/pages/admin/AccountManagement";
+import AdminAuditLog from "@/pages/admin/AuditLog";
+import AdminSettings from "@/pages/admin/Settings";
+import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <AdminAuthProvider>
+      <BrowserRouter>
+        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/conference" element={<ConferenceLanding />} />
         <Route path="/showcase" element={<ShowcaseLanding />} />
@@ -126,11 +135,26 @@ export default function App() {
           <Route path="publish/*" element={<NewPublishFlow />} />
         </Route>
 
+        {/* Admin Portal Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="accounts" element={<AccountManagement />} />
+          <Route path="audit" element={<AdminAuditLog />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish/*" element={<NewPublishFlow />} />
         )}
         <Route path="*" element={<Home />} />
       </Routes>
     </BrowserRouter>
+    </AdminAuthProvider>
   );
 }
