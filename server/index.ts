@@ -34,6 +34,9 @@ import testEmailRouter from './routes/test-email';
 import applyMigrationRouter from './routes/apply-migration';
 import blueNoticesRouter from './routes/blueNotices';
 import registrationRouter from './routes/registration';
+import adminAuthRouter from './routes/admin/auth';
+import adminAccountsRouter from './routes/admin/accounts';
+import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth';
 
 export const app = express();
 
@@ -77,6 +80,12 @@ app.use('/api/registration', registrationRouter);
 app.use('/api', testCertificateRouter);
 app.use('/api', testEmailRouter);
 app.use('/api/migration', applyMigrationRouter);
+
+// Admin routes (no auth required for login)
+app.use('/api/admin/auth', adminAuthRouter);
+
+// Protected admin routes
+app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRouter);
 
 // Sentry error handler MUST be after routes but BEFORE other error handlers
 app.use(sentryErrorHandler());
