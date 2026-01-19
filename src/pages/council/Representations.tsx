@@ -19,14 +19,14 @@ import {
 interface Representation {
   id: string;
   notice_id: string;
-  created_at: string;
-  respondent_name: string | null;
-  respondent_email: string | null;
+  submitted_at: string;
+  representor_name: string | null;
+  representor_email: string | null;
   representation_text: string;
-  stance: 'support' | 'object' | 'comment' | null;
-  attachments?: string[];
+  type: 'support' | 'objection' | 'comment' | null;
+  supporting_documents?: string[];
   is_anonymous: boolean;
-  ip_address?: string;
+  submitter_ip?: string;
   assigned_to?: string | null;
   assigned_to_name?: string | null;
   assigned_at?: string | null;
@@ -35,10 +35,11 @@ interface Representation {
   reviewed_by_name?: string | null;
   notice?: {
     id: string;
-    application_type: string;
+    application_type?: string;
+    notice_type?: string;
     trading_name?: string;
-    premises_name?: string;
-    premises_address?: any;
+    applicant?: string;
+    premises?: any;
   };
 }
 
@@ -68,7 +69,7 @@ export default function CouncilRepresentations() {
   const [representations, setRepresentations] = useState<Representation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'support' | 'object' | 'comment' | 'reviewed' | 'not_reviewed'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'support' | 'objection' | 'comment' | 'reviewed' | 'not_reviewed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRep, setSelectedRep] = useState<Representation | null>(null);
   const [userName, setUserName] = useState('');
@@ -112,18 +113,19 @@ export default function CouncilRepresentations() {
           notices!inner (
             id,
             application_type,
+            notice_type,
             trading_name,
-            premises_name,
-            premises_address,
+            applicant,
+            premises,
             department_id
           )
         `)
         .eq('notices.department_id', department.id)
-        .order('created_at', { ascending: false });
+        .order('submitted_at', { ascending: false });
 
       // Apply stance filter if not 'all'
-      if (filter !== 'all' && filter !== 'unread') {
-        query = query.eq('stance', filter);
+      if (filter !== 'all' && filter !== 'unread' && filter !== 'reviewed' && filter !== 'not_reviewed') {
+        query = query.eq('type', filter);
       }
 
       const { data, error: fetchError } = await query;
@@ -141,11 +143,11 @@ export default function CouncilRepresentations() {
     }
   };
 
-  const getStanceIcon = (stance: string | null) => {
-    switch (stance) {
+  const getStanceIcon = (type: string | null) => {
+    switch (type) {
       case 'support':
         return <ThumbsUp className="h-4 w-4 text-green-600" />;
-      case 'object':
+      case 'objection':
         return <ThumbsDown className="h-4 w-4 text-red-600" />;
       case 'comment':
         return <MessageCircle className="h-4 w-4 text-blue-600" />;
@@ -154,11 +156,11 @@ export default function CouncilRepresentations() {
     }
   };
 
-  const getStanceLabel = (stance: string | null) => {
-    switch (stance) {
+  const getStanceLabel = (type: string | null) => {
+    switch (type) {
       case 'support':
         return 'Support';
-      case 'object':
+      case 'objection':
         return 'Objection';
       case 'comment':
         return 'Comment';
@@ -171,13 +173,13 @@ export default function CouncilRepresentations() {
     const csvContent = [
       ['Date', 'Notice ID', 'Notice Type', 'Premises', 'Stance', 'Name', 'Email', 'Comment'],
       ...representations.map(rep => [
-        new Date(rep.created_at).toLocaleDateString(),
+        new Date(rep.submitted_at).toLocaleDateString(),
         rep.notice_id,
-        rep.notice?.application_type || '',
-        rep.notice?.premises_name || rep.notice?.trading_name || '',
-        getStanceLabel(rep.stance),
-        rep.respondent_name || 'Anonymous',
-        rep.respondent_email || '',
+        rep.notice?.application_type || rep.notice?.notice_type || '',
+        rep.notice?.applicant || rep.notice?.trading_name || '',
+        getStanceLabel(rep.type),
+        rep.representor_name || 'Anonymous',
+        rep.representor_email || '',
         rep.representation_text.replace(/"/g, '""') // Escape quotes
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
@@ -201,18 +203,18 @@ export default function CouncilRepresentations() {
       ...dataToExport.map(rep => [
         rep.id,
         rep.notice_id,
-        rep.respondent_name || 'Anonymous',
-        rep.respondent_email || '',
-        getStanceLabel(rep.stance),
+        rep.representor_name || 'Anonymous',
+        rep.representor_email || '',
+        getStanceLabel(rep.type),
         rep.representation_text.replace(/"/g, '""'), // Escape quotes for CSV
-        new Date(rep.created_at).toISOString(),
+        new Date(rep.submitted_at).toISOString(),
         rep.reviewed_at ? 'Reviewed' : 'Not Reviewed',
         rep.reviewed_by_name || '',
         rep.reviewed_at ? new Date(rep.reviewed_at).toISOString() : '',
         rep.assigned_to_name || '',
-        rep.notice?.application_type || '',
-        rep.notice?.premises_name || rep.notice?.trading_name || '',
-        rep.notice?.premises_address ? JSON.stringify(rep.notice.premises_address) : ''
+        rep.notice?.application_type || rep.notice?.notice_type || '',
+        rep.notice?.applicant || rep.notice?.trading_name || '',
+        rep.notice?.premises ? JSON.stringify(rep.notice.premises) : ''
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -227,9 +229,9 @@ export default function CouncilRepresentations() {
 
   const filteredRepresentations = representations.filter(rep => {
     // Apply filter type
-    if (filter === 'support' && rep.stance !== 'support') return false;
-    if (filter === 'object' && rep.stance !== 'object') return false;
-    if (filter === 'comment' && rep.stance !== 'comment') return false;
+    if (filter === 'support' && rep.type !== 'support') return false;
+    if (filter === 'objection' && rep.type !== 'objection') return false;
+    if (filter === 'comment' && rep.type !== 'comment') return false;
     if (filter === 'reviewed' && !rep.reviewed_at) return false;
     if (filter === 'not_reviewed' && rep.reviewed_at) return false;
 
@@ -238,18 +240,18 @@ export default function CouncilRepresentations() {
     const searchLower = searchTerm.toLowerCase();
     return (
       rep.representation_text.toLowerCase().includes(searchLower) ||
-      rep.respondent_name?.toLowerCase().includes(searchLower) ||
-      rep.respondent_email?.toLowerCase().includes(searchLower) ||
-      rep.notice?.premises_name?.toLowerCase().includes(searchLower) ||
+      rep.representor_name?.toLowerCase().includes(searchLower) ||
+      rep.representor_email?.toLowerCase().includes(searchLower) ||
+      rep.notice?.applicant?.toLowerCase().includes(searchLower) ||
       rep.notice?.trading_name?.toLowerCase().includes(searchLower)
     );
   });
 
   const counts = {
     total: representations.length,
-    support: representations.filter(r => r.stance === 'support').length,
-    object: representations.filter(r => r.stance === 'object').length,
-    comment: representations.filter(r => r.stance === 'comment').length,
+    support: representations.filter(r => r.type === 'support').length,
+    objection: representations.filter(r => r.type === 'objection').length,
+    comment: representations.filter(r => r.type === 'comment').length,
   };
 
   return (
@@ -321,7 +323,7 @@ export default function CouncilRepresentations() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Objections</dt>
-                  <dd className="text-lg font-medium text-gray-900">{counts.object}</dd>
+                  <dd className="text-lg font-medium text-gray-900">{counts.objection}</dd>
                 </dl>
               </div>
             </div>
@@ -359,7 +361,7 @@ export default function CouncilRepresentations() {
                   <option value="all">All Representations</option>
                   <option value="unread">Unread</option>
                   <option value="support">Support Only</option>
-                  <option value="object">Objections Only</option>
+                  <option value="objection">Objections Only</option>
                   <option value="comment">Comments Only</option>
                   <option value="reviewed">Reviewed</option>
                   <option value="not_reviewed">Not Reviewed</option>
@@ -396,12 +398,12 @@ export default function CouncilRepresentations() {
                     onClick={() => setSelectedRep(rep)}
                   >
                     <div className="flex items-center gap-2">
-                      {getStanceIcon(rep.stance)}
+                      {getStanceIcon(rep.type)}
                       <p className="text-sm font-medium text-gray-900">
-                        {rep.respondent_name || 'Anonymous'}
+                        {rep.representor_name || 'Anonymous'}
                       </p>
-                      {rep.respondent_email && (
-                        <p className="text-sm text-gray-500">({rep.respondent_email})</p>
+                      {rep.representor_email && (
+                        <p className="text-sm text-gray-500">({rep.representor_email})</p>
                       )}
                       {rep.assigned_to_name && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -421,14 +423,14 @@ export default function CouncilRepresentations() {
                     <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(rep.created_at).toLocaleDateString()}
+                        {new Date(rep.submitted_at).toLocaleDateString()}
                       </span>
                       <span className="flex items-center gap-1">
                         <FileText className="h-3 w-3" />
-                        {rep.notice?.application_type}
+                        {rep.notice?.application_type || rep.notice?.notice_type}
                       </span>
-                      {rep.notice?.premises_name && (
-                        <span>{rep.notice.premises_name}</span>
+                      {rep.notice?.applicant && (
+                        <span>{rep.notice.applicant}</span>
                       )}
                     </div>
                   </div>
@@ -484,23 +486,23 @@ export default function CouncilRepresentations() {
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">Submitter</h4>
                   <p className="mt-1 text-sm text-gray-600">
-                    {selectedRep.respondent_name || 'Anonymous'}
-                    {selectedRep.respondent_email && ` (${selectedRep.respondent_email})`}
+                    {selectedRep.representor_name || 'Anonymous'}
+                    {selectedRep.representor_email && ` (${selectedRep.representor_email})`}
                   </p>
                 </div>
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">Stance</h4>
                   <p className="mt-1 text-sm text-gray-600 flex items-center gap-2">
-                    {getStanceIcon(selectedRep.stance)}
-                    {getStanceLabel(selectedRep.stance)}
+                    {getStanceIcon(selectedRep.type)}
+                    {getStanceLabel(selectedRep.type)}
                   </p>
                 </div>
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">Notice</h4>
                   <p className="mt-1 text-sm text-gray-600">
-                    {selectedRep.notice?.application_type} - {selectedRep.notice?.premises_name || selectedRep.notice?.trading_name}
+                    {selectedRep.notice?.application_type || selectedRep.notice?.notice_type} - {selectedRep.notice?.applicant || selectedRep.notice?.trading_name}
                   </p>
                 </div>
 
@@ -523,7 +525,7 @@ export default function CouncilRepresentations() {
                 <div>
                   <h4 className="text-sm font-medium text-gray-900">Submitted</h4>
                   <p className="mt-1 text-sm text-gray-600">
-                    {new Date(selectedRep.created_at).toLocaleString()}
+                    {new Date(selectedRep.submitted_at).toLocaleString()}
                   </p>
                 </div>
               </div>

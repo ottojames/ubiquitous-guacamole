@@ -22,7 +22,7 @@ router.get('/council/:councilId', async (req, res) => {
       : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
     // Use the database function to get analytics
-    const { data: analyticsData, error: analyticsError } = await getServiceSupabaseClient().rpc(
+    let { data: analyticsData, error: analyticsError } = await getServiceSupabaseClient().rpc(
       'get_analytics_for_period',
       {
         p_organization_id: councilId,
@@ -34,6 +34,54 @@ router.get('/council/:councilId', async (req, res) => {
     if (analyticsError) {
       console.error('Error fetching analytics:', analyticsError);
       return res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+
+    // If RPC returns no data, try direct query as fallback
+    if (analyticsData?.total_notices === 0) {
+      const supabase = getServiceSupabaseClient();
+
+      // Get notices directly by organization_id
+      const { data: notices, error: noticesError } = await supabase
+        .from('notices')
+        .select('id, status, published_at, department_id')
+        .eq('organization_id', councilId)
+        .gte('published_at', start.toISOString())
+        .lte('published_at', end.toISOString());
+
+      // Get representations
+      const { data: reps, error: repsError } = await supabase
+        .from('representations')
+        .select('*, notices!inner(organization_id)')
+        .eq('notices.organization_id', councilId);
+
+      // Calculate metrics
+      const totalNotices = notices?.length || 0;
+      const publishedNotices = notices?.filter(n => n.status === 'published').length || 0;
+      const activeNotices = notices?.filter(n => n.status === 'published' && n.published_at).length || 0;
+      const totalReps = reps?.length || 0;
+
+      // Group notices by department
+      const noticesByDept = notices?.reduce((acc: any[], notice: any) => {
+        const dept = acc.find(d => d.department_id === notice.department_id);
+        if (dept) {
+          dept.count++;
+        } else {
+          acc.push({ department_id: notice.department_id, count: 1 });
+        }
+        return acc;
+      }, []) || [];
+
+      // Create fallback analytics data
+      analyticsData = {
+        total_notices: totalNotices,
+        active_notices: activeNotices,
+        published_notices: publishedNotices,
+        total_representations: totalReps,
+        notices_by_department: noticesByDept,
+        engagement_rate: totalNotices > 0 ? (totalReps / totalNotices * 100).toFixed(1) : null,
+        avg_approval_time_days: null,
+        deadline_adherence_rate: null
+      };
     }
 
     // Calculate cost savings

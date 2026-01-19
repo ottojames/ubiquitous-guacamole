@@ -778,7 +778,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 3.5 [x] CRITICAL-001: Fix Password Validation Blocking Demo Logins
+### 3.5 [ ] CRITICAL-001: Fix Password Validation Blocking Demo Logins
 
 **Description:** Demo accounts cannot login - NEW ERROR after password fix
 
@@ -804,8 +804,6 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 3. Check if user is linked to Westminster organization/departments
 4. Check the authentication flow in src/contexts/AuthContext.tsx
 5. May need to create proper database relationships
-
-**Evidence:** FIXED 2026-01-19: Created Westminster user (ID: 168b695f-f831-4ffb-82f5-d1a68392947b) with profile and organization/department memberships. User can now sign in successfully with testpass123. Created Sampletonborough user as well. Wilson Partners has database issue preventing user creation. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing JS errors), test ✓ (408/458 passed), dev servers ✓.
 
 ---
 
