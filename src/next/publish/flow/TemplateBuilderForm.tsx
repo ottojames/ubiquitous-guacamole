@@ -612,7 +612,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
       console.log('[CouncilSettings] Selected department:', department);
 
       // Set the authority name field value
-      onChange([field.token], department.organizationName, { fromUser: true });
+      onChange(department.organizationName, { fromUser: true });
 
       // Auto-populate related fields
       if (setValue) {
@@ -661,7 +661,7 @@ function FieldInput({ field, value, onChange, errors, onAlcoholChange, setValue,
       } else {
         console.log('[CouncilSettings] setValue function not available - auto-population skipped');
       }
-    }, [onChange, setValue, field.token]);
+    }, [onChange, setValue]);
 
     return (
       <div className="space-y-2">
