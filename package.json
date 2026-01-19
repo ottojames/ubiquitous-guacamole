@@ -24,7 +24,11 @@
     "backfill:locations": "tsx scripts/backfillNoticeLocations.ts",
     "test:scraper": "tsx server/jobs/testScraper.ts",
     "smoke:api": "node -e \"(async()=>{const h=await fetch('http://localhost:5174/api/health');console.log('health:',await h.json());const s=await fetch('http://localhost:5174/api/addresses?q=9%20lower');console.log('sample:',await s.json())})().catch(e=>{console.error(e);process.exit(1)})\"",
-    "audit:prd": "tsx scripts/audit-prd.ts"
+    "audit:prd": "tsx scripts/audit-prd.ts",
+    "test:all": "./test-all.sh",
+    "test:suite": "./scripts/run-test-suite.sh",
+    "test:api": "tsx scripts/test-api-endpoints.ts",
+    "test:email": "tsx scripts/test-representation-email.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
