@@ -1304,10 +1304,10 @@ router.post('/notices/:id/representations', async (req, res) => {
   try {
     const supabase = getServiceSupabaseClient();
 
-    // Check if notice exists
+    // Check if notice exists and get details for email
     const { data: notice, error: noticeError } = await supabase
       .from('notices')
-      .select('id, reps_deadline')
+      .select('id, reps_deadline, notice_type, premises, applicant')
       .eq('id', id)
       .single();
 
@@ -1352,7 +1352,88 @@ router.post('/notices/:id/representations', async (req, res) => {
 
     console.log(`[rep-submit] Successfully submitted representation ${refNumber} for notice ${id}`);
 
-    // TODO: Send confirmation email if email provided
+    // Send confirmation email if email provided
+    if (representor_email && !is_anonymous) {
+      console.log(`[rep-submit] Sending confirmation email to ${representor_email}`);
+      try {
+        const { sendRepresentationConfirmation } = await import('../services/email');
+
+        // Map representation type to stance
+        const stanceMap: Record<string, 'support' | 'object' | 'comment'> = {
+          'support': 'support',
+          'object': 'object',
+          'objection': 'object',
+          'comment': 'comment',
+          'neutral': 'comment'
+        };
+
+        // Get notice type label
+        const noticeTypeLabels: Record<string, string> = {
+          'premises-licence': 'Premises Licence Application',
+          'premises-licence-variation': 'Premises Licence Variation',
+          'premises-licence-review': 'Premises Licence Review',
+          'club-premises-certificate': 'Club Premises Certificate',
+          'temporary-event-notice': 'Temporary Event Notice',
+          'personal-licence': 'Personal Licence',
+          'designated-premises-supervisor': 'Designated Premises Supervisor',
+          'interim-authority-notice': 'Interim Authority Notice',
+          'transfer-premises-licence': 'Transfer of Premises Licence',
+          'planning-application': 'Planning Application',
+          'traffic-order': 'Traffic Order',
+          'street-works': 'Street Works Notice',
+          'environmental-permit': 'Environmental Permit',
+          'public-space-protection-order': 'Public Space Protection Order'
+        };
+
+        const noticeUrl = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/notices/${id}`;
+
+        // Format deadline if available
+        let formattedDeadline: string | undefined;
+        if (notice.reps_deadline) {
+          const deadline = new Date(notice.reps_deadline);
+          formattedDeadline = deadline.toLocaleDateString('en-GB', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+        }
+
+        // Build premises address string
+        let premisesAddress: string | undefined;
+        if (notice.premises?.address) {
+          const addr = notice.premises.address;
+          const parts = [
+            addr.street_address || addr.line_1,
+            addr.line_2,
+            addr.line_3,
+            addr.town || addr.city,
+            addr.county,
+            addr.postcode
+          ].filter(Boolean);
+          premisesAddress = parts.join(', ');
+        } else if (notice.premises?.postcode) {
+          premisesAddress = notice.premises.postcode;
+        }
+
+        await sendRepresentationConfirmation({
+          representationId: refNumber,
+          noticeType: noticeTypeLabels[notice.notice_type] || notice.notice_type,
+          premisesName: notice.premises?.name,
+          premisesAddress,
+          stance: stanceMap[type.toLowerCase()] || 'comment',
+          submitterName: representor_name || 'Anonymous',
+          submitterEmail: representor_email,
+          deadline: formattedDeadline,
+          noticeUrl
+        });
+
+        console.log(`[rep-submit] Confirmation email sent to ${representor_email}`);
+      } catch (emailError) {
+        // Log error but don't fail the request
+        console.error('[rep-submit] Failed to send confirmation email:', emailError);
+      }
+    }
 
     return res.status(201).json({
       success: true,
