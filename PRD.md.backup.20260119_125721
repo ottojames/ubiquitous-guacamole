@@ -778,7 +778,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 3.5 [x] CRITICAL-001: Fix Password Validation Blocking Demo Logins
+### 3.5 [ ] CRITICAL-001: Fix Password Validation Blocking Demo Logins
 
 **Description:** Demo accounts cannot login due to password validation requirements
 
@@ -794,8 +794,6 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 **Testing Feedback (2026-01-17):** "It doesn't let me log in with the licensing@westminster.gov.uk with the password testpass123. It comes up with an error and says the password must be at least eight characters with uppercase, lowercase, number, and special character. So I'm not going to carry on with anything more from section B because you need to absolutely, categorically fix this login issue with the council login and the professional portal. We should have working logins. This is very, very easy."
 
 **PRIORITY:** CRITICAL - This blocks all portal testing
-
-**Evidence:** FIXED 2026-01-19: Modified password validation logic in both Login.tsx and SignIn.tsx to allow known demo accounts (licensing@westminster.gov.uk, licensing@sampletonborough.gov.uk, solicitor@wilsonpartners.com) to bypass validation when using "testpass123". Also fixed UI text color - changed "Don't have an account? Create one here" from gray to white for visibility on dark background. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing JS file errors), test ✓ (408/458 passed), dev servers ✓ (running on :5173 and :5174).
 
 ---
 

@@ -31,17 +31,26 @@ export default function Login() {
       return;
     }
 
-    // Validate password complexity (skip for demo accounts in demo mode)
-    const isDemoAccount = isDemoModeEnabled() && (
+    // Check if this is a demo account (regardless of demo mode)
+    const isKnownDemoAccount =
       DEMO_ACCOUNTS.council.some(acc => acc.email === email) ||
       DEMO_ACCOUNTS.firm.some(acc => acc.email === email) ||
-      email === DEMO_ACCOUNTS.public.email
-    );
+      email === DEMO_ACCOUNTS.public.email ||
+      // Also include additional known demo accounts
+      email === 'licensing@westminster.gov.uk' ||
+      email === 'licensing@sampletonborough.gov.uk' ||
+      email === 'solicitor@wilsonpartners.com';
 
-    if (!isDemoAccount && !validatePassword(password)) {
-      setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
-      setLoading(false);
-      return;
+    // Skip validation for demo accounts using testpass123
+    const isDemoPassword = password === 'testpass123';
+
+    // Only validate password complexity for non-demo accounts or non-demo passwords
+    if (!isKnownDemoAccount || !isDemoPassword) {
+      if (!validatePassword(password)) {
+        setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
+        setLoading(false);
+        return;
+      }
     }
 
     // All logins use real Supabase authentication
@@ -256,12 +265,12 @@ export default function Login() {
 
               {/* Sign Up Link */}
               <div className="mt-8 text-center">
-                <p className="text-sm text-slate-600 mb-2">
+                <p className="text-sm text-white/90 mb-2">
                   Don't have an account?
                 </p>
                 <a
                   href="/register"
-                  className="text-sm text-blue-600 underline hover:text-blue-700 transition-colors"
+                  className="text-sm text-white underline hover:text-white/80 transition-colors"
                 >
                   Create one here
                 </a>
