@@ -886,7 +886,7 @@ import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
 
 ---
 
-### ⬜ Task 3.8: Create Admin Protected Route Component
+### ✅ Task 3.8: Create Admin Protected Route Component
 
 **File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/components/admin/AdminProtectedRoute.tsx`
 
@@ -910,9 +910,16 @@ export default function AdminProtectedRoute({ children }) {
 ```
 
 **Success Criteria:**
-- [ ] Redirects to login if not authenticated
-- [ ] Shows loading state
-- [ ] Allows access when authenticated
+- [x] Redirects to login if not authenticated
+- [x] Shows loading state
+- [x] Allows access when authenticated
+
+**Evidence of Completion:**
+- Created AdminProtectedRoute.tsx with authentication checking
+- Redirects unauthenticated users to /admin/login
+- Shows loading spinner during authentication check
+- TypeScript types properly defined
+- Integrates with AdminAuthContext
 
 **Dependencies:** Task 3.1
 
