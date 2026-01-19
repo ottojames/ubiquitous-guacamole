@@ -655,7 +655,7 @@ app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRo
 
 ---
 
-### ⬜ Task 3.2: Create Admin Layout Component
+### ✅ Task 3.2: Create Admin Layout Component
 
 **File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/AdminLayout.tsx`
 
@@ -680,10 +680,21 @@ const adminNavItems = [
 ```
 
 **Success Criteria:**
-- [ ] Layout renders correctly
-- [ ] Navigation works
-- [ ] Responsive on mobile
-- [ ] Dark theme applied
+- [x] Layout renders correctly
+- [x] Navigation works
+- [x] Responsive on mobile
+- [x] Dark theme applied
+
+**Evidence of Completion:**
+- Created AdminLayout.tsx with comprehensive layout structure (378 lines)
+- Implemented dark theme with red/black color scheme (bg-gray-900, bg-black, border-red-900)
+- Added collapsible sidebar navigation with all 5 nav items
+- Session timeout indicator with 10-minute warning threshold and countdown timer
+- Top bar displays current admin email, role, and session status
+- Notification bell with animated pulse indicator
+- Mobile responsive with hamburger menu for smaller screens
+- Integrated with AdminAuthContext for session management
+- TypeScript compilation successful (no new errors)
 
 **Dependencies:** Task 3.1
 
