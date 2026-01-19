@@ -1,393 +1,981 @@
-# CivicNotices - Product Requirements Document
+# CivicNotices - RALPH SEQUENTIAL TASK LIST
 
-**Branch:** demo-site-22112025
-**Purpose:** Track implementation of enterprise-grade features for $500M valuation target
-
----
-
-## 🎯 Project Vision
-
-**Enterprise Goal:** Build a $500 Million valuation platform (5-year target)
-**Code Standard:** Enterprise-grade, security-first, institutional quality
-**Compliance:** SOC 2 Type II ready, GDPR compliant, ISO 27001 aligned
+**Purpose:** Step-by-step implementation tasks for Enterprise Admin Panel
+**Target:** $500M valuation platform with enterprise-grade security
+**Execution:** Ralph should complete tasks sequentially - each builds on previous
 
 ---
 
-## 📊 Current System Status
+## 📊 Current Status
 
-**Document Version:** 6.0
-**Last Updated:** January 19, 2026 @ 19:00
-**Status:** ✅ CORE FUNCTIONAL | ⚠️ ENTERPRISE FEATURES PENDING
+**Version:** 7.0
+**Updated:** January 19, 2026 @ 19:30
+**Core System:** ✅ FUNCTIONAL
+**Admin Panel:** 🔴 NOT STARTED
 
-### What's Working ✅
-- **Registration:** Councils and firms can register successfully
-- **Authentication:** Sessions persist correctly
-- **Department Switching:** No recursion errors
-- **Database Schema:** Stable (columns fixed)
-- **Notice Submission:** Working from firm portal
-- **Public Search:** Working with distance filter
-- **Demo Accounts:** Westminster accounts functional
-
-### What's Pending 🔴
-- **Admin Panel:** NOT IMPLEMENTED - Critical for managing live accounts
-- **Enterprise Security:** Partial - Needs hardening for institutional clients
-- **Comprehensive Audit Trail:** Basic - Needs enterprise-grade logging
-- **Advanced Monitoring:** Basic - Needs enterprise observability
+### Prerequisites Confirmed ✅
+- Supabase authentication working
+- Council/firm portals functional
+- Database migrations system operational
+- Express server on port 5174
+- React Router configured
+- Audit logging foundation exists
 
 ---
 
-## 🏢 ENTERPRISE ADMIN PANEL - CRITICAL PRIORITY
+## 🎯 RALPH EXECUTION INSTRUCTIONS
 
-### ADMIN-001: Master Admin Control Panel
+1. **Complete tasks in exact order** - dependencies matter
+2. **Test after each task** - verify success criteria
+3. **Commit after each task** - maintain clean history
+4. **If blocked, document issue** - don't skip tasks
+5. **Run quality checks** - `npm run typecheck` after each phase
 
-**Status:** 🔴 NOT IMPLEMENTED - CRITICAL FOR LIVE TESTING
-**Business Impact:** Cannot manage real council accounts or test live notices
+---
 
-**Core Requirements:**
+## PHASE 1: DATABASE FOUNDATION (Tasks 1.1-1.3)
 
-#### 1. Super Admin Dashboard (/admin)
-```
-Access Level: RESTRICTED - Super Admins Only
-Authentication: Multi-factor required
-Audit: Every action logged with timestamp, user, and IP
-```
+### ⬜ Task 1.1: Create Admin Users Table Migration
 
-**Features:**
-- **Real-time System Overview**
-  - Active councils: count, names, subscription status
-  - Active firms: count, types, activity levels
-  - Total notices: published, pending, expired
-  - System health: API status, database connections, error rates
-  - Revenue metrics: MRR, ARR, churn rate
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/supabase/migrations/20260120000001_admin_users.sql`
 
-- **Account Management Grid**
-  - Searchable/filterable list of ALL accounts
-  - Columns: Organization, Type, Status, Created, Last Active, Subscription, Actions
-  - Bulk actions: Export, Suspend Multiple, Send Communications
-  - Quick actions per row: View, Edit, Suspend, Delete, Impersonate
-
-#### 2. Organization Management
-
-**Council/Firm Account Controls:**
-```typescript
-interface OrganizationControls {
-  // View Operations
-  viewFullProfile(): OrganizationProfile;
-  viewActivityLog(): ActivityLog[];
-  viewBillingHistory(): Invoice[];
-  viewNoticeHistory(): Notice[];
-
-  // Modify Operations (with audit trail)
-  suspendAccount(reason: string): void;
-  reactivateAccount(): void;
-  updateSubscription(tier: SubscriptionTier): void;
-  resetPassword(userId: string): void;
-
-  // Dangerous Operations (require 2FA + confirmation)
-  deleteAccount(confirmation: string): void;
-  purgeData(dataType: DataType[]): void;
-  transferOwnership(newOwnerId: string): void;
-}
-```
-
-**Security Requirements:**
-- All destructive operations require typed confirmation
-- Automatic backup before any deletion
-- 30-day soft delete with recovery option
-- Audit log cannot be modified or deleted
-- Rate limiting on all admin endpoints
-
-#### 3. Notice Management & Testing
-
-**Live Notice Testing Dashboard:**
-- Test notice submission as any council
-- Validate notice processing pipeline
-- Check geocoding accuracy
-- Verify publication to correct channels
-- Test representation submission flow
-- Monitor email delivery
-
-**Notice Controls:**
-```typescript
-interface NoticeAdminControls {
-  // Inspection
-  viewNoticeDetails(noticeId: string): NoticeDetails;
-  viewRepresentations(noticeId: string): Representation[];
-  validateCompliance(noticeId: string): ComplianceReport;
-
-  // Modifications (logged)
-  extendDeadline(noticeId: string, days: number): void;
-  correctErrors(noticeId: string, corrections: Partial<Notice>): void;
-  flagForReview(noticeId: string, reason: string): void;
-
-  // Testing
-  createTestNotice(council: string, type: NoticeType): TestNotice;
-  simulateSubmission(notice: TestNotice): SimulationResult;
-  verifyPublication(noticeId: string): PublicationStatus;
-}
-```
-
-#### 4. Security & Compliance
-
-**Enterprise Security Features:**
-- **Session Management:** View/terminate active sessions per account
-- **IP Allowlisting:** Restrict admin access to specific IPs
-- **Audit Trail:** Immutable log of all admin actions
-- **Data Encryption:** All sensitive data encrypted at rest
-- **Access Control:** Granular permissions system
-- **Compliance Reports:** GDPR data requests, right to be forgotten
-
-**Implementation Standards:**
-```typescript
-// Every admin action must follow this pattern
-async function executeAdminAction<T>(
-  action: AdminAction<T>,
-  context: AdminContext
-): Promise<ActionResult<T>> {
-  // 1. Verify permissions
-  await verifyAdminPermissions(context.user, action.requiredRole);
-
-  // 2. Validate 2FA if required
-  if (action.requires2FA) {
-    await validate2FA(context.user, context.token);
-  }
-
-  // 3. Create audit entry (before action)
-  const auditId = await createAuditEntry({
-    user: context.user,
-    action: action.type,
-    target: action.target,
-    timestamp: new Date(),
-    ip: context.ip,
-    userAgent: context.userAgent,
-    status: 'pending'
-  });
-
-  // 4. Execute with monitoring
-  const result = await monitorExecution(async () => {
-    return await action.execute();
-  });
-
-  // 5. Update audit with result
-  await updateAuditEntry(auditId, {
-    status: result.success ? 'completed' : 'failed',
-    result: result.data,
-    error: result.error
-  });
-
-  // 6. Send alerts if needed
-  if (action.alertOnComplete) {
-    await sendAdminAlert(action, result);
-  }
-
-  return result;
-}
-```
-
-#### 5. Monitoring & Alerting
-
-**Real-time Monitoring Requirements:**
-- Failed login attempts (alert after 3 failures)
-- Suspicious activity patterns
-- High error rates (>1% of requests)
-- Database connection issues
-- Payment processing failures
-- Unusual data access patterns
-
-**Alert Channels:**
-- Email to admin team
-- Slack/Teams integration
-- SMS for critical issues
-- Dashboard notifications
-- Automated incident creation
-
-#### 6. Database Schema for Admin Features
-
+**Implementation:**
 ```sql
--- Admin users table (separate from regular users for security)
-CREATE TABLE admin_users (
+-- Admin users table with enhanced security
+CREATE TABLE IF NOT EXISTS public.admin_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT CHECK (role IN ('super_admin', 'admin', 'support', 'viewer')),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('super_admin', 'admin', 'support')),
+
+  -- 2FA fields
+  two_factor_enabled BOOLEAN NOT NULL DEFAULT false,
   two_factor_secret TEXT,
-  two_factor_enabled BOOLEAN DEFAULT false,
-  ip_whitelist TEXT[],
+  backup_codes TEXT[], -- Array of hashed backup codes
+
+  -- Security
+  ip_allowlist TEXT[], -- Array of allowed IP addresses
   last_login_at TIMESTAMPTZ,
   last_login_ip INET,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  failed_login_attempts INTEGER DEFAULT 0,
+  locked_until TIMESTAMPTZ,
+
+  -- Status
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'revoked')),
+
+  -- Metadata
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_by UUID REFERENCES public.admin_users(id) ON DELETE SET NULL,
+  revoked_at TIMESTAMPTZ,
+  revoked_by UUID REFERENCES public.admin_users(id) ON DELETE SET NULL,
+  revoke_reason TEXT,
+
+  UNIQUE(user_id),
+  UNIQUE(email)
 );
 
--- Comprehensive audit log
-CREATE TABLE admin_audit_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_user_id UUID REFERENCES admin_users(id),
-  action_type TEXT NOT NULL,
-  action_details JSONB NOT NULL,
-  target_type TEXT,
-  target_id UUID,
-  ip_address INET NOT NULL,
-  user_agent TEXT,
-  success BOOLEAN NOT NULL,
-  error_message TEXT,
-  duration_ms INTEGER,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Indexes
+CREATE INDEX idx_admin_users_user_id ON public.admin_users(user_id);
+CREATE INDEX idx_admin_users_email ON public.admin_users(email);
+CREATE INDEX idx_admin_users_status ON public.admin_users(status);
+CREATE INDEX idx_admin_users_role ON public.admin_users(role);
 
--- Account suspension tracking
-CREATE TABLE account_suspensions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id UUID REFERENCES organizations(id),
-  suspended_by UUID REFERENCES admin_users(id),
-  suspension_reason TEXT NOT NULL,
-  suspension_type TEXT CHECK (suspension_type IN ('temporary', 'permanent', 'pending_review')),
-  suspended_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ,
-  lifted_at TIMESTAMPTZ,
-  lifted_by UUID REFERENCES admin_users(id),
-  notes TEXT
-);
+-- Enable RLS
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
--- Indexes for performance
-CREATE INDEX idx_audit_log_admin_user ON admin_audit_log(admin_user_id);
-CREATE INDEX idx_audit_log_created_at ON admin_audit_log(created_at DESC);
-CREATE INDEX idx_audit_log_target ON admin_audit_log(target_type, target_id);
-CREATE INDEX idx_suspensions_org ON account_suspensions(organization_id);
-CREATE INDEX idx_suspensions_active ON account_suspensions(lifted_at) WHERE lifted_at IS NULL;
+-- Policy: Only service role can manage admin users
+CREATE POLICY "Admin users manageable by service role only"
+  ON public.admin_users
+  FOR ALL
+  TO service_role
+  USING (true);
+
+-- Function to check if user is admin
+CREATE OR REPLACE FUNCTION public.is_admin_user(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE user_id = p_user_id
+      AND status = 'active'
+      AND (locked_until IS NULL OR locked_until < NOW())
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to check if user is super admin
+CREATE OR REPLACE FUNCTION public.is_super_admin(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE user_id = p_user_id
+      AND role = 'super_admin'
+      AND status = 'active'
+      AND (locked_until IS NULL OR locked_until < NOW())
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON TABLE public.admin_users IS 'Platform administrators with elevated privileges';
 ```
 
-#### 7. Implementation Timeline
+**Test Command:**
+```bash
+npx supabase migration up --local
+```
 
-**Phase 1 (Week 1) - Core Infrastructure:**
-- [ ] Admin authentication system with 2FA
-- [ ] Basic admin dashboard with organization list
-- [ ] View-only access to accounts
-- [ ] Audit logging foundation
+**Success Criteria:**
+- [ ] Migration runs without errors
+- [ ] Table `admin_users` exists in Supabase
+- [ ] RLS policies active
+- [ ] Helper functions `is_admin_user` and `is_super_admin` work
 
-**Phase 2 (Week 2) - Account Management:**
-- [ ] Suspend/reactivate accounts
-- [ ] Edit organization details
-- [ ] View activity logs
-- [ ] Basic search and filtering
-
-**Phase 3 (Week 3) - Testing & Monitoring:**
-- [ ] Notice testing interface
-- [ ] System health monitoring
-- [ ] Alert configuration
-- [ ] Performance metrics
-
-**Phase 4 (Week 4) - Security & Polish:**
-- [ ] IP whitelisting
-- [ ] Advanced audit reports
-- [ ] Compliance tools
-- [ ] Role-based permissions
+**Dependencies:** None
 
 ---
 
-## 📋 Other Pending Enhancements
+### ⬜ Task 1.2: Create Admin Sessions Table Migration
 
-### ENHANCE-002: Advanced Search & Filtering
-- [ ] Multi-parameter search (postcode + notice type + date range)
-- [ ] Saved searches for registered users
-- [ ] Search history
-- [ ] Advanced filters (council, status, deadline)
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/supabase/migrations/20260120000002_admin_sessions.sql`
 
-### ENHANCE-003: Analytics Dashboard
-- [ ] Council-specific analytics
-- [ ] Notice performance metrics
-- [ ] Representation analytics
-- [ ] Revenue tracking
+**Implementation:**
+```sql
+-- Admin session tracking for enhanced security
+CREATE TABLE IF NOT EXISTS public.admin_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id UUID NOT NULL REFERENCES public.admin_users(id) ON DELETE CASCADE,
 
-### ENHANCE-004: API Documentation
-- [ ] OpenAPI/Swagger documentation
-- [ ] API key management
-- [ ] Rate limiting per key
-- [ ] Usage analytics
+  -- Session details
+  session_token TEXT NOT NULL UNIQUE,
+  ip_address INET NOT NULL,
+  user_agent TEXT,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '2 hours',
+  last_activity_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  terminated_at TIMESTAMPTZ,
+
+  -- Termination reason
+  termination_reason TEXT CHECK (termination_reason IN ('logout', 'timeout', 'security', 'admin_action'))
+);
+
+-- Indexes
+CREATE INDEX idx_admin_sessions_admin_user ON public.admin_sessions(admin_user_id);
+CREATE INDEX idx_admin_sessions_token ON public.admin_sessions(session_token);
+CREATE INDEX idx_admin_sessions_expires ON public.admin_sessions(expires_at) WHERE terminated_at IS NULL;
+
+-- Enable RLS
+ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Only service role
+CREATE POLICY "Admin sessions manageable by service role only"
+  ON public.admin_sessions
+  FOR ALL
+  TO service_role
+  USING (true);
+
+-- Function to validate admin session
+CREATE OR REPLACE FUNCTION public.validate_admin_session(p_session_token TEXT)
+RETURNS TABLE(
+  admin_user_id UUID,
+  user_id UUID,
+  email TEXT,
+  role TEXT,
+  two_factor_enabled BOOLEAN
+) AS $$
+BEGIN
+  -- Update last activity
+  UPDATE public.admin_sessions
+  SET last_activity_at = NOW()
+  WHERE session_token = p_session_token
+    AND terminated_at IS NULL
+    AND expires_at > NOW();
+
+  -- Return admin user details
+  RETURN QUERY
+  SELECT
+    au.id,
+    au.user_id,
+    au.email,
+    au.role,
+    au.two_factor_enabled
+  FROM public.admin_sessions s
+  JOIN public.admin_users au ON s.admin_user_id = au.id
+  WHERE s.session_token = p_session_token
+    AND s.terminated_at IS NULL
+    AND s.expires_at > NOW()
+    AND au.status = 'active'
+    AND (au.locked_until IS NULL OR au.locked_until < NOW());
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to cleanup expired sessions
+CREATE OR REPLACE FUNCTION public.cleanup_expired_admin_sessions()
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  UPDATE public.admin_sessions
+  SET terminated_at = NOW(),
+      termination_reason = 'timeout'
+  WHERE terminated_at IS NULL
+    AND expires_at < NOW();
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON TABLE public.admin_sessions IS 'Admin session tracking with 2-hour timeout';
+```
+
+**Test Command:**
+```bash
+npx supabase migration up --local
+```
+
+**Success Criteria:**
+- [ ] Migration runs without errors
+- [ ] Table `admin_sessions` exists
+- [ ] Function `validate_admin_session` callable
+- [ ] Function `cleanup_expired_admin_sessions` callable
+
+**Dependencies:** Task 1.1 must be complete
 
 ---
 
-## 🔒 Security Requirements
+### ⬜ Task 1.3: Create Admin Actions Audit Table Migration
 
-### Critical Security Features Needed:
-- [ ] Two-factor authentication for all admin users
-- [ ] IP allowlisting for admin panel
-- [ ] Comprehensive audit logging
-- [ ] Data encryption at rest
-- [ ] Regular security audits
-- [ ] GDPR compliance tools
-- [ ] Automated backup system
-- [ ] Disaster recovery plan
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/supabase/migrations/20260120000003_admin_actions_audit.sql`
 
-### Security Checklist:
-- [ ] All endpoints require authentication
-- [ ] Rate limiting implemented (10 req/sec)
-- [ ] SQL injection prevention
-- [ ] XSS protection
-- [ ] CSRF tokens on all forms
-- [ ] Encrypted passwords (bcrypt/argon2)
-- [ ] Secure session management
-- [ ] Input validation on all fields
-- [ ] Output encoding
-- [ ] Secure headers (HSTS, CSP, etc.)
+**Implementation:**
+```sql
+-- Enhanced audit logging for admin actions
+CREATE TABLE IF NOT EXISTS public.admin_actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Admin context
+  admin_user_id UUID NOT NULL REFERENCES public.admin_users(id) ON DELETE SET NULL,
+  admin_email TEXT NOT NULL,
+  admin_role TEXT NOT NULL,
+
+  -- Action details
+  action TEXT NOT NULL, -- e.g., 'account.suspended', 'notice.deleted'
+  action_category TEXT NOT NULL CHECK (action_category IN (
+    'account_management',
+    'notice_moderation',
+    'user_management',
+    'system_config',
+    'security',
+    'billing'
+  )),
+
+  -- Target resource
+  target_type TEXT NOT NULL, -- 'organization', 'department', 'user', 'notice'
+  target_id UUID,
+  target_identifier TEXT, -- Human-readable identifier
+
+  -- Change tracking
+  old_values JSONB,
+  new_values JSONB,
+  reason TEXT,
+
+  -- Request context
+  ip_address INET NOT NULL,
+  user_agent TEXT,
+  session_id UUID REFERENCES public.admin_sessions(id) ON DELETE SET NULL,
+
+  -- Severity
+  severity TEXT NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical')),
+
+  -- Timestamp (immutable)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_admin_actions_admin_user ON public.admin_actions(admin_user_id, created_at DESC);
+CREATE INDEX idx_admin_actions_category ON public.admin_actions(action_category, created_at DESC);
+CREATE INDEX idx_admin_actions_target ON public.admin_actions(target_type, target_id);
+CREATE INDEX idx_admin_actions_severity ON public.admin_actions(severity, created_at DESC);
+CREATE INDEX idx_admin_actions_created ON public.admin_actions(created_at DESC);
+
+-- Enable RLS
+ALTER TABLE public.admin_actions ENABLE ROW LEVEL SECURITY;
+
+-- Policy
+CREATE POLICY "Admin actions readable by service role only"
+  ON public.admin_actions
+  FOR SELECT
+  TO service_role
+  USING (true);
+
+-- Prevent modification
+CREATE OR REPLACE FUNCTION prevent_admin_action_modification()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'Admin actions are immutable and cannot be modified or deleted';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER admin_actions_immutable
+  BEFORE UPDATE OR DELETE ON public.admin_actions
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_admin_action_modification();
+
+-- Helper function to log admin actions
+CREATE OR REPLACE FUNCTION public.log_admin_action(
+  p_admin_user_id UUID,
+  p_action TEXT,
+  p_action_category TEXT,
+  p_target_type TEXT,
+  p_target_id UUID,
+  p_target_identifier TEXT DEFAULT NULL,
+  p_old_values JSONB DEFAULT NULL,
+  p_new_values JSONB DEFAULT NULL,
+  p_reason TEXT DEFAULT NULL,
+  p_ip_address INET DEFAULT NULL,
+  p_session_id UUID DEFAULT NULL,
+  p_severity TEXT DEFAULT 'info'
+)
+RETURNS UUID AS $$
+DECLARE
+  action_id UUID;
+  admin_email_val TEXT;
+  admin_role_val TEXT;
+BEGIN
+  -- Get admin details
+  SELECT email, role INTO admin_email_val, admin_role_val
+  FROM public.admin_users
+  WHERE id = p_admin_user_id;
+
+  INSERT INTO public.admin_actions (
+    admin_user_id, admin_email, admin_role, action, action_category,
+    target_type, target_id, target_identifier,
+    old_values, new_values, reason,
+    ip_address, session_id, severity
+  ) VALUES (
+    p_admin_user_id, admin_email_val, admin_role_val, p_action, p_action_category,
+    p_target_type, p_target_id, p_target_identifier,
+    p_old_values, p_new_values, p_reason,
+    p_ip_address, p_session_id, p_severity
+  ) RETURNING id INTO action_id;
+
+  RETURN action_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON TABLE public.admin_actions IS 'Immutable audit trail of all admin panel actions';
+```
+
+**Test Command:**
+```bash
+npx supabase migration up --local
+```
+
+**Success Criteria:**
+- [ ] Migration runs without errors
+- [ ] Table `admin_actions` exists
+- [ ] Trigger prevents updates/deletes
+- [ ] Function `log_admin_action` callable
+
+**Dependencies:** Tasks 1.1, 1.2 must be complete
 
 ---
 
-## 📈 Success Metrics
+## PHASE 2: SERVER-SIDE ADMIN (Tasks 2.1-2.5)
 
-### Admin Panel Success Criteria:
-- Admin can manage 1000+ accounts without performance degradation
-- All admin actions logged within 100ms
-- Zero unauthorized access incidents
-- 99.9% uptime for admin panel
-- <2 second load time for any admin view
+### ⬜ Task 2.1: Install Required Dependencies
 
-### Platform Success Metrics:
-- 500+ councils onboarded within 2 years
-- 99.99% uptime SLA
-- <500ms average API response time
-- 100% statutory compliance
-- Zero data breaches
+**Commands to Run:**
+```bash
+npm install otplib qrcode bcrypt speakeasy
+npm install --save-dev @types/bcrypt @types/speakeasy
+```
 
----
+**Success Criteria:**
+- [ ] No npm errors
+- [ ] Packages in package.json
+- [ ] TypeScript types available
 
-## 🚀 Next Steps (Priority Order)
-
-1. **IMMEDIATE (This Week):**
-   - [ ] Start Phase 1 of Admin Panel implementation
-   - [ ] Set up admin authentication with 2FA
-   - [ ] Create basic dashboard layout
-
-2. **WEEK 2:**
-   - [ ] Implement account management features
-   - [ ] Add suspend/delete functionality
-   - [ ] Create audit logging system
-
-3. **WEEK 3:**
-   - [ ] Build notice testing interface
-   - [ ] Add system monitoring
-   - [ ] Configure alerts
-
-4. **WEEK 4:**
-   - [ ] Implement enterprise security features
-   - [ ] Add compliance tools
-   - [ ] Final testing and polish
-
-5. **ONGOING:**
-   - [ ] Test with real councils
-   - [ ] Monitor system health
-   - [ ] Iterate based on feedback
-   - [ ] Scale infrastructure as needed
+**Dependencies:** Phase 1 complete
 
 ---
 
-## 📚 Related Documents
+### ⬜ Task 2.2: Create Admin Authentication Middleware
 
-- **Completed Items:** See PRD_COMPLETED.md for all finished work
-- **Ralph Automation:** See docs/RALPH-CICD.md for database fix automation
-- **Production Guide:** See docs/PRODUCTION-DEPLOYMENT.md for deployment
-- **Monitoring Setup:** See monitoring/setup-monitoring.sh for configuration
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/server/middleware/adminAuth.ts`
+
+**Pattern to Follow:** Similar to existing auth middleware at `server/middleware/auth.ts`
+
+**Key Implementation Points:**
+```typescript
+// 1. Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      adminUser?: {
+        id: string;
+        userId: string;
+        email: string;
+        role: 'super_admin' | 'admin' | 'support';
+        twoFactorEnabled: boolean;
+        sessionId: string;
+      };
+    }
+  }
+}
+
+// 2. Main middleware function
+export async function requireAdmin(req, res, next) {
+  // Extract session token from cookie or header
+  // Validate via validate_admin_session RPC
+  // Attach adminUser to request
+  // Handle errors
+}
+
+// 3. Role-specific middleware
+export function requireSuperAdmin(req, res, next) {
+  // Check req.adminUser exists
+  // Verify role === 'super_admin'
+}
+
+// 4. Action logging middleware
+export function logAdminAction(action, category, targetType, targetId?, options?) {
+  // Return middleware function
+  // Log action on response finish
+}
+
+// 5. IP allowlist enforcement
+export async function enforceIPAllowlist(req, res, next) {
+  // Check admin user's IP allowlist
+  // Compare with request IP
+}
+```
+
+**Test:** Create test file `server/middleware/adminAuth.test.ts`
+
+**Success Criteria:**
+- [ ] Compiles without TypeScript errors
+- [ ] Request type extended properly
+- [ ] Middleware functions exported
+- [ ] Session validation works
+
+**Dependencies:** Task 2.1
 
 ---
 
-**For questions or updates, contact the development team**
+### ⬜ Task 2.3: Create Admin Authentication Routes
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/server/routes/admin/auth.ts`
+
+**Endpoints to Implement:**
+1. `POST /api/admin/auth/login` - Email/password login
+2. `POST /api/admin/auth/verify-2fa` - 2FA verification
+3. `POST /api/admin/auth/logout` - Session termination
+4. `GET /api/admin/auth/session` - Check current session
+5. `POST /api/admin/auth/setup-2fa` - Enable 2FA
+6. `POST /api/admin/auth/disable-2fa` - Disable 2FA
+
+**Key Features:**
+- Failed login attempt tracking
+- Account lockout after 5 failed attempts
+- Session token generation
+- 2FA with TOTP (Google Authenticator compatible)
+- Audit logging for all auth events
+
+**Success Criteria:**
+- [ ] All endpoints return proper status codes
+- [ ] Login creates session in database
+- [ ] 2FA flow works end-to-end
+- [ ] Failed attempts tracked
+
+**Dependencies:** Task 2.2
+
+---
+
+### ⬜ Task 2.4: Create Admin Account Management Routes
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/server/routes/admin/accounts.ts`
+
+**Endpoints to Implement:**
+```typescript
+// List endpoints with pagination and filters
+GET /api/admin/accounts/councils?page=1&limit=25&status=active
+GET /api/admin/accounts/firms?page=1&limit=25
+GET /api/admin/accounts/users?organizationId=xxx
+
+// Detail endpoints
+GET /api/admin/accounts/:id
+GET /api/admin/accounts/:id/activity
+GET /api/admin/accounts/:id/notices
+GET /api/admin/accounts/:id/billing
+
+// Action endpoints
+PATCH /api/admin/accounts/:id/suspend
+PATCH /api/admin/accounts/:id/activate
+PATCH /api/admin/accounts/:id/update
+DELETE /api/admin/accounts/:id
+
+// Bulk operations
+POST /api/admin/accounts/bulk/suspend
+POST /api/admin/accounts/bulk/export
+```
+
+**Success Criteria:**
+- [ ] All endpoints protected by requireAdmin
+- [ ] Pagination works correctly
+- [ ] Actions logged to admin_actions table
+- [ ] Soft delete preserves data
+
+**Dependencies:** Task 2.3
+
+---
+
+### ⬜ Task 2.5: Register Admin Routes in Server
+
+**File to Modify:** `/Users/ottoclarke/projects/Ralph's Civic Notices/server/index.ts`
+
+**Changes at Line 36:**
+```typescript
+// Import admin routes
+import adminAuthRouter from './routes/admin/auth.js';
+import adminAccountsRouter from './routes/admin/accounts.js';
+import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth.js';
+```
+
+**Changes at Line 83 (after other routes):**
+```typescript
+// Admin routes (no auth required for login)
+app.use('/api/admin/auth', adminAuthRouter);
+
+// Protected admin routes
+app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRouter);
+```
+
+**Success Criteria:**
+- [ ] Server starts without errors
+- [ ] Admin routes accessible at /api/admin/*
+- [ ] Non-admin routes still work
+
+**Dependencies:** Tasks 2.3, 2.4
+
+---
+
+## PHASE 3: FRONTEND ADMIN UI (Tasks 3.1-3.8)
+
+### ⬜ Task 3.1: Create Admin Context Provider
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/contexts/AdminAuthContext.tsx`
+
+**Pattern to Follow:** Similar to `src/contexts/AuthContext.tsx`
+
+**Key Differences:**
+- Separate admin session management
+- 2FA state handling
+- Session timeout warnings
+- IP allowlist checks
+
+**Success Criteria:**
+- [ ] Context provides admin user state
+- [ ] Login/logout functions work
+- [ ] Session persistence in localStorage
+- [ ] Auto-logout on timeout
+
+**Dependencies:** Phase 2 complete
+
+---
+
+### ⬜ Task 3.2: Create Admin Layout Component
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/AdminLayout.tsx`
+
+**Pattern to Follow:** Similar to `src/pages/council/CouncilLayout.tsx`
+
+**Visual Requirements:**
+- Dark theme (red/black color scheme)
+- Sidebar navigation
+- Top bar with admin info
+- Session timeout indicator
+- Notification bell for alerts
+
+**Navigation Items:**
+```typescript
+const adminNavItems = [
+  { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+  { label: 'Accounts', path: '/admin/accounts', icon: Building2 },
+  { label: 'Notices', path: '/admin/notices', icon: FileText },
+  { label: 'Audit Log', path: '/admin/audit', icon: Shield },
+  { label: 'Settings', path: '/admin/settings', icon: Settings },
+];
+```
+
+**Success Criteria:**
+- [ ] Layout renders correctly
+- [ ] Navigation works
+- [ ] Responsive on mobile
+- [ ] Dark theme applied
+
+**Dependencies:** Task 3.1
+
+---
+
+### ⬜ Task 3.3: Create Admin Login Page
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/Login.tsx`
+
+**Features:**
+1. Email/password form
+2. 2FA code input (conditional)
+3. Remember device checkbox
+4. Failed attempt warnings
+5. Account locked message
+
+**Visual Style:**
+- Center-aligned card
+- Dark background
+- Red accent colors
+- Security badge/shield icon
+
+**Success Criteria:**
+- [ ] Login form submits correctly
+- [ ] 2FA step appears when needed
+- [ ] Error messages display
+- [ ] Redirects to dashboard on success
+
+**Dependencies:** Task 3.1
+
+---
+
+### ⬜ Task 3.4: Create Admin Dashboard
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/Dashboard.tsx`
+
+**Components to Include:**
+1. Statistics cards (councils, firms, notices, revenue)
+2. Recent activity feed
+3. System health indicators
+4. Quick actions panel
+5. Alerts/warnings section
+
+**Data to Fetch:**
+```typescript
+// Statistics
+const stats = {
+  totalCouncils: number,
+  activeCouncils: number,
+  totalFirms: number,
+  totalNotices: number,
+  monthlyRevenue: number,
+  systemHealth: 'healthy' | 'degraded' | 'down'
+};
+
+// Recent activity
+const recentActions = await fetch('/api/admin/audit/recent');
+```
+
+**Success Criteria:**
+- [ ] All stats display correctly
+- [ ] Real-time data updates
+- [ ] Charts render properly
+- [ ] Mobile responsive
+
+**Dependencies:** Task 3.2
+
+---
+
+### ⬜ Task 3.5: Create Account Management Page
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/AccountManagement.tsx`
+
+**Features:**
+1. Tabbed interface (Councils | Firms | Users)
+2. Data table with sorting/filtering
+3. Search functionality
+4. Bulk action toolbar
+5. Account detail modal
+
+**Table Columns:**
+- Organization Name
+- Type
+- Status
+- Created Date
+- Last Active
+- Subscription
+- Actions (dropdown menu)
+
+**Action Menu Items:**
+- View Details
+- Edit
+- Suspend/Activate
+- Reset Password
+- Delete
+
+**Success Criteria:**
+- [ ] Data table loads accounts
+- [ ] Search/filter works
+- [ ] Actions update database
+- [ ] Audit log entries created
+
+**Dependencies:** Task 3.2
+
+---
+
+### ⬜ Task 3.6: Create Audit Log Page
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/AuditLog.tsx`
+
+**Features:**
+1. Filterable log table
+2. Date range picker
+3. Severity indicators
+4. Export functionality
+5. Detail view modal
+
+**Filters:**
+- Date range
+- Admin user
+- Action category
+- Severity level
+- Target type
+
+**Success Criteria:**
+- [ ] Logs display correctly
+- [ ] Filters work
+- [ ] Export generates CSV
+- [ ] Infinite scroll works
+
+**Dependencies:** Task 3.2
+
+---
+
+### ⬜ Task 3.7: Add Admin Routes to App.tsx
+
+**File to Modify:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/App.tsx`
+
+**Changes at Line 132 (after council routes):**
+```typescript
+// Import admin components
+import AdminLayout from '@/pages/admin/AdminLayout';
+import AdminLogin from '@/pages/admin/Login';
+import AdminDashboard from '@/pages/admin/Dashboard';
+import AccountManagement from '@/pages/admin/AccountManagement';
+import AdminAuditLog from '@/pages/admin/AuditLog';
+import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute';
+
+// Add routes
+<Route path="/admin/login" element={<AdminLogin />} />
+<Route path="/admin" element={
+  <AdminProtectedRoute>
+    <AdminLayout />
+  </AdminProtectedRoute>
+}>
+  <Route index element={<Navigate to="dashboard" replace />} />
+  <Route path="dashboard" element={<AdminDashboard />} />
+  <Route path="accounts" element={<AccountManagement />} />
+  <Route path="audit" element={<AdminAuditLog />} />
+  <Route path="settings" element={<AdminSettings />} />
+</Route>
+```
+
+**Success Criteria:**
+- [ ] Routes accessible at /admin/*
+- [ ] Protected route component works
+- [ ] Navigation between pages works
+
+**Dependencies:** Tasks 3.3-3.6
+
+---
+
+### ⬜ Task 3.8: Create Admin Protected Route Component
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/components/admin/AdminProtectedRoute.tsx`
+
+**Implementation:**
+```typescript
+export default function AdminProtectedRoute({ children }) {
+  const { adminUser, loading } = useAdminAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !adminUser) {
+      navigate('/admin/login');
+    }
+  }, [loading, adminUser]);
+
+  if (loading) return <LoadingSpinner />;
+  if (!adminUser) return null;
+
+  return children;
+}
+```
+
+**Success Criteria:**
+- [ ] Redirects to login if not authenticated
+- [ ] Shows loading state
+- [ ] Allows access when authenticated
+
+**Dependencies:** Task 3.1
+
+---
+
+## PHASE 4: TESTING & DEPLOYMENT (Tasks 4.1-4.5)
+
+### ⬜ Task 4.1: Create Super Admin Seed Script
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/scripts/create-super-admin.ts`
+
+**Implementation:**
+```typescript
+import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcrypt';
+import { config } from 'dotenv';
+
+config();
+
+async function createSuperAdmin() {
+  const email = 'admin@civicnotices.co.uk';
+  const password = 'ChangeMeImmediately123!';
+
+  // 1. Create auth user
+  // 2. Create admin_users record
+  // 3. Log action
+  // 4. Display credentials
+
+  console.log('Super Admin created:');
+  console.log('Email:', email);
+  console.log('Password:', password);
+  console.log('IMPORTANT: Change password on first login!');
+}
+```
+
+**Success Criteria:**
+- [ ] Script runs without errors
+- [ ] Super admin can login
+- [ ] Record in admin_users table
+
+**Dependencies:** Phase 1-3 complete
+
+---
+
+### ⬜ Task 4.2: Create Admin Panel E2E Tests
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/e2e/admin-panel.spec.ts`
+
+**Test Cases:**
+1. Admin login flow
+2. 2FA setup and verification
+3. Account suspension
+4. Audit log generation
+5. Session timeout
+
+**Success Criteria:**
+- [ ] All tests pass
+- [ ] Coverage > 80%
+
+**Dependencies:** Task 4.1
+
+---
+
+### ⬜ Task 4.3: Security Audit Checklist
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/docs/ADMIN_SECURITY_AUDIT.md`
+
+**Checklist Items:**
+- [ ] All admin endpoints require authentication
+- [ ] 2FA enforcement works
+- [ ] Session timeout at 2 hours
+- [ ] Failed login lockout works
+- [ ] Audit logging comprehensive
+- [ ] No SQL injection vulnerabilities
+- [ ] XSS protection in place
+- [ ] CSRF tokens implemented
+- [ ] Rate limiting active
+
+**Dependencies:** All previous tasks
+
+---
+
+### ⬜ Task 4.4: Admin Documentation
+
+**File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/docs/ADMIN_PANEL_GUIDE.md`
+
+**Sections:**
+1. Getting Started
+2. Authentication & 2FA
+3. Managing Accounts
+4. Monitoring System
+5. Security Best Practices
+6. Troubleshooting
+
+**Dependencies:** All previous tasks
+
+---
+
+### ⬜ Task 4.5: Final Integration Testing
+
+**Manual Test Checklist:**
+- [ ] Create super admin account
+- [ ] Login with 2FA
+- [ ] View dashboard metrics
+- [ ] Suspend a test account
+- [ ] Check audit log entry
+- [ ] Test session timeout
+- [ ] Verify mobile responsiveness
+- [ ] Check performance (< 2s load times)
+- [ ] Test concurrent admin sessions
+- [ ] Verify data encryption
+
+**Success Criteria:**
+- [ ] All manual tests pass
+- [ ] No console errors
+- [ ] No security warnings
+
+**Dependencies:** Tasks 4.1-4.4
+
+---
+
+## 📊 COMPLETION TRACKING
+
+### Phase Status:
+- [ ] **Phase 1:** Database Foundation (3 tasks)
+- [ ] **Phase 2:** Server-Side Admin (5 tasks)
+- [ ] **Phase 3:** Frontend Admin UI (8 tasks)
+- [ ] **Phase 4:** Testing & Deployment (5 tasks)
+
+### Total Progress: 0/21 tasks
+
+### Time Estimates:
+- Phase 1: 3-4 hours
+- Phase 2: 6-8 hours
+- Phase 3: 8-10 hours
+- Phase 4: 4-5 hours
+- **Total:** 21-27 hours
+
+---
+
+## 🚨 CRITICAL NOTES FOR RALPH
+
+1. **DO NOT SKIP DEPENDENCIES** - Tasks build on each other
+2. **TEST EACH TASK** - Verify success criteria before moving on
+3. **COMMIT FREQUENTLY** - After each successful task
+4. **SECURITY FIRST** - This is admin panel, security is paramount
+5. **FOLLOW PATTERNS** - Use existing code patterns from council/firm portals
+
+---
+
+## 🎯 Definition of Done
+
+The Admin Panel is complete when:
+- [ ] All 21 tasks marked complete
+- [ ] Super admin can login with 2FA
+- [ ] Can view/manage all accounts
+- [ ] Audit trail captures all actions
+- [ ] Security audit passed
+- [ ] Documentation complete
+- [ ] E2E tests passing
+
+---
+
+**Next Action:** Ralph should start with Task 1.1 - Create Admin Users Table Migration
