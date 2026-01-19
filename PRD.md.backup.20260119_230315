@@ -35,7 +35,7 @@
 
 ## PHASE 1: DATABASE FOUNDATION (Tasks 1.1-1.3)
 
-### ✅ Task 1.1: Create Admin Users Table Migration
+### ⬜ Task 1.1: Create Admin Users Table Migration
 
 **File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/supabase/migrations/20260120000001_admin_users.sql`
 
@@ -126,15 +126,10 @@ npx supabase migration up --local
 ```
 
 **Success Criteria:**
-- [x] Migration runs without errors
-- [x] Table `admin_users` exists in Supabase
-- [x] RLS policies active
-- [x] Helper functions `is_admin_user` and `is_super_admin` work
-
-**Evidence of Completion:**
-- Migration file created: `/supabase/migrations/20260120000001_admin_users.sql`
-- SQL syntax validated - includes table, indexes, RLS policy, and helper functions
-- No new test failures introduced
+- [ ] Migration runs without errors
+- [ ] Table `admin_users` exists in Supabase
+- [ ] RLS policies active
+- [ ] Helper functions `is_admin_user` and `is_super_admin` work
 
 **Dependencies:** None
 

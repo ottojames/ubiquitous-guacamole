@@ -192,6 +192,46 @@ router.post('/council', async (req, res) => {
       throw authError;
     }
 
+    // 5. Create department memberships for the admin user
+    console.log('🔗 [registration/council] Creating department memberships');
+    const departmentIds = await supabase
+      .from('departments')
+      .select('id')
+      .eq('organization_id', org.id);
+
+    if (departmentIds.data) {
+      for (const dept of departmentIds.data) {
+        const { error: membershipError } = await supabase
+          .from('department_memberships')
+          .insert({
+            user_id: authData.user.id,
+            department_id: dept.id,
+            organization_id: org.id,
+            role: 'admin'
+          });
+
+        if (membershipError) {
+          console.warn('⚠️ [registration/council] Could not create department membership:', membershipError);
+          // Don't fail registration if this fails - the SQL trigger should handle it
+        }
+      }
+    }
+
+    // 6. Also create organization membership for consistency
+    console.log('🔗 [registration/council] Creating organization membership');
+    const { error: orgMembershipError } = await supabase
+      .from('organization_memberships')
+      .insert({
+        user_id: authData.user.id,
+        organization_id: org.id,
+        role: 'org_admin'
+      });
+
+    if (orgMembershipError) {
+      console.warn('⚠️ [registration/council] Could not create organization membership:', orgMembershipError);
+      // Don't fail registration if this fails - table might not exist
+    }
+
     console.log('✅ [registration/council] Registration complete');
 
     // Build redirect path - safely access departments array
@@ -306,6 +346,21 @@ router.post('/firm', async (req, res) => {
         });
       }
       throw authError;
+    }
+
+    // 3. Create organization membership for the admin user
+    console.log('🔗 [registration/firm] Creating organization membership');
+    const { error: orgMembershipError } = await supabase
+      .from('organization_memberships')
+      .insert({
+        user_id: authData.user.id,
+        organization_id: org.id,
+        role: 'org_admin'
+      });
+
+    if (orgMembershipError) {
+      console.warn('⚠️ [registration/firm] Could not create organization membership:', orgMembershipError);
+      // Don't fail registration if this fails - table might not exist
     }
 
     console.log('✅ [registration/firm] Registration complete');
