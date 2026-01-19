@@ -32,10 +32,12 @@ interface FirmData {
   city: string;
   postcode: string;
   phone: string;
+  email: string;
   website: string;
   // Step 5: Admin Account
   adminEmail: string;
   adminPassword: string;
+  adminPasswordConfirm: string;
   adminName: string;
   adminRole: string;
   // Step 6: Subscription Plan
@@ -92,9 +94,11 @@ export default function FirmRegistration() {
     city: '',
     postcode: '',
     phone: '',
+    email: '',
     website: '',
     adminEmail: '',
     adminPassword: '',
+    adminPasswordConfirm: '',
     adminName: '',
     adminRole: 'Managing Partner',
     billingCycle: 'monthly'
@@ -210,7 +214,7 @@ export default function FirmRegistration() {
         break;
 
       case 'office':
-        if (!firmData.address || !firmData.city || !firmData.postcode || !firmData.phone) {
+        if (!firmData.address || !firmData.city || !firmData.postcode || !firmData.phone || !firmData.email) {
           setError('Please fill in all required office details');
           return;
         }
@@ -218,12 +222,16 @@ export default function FirmRegistration() {
         break;
 
       case 'admin':
-        if (!firmData.adminEmail || !firmData.adminPassword || !firmData.adminName) {
+        if (!firmData.adminEmail || !firmData.adminPassword || !firmData.adminPasswordConfirm || !firmData.adminName) {
           setError('Please fill in all admin account details');
           return;
         }
         if (!validatePassword(firmData.adminPassword)) {
           setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+          return;
+        }
+        if (firmData.adminPassword !== firmData.adminPasswordConfirm) {
+          setError('Passwords do not match');
           return;
         }
         // Load subscription tiers before moving to subscription step
@@ -268,16 +276,16 @@ export default function FirmRegistration() {
           firmName: firmData.name,
           practiceAreas: firmData.practiceAreas,
           // Office Details
-          officeAddress: firmData.officeAddress,
-          officeEmail: firmData.officeEmail,
-          officePhone: firmData.officePhone,
+          officeAddress: `${firmData.address}, ${firmData.city}, ${firmData.postcode}`,
+          officeEmail: firmData.email,
+          officePhone: firmData.phone,
           // Admin Account
           adminEmail: firmData.adminEmail,
           adminPassword: firmData.adminPassword,
           adminName: firmData.adminName,
           adminRole: firmData.adminRole,
           // Subscription
-          subscriptionPlan: firmData.subscriptionPlan
+          subscriptionPlan: firmData.selectedTier?.slug || 'starter'
         })
       });
 
@@ -558,6 +566,19 @@ export default function FirmRegistration() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={firmData.email}
+                  onChange={(e) => setFirmData({ ...firmData, email: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="e.g., contact@wilsonpartners.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Website
                 </label>
                 <input
@@ -618,6 +639,19 @@ export default function FirmRegistration() {
                 <p className="text-sm text-gray-500 mt-1">
                   Must be at least 8 characters with uppercase, lowercase, number, and special character
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password *
+                </label>
+                <input
+                  type="password"
+                  value={firmData.adminPasswordConfirm}
+                  onChange={(e) => setFirmData({ ...firmData, adminPasswordConfirm: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Re-enter your password"
+                />
               </div>
 
               <div>

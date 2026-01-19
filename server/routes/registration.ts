@@ -182,11 +182,16 @@ router.post('/council', async (req, res) => {
 
     console.log('✅ [registration/council] Registration complete');
 
+    // Build redirect path - safely access departments array
+    const firstDeptSlug = data.departments && data.departments.length > 0
+      ? data.departments[0].slug
+      : 'dashboard';
+
     // Return success with redirect path
     res.status(201).json({
       success: true,
       organizationId: org.id,
-      redirectPath: `/c/${councilSlug}/${data.departments[0].slug}/dashboard`,
+      redirectPath: `/c/${councilSlug}/${firstDeptSlug}/dashboard`,
       message: 'Council registration successful'
     });
 

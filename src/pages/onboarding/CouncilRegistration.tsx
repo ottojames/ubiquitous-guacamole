@@ -30,6 +30,7 @@ interface CouncilData {
   // Step 5: Admin Account
   adminEmail: string;
   adminPassword: string;
+  adminPasswordConfirm: string;
   adminName: string;
   adminRole: string;
 }
@@ -83,6 +84,7 @@ export default function CouncilRegistration() {
     onlineRegisterUrl: '',
     adminEmail: '',
     adminPassword: '',
+    adminPasswordConfirm: '',
     adminName: '',
     adminRole: 'Head of Service'
   });
@@ -141,12 +143,16 @@ export default function CouncilRegistration() {
         break;
 
       case 'admin':
-        if (!councilData.adminEmail || !councilData.adminPassword || !councilData.adminName) {
+        if (!councilData.adminEmail || !councilData.adminPassword || !councilData.adminPasswordConfirm || !councilData.adminName) {
           setError('Please fill in all admin account details');
           return;
         }
         if (!validatePassword(councilData.adminPassword)) {
           setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+          return;
+        }
+        if (councilData.adminPassword !== councilData.adminPasswordConfirm) {
+          setError('Passwords do not match');
           return;
         }
         setCurrentStep('review');
@@ -633,6 +639,19 @@ export default function CouncilRegistration() {
                 <p className="text-sm text-gray-500 mt-1">
                   Must be at least 8 characters with uppercase, lowercase, number, and special character
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password *
+                </label>
+                <input
+                  type="password"
+                  value={councilData.adminPasswordConfirm}
+                  onChange={(e) => setCouncilData({ ...councilData, adminPasswordConfirm: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Re-enter your password"
+                />
               </div>
 
               <div>
