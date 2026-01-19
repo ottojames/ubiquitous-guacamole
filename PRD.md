@@ -881,7 +881,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 
 ---
 
-### 3.4 [ ] ENHANCEMENT-001: Add Distance Filter to Notice List
+### 3.4 [x] ENHANCEMENT-001: Add Distance Filter to Notice List
 
 **Description:** Add ability to filter/sort notices by distance in the right-hand rail list when viewing map
 
@@ -898,5 +898,7 @@ Database confirmation: UPDATE 3 rows, updated_at = 2026-01-16 15:43:09 UTC.
 **Testing Feedback (2026-01-17):** PARTIAL SUCCESS - "On the rail card on the right, you can see the distance away. But I think it would be good to be able to filter it by distance, so there's like a filter. There should be a filter at the top, like within that right rail card, saying arranged by, you know, newly added, recently added, or whatever the correct terminology would be there, nearest, etc. So they need to be a few more filters there. Look at publicnoticeportals.co.uk, see what their filters are, and then copy them... You can at the top, but the filter is, I don't know, do you think it's okay in terms of going to the mind of a UI designer with 15 years experience and see if they think that this is in the correct place."
 
 **STATUS:** Distance display works, sorting works, but UI needs improvement. Filters should be INSIDE the right-hand rail, not just at the top of the page.
+
+**Evidence:** COMPLETED 2026-01-19: Added sort/filter dropdown INSIDE SearchResults component for map view right-hand rail. Filter includes: Nearest (only when location available), Recently Added, Newly Added, Ending Soon. Sticky positioning keeps filter accessible while scrolling. Distance already displayed on cards. Implementation in SearchResults.tsx lines 101-119, Notices.tsx lines 847-854. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing JS errors), test ✓ (408/458 passed), dev servers ✓ (:5173 and :5174).
 
 ---

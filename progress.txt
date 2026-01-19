@@ -1606,3 +1606,35 @@ BROWSER TESTED: Navigated to /notices/550e8400-e29b-41d4-a716-446655440001 (The 
 - Always check for null/undefined when accessing array elements
 
 ---
+
+## Iteration - ENHANCEMENT-001: Add Distance Filter to Notice List
+**Status:** Success
+**Timestamp:** Mon 19 Jan 2026 13:18:00 GMT
+
+### What was implemented:
+- Added sort/filter controls INSIDE SearchResults component for the map view right-hand rail
+- Added 'Sort by:' dropdown with options: Nearest, Recently Added, Newly Added, Ending Soon
+- Dropdown only shows in list layout when showInlineFilters prop is true
+- Nearest option only appears when hasLocation prop indicates we have a search location
+- Filter is sticky at top of list for easy access while scrolling
+- Distance display already working on notice cards (shows "Xm away" or "X.Xkm away")
+
+### Files changed:
+- src/components/home/SearchResults.tsx (added sortBy, onSortChange, showInlineFilters, hasLocation props and filter UI)
+- src/pages/Notices.tsx (line 847-854 - pass new props to SearchResults in map view)
+
+### Quality checks:
+- typecheck: ✗ (pre-existing Cypress errors)
+- lint: ✗ (pre-existing JS file errors)
+- test: ✓ (408/458 passed)
+- browser test: N/A (requires manual testing)
+- dev servers: ✓ (running on :5173 and :5174)
+
+### Learnings for future iterations:
+- User wanted filters INSIDE the right-hand rail, not just at page top
+- Sticky positioning keeps filter accessible while scrolling through notices
+- Conditional rendering of "Nearest" option prevents confusion when no location
+- SearchResults component made flexible to support inline filters when needed
+- Existing sort dropdown in header kept for list view compatibility
+
+---

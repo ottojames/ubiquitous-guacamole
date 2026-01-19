@@ -17,6 +17,10 @@ type SearchResultsProps = {
   layout?: 'grid' | 'list'; // grid for main view, list for sidebar
   onShowMore?: () => void; // callback when "Show More" is clicked
   showMoreButton?: boolean; // whether to show "Show More" button
+  sortBy?: string; // current sort option
+  onSortChange?: (sort: string) => void; // callback when sort changes
+  showInlineFilters?: boolean; // whether to show filters inside the component
+  hasLocation?: boolean; // whether we have a search location (for showing Nearest option)
 };
 
 function formatAddress(address: any): string {
@@ -48,6 +52,10 @@ export default function SearchResults({
   layout = 'grid',
   onShowMore,
   showMoreButton = false,
+  sortBy,
+  onSortChange,
+  showInlineFilters = false,
+  hasLocation = false,
 }: SearchResultsProps) {
   const navigate = useNavigate();
 
@@ -90,6 +98,25 @@ export default function SearchResults({
   if (layout === 'list') {
     return (
       <>
+        {showInlineFilters && onSortChange && (
+          <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-slate-700">
+                Sort by:
+              </label>
+              <select
+                value={sortBy || 'created_at.desc'}
+                onChange={(e) => onSortChange(e.target.value)}
+                className="ml-2 flex-1 max-w-[180px] rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              >
+                {hasLocation && <option value="distance.asc">Nearest</option>}
+                <option value="created_at.desc">Recently Added</option>
+                <option value="created_at.asc">Newly Added</option>
+                <option value="deadline.asc">Ending Soon</option>
+              </select>
+            </div>
+          </div>
+        )}
         <div className={containerClass}>
           {displayResults.map((item) => {
             const isActive = activeNoticeId === item.id;

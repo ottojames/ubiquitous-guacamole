@@ -844,6 +844,14 @@ export default function NoticesPage() {
                         maxResults={showAllMapResults ? undefined : 10}
                         showMoreButton={!showAllMapResults}
                         onShowMore={() => setShowAllMapResults(true)}
+                        sortBy={sortParam}
+                        onSortChange={(newSort) => {
+                          updateParams((params) => {
+                            params.set('sort', newSort);
+                          });
+                        }}
+                        showInlineFilters={true}
+                        hasLocation={Boolean(postcodeParam)}
                       />
                     </div>
                   </aside>
