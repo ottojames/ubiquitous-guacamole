@@ -11,7 +11,6 @@ interface Department {
   slug: string;
   type: string;
   email: string;
-  description?: string;
 }
 
 interface CouncilData {
@@ -93,8 +92,7 @@ export default function CouncilRegistration() {
     name: '',
     slug: '',
     type: 'licensing',
-    email: '',
-    description: ''
+    email: ''
   });
 
   const currentStepIndex = COUNCIL_STEPS.findIndex(s => s.key === currentStep);
@@ -187,8 +185,7 @@ export default function CouncilRegistration() {
       name: '',
       slug: '',
       type: 'licensing',
-      email: '',
-      description: ''
+      email: ''
     });
 
     setError(null);
@@ -204,6 +201,12 @@ export default function CouncilRegistration() {
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
+
+    // Fix URL format before sending
+    let fixedUrl = councilData.onlineRegisterUrl.trim();
+    if (fixedUrl && !fixedUrl.startsWith('http://') && !fixedUrl.startsWith('https://')) {
+      fixedUrl = 'https://' + fixedUrl;
+    }
 
     try {
       // Use server API to bypass RLS policies
@@ -223,7 +226,7 @@ export default function CouncilRegistration() {
           authorityAddress: councilData.authorityAddress,
           authorityEmail: councilData.authorityEmail,
           authorityPhone: councilData.authorityPhone,
-          onlineRegisterUrl: councilData.onlineRegisterUrl,
+          onlineRegisterUrl: fixedUrl,
           // Admin Account
           adminEmail: councilData.adminEmail,
           adminPassword: councilData.adminPassword,
@@ -232,18 +235,24 @@ export default function CouncilRegistration() {
         })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse response:', jsonError);
+        data = null;
+      }
 
       if (!response.ok) {
         console.error('Registration failed:', data);
 
         // Handle specific error types
-        if (data.error === 'duplicate') {
+        if (data?.error === 'duplicate') {
           throw new Error(data.message);
-        } else if (data.error === 'validation') {
+        } else if (data?.error === 'validation') {
           throw new Error(data.message || 'Please check all required fields are filled correctly');
         } else {
-          throw new Error(data.message || 'Registration failed. Please try again.');
+          throw new Error(data?.message || 'Registration failed. Please try again.');
         }
       }
 
@@ -261,7 +270,13 @@ export default function CouncilRegistration() {
       }
 
       // Success! Redirect to council dashboard
-      navigate(data.redirectPath);
+      if (data?.redirectPath) {
+        navigate(data.redirectPath);
+      } else {
+        // Fallback to a default path if redirectPath is missing
+        console.warn('No redirect path in response, using default');
+        navigate('/council/dashboard');
+      }
 
     } catch (err: any) {
       console.error('Registration error:', err);
@@ -580,11 +595,31 @@ export default function CouncilRegistration() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Online Register URL *
+                  <span className="block text-xs font-normal text-gray-500 mt-1">
+                    Must start with http:// or https://
+                  </span>
                 </label>
                 <input
                   type="url"
                   value={councilData.onlineRegisterUrl}
-                  onChange={(e) => setCouncilData({ ...councilData, onlineRegisterUrl: e.target.value })}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    // Help users by auto-adding https:// if they start typing a domain
+                    if (value && !value.startsWith('http://') && !value.startsWith('https://')) {
+                      if (value.match(/^[a-zA-Z0-9][\w.-]*\.[a-zA-Z]{2,}/)) {
+                        value = 'https://' + value;
+                      }
+                    }
+                    setCouncilData({ ...councilData, onlineRegisterUrl: value });
+                  }}
+                  onBlur={(e) => {
+                    // On blur, ensure the URL starts with http:// or https://
+                    let value = e.target.value.trim();
+                    if (value && !value.startsWith('http://') && !value.startsWith('https://')) {
+                      value = 'https://' + value;
+                      setCouncilData({ ...councilData, onlineRegisterUrl: value });
+                    }
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., https://westminster.gov.uk/licensing-register"
                 />

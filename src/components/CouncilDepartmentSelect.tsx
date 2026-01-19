@@ -88,7 +88,7 @@ export default function CouncilDepartmentSelect({
             id,
             name,
             type,
-            contact_email,
+            email,
             organization_id,
             organizations!inner (
               id,
@@ -116,7 +116,7 @@ export default function CouncilDepartmentSelect({
           departmentType: dept.type,
           organizationId: dept.organizations.id,
           organizationName: dept.organizations.name,
-          email: dept.contact_email,
+          email: dept.email,
           displayName: `${dept.organizations.name} - ${dept.name}`,
         }));
 

@@ -60,9 +60,19 @@ router.post('/council', async (req, res) => {
     const validationResult = councilRegistrationSchema.safeParse(req.body);
     if (!validationResult.success) {
       console.error('❌ [registration/council] Validation failed:', validationResult.error);
+      const firstError = validationResult.error.errors?.[0];
+      let errorMessage = 'Invalid data provided';
+
+      // Provide more helpful error messages
+      if (firstError?.path?.[0] === 'onlineRegisterUrl') {
+        errorMessage = 'Please enter a valid URL starting with http:// or https://';
+      } else if (firstError?.message) {
+        errorMessage = firstError.message;
+      }
+
       return res.status(400).json({
         error: 'validation',
-        message: validationResult.error.errors[0]?.message || 'Invalid data provided',
+        message: errorMessage,
         details: validationResult.error.errors
       });
     }
@@ -111,6 +121,8 @@ router.post('/council', async (req, res) => {
     // 2. Create departments
     for (const dept of data.departments) {
       console.log('🏬 [registration/council] Creating department:', dept.name);
+      // FIX APPLIED: Using 'email' column as per original migrations (20251021000000_multi_tenant_foundation.sql)
+      // Migration 20260119_fix_departments_email_column.sql should be run to rename contact_email -> email
       const { error: deptError } = await supabase
         .from('departments')
         .insert({
@@ -118,8 +130,8 @@ router.post('/council', async (req, res) => {
           name: dept.name,
           slug: dept.slug,
           type: dept.type,
-          contact_email: dept.email,
-          description: dept.description
+          email: dept.email, // Correct column name per migrations
+          status: 'active' // Required field with default value
         });
 
       if (deptError) {
@@ -216,9 +228,12 @@ router.post('/firm', async (req, res) => {
     const validationResult = firmRegistrationSchema.safeParse(req.body);
     if (!validationResult.success) {
       console.error('❌ [registration/firm] Validation failed:', validationResult.error);
+      const firstError = validationResult.error.errors?.[0];
+      let errorMessage = firstError?.message || 'Invalid data provided';
+
       return res.status(400).json({
         error: 'validation',
-        message: validationResult.error.errors[0]?.message || 'Invalid data provided',
+        message: errorMessage,
         details: validationResult.error.errors
       });
     }

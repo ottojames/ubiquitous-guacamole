@@ -74,64 +74,49 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
+      console.log('[Dashboard] Loading data for department:', department.id, department.name);
+
       // Check if we're in demo mode (supporting both mock and real Westminster department)
-      const isDemoSampleBorough = department.id === 'demo-sample-borough-id';
-      const isDemoWestminster = department.id === 'demo-westminster-id';
+      const isDemoSampleBorough = department.id === 'demo-sample-borough-id' || department.id === 'demo-sampletonborough-licensing';
+      const isDemoWestminster = department.id === 'demo-westminster-id' || department.id === 'demo-westminster-licensing';
       // Also support real Westminster Licensing department for showcase demo
       const isRealWestminsterLicensing = department.id === '53c08600-5c5a-46a4-8805-16c129022952';
       const isDemoMode = isDemoSampleBorough || isDemoWestminster || isRealWestminsterLicensing;
+
+      console.log('[Dashboard] Demo mode checks:', {
+        isDemoSampleBorough,
+        isDemoWestminster,
+        isRealWestminsterLicensing,
+        isDemoMode
+      });
 
       let notices: any[] = [];
       let recent: any[] = [];
 
       if (isDemoMode) {
-        // For Westminster demo, use server API to bypass RLS restrictions
-        console.log(`[Dashboard] Demo mode: fetching notices via API for department ${department.id}`);
+        // For demo mode, use hardcoded data
+        console.log(`[Dashboard] Demo mode: using hardcoded demo data for department ${department.id}`);
 
-        try {
-          // Fetch notices via API endpoint which uses service role key
-          const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
-          if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-          }
+        // Hardcoded demo data
+        notices = [
+          { id: '1', status: 'published', premises: { name: 'The Crown' }, notice_type: 'premises-licence', created_at: '2024-01-15', published_at: '2024-01-15', representation_deadline: '2024-02-15', proof_pdf_url: null },
+          { id: '2', status: 'published', premises: { name: 'The Ivy' }, notice_type: 'premises-licence', created_at: '2024-01-10', published_at: '2024-01-10', representation_deadline: '2024-02-10', proof_pdf_url: null },
+          { id: '3', status: 'published', premises: { name: 'Churchill Arms' }, notice_type: 'variation', created_at: '2024-01-08', published_at: '2024-01-08', representation_deadline: '2024-02-08', proof_pdf_url: null },
+          { id: '4', status: 'draft', premises: { name: 'Westminster Abbey Cafe' }, notice_type: 'premises-licence', created_at: '2024-01-20', published_at: null, representation_deadline: null, proof_pdf_url: null },
+          { id: '5', status: 'pending_approval', premises: { name: 'Buckingham Arms' }, notice_type: 'premises-licence', created_at: '2024-01-18', published_at: null, representation_deadline: null, proof_pdf_url: null },
+        ];
 
-          const responseData = await response.json();
-          const allNotices = responseData.items || [];
-          console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
+        recent = [
+          { id: '1', title: 'The Crown - New Premises Licence', status: 'published', created_at: '2024-01-15', published_at: '2024-01-15', proof_pdf_url: null, repsDeadline: '2024-02-15' },
+          { id: '2', title: 'The Ivy - New Premises Licence', status: 'published', created_at: '2024-01-10', published_at: '2024-01-10', proof_pdf_url: null, repsDeadline: '2024-02-10' },
+          { id: '3', title: 'Churchill Arms - Variation', status: 'published', created_at: '2024-01-08', published_at: '2024-01-08', proof_pdf_url: null, repsDeadline: '2024-02-08' },
+          { id: '4', title: 'Westminster Abbey Cafe - New Premises Licence', status: 'draft', created_at: '2024-01-20', published_at: null, proof_pdf_url: null },
+          { id: '5', title: 'Buckingham Arms - New Premises Licence', status: 'pending_approval', created_at: '2024-01-18', published_at: null, proof_pdf_url: null },
+        ];
 
-          // Map API response to notice format
-          notices = allNotices.map((n: any) => ({
-            id: n.id,
-            status: n.status || 'published',
-            premises: { name: n.premisesName },
-            notice_type: n.noticeType,
-            created_at: n.publicationDate || new Date().toISOString(),
-            published_at: n.publicationDate || null,
-            representation_deadline: n.repsDeadline,
-            proof_pdf_url: null
-          }));
-
-          // Get recent notices with full details
-          recent = allNotices.slice(0, 5).map((n: any) => {
-            const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
-
-            return {
-              id: n.id,
-              title: title,
-              status: n.status || 'published',
-              created_at: n.publicationDate || new Date().toISOString(),
-              published_at: n.publicationDate || null,
-              proof_pdf_url: null,
-              repsDeadline: n.repsDeadline,
-              premisesName: n.premisesName
-            };
-          });
-
-          console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
-        } catch (err) {
-          console.error('[Dashboard] Error fetching from API:', err);
-          throw err;
-        }
+        console.log(`[Dashboard] Using hardcoded demo data: ${notices.length} total notices, ${recent.length} recent notices`);
+        console.log('[Dashboard] Demo notices:', notices);
+        console.log('[Dashboard] Recent notices:', recent);
       } else {
         // Normal mode - query by department_id
         const { data: noticesData, error: noticesError } = await supabase

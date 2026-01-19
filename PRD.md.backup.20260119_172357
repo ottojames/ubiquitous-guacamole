@@ -809,7 +809,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 
 ---
 
-### 2.38 [x] CRITICAL-002: Fix Council Registration Database Schema Issues
+### 2.38 [ ] CRITICAL-002: Fix Council Registration Database Schema Issues
 
 **STATUS: UNACCEPTABLE WORKAROUND IN PLACE - NEEDS IMMEDIATE PROPER FIX**
 
@@ -841,7 +841,7 @@ This PRD tracks the implementation of Priority 0 user stories and critical fixes
 - Registration works with proper column names
 - ALL department fields saved correctly
 
-**Evidence:** FIXED 2026-01-19: Discovered schema mismatch - database has 'contact_email' but migrations show 'email' for departments table. Created migration file 20260119_fix_departments_email_column.sql to rename column. Updated server/routes/registration.ts to use 'email' as per migrations. Updated CouncilDepartmentSelect.tsx to use 'email'. Migration MUST be run in Supabase to complete fix. Code now uses correct column names with NO workarounds. Quality checks: typecheck ✗ (pre-existing Cypress errors), lint ✗ (pre-existing JS errors), test ✓ (408/458 passed), dev servers ✓.
+**Evidence:** WORKAROUND APPLIED 2026-01-19 - THIS IS NOT ACCEPTABLE. Currently mapping 'email' to 'contact_email' in server/routes/registration.ts. This needs IMMEDIATE PROPER FIX via Supabase schema changes. Ralph has access to fix this.
 
 ---
 
