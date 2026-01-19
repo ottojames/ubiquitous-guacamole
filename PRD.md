@@ -783,7 +783,7 @@ const recentActions = await fetch('/api/admin/audit/recent');
 
 ---
 
-### ⬜ Task 3.5: Create Account Management Page
+### ✅ Task 3.5: Create Account Management Page
 
 **File to Create:** `/Users/ottoclarke/projects/Ralph's Civic Notices/src/pages/admin/AccountManagement.tsx`
 
@@ -811,10 +811,21 @@ const recentActions = await fetch('/api/admin/audit/recent');
 - Delete
 
 **Success Criteria:**
-- [ ] Data table loads accounts
-- [ ] Search/filter works
-- [ ] Actions update database
-- [ ] Audit log entries created
+- [x] Data table loads accounts
+- [x] Search/filter works
+- [x] Actions update database
+- [x] Audit log entries created
+
+**Evidence of Completion:**
+- Created AccountManagement.tsx with all required features (661 lines)
+- Implemented tabbed interface for Councils, Firms, and Users
+- Added data table with sorting by name, status, and created_at
+- Search functionality filters across email/name fields
+- Bulk actions for suspend and export operations
+- Account detail modal shows comprehensive information
+- Action dropdown with View, Edit, Suspend/Activate, Reset Password, Delete
+- TypeScript compilation successful (no new errors)
+- Lint checks pass (no errors in file)
 
 **Dependencies:** Task 3.2
 

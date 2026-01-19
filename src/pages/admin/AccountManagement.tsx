@@ -240,12 +240,13 @@ export default function AccountManagement() {
     if (!searchTerm) return true;
 
     const searchLower = searchTerm.toLowerCase();
-    if ('email' in account) {
+    if ('email' in account && account.email) {
       return account.email.toLowerCase().includes(searchLower);
-    } else {
+    } else if ('name' in account) {
       return account.name.toLowerCase().includes(searchLower) ||
              (account.email?.toLowerCase().includes(searchLower) ?? false);
     }
+    return false;
   });
 
   // Sort accounts
@@ -551,7 +552,7 @@ export default function AccountManagement() {
                       {'email' in account ? account.email : account.name}
                     </td>
                     <td className="p-4 text-gray-300 capitalize">
-                      {'email' in account ? account.role : account.type}
+                      {'role' in account ? account.role : account.type}
                     </td>
                     <td className="p-4">
                       <span
