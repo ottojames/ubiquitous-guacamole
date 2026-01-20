@@ -65,67 +65,81 @@ export default function Clients() {
   const loadClients = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // For now, use mock data since client_relationships table may not exist
-      // In production, this would query the client_relationships table
-      const mockClients: Client[] = [
-        {
-          id: 'client-1',
-          name: 'The Red Lion Pub Ltd',
-          slug: 'red-lion-pub',
-          type: 'business',
-          contact_name: 'John Smith',
-          contact_email: 'john@redlionpub.co.uk',
-          contact_phone: '020 7123 4567',
-          address: {
-            line1: '45 High Street',
-            city: 'London',
-            postcode: 'SW1A 1AA'
-          },
-          notes: 'Premises licence application in progress',
-          created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          active: true,
-          notice_count: 3
-        },
-        {
-          id: 'client-2',
-          name: 'Westminster Entertainment Group',
-          slug: 'westminster-entertainment',
-          type: 'business',
-          contact_name: 'Sarah Johnson',
-          contact_email: 'sarah.johnson@weg.co.uk',
-          contact_phone: '020 7987 6543',
-          address: {
-            line1: '123 Oxford Street',
-            city: 'London',
-            postcode: 'W1D 2HF'
-          },
-          notes: 'Multiple venue operator - 5 locations',
-          created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-          active: true,
-          notice_count: 12
-        },
-        {
-          id: 'client-3',
-          name: 'Soho Bars & Restaurants Ltd',
-          slug: 'soho-bars-restaurants',
-          type: 'business',
-          contact_name: 'Michael Chen',
-          contact_email: 'michael@sohobars.co.uk',
-          contact_phone: '020 7456 7890',
-          address: {
-            line1: '78 Dean Street',
-            city: 'London',
-            postcode: 'W1D 3SH'
-          },
-          notes: null,
-          created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-          active: true,
-          notice_count: 7
+      // Query the firm_clients view which joins client_relationships with organizations
+      // and includes aggregated notice counts
+      const { data, error: queryError } = await supabase
+        .from('firm_clients')
+        .select('*')
+        .eq('firm_id', firm.id)
+        .order('client_name', { ascending: true });
+
+      if (queryError) {
+        console.error('Failed to load clients from firm_clients view:', queryError);
+        // Fall back to direct client_relationships query
+        const { data: relData, error: relError } = await supabase
+          .from('client_relationships')
+          .select(`
+            id,
+            status,
+            notes,
+            created_at,
+            client:client_id (
+              id,
+              name,
+              slug,
+              type,
+              contact_name,
+              contact_email,
+              contact_phone,
+              address
+            )
+          `)
+          .eq('firm_id', firm.id)
+          .order('created_at', { ascending: false });
+
+        if (relError) {
+          throw new Error(`Failed to load clients: ${relError.message}`);
         }
-      ];
 
-      setClients(mockClients);
+        // Transform relationship data to Client format
+        const transformedClients: Client[] = (relData || []).map((rel: any) => ({
+          id: rel.client?.id || rel.id,
+          name: rel.client?.name || 'Unknown Client',
+          slug: rel.client?.slug || '',
+          type: rel.client?.type || 'business',
+          contact_name: rel.client?.contact_name || null,
+          contact_email: rel.client?.contact_email || null,
+          contact_phone: rel.client?.contact_phone || null,
+          address: rel.client?.address || null,
+          notes: rel.notes,
+          created_at: rel.created_at,
+          active: rel.status === 'active',
+          notice_count: 0 // Would need separate query to count notices
+        }));
+
+        setClients(transformedClients);
+      } else {
+        // Transform firm_clients view data to Client format
+        const transformedClients: Client[] = (data || []).map((row: any) => ({
+          id: row.client_id,
+          name: row.client_name || 'Unknown Client',
+          slug: row.client_slug || '',
+          type: row.client_type || 'business',
+          contact_name: row.contact_name || null,
+          contact_email: row.contact_email || null,
+          contact_phone: row.contact_phone || null,
+          address: row.address || null,
+          notes: row.relationship_notes,
+          created_at: row.relationship_created_at || row.client_created_at,
+          active: row.relationship_status === 'active',
+          notice_count: row.notice_count || 0
+        }));
+
+        setClients(transformedClients);
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Failed to load clients:', err);
@@ -181,17 +195,83 @@ export default function Clients() {
         throw new Error('Client name is required');
       }
 
-      // TODO: Implement actual save to database
-      // const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      //
-      // if (editingClient) {
-      //   // Update existing client
-      //   await supabase.from('organizations').update({ ... }).eq('id', editingClient.id);
-      // } else {
-      //   // Create new client organization and relationship
-      //   const { data: newOrg } = await supabase.from('organizations').insert({ ... }).select().single();
-      //   await supabase.from('client_relationships').insert({ firm_id: firm.id, client_id: newOrg.id });
-      // }
+      const slug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+      if (editingClient) {
+        // Update existing client organization
+        const { error: updateError } = await supabase
+          .from('organizations')
+          .update({
+            name: formData.name,
+            slug,
+            contact_name: formData.contact_name || null,
+            contact_email: formData.contact_email || null,
+            contact_phone: formData.contact_phone || null,
+            address: formData.address.line1 ? formData.address : null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingClient.id);
+
+        if (updateError) {
+          throw new Error(`Failed to update client: ${updateError.message}`);
+        }
+
+        // Update relationship notes if provided
+        if (formData.notes !== editingClient.notes) {
+          await supabase
+            .from('client_relationships')
+            .update({ notes: formData.notes || null, updated_at: new Date().toISOString() })
+            .eq('firm_id', firm.id)
+            .eq('client_id', editingClient.id);
+        }
+      } else {
+        // Create new client using the add_client_to_firm function
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('add_client_to_firm', {
+          p_firm_id: firm.id,
+          p_client_name: formData.name,
+          p_contact_name: formData.contact_name || null,
+          p_contact_email: formData.contact_email || null,
+          p_contact_phone: formData.contact_phone || null,
+          p_address: formData.address.line1 ? formData.address : null,
+          p_notes: formData.notes || null
+        });
+
+        if (rpcError) {
+          console.error('RPC add_client_to_firm failed:', rpcError);
+          // Fallback to manual insert if RPC doesn't exist
+          const { data: newOrg, error: orgError } = await supabase
+            .from('organizations')
+            .insert({
+              name: formData.name,
+              slug,
+              type: 'client',
+              contact_name: formData.contact_name || null,
+              contact_email: formData.contact_email || null,
+              contact_phone: formData.contact_phone || null,
+              address: formData.address.line1 ? formData.address : null,
+              is_client: true
+            })
+            .select()
+            .single();
+
+          if (orgError) {
+            throw new Error(`Failed to create client: ${orgError.message}`);
+          }
+
+          const { error: relError } = await supabase
+            .from('client_relationships')
+            .insert({
+              firm_id: firm.id,
+              client_id: newOrg.id,
+              notes: formData.notes || null,
+              status: 'active'
+            });
+
+          if (relError) {
+            throw new Error(`Failed to link client: ${relError.message}`);
+          }
+        }
+      }
 
       setSuccess(editingClient ? 'Client updated successfully' : 'Client added successfully');
       setSaving(false);
@@ -211,8 +291,18 @@ export default function Clients() {
     }
 
     try {
-      // TODO: Implement actual delete
-      // await supabase.from('client_relationships').delete().eq('firm_id', firm.id).eq('client_id', clientId);
+      setError(null);
+
+      // Delete the client relationship (soft delete - just removes from firm's list)
+      const { error: deleteError } = await supabase
+        .from('client_relationships')
+        .delete()
+        .eq('firm_id', firm.id)
+        .eq('client_id', clientId);
+
+      if (deleteError) {
+        throw new Error(`Failed to remove client: ${deleteError.message}`);
+      }
 
       setSuccess('Client removed from your list');
       loadClients();
@@ -610,11 +700,6 @@ export default function Clients() {
                   />
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> This is a prototype interface. Full database integration will be added in production.
-                  </p>
-                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">

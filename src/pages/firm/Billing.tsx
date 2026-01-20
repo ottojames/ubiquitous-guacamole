@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { CreditCard, Download, Calendar, DollarSign, AlertCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface Organization {
   id: string;
   name: string;
   slug: string;
-  type: 'firm' | 'council';
+  type: string;
 }
 
 interface ContextType {
-  organization: Organization;
+  firm: Organization;
   userRole: string;
 }
 
@@ -24,16 +25,25 @@ interface Invoice {
 }
 
 interface Subscription {
-  tier: string;
+  id: string;
+  tier_name: string;
+  tier_slug: string;
   billing_cycle: string;
   next_billing_date: string;
+  current_period_start: string;
+  current_period_end: string;
   price_per_month: number;
+  status: string;
+  notices_per_month: number;
+  notices_used: number;
+  additional_notice_price: number;
 }
 
 export default function FirmBilling() {
   const { firmSlug } = useParams<{ firmSlug: string }>();
-  const { organization } = useOutletContext<ContextType>();
+  const { firm } = useOutletContext<ContextType>();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<{
@@ -44,62 +54,126 @@ export default function FirmBilling() {
   } | null>(null);
 
   useEffect(() => {
-    loadBillingData();
-  }, [organization.id]);
+    if (firm?.id) {
+      loadBillingData();
+    }
+  }, [firm?.id]);
 
   const loadBillingData = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // Mock data for now - in production, fetch from API
-      setSubscription({
-        tier: 'Professional',
-        billing_cycle: 'monthly',
-        next_billing_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        price_per_month: 149.99
-      });
+      // Load subscription from firm_subscriptions table with tier details
+      const { data: subData, error: subError } = await supabase
+        .from('firm_subscriptions')
+        .select(`
+          id,
+          status,
+          billing_cycle,
+          current_period_start,
+          current_period_end,
+          stripe_subscription_id,
+          stripe_customer_id,
+          tier:tier_id (
+            name,
+            slug,
+            monthly_price_gbp,
+            annual_price_gbp,
+            notices_per_month,
+            additional_notice_price_gbp
+          )
+        `)
+        .eq('organization_id', firm.id)
+        .single();
 
-      setPaymentMethod({
-        type: 'Visa',
-        last4: '4242',
-        exp_month: 12,
-        exp_year: 2026
-      });
+      if (subError && subError.code !== 'PGRST116') {
+        console.error('Failed to load subscription:', subError);
+      }
 
-      // Mock invoices
-      const mockInvoices: Invoice[] = [
-        {
-          id: 'inv_001',
-          date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          amount: 149.99,
-          status: 'paid',
-          period: 'January 2026',
-          pdf_url: '/api/invoices/inv_001/pdf'
-        },
-        {
-          id: 'inv_002',
-          date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-          amount: 149.99,
-          status: 'paid',
-          period: 'December 2025',
-          pdf_url: '/api/invoices/inv_002/pdf'
-        },
-        {
-          id: 'inv_003',
-          date: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000).toISOString(),
-          amount: 149.99,
-          status: 'paid',
-          period: 'November 2025',
-          pdf_url: '/api/invoices/inv_003/pdf'
+      if (subData) {
+        // Get usage stats for current period
+        const { data: usageData } = await supabase.rpc('get_subscription_usage', {
+          p_subscription_id: subData.id
+        });
+
+        const tier = subData.tier as any;
+        const usage = usageData?.[0] || { total_notices: 0 };
+
+        setSubscription({
+          id: subData.id,
+          tier_name: tier?.name || 'Unknown',
+          tier_slug: tier?.slug || '',
+          billing_cycle: subData.billing_cycle,
+          next_billing_date: subData.current_period_end,
+          current_period_start: subData.current_period_start,
+          current_period_end: subData.current_period_end,
+          price_per_month: subData.billing_cycle === 'annual'
+            ? (tier?.annual_price_gbp || 0) / 12
+            : (tier?.monthly_price_gbp || 0),
+          status: subData.status,
+          notices_per_month: tier?.notices_per_month || 0,
+          notices_used: usage.total_notices || 0,
+          additional_notice_price: tier?.additional_notice_price_gbp || 0
+        });
+
+        // If there's a Stripe customer, try to get payment method from API
+        if (subData.stripe_customer_id) {
+          try {
+            const response = await fetch(`/api/stripe/payment-method?customerId=${subData.stripe_customer_id}`);
+            if (response.ok) {
+              const pmData = await response.json();
+              if (pmData?.card) {
+                setPaymentMethod({
+                  type: pmData.card.brand,
+                  last4: pmData.card.last4,
+                  exp_month: pmData.card.exp_month,
+                  exp_year: pmData.card.exp_year
+                });
+              }
+            }
+          } catch {
+            // Payment method fetch failed, leave as null
+          }
         }
-      ];
+      }
 
-      setInvoices(mockInvoices);
+      // Load invoices from monthly_invoices table
+      const { data: invData, error: invError } = await supabase
+        .from('monthly_invoices')
+        .select('*')
+        .eq('organization_id', firm.id)
+        .order('billing_period_start', { ascending: false })
+        .limit(12);
+
+      if (invError && invError.code !== 'PGRST116') {
+        console.error('Failed to load invoices:', invError);
+      }
+
+      if (invData && invData.length > 0) {
+        const transformedInvoices: Invoice[] = invData.map((inv: any) => ({
+          id: inv.invoice_number || inv.id,
+          date: inv.created_at,
+          amount: inv.total_inc_vat_gbp || inv.total_amount_gbp,
+          status: inv.status === 'void' ? 'paid' : inv.status as 'paid' | 'pending' | 'overdue',
+          period: formatPeriod(inv.billing_period_start, inv.billing_period_end),
+          pdf_url: inv.stripe_invoice_id ? `/api/stripe/invoice/${inv.stripe_invoice_id}/pdf` : undefined
+        }));
+
+        setInvoices(transformedInvoices);
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Failed to load billing data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load billing data');
       setLoading(false);
     }
+  };
+
+  const formatPeriod = (start: string, end: string) => {
+    const startDate = new Date(start);
+    return startDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   };
 
   const formatDate = (dateString: string) => {
@@ -135,7 +209,12 @@ export default function FirmBilling() {
   };
 
   const handleDownloadInvoice = (invoice: Invoice) => {
-    alert(`Downloading invoice ${invoice.id} for ${invoice.period}`);
+    if (invoice.pdf_url) {
+      // If it's a Stripe invoice, open the PDF URL
+      window.open(invoice.pdf_url, '_blank');
+    } else {
+      alert(`Invoice PDF not available for ${invoice.id}`);
+    }
   };
 
   if (loading) {
@@ -154,24 +233,48 @@ export default function FirmBilling() {
         <p className="text-gray-600">Manage your subscription, invoices, and payment methods</p>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Current Subscription Card */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-start justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-1">Current Subscription</h2>
-              <p className="text-sm text-gray-600">Active since November 2025</p>
+              {subscription && (
+                <p className="text-sm text-gray-600">
+                  Period: {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                </p>
+              )}
             </div>
-            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-              Active
-            </span>
+            {subscription ? (
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                subscription.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                subscription.status === 'trialing' ? 'bg-purple-100 text-purple-800' :
+                subscription.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {subscription.status === 'active' ? 'Active' :
+                 subscription.status === 'trialing' ? 'Trial' :
+                 subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+              </span>
+            ) : (
+              <span className="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">
+                No Subscription
+              </span>
+            )}
           </div>
 
-          {subscription && (
+          {subscription ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between py-3 border-b border-gray-200">
                 <span className="text-gray-600">Plan</span>
-                <span className="font-semibold text-gray-900">{subscription.tier}</span>
+                <span className="font-semibold text-gray-900">{subscription.tier_name}</span>
               </div>
 
               <div className="flex items-center justify-between py-3 border-b border-gray-200">
@@ -184,10 +287,28 @@ export default function FirmBilling() {
                 <span className="font-semibold text-gray-900">{formatAmount(subscription.price_per_month)}/month</span>
               </div>
 
+              <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <span className="text-gray-600">Notices Used</span>
+                <span className="font-semibold text-gray-900">
+                  {subscription.notices_used} / {subscription.notices_per_month}
+                  {subscription.notices_used >= subscription.notices_per_month && (
+                    <span className="ml-2 text-xs text-orange-600">
+                      (+{formatAmount(subscription.additional_notice_price)} per extra)
+                    </span>
+                  )}
+                </span>
+              </div>
+
               <div className="flex items-center justify-between py-3">
                 <span className="text-gray-600">Next Billing Date</span>
                 <span className="font-semibold text-gray-900">{formatDate(subscription.next_billing_date)}</span>
               </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-600 mb-4">No active subscription</p>
+              <p className="text-sm text-gray-500">Contact us to set up your subscription plan</p>
             </div>
           )}
 
@@ -196,7 +317,7 @@ export default function FirmBilling() {
               onClick={() => alert('Upgrade/change plan coming soon')}
               className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
             >
-              Change Plan
+              {subscription ? 'Change Plan' : 'Subscribe'}
             </button>
           </div>
         </div>
