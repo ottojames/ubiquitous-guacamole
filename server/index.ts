@@ -82,12 +82,13 @@ app.use('/api', testCertificateRouter);
 app.use('/api', testEmailRouter);
 app.use('/api/migration', applyMigrationRouter);
 
-// Admin routes (no auth required for login)
-app.use('/api/admin/auth', adminAuthRouter);
+// TEMPORARY: Comment out conflicting admin auth routes during migration
+// TODO: Re-enable after Phase 5 Authentication Unification is complete
+// app.use('/api/admin/auth', adminAuthRouter);
 
-// Protected admin routes
-app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRouter);
-app.use('/api/admin/audit', requireAdmin, enforceIPAllowlist, adminAuditRouter);
+// Protected admin routes - also commented during migration
+// app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRouter);
+// app.use('/api/admin/audit', requireAdmin, enforceIPAllowlist, adminAuditRouter);
 
 // Sentry error handler MUST be after routes but BEFORE other error handlers
 app.use(sentryErrorHandler());
