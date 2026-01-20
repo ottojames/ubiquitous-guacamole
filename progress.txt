@@ -1251,3 +1251,56 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated to migrations
   - Next task is Task 8.6b: Apply deadline_reminders migration to Supabase
 ---
+
+## Iteration 50 - Task 8.6b: Apply deadline_reminders migration to Supabase
+- **What was implemented**: Applied the deadline_reminders migration to the remote Supabase database
+- **Method used**: psql with DATABASE_URL (consistent with established pattern)
+- **Files unchanged**: No code changes - database schema update only
+- **Verification**:
+  - Table created with 18 columns (id, notice_id, workflow_status_id, firm_id, reminder_type, scheduled_for, sent_at, status, channel, recipient_email, recipient_phone, recipient_user_id, subject, message, related_deadline_date, created_at, updated_at, sent_error)
+  - Primary key (id)
+  - 3 check constraints (channel, reminder_type, status)
+  - 5 indexes: on notice_id, firm_id, scheduled_for (partial for pending), status, composite (scheduled_for, status) partial
+  - 4 foreign keys:
+    - notice_id → notices(id) ON DELETE CASCADE
+    - workflow_status_id → notice_workflow_status(id) ON DELETE CASCADE
+    - firm_id → organizations(id) ON DELETE CASCADE
+    - recipient_user_id → auth.users(id)
+  - 2 RLS policies: select for firm members, all for firm admins
+  - Update trigger for automatic updated_at timestamps
+  - Migration recorded in supabase_migrations.schema_migrations table
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - psql pattern continues to work reliably for applying migrations
+  - All Phase 8.1 Core Tables are now complete (firm_departments, workflow_configs, workflow_stages, notice_workflow_status, workflow_stage_history, deadline_reminders)
+  - Next task is Task 8.7a: Create firm_notice_templates table migration
+---
+
+## Iteration 51 - Task 8.7a: Create firm_notice_templates table migration
+- **What was implemented**: Created SQL migration for `firm_notice_templates` table with RLS policies
+- **Files created**:
+  - `supabase/migrations/20260120280000_create_firm_notice_templates.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.7a complete
+- **Key features of the migration**:
+  - Table with: id (UUID), firm_id (FK to organizations), department_id (FK to firm_departments)
+  - Template details: name, description, notice_type
+  - Template data: template_data (JSONB) for pre-filled form fields
+  - Settings: is_active, is_shared, usage_count
+  - Metadata: created_at, updated_at, created_by, last_used_at
+  - 4 indexes: on firm_id, department_id, notice_type, and partial index on is_active
+  - Trigger for automatic updated_at timestamp
+  - RLS enabled with 4 policies:
+    - Firm members can view shared templates (SELECT - shared OR own templates)
+    - Firm members can create templates (INSERT)
+    - Template owners OR firm admins can update (UPDATE)
+    - Template owners OR firm admins can delete (DELETE)
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Migration follows established pattern from previous workflow tables
+  - SQL directly copied from implementation plan with timestamp updated
+  - RLS policies for templates have owner/creator special access (not just role-based)
+  - is_shared flag allows personal vs team-visible templates
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated to migrations
+  - Next task is Task 8.7b: Apply firm_notice_templates migration to Supabase
+---

@@ -112,7 +112,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.5b**: Apply `workflow_stage_history` migration to Supabase. (Applied 2026-01-20 via psql - table created with 10 columns, 4 indexes, 5 FKs including to notices/notice_workflow_status/workflow_stages/organizations/auth.users, 2 RLS policies for select/insert, check constraint for transition_type)
 - [x] **Task 8.6a**: Create `deadline_reminders` table migration. Copy from Task 8.6. Fields: notice_id, firm_id, reminder_type, scheduled_for, status, channel, recipient_email. (Created 2026-01-20 - File: supabase/migrations/20260120270000_create_deadline_reminders.sql)
 - [x] **Task 8.6b**: Apply `deadline_reminders` migration to Supabase. (Applied 2026-01-20 via psql - table created with 18 columns, 5 indexes, 3 check constraints, 4 FKs, 2 RLS policies, update trigger)
-- [ ] **Task 8.7a**: Create `firm_notice_templates` table migration. Copy from Task 8.7. Fields: firm_id, department_id, name, notice_type, template_data (JSONB).
+- [x] **Task 8.7a**: Create `firm_notice_templates` table migration. Copy from Task 8.7. Fields: firm_id, department_id, name, notice_type, template_data (JSONB). (Created 2026-01-20 - File: supabase/migrations/20260120280000_create_firm_notice_templates.sql)
 - [ ] **Task 8.7b**: Apply `firm_notice_templates` migration to Supabase.
 
 ### 8.2 Default Workflow Seeds
