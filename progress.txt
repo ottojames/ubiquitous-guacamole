@@ -140,3 +140,44 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The `session` variable was being destructured but never used - removed it to clean up unused variable
 ---
 
+## Iteration 8 - Task 1.3.3: Update AdminProtectedRoute.tsx to use only UnifiedAuthContext
+- **What was implemented**: Refactored AdminProtectedRoute to use useAuth() hook instead of direct supabase calls
+- **Files changed**:
+  - `src/components/admin/AdminProtectedRoute.tsx` - Complete refactor
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Removed `import { supabase } from '@/lib/supabase'`
+  - Added `import { useAuth } from '@/contexts/UnifiedAuthContext'`
+  - Removed local `isAuthorized` state, now uses context's `loading` state
+  - Replaced `supabase.auth.getSession()` with `useAuth()` hook's `user` and `canAccessAdmin()`
+  - Removed manual `onAuthStateChange` subscription (context already handles auth state changes)
+  - Component now reacts to `loading`, `user`, `canAccessAdmin()` changes via useEffect
+- **Learnings for future iterations**:
+  - AdminProtectedRoute was the last component using direct supabase.auth calls - all admin auth now flows through UnifiedAuthContext
+  - The UnifiedAuthContext already handles `onAuthStateChange` internally, so protected routes don't need their own listeners
+  - Using `canAccessAdmin()` consolidates all admin access logic in one place (checking isPlatformAdmin, adminRole, email fallback)
+  - The 49 failing tests remain pre-existing (unchanged count) - these are Phase 6 work
+  - Next task (1.3.4) is CouncilLayout.tsx - need to check if it has similar direct supabase calls or is already using useAuth()
+---
+
+## Iteration 9 - Task 1.3.4: Update CouncilLayout.tsx to use only UnifiedAuthContext
+- **What was implemented**: Refactored CouncilLayout to use session from UnifiedAuthContext instead of calling supabase.auth.getSession()
+- **Files changed**:
+  - `src/pages/council/CouncilLayout.tsx` - Auth refactor
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Removed unused `UserMembership` interface
+  - Changed `useAuth()` destructuring to include `user`, `session`, `loading: authLoading`
+  - Renamed local `loading` state to `dataLoading` to distinguish from auth loading
+  - Removed `supabase.auth.getSession()` call - now uses `session` from context
+  - Added `authLoading` to useEffect dependencies to wait for auth before loading data
+  - Updated loading check to show spinner while either auth or data is loading
+  - Note: Still imports `supabase` for database queries (organizations, departments, memberships) - this is correct since those are data queries not auth queries
+- **Learnings for future iterations**:
+  - The task is about using UnifiedAuthContext for AUTH only - database queries still need the supabase client
+  - It's important to distinguish between `authLoading` (from context) and local `dataLoading` (for database queries)
+  - The useEffect should wait for auth to complete (`!authLoading`) before starting data queries
+  - 49 failing tests remain pre-existing - same count as before
+  - Next task (1.3.5) is FirmLayout.tsx - likely has similar pattern to CouncilLayout
+---
+

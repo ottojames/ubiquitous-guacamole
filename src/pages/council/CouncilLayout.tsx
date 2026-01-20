@@ -15,29 +15,26 @@ interface Department {
   };
 }
 
-interface UserMembership {
-  role: string;
-  department_id: string;
-}
-
 export default function CouncilLayout() {
   const { orgSlug, deptSlug } = useParams<{ orgSlug: string; deptSlug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut: authSignOut, loadPermissions } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { user, session, loading: authLoading, signOut: authSignOut, loadPermissions } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
   const [department, setDepartment] = useState<Department | null>(null);
   const [userRole, setUserRole] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    loadDepartmentData();
-  }, [orgSlug, deptSlug]);
+    // Wait for auth to finish loading before loading department data
+    if (!authLoading) {
+      loadDepartmentData();
+    }
+  }, [orgSlug, deptSlug, authLoading, session]);
 
   const loadDepartmentData = async () => {
     try {
-      // Check if user has a real session first
-      const { data: { session } } = await supabase.auth.getSession();
+      // Use session from UnifiedAuthContext instead of direct supabase.auth.getSession() call
 
       // CRITICAL FIX: Bypass database queries for demo accounts
       const demoAccounts = [
@@ -87,7 +84,7 @@ export default function CouncilLayout() {
             } as Department);
             setUserRole('org_admin');
             await loadPermissions(deptData.id, 'org_admin');
-            setLoading(false);
+            setDataLoading(false);
             return;
           }
         }
@@ -108,7 +105,7 @@ export default function CouncilLayout() {
         setDepartment(mockDepartment as Department);
         setUserRole('org_admin');
         await loadPermissions(mockDepartment.id, 'org_admin');
-        setLoading(false);
+        setDataLoading(false);
         return;
       }
 
@@ -137,7 +134,7 @@ export default function CouncilLayout() {
         setDepartment(mockDepartment as Department);
         setUserRole('org_admin');
         await loadPermissions(mockDepartment.id, 'org_admin');
-        setLoading(false);
+        setDataLoading(false);
         return;
       }
 
@@ -210,7 +207,7 @@ export default function CouncilLayout() {
       // Load permissions for authenticated user
       await loadPermissions(fullDeptData.id);
 
-      setLoading(false);
+      setDataLoading(false);
 
       // Update last accessed
       if (membership) {
@@ -252,7 +249,8 @@ export default function CouncilLayout() {
     { path: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' }
   ];
 
-  if (loading) {
+  // Show loading spinner while auth is loading or data is loading
+  if (authLoading || dataLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>

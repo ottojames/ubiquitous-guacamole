@@ -183,7 +183,7 @@ The file provides (unused):
 - [x] Update `src/pages/admin/Login.tsx` to use only UnifiedAuthContext
 - [x] Update `src/pages/admin/AdminLayout.tsx` to use only UnifiedAuthContext
 - [x] Update `src/components/admin/AdminProtectedRoute.tsx` to use only UnifiedAuthContext
-- [ ] Update `src/pages/council/CouncilLayout.tsx` to use only UnifiedAuthContext
+- [x] Update `src/pages/council/CouncilLayout.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/pages/firm/FirmLayout.tsx` to use only UnifiedAuthContext
 
 ### 1.4 Remove Legacy Auth Contexts
