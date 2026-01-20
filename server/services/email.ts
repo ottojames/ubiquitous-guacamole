@@ -101,6 +101,20 @@ export interface CouncilDepartmentInvitationData {
   acceptUrl: string;
 }
 
+export interface RepresentationNotificationData {
+  representationId: string;
+  noticeId: string;
+  noticeType: string;
+  premisesName?: string;
+  premisesAddress?: string;
+  stance: 'support' | 'objection' | 'comment';
+  submitterName: string;
+  contentPreview: string;
+  noticeUrl: string;
+  dashboardUrl: string;
+  councilName: string;
+}
+
 /**
  * Send team invitation email
  */
@@ -914,6 +928,251 @@ The CivicNotices Team
 
   } catch (error: any) {
     console.error('[Email] Failed to send representation confirmation:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send notification email to council staff when a new representation is submitted
+ */
+export async function sendRepresentationNotificationToCouncil(
+  to: string,
+  data: RepresentationNotificationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping council notification email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const stanceLabels = {
+      support: 'Support',
+      objection: 'Objection',
+      comment: 'Comment'
+    };
+    const stanceColors = {
+      support: '#16a34a',
+      objection: '#dc2626',
+      comment: '#2563eb'
+    };
+    const stanceBgColors = {
+      support: '#dcfce7',
+      objection: '#fee2e2',
+      comment: '#dbeafe'
+    };
+
+    const subject = `New ${stanceLabels[data.stance]} Received - ${data.premisesName || data.noticeType}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>${subject}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f6f9fc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center" style="padding: 0 20px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px; text-align: center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="width: 56px; height: 56px; background-color: ${stanceColors[data.stance]}; border-radius: 12px; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 28px; line-height: 56px;">${data.stance === 'support' ? '👍' : data.stance === 'objection' ? '👎' : '💬'}</span>
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin: 24px 0 8px; font-size: 24px; font-weight: 600; color: #0a0a0a;">
+                New ${stanceLabels[data.stance]} Received
+              </h1>
+              <p style="margin: 0; font-size: 15px; color: #737373;">
+                A member of the public has submitted a representation
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 0 40px;"><div style="height: 1px; background-color: #e5e5e5;"></div></td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 40px;">
+
+              <!-- Stance Badge -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <span style="display: inline-block; background-color: ${stanceBgColors[data.stance]}; color: ${stanceColors[data.stance]}; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                      ${stanceLabels[data.stance]}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notice Details Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 16px; font-size: 13px; font-weight: 600; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Notice Details
+                    </p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Notice Type</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.noticeType}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ${data.premisesName ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Premises</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${data.premisesAddress ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px; vertical-align: top;">Address</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesAddress}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 12px 0;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Submitted By</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.submitterName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Representation Preview -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f9ff; border-left: 3px solid #0ea5e9; border-radius: 6px; padding: 16px 20px; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Representation Preview
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #0c4a6e; line-height: 1.6; font-style: italic;">
+                      "${data.contentPreview}"
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Buttons -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.dashboardUrl}" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; margin-right: 12px;">
+                      View in Dashboard
+                    </a>
+                    <a href="${data.noticeUrl}" style="display: inline-block; background-color: #e5e7eb; color: #374151; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+                      View Public Notice
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 24px 0 0; font-size: 14px; color: #6b7280; line-height: 1.6; text-align: center;">
+                You can review and respond to this representation from your ${data.councilName} dashboard.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #a3a3a3;">CivicNotices</p>
+              <p style="margin: 0; font-size: 12px; color: #a3a3a3;">
+                This is an automated notification for ${data.councilName}.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+New ${stanceLabels[data.stance]} Received
+
+A member of the public has submitted a representation on a notice.
+
+Notice Details:
+- Notice Type: ${data.noticeType}
+${data.premisesName ? `- Premises: ${data.premisesName}` : ''}
+${data.premisesAddress ? `- Address: ${data.premisesAddress}` : ''}
+- Submitted By: ${data.submitterName}
+- Stance: ${stanceLabels[data.stance]}
+
+Representation Preview:
+"${data.contentPreview}"
+
+View in Dashboard: ${data.dashboardUrl}
+View Public Notice: ${data.noticeUrl}
+
+You can review and respond to this representation from your ${data.councilName} dashboard.
+
+---
+CivicNotices - Automated notification for ${data.councilName}
+    `;
+
+    console.log('[Email] Sending representation notification to council:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Representation notification sent to council successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send representation notification to council:', error);
     return { success: false, error: error.message };
   }
 }

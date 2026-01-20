@@ -40,7 +40,7 @@ A digital replacement for newspaper public notice publication in the UK. Central
 - [x] Skeleton loaders for list pages (Implemented 2026-01-20 - Council Notices, Admin Notices, Public Search Results all use skeleton loaders)
 
 ### 7.3 Email Notifications
-- [ ] Implement representation notification to council staff
+- [x] Implement representation notification to council staff (Implemented 2026-01-20 - sendRepresentationNotificationToCouncil() in email.ts, integrated in representations.ts POST endpoint)
 - [ ] Implement notice publication confirmation to publisher
 - [ ] Verify email templates render correctly
 

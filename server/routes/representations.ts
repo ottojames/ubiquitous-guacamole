@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth, optionalAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
+import { sendRepresentationNotificationToCouncil } from '../services/email';
 
 const router = Router();
 
@@ -424,6 +425,78 @@ router.post('/representations', async (req: Request, res: Response) => {
       console.error('Error inserting representation:', insertError);
       return res.status(500).json({ error: 'Failed to submit representation' });
     }
+
+    // Send notification email to council staff (async, don't block response)
+    (async () => {
+      try {
+        // Fetch notice with organization details for council notification
+        const { data: noticeWithOrg, error: noticeOrgError } = await supabase
+          .from('notices')
+          .select(`
+            id,
+            notice_type,
+            title,
+            premises,
+            organization_id,
+            organizations!inner (
+              id,
+              name,
+              slug,
+              contact_email
+            )
+          `)
+          .eq('id', noticeId)
+          .single();
+
+        if (noticeOrgError || !noticeWithOrg) {
+          console.warn('[Representation] Could not fetch notice organization for email notification:', noticeOrgError);
+          return;
+        }
+
+        const org = noticeWithOrg.organizations as any;
+        if (!org?.contact_email) {
+          console.log('[Representation] No contact email configured for organization, skipping notification');
+          return;
+        }
+
+        const premises = noticeWithOrg.premises as any;
+        const premisesName = premises?.name || noticeWithOrg.title;
+        const premisesAddress = premises?.address || null;
+
+        // Truncate content for preview (first 200 chars)
+        const contentPreview = content.trim().length > 200
+          ? content.trim().substring(0, 200) + '...'
+          : content.trim();
+
+        // Map type to stance for email
+        const stanceMap: Record<string, 'support' | 'objection' | 'comment'> = {
+          'support': 'support',
+          'objection': 'objection',
+          'comment': 'comment'
+        };
+
+        const baseUrl = process.env.PUBLIC_URL || process.env.VITE_APP_URL || 'http://localhost:5173';
+
+        await sendRepresentationNotificationToCouncil(org.contact_email, {
+          representationId: representation.id,
+          noticeId: noticeId,
+          noticeType: noticeWithOrg.notice_type || 'Notice',
+          premisesName,
+          premisesAddress,
+          stance: stanceMap[type] || 'comment',
+          submitterName: submitterName.trim(),
+          contentPreview,
+          noticeUrl: `${baseUrl}/notices/${noticeId}`,
+          dashboardUrl: `${baseUrl}/c/${org.slug}/licensing/notices/${noticeId}/representations`,
+          councilName: org.name,
+        });
+
+        console.log(`[Representation] Sent notification to council ${org.name} for representation ${representation.id}`);
+      } catch (emailError) {
+        console.error('[Representation] Error sending council notification email:', emailError);
+        // Don't fail the request if email fails
+      }
+    })();
 
     return res.status(201).json({
       success: true,

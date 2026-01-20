@@ -882,3 +882,29 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in src/pages/council/Dashboard.tsx etc. are unrelated to this work
   - Next is Task 7.3: Email Notifications
 ---
+
+## Iteration 36 - Task 7.3: Implement representation notification to council staff
+- **What was implemented**: Email notification to council staff when a new representation is submitted on one of their notices
+- **Files changed**:
+  - `server/services/email.ts` - Added `RepresentationNotificationData` interface and `sendRepresentationNotificationToCouncil()` function
+  - `server/routes/representations.ts` - Integrated email notification in POST /api/representations endpoint
+  - `PRD.md` - Marked Task 7.3 first subtask complete
+- **Key features**:
+  - Professional HTML email template with:
+    - Stance-colored header (green for support, red for objection, blue for comment)
+    - Stance badge (Support/Objection/Comment)
+    - Notice details card (type, premises, address, submitter)
+    - Representation preview (first 200 chars)
+    - Two CTA buttons: "View in Dashboard" and "View Public Notice"
+  - Email sent asynchronously (doesn't block API response)
+  - Graceful handling: if email fails or organization has no contact_email, submission still succeeds
+  - Uses organization's `contact_email` field from `organizations` table
+  - Dashboard URL pattern: `/c/{org_slug}/licensing/notices/{notice_id}/representations`
+- **Learnings for future iterations**:
+  - The `organizations` table has a `contact_email` field for councils - used for notifications
+  - Supabase nested select with `organizations!inner` returns the joined organization data
+  - Email notifications should be async (fire-and-forget) to not block user-facing API responses
+  - All 465 tests pass, no regressions
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, server/ directories are unrelated
+  - Next is Task 7.3 second subtask: Implement notice publication confirmation to publisher
+---
