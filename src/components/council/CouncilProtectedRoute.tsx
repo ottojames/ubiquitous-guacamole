@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
+import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 
 interface CouncilProtectedRouteProps {
   children: React.ReactNode;
@@ -107,17 +108,15 @@ export default function CouncilProtectedRoute({ children }: CouncilProtectedRout
     });
 
     try {
-      // Demo mode check - allow demo accounts through
-      const demoAccounts = [
-        'licensing@westminster.gov.uk',
-        'licensing@sampletonborough.gov.uk',
-      ];
-
-      if (demoAccounts.includes(session.user.email?.toLowerCase() || '')) {
-        console.log('[CouncilProtectedRoute] Demo account detected, granting access');
-        setHasAccess(true);
-        setMembershipLoading(false);
-        return;
+      // Demo mode check - allow demo accounts through ONLY when demo mode is enabled
+      if (isDemoModeEnabled()) {
+        const demoAccountEmails = DEMO_ACCOUNTS.council.map(acc => acc.email.toLowerCase());
+        if (demoAccountEmails.includes(session.user.email?.toLowerCase() || '')) {
+          console.log('[CouncilProtectedRoute] Demo mode active + demo account detected, granting access');
+          setHasAccess(true);
+          setMembershipLoading(false);
+          return;
+        }
       }
 
       // First, look up the organization by slug

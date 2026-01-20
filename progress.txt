@@ -695,3 +695,33 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task is Task 5.5: Remove Demo Council Logic
 ---
 
+## Iteration 29 - Task 5.5: Remove Demo Council Logic
+- **What was implemented**: Gated all hardcoded demo account bypasses behind `isDemoModeEnabled()`
+- **Files changed**:
+  - `src/components/council/CouncilProtectedRoute.tsx` - Added import + gated demo check
+  - `src/pages/council/CouncilLayout.tsx` - Added import + gated demo paths/accounts
+  - `src/pages/council/DepartmentSwitcher.tsx` - Added import + gated demo check
+  - `src/pages/auth/SwitchContext.tsx` - Added import + gated demo accounts block
+  - `PRD.md` - Marked Task 5.5 complete, added implementation notes
+- **Security fixes**:
+  - CouncilProtectedRoute was granting access to `licensing@westminster.gov.uk` etc. regardless of demo mode
+  - CouncilLayout had demo paths that would work in production
+  - DepartmentSwitcher was showing demo departments for hardcoded emails
+  - SwitchContext had mock data bypass for demo accounts in production
+- **Pattern applied**:
+  - All demo checks now wrapped in `if (isDemoModeEnabled()) { ... }`
+  - All hardcoded email arrays replaced with `DEMO_ACCOUNTS.council` and `DEMO_ACCOUNTS.firm`
+  - Centralized demo account definitions in `@/lib/demoMode`
+- **Double protection**:
+  - `isDemoModeEnabled()` requires: `VITE_DEMO_MODE=true` AND `MODE === 'development'`
+  - Production builds (MODE !== 'development') can NEVER activate demo mode
+  - This is a defense-in-depth approach
+- **Learnings for future iterations**:
+  - Multiple files had scattered hardcoded demo email arrays - consolidating in demoMode.ts helps
+  - The pattern `isDemoModeEnabled() ? DEMO_ACCOUNTS... : []` safely returns empty array in production
+  - 49 failing tests remain pre-existing (schema drift) - same count as before (Phase 6 work)
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and not blocking
+  - Phase 5 (Remove Mock/Demo Data) is now COMPLETE
+  - Next is Phase 6: Fix Failing Tests
+---
+

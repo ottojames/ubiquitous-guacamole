@@ -595,9 +595,44 @@ Updated `server/routes/address.ts` to properly use `ADDRESS_PROVIDER` environmen
    - API key env vars checked: `VITE_GETADDRESS_KEY`, `VITE_GETADDRESS_API_KEY`, `ADDRESS_API_KEY`, `GETADDRESS_API_KEY`
 
 ### 5.5 Remove Demo Council Logic
-- [ ] Search for `isDemoMode` checks throughout codebase
-- [ ] Remove or gate behind explicit `DEMO_MODE=true` env var
-- [ ] Ensure production deployments never activate demo mode
+- [x] Search for `isDemoMode` checks throughout codebase
+- [x] Remove or gate behind explicit `DEMO_MODE=true` env var
+- [x] Ensure production deployments never activate demo mode
+
+#### Implementation Notes (Task 5.5)
+
+Fixed multiple files that had hardcoded demo account bypasses that were NOT gated behind `isDemoModeEnabled()`:
+
+1. **`src/components/council/CouncilProtectedRoute.tsx`**:
+   - Was granting access to demo emails regardless of demo mode
+   - Now uses `isDemoModeEnabled()` check before granting access
+   - Uses `DEMO_ACCOUNTS.council` from demoMode.ts instead of hardcoded emails
+
+2. **`src/pages/council/CouncilLayout.tsx`**:
+   - Had hardcoded demo account bypass for database queries
+   - Now only activates demo paths when `isDemoModeEnabled()` returns true
+   - Uses `DEMO_ACCOUNTS` from demoMode.ts for email checking
+
+3. **`src/pages/council/DepartmentSwitcher.tsx`**:
+   - Was showing Westminster demo departments for hardcoded emails
+   - Now requires `isDemoModeEnabled()` for demo account treatment
+   - Uses `DEMO_ACCOUNTS` from demoMode.ts
+
+4. **`src/pages/auth/SwitchContext.tsx`**:
+   - Had hardcoded demo account mock data bypass
+   - Now entire demo accounts block is wrapped in `isDemoModeEnabled()` check
+   - Uses `DEMO_ACCOUNTS` from demoMode.ts for email mapping
+
+**Demo mode architecture**:
+- `isDemoModeEnabled()` requires BOTH: `VITE_DEMO_MODE=true` AND development mode
+- This means production builds will NEVER activate demo mode, even if env var is set
+- All demo account lists now use centralized `DEMO_ACCOUNTS` from `@/lib/demoMode`
+
+**Files updated**:
+- `src/components/council/CouncilProtectedRoute.tsx` - Added import + gated demo check
+- `src/pages/council/CouncilLayout.tsx` - Added import + gated demo paths/accounts
+- `src/pages/council/DepartmentSwitcher.tsx` - Added import + gated demo check
+- `src/pages/auth/SwitchContext.tsx` - Added import + gated demo accounts block
 
 ---
 

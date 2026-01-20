@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 
 interface Department {
   id: string;
@@ -36,17 +37,15 @@ export default function CouncilLayout() {
     try {
       // Use session from UnifiedAuthContext instead of direct supabase.auth.getSession() call
 
-      // CRITICAL FIX: Bypass database queries for demo accounts
-      const demoAccounts = [
-        'licensing@westminster.gov.uk',
-        'licensing@sampletonborough.gov.uk',
-        'solicitor@wilsonpartners.com'
-      ];
+      // Demo mode check - only allow demo account bypass when VITE_DEMO_MODE=true
+      const demoAccountEmails = isDemoModeEnabled()
+        ? [...DEMO_ACCOUNTS.council.map(acc => acc.email.toLowerCase()), ...DEMO_ACCOUNTS.firm.map(acc => acc.email.toLowerCase())]
+        : [];
 
-      const isAuthenticatedDemoAccount = session && session.user.email && demoAccounts.includes(session.user.email.toLowerCase());
+      const isAuthenticatedDemoAccount = session && session.user.email && demoAccountEmails.includes(session.user.email.toLowerCase());
 
-      // Demo mode paths for showcase
-      const demoPaths = [
+      // Demo mode paths for showcase - only active when demo mode is enabled
+      const demoPaths = isDemoModeEnabled() ? [
         { org: 'sample-borough', dept: 'licensing', orgName: 'Sample Borough Council', deptName: 'Licensing Department' },
         { org: 'westminster', dept: 'licensing', orgName: 'Westminster Council', deptName: 'Westminster Licensing' },
         { org: 'bristol-council', dept: 'licensing', orgName: 'Bristol Council', deptName: 'Licensing' },
@@ -56,7 +55,7 @@ export default function CouncilLayout() {
         { org: 'westminster-city-of-council', dept: 'planning', orgName: 'Westminster (City of) Council', deptName: 'Planning' },
         { org: 'westminster-city-of-council', dept: 'highways', orgName: 'Westminster (City of) Council', deptName: 'Highways' },
         { org: 'sampletonborough', dept: 'licensing', orgName: 'Sampletonborough Council', deptName: 'Licensing Department' },
-      ];
+      ] : [];
 
       const demoPath = (!session || isAuthenticatedDemoAccount) && demoPaths.find(p => orgSlug === p.org && deptSlug === p.dept);
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 
 interface Department {
   id: string;
@@ -48,24 +49,22 @@ export default function DepartmentSwitcher() {
 
   const loadDepartments = async () => {
     try {
-      // Demo mode accounts for testing
-      const demoAccounts = [
-        'licensing@westminster.gov.uk',
-        'licensing@sampletonborough.gov.uk',
-        'solicitor@wilsonpartners.com'
-      ];
+      // Demo mode accounts - only active when VITE_DEMO_MODE=true
+      const demoAccountEmails = isDemoModeEnabled()
+        ? [...DEMO_ACCOUNTS.council.map(acc => acc.email.toLowerCase()), ...DEMO_ACCOUNTS.firm.map(acc => acc.email.toLowerCase())]
+        : [];
 
       const isAuthenticatedDemoAccount = session && session.user.email &&
-        demoAccounts.includes(session.user.email.toLowerCase());
+        demoAccountEmails.includes(session.user.email.toLowerCase());
 
-      // If no user and not demo mode, redirect to login
+      // If no user and not in demo mode with demo account, redirect to login
       if (!user && !isAuthenticatedDemoAccount) {
         navigate('/auth/council-login');
         return;
       }
 
-      // For demo accounts or unauthenticated demo mode, show Westminster departments
-      if (!user || isAuthenticatedDemoAccount) {
+      // For demo accounts in demo mode or unauthenticated demo mode, show Westminster departments
+      if (isDemoModeEnabled() && (!user || isAuthenticatedDemoAccount)) {
         await loadDemoDepartments();
         return;
       }

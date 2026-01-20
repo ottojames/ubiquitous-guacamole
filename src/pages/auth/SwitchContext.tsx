@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 
 interface DepartmentMembership {
   department_id: string;
@@ -53,77 +54,79 @@ export default function SwitchContext() {
       const userId = session.user.id;
       const userEmail = session.user.email?.toLowerCase();
 
-      // CRITICAL FIX: Bypass database queries for demo accounts
-      const demoAccounts: Record<string, any> = {
-        'licensing@westminster.gov.uk': {
-          type: 'council',
-          memberships: [{
-            department_id: 'demo-westminster-licensing',
-            role: 'org_admin',
-            last_accessed_at: new Date().toISOString(),
-            department: {
-              id: 'demo-westminster-licensing',
-              slug: 'licensing',
-              name: 'Westminster Licensing',
-              type: 'licensing',
-              organization: {
-                id: 'demo-westminster-org',
-                name: 'Westminster Council',
-                type: 'council',
-                slug: 'westminster'
+      // Demo mode check - only use demo data when VITE_DEMO_MODE=true
+      if (isDemoModeEnabled() && userEmail) {
+        const demoAccounts: Record<string, any> = {
+          [DEMO_ACCOUNTS.council[0].email.toLowerCase()]: {
+            type: 'council',
+            memberships: [{
+              department_id: 'demo-westminster-licensing',
+              role: 'org_admin',
+              last_accessed_at: new Date().toISOString(),
+              department: {
+                id: 'demo-westminster-licensing',
+                slug: 'licensing',
+                name: 'Westminster Licensing',
+                type: 'licensing',
+                organization: {
+                  id: 'demo-westminster-org',
+                  name: 'Westminster Council',
+                  type: 'council',
+                  slug: 'westminster'
+                }
               }
-            }
-          }]
-        },
-        'licensing@sampletonborough.gov.uk': {
-          type: 'council',
-          memberships: [{
-            department_id: 'demo-sampletonborough-licensing',
-            role: 'org_admin',
-            last_accessed_at: new Date().toISOString(),
-            department: {
-              id: 'demo-sampletonborough-licensing',
-              slug: 'licensing',
-              name: 'Sampletonborough Licensing',
-              type: 'licensing',
-              organization: {
-                id: 'demo-sampletonborough-org',
-                name: 'Sampletonborough Council',
-                type: 'council',
-                slug: 'sampletonborough'
+            }]
+          },
+          [DEMO_ACCOUNTS.council[1]?.email.toLowerCase() || 'planning@camden.gov.uk']: {
+            type: 'council',
+            memberships: [{
+              department_id: 'demo-camden-planning',
+              role: 'org_admin',
+              last_accessed_at: new Date().toISOString(),
+              department: {
+                id: 'demo-camden-planning',
+                slug: 'planning',
+                name: 'Camden Planning',
+                type: 'planning',
+                organization: {
+                  id: 'demo-camden-org',
+                  name: 'Camden Council',
+                  type: 'council',
+                  slug: 'camden'
+                }
               }
-            }
-          }]
-        },
-        'solicitor@wilsonpartners.com': {
-          type: 'firm',
-          memberships: [{
-            organization_id: 'demo-wilson-org',
-            role: 'org_admin',
-            organization: {
-              id: 'demo-wilson-org',
-              name: 'Wilson Partners',
-              type: 'firm',
-              slug: 'wilson-partners'
-            }
-          }]
+            }]
+          },
+          [DEMO_ACCOUNTS.firm[0].email.toLowerCase()]: {
+            type: 'firm',
+            memberships: [{
+              organization_id: 'demo-wilson-org',
+              role: 'org_admin',
+              organization: {
+                id: 'demo-wilson-org',
+                name: 'Wilson Partners',
+                type: 'firm',
+                slug: 'wilson-partners'
+              }
+            }]
+          }
+        };
+
+        if (demoAccounts[userEmail]) {
+          console.log('[SwitchContext] Demo mode active + demo account detected, using mock data');
+          const demoConfig = demoAccounts[userEmail];
+
+          if (demoConfig.type === 'council') {
+            setDeptMemberships(demoConfig.memberships);
+            setOrgMemberships([]);
+          } else {
+            setDeptMemberships([]);
+            setOrgMemberships(demoConfig.memberships);
+          }
+
+          setLoading(false);
+          return;
         }
-      };
-
-      if (userEmail && demoAccounts[userEmail]) {
-        console.log('Demo account detected in SwitchContext, using mock data to avoid 500 error');
-        const demoConfig = demoAccounts[userEmail];
-
-        if (demoConfig.type === 'council') {
-          setDeptMemberships(demoConfig.memberships);
-          setOrgMemberships([]);
-        } else {
-          setDeptMemberships([]);
-          setOrgMemberships(demoConfig.memberships);
-        }
-
-        setLoading(false);
-        return;
       }
 
       // Load department memberships
@@ -184,12 +187,10 @@ export default function SwitchContext() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // CRITICAL FIX: Skip database update for demo accounts
-      const demoEmails = [
-        'licensing@westminster.gov.uk',
-        'licensing@sampletonborough.gov.uk',
-        'solicitor@wilsonpartners.com'
-      ];
+      // Skip database update for demo accounts (only when demo mode is active)
+      const demoEmails = isDemoModeEnabled()
+        ? [...DEMO_ACCOUNTS.council.map(acc => acc.email.toLowerCase()), ...DEMO_ACCOUNTS.firm.map(acc => acc.email.toLowerCase())]
+        : [];
 
       if (!demoEmails.includes(session.user.email?.toLowerCase() || '')) {
         await supabase
