@@ -4,6 +4,7 @@ import { getServiceSupabaseClient } from "../lib/supabase.js";
 import { createHash } from "node:crypto";
 import slugify from "slugify";
 import { extractTextFromBuffer } from "../utils/extractText";
+import { cleanupNoticeText } from "../utils/cleanupNoticeText";
 
 const upload = (multer as any)({
   storage: multer.memoryStorage(),
@@ -84,8 +85,14 @@ export async function handleUploadCore(
         file.originalname,
         file.mimetype
       );
-      ocr_text = text;
+      // Apply AI-powered text cleanup to fix capitalization, postcodes, etc.
+      // while preserving legal wording
+      ocr_text = cleanupNoticeText(text);
       meta = m;
+      console.log('[upload] Text cleanup applied:', {
+        originalLength: text.length,
+        cleanedLength: ocr_text.length,
+      });
     } catch (err: any) {
       const status = err?.status || 500;
       if (status === 415) {

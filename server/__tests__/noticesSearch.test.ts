@@ -147,13 +147,10 @@ describe('GET /api/notices/search', () => {
       longitude: -0.125,
     });
 
-    const postcodeFilter = queryLog.find(
-      (entry) =>
-        entry.type === 'filter' &&
-        entry.column === "coalesce(premises->>'postcode', premises_address->>'postcode')"
-    );
-    expect(postcodeFilter?.value).toBe('W4%');
-    expect(queryLog.some((entry) => entry.type === 'or')).toBe(false);
+    // Postcode filter uses .or() to check both premises and premises_address
+    const orFilter = queryLog.find((entry) => entry.type === 'or');
+    expect(orFilter).toBeDefined();
+    expect(orFilter?.filter).toContain('W4%');
   });
 
   it('applies bounding box filters when bbox query is present', async () => {

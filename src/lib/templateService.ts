@@ -48,20 +48,46 @@ export async function getTemplateForDepartment(
   noticeTypeId: string
 ): Promise<CustomTemplate | null> {
   try {
-    // Use the RPC function we created in the migration
-    const { data, error } = await supabase.rpc('get_active_template', {
-      p_department_id: departmentId,
-      p_notice_type: noticeTypeId,
-    });
+    console.log('[Template Service] Querying templates for:', { departmentId, noticeTypeId });
+
+    // Query templates table directly instead of using RPC
+    const { data, error } = await supabase
+      .from('templates')
+      .select('id, name, description, template_text')
+      .eq('department_id', departmentId)
+      .eq('notice_type', noticeTypeId)
+      .not('template_text', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
 
     if (error) {
+      // PGRST116 = no rows found, which is not an error
+      if (error.code === 'PGRST116') {
+        console.log('[Template Service] No template found for:', { departmentId, noticeTypeId });
+        return null;
+      }
       console.error('Error fetching custom template:', error);
       return null;
     }
 
-    // RPC returns array, get first result
-    if (data && data.length > 0) {
-      return data[0] as CustomTemplate;
+    if (data && data.template_text) {
+      // Extract placeholders from template_text
+      const placeholderMatches = data.template_text.match(/\{\{([A-Z_]+)\}\}/g) || [];
+      const placeholders = [...new Set(placeholderMatches.map((m: string) => m.replace(/\{\{|\}\}/g, '')))];
+
+      console.log('[Template Service] Found template:', data.name, 'with placeholders:', placeholders);
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        template_text: data.template_text,
+        placeholders,
+        required_placeholders: [], // Not tracking required vs optional for now
+        is_validated: true,
+        validation_warnings: [],
+      };
     }
 
     return null;

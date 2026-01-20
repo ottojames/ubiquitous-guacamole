@@ -541,6 +541,71 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       }
     }
 
+    // Resolve organization_id from department_id if not provided
+    let resolvedOrganizationId = payload.organization_id || null;
+    let resolvedDepartmentId = payload.department_id || null;
+
+    if (resolvedDepartmentId && !resolvedOrganizationId) {
+      console.log('[notice-submit] Looking up organization_id from department_id:', resolvedDepartmentId);
+      const { data: deptData, error: deptError } = await client
+        .from('departments')
+        .select('organization_id')
+        .eq('id', resolvedDepartmentId)
+        .single();
+
+      if (deptData?.organization_id) {
+        resolvedOrganizationId = deptData.organization_id;
+        console.log('[notice-submit] Resolved organization_id:', resolvedOrganizationId);
+      } else if (deptError) {
+        console.warn('[notice-submit] Failed to lookup department:', deptError.message);
+      }
+    }
+
+    // Generate notice text using custom template if available
+    let generatedDescription = payload.description || null;
+    if (resolvedDepartmentId && payload.notice_type && !generatedDescription) {
+      try {
+        console.log('[notice-submit] Looking for custom template:', { departmentId: resolvedDepartmentId, noticeType: payload.notice_type });
+        const { data: templateData } = await client
+          .from('templates')
+          .select('template_text, name')
+          .eq('department_id', resolvedDepartmentId)
+          .eq('notice_type', payload.notice_type)
+          .not('template_text', 'is', null)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (templateData?.template_text) {
+          console.log('[notice-submit] Using custom template:', templateData.name);
+          // Generate tokens from payload
+          const tokens: Record<string, string> = {
+            APPLICANT_NAME: payload.applicant?.name || '',
+            PREMISES_NAME: payload.premises?.name || '',
+            PREMISES_ADDRESS: typeof payload.premises?.address === 'string'
+              ? payload.premises.address
+              : [payload.premises?.address?.line1, payload.premises?.address?.line2, payload.premises?.address?.town, payload.premises?.address?.postcode].filter(Boolean).join(', '),
+            APPLICATION_DATE: payload.extras?.applicationDate || new Date().toISOString().split('T')[0],
+            DEADLINE_DATE: payload.consultation?.repsDeadline || '',
+            PUBLICATION_DATE: new Date().toISOString().split('T')[0],
+            AUTHORITY_NAME: payload.extras?.authorityName || '',
+            REPRESENTATION_ADDRESS: payload.extras?.representationAddress || '',
+            LICENSABLE_ACTIVITIES: payload.extras?.activities?.join(', ') || '',
+            ...(payload.extras?.tokens || {}), // Include any additional tokens from form
+          };
+
+          // Replace {{TOKEN}} placeholders with values
+          generatedDescription = templateData.template_text.replace(
+            /\{\{([A-Z_]+)\}\}/g,
+            (match: string, token: string) => tokens[token] || match
+          );
+          console.log('[notice-submit] Generated description from template');
+        }
+      } catch (templateErr) {
+        console.warn('[notice-submit] Template lookup failed (using default):', templateErr);
+      }
+    }
+
     // Prepare data with geocoding and organization context
     const noticeData = {
       ...payload,
@@ -552,9 +617,11 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       location: latitude && longitude
         ? `POINT(${longitude} ${latitude})`
         : null,
-      // Ensure organization context is set if provided
-      organization_id: payload.organization_id || null,
-      department_id: payload.department_id || null,
+      // Set resolved organization/department IDs
+      organization_id: resolvedOrganizationId,
+      department_id: resolvedDepartmentId,
+      // Use generated description if available
+      description: generatedDescription || payload.description || null,
     };
 
     // Add postcode to premises if extracted
@@ -959,7 +1026,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
       }
 
       if (councilParam) {
-        const rowCouncil = firstNonEmptyString(row?.extras?.councilId, row?.council_id, row?.councilId);
+        const rowCouncil = firstNonEmptyString(row?.organization_id, row?.extras?.councilId, row?.council_id, row?.councilId);
         if (rowCouncil !== councilParam) {
           return false;
         }
@@ -1216,8 +1283,8 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
       viewUrl: firstNonEmptyString(extras.viewUrl, row?.view_url),
       latitude,
       longitude,
-      // Council information (for representations)
-      council_id: row.council_id,
+      // Council/organization information (for representations)
+      council_id: row.organization_id,
       councils: row.councils || null,
       // Additional detailed fields
       applicantName: firstNonEmptyString(applicant.name, consultation.applicantName, licensing.applicantName),
