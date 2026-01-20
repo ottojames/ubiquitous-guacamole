@@ -1025,3 +1025,48 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The migration pattern for subsequent tasks (8.2b, 8.3b, etc.) is established: psql -f migration.sql
   - Next task is Task 8.2a: Create workflow_configs table migration
 ---
+
+## Iteration 41 - Task 8.2a: Create workflow_configs table migration
+- **What was implemented**: Created SQL migration for `workflow_configs` table with RLS policies
+- **Files created**:
+  - `supabase/migrations/20260120230000_create_workflow_configs.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.2a complete
+- **Key features of the migration**:
+  - Table with: id (UUID), firm_id (FK to organizations), department_id (FK to firm_departments)
+  - Configuration fields: notice_type, name, description
+  - Settings: is_active, is_default
+  - Metadata: created_at, updated_at, created_by
+  - Unique constraint on (firm_id, notice_type, is_default) for one default per type
+  - Indexes on firm_id, department_id, notice_type, and partial index on is_active
+  - Trigger for automatic updated_at timestamp
+  - RLS enabled with 2 policies:
+    - Firm members can view workflows (SELECT)
+    - Firm admins (owner/admin roles) can manage workflows (ALL)
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Migration follows same pattern as firm_departments - consistent approach
+  - SQL directly copied from implementation plan with no modifications needed
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and not blocking
+  - Next task is Task 8.2b: Apply workflow_configs migration to Supabase
+---
+
+## Iteration 42 - Task 8.2b: Apply workflow_configs migration to Supabase
+- **What was implemented**: Applied the workflow_configs migration to the remote Supabase database
+- **Method used**: psql with DATABASE_URL (consistent with established pattern from Iteration 40)
+- **Files unchanged**: No code changes - database schema update only
+- **Verification**:
+  - Table created with all columns (id, firm_id, department_id, notice_type, name, description, is_active, is_default, timestamps, created_by)
+  - Primary key, unique constraint (firm_id, notice_type, is_default)
+  - Four indexes: idx_workflow_configs_firm, dept, type, and partial on is_active
+  - Foreign keys to organizations(id), firm_departments(id), and auth.users(id)
+  - 2 RLS policies: select for members, all for admins (owner/admin roles)
+  - Update trigger for automatic updated_at timestamps
+  - Migration recorded in supabase_migrations.schema_migrations table
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - psql pattern established: `source .env && psql "$DATABASE_URL" -f "migration.sql"`
+  - Always record migration in schema_migrations table after direct SQL execution
+  - Verify table structure with `\d public.table_name` after applying migration
+  - Next task is Task 8.3a: Create workflow_stages table migration
+---
