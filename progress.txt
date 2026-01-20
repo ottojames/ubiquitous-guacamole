@@ -505,3 +505,30 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 4.2: Link Templates to Notice Preview
 ---
 
+## Iteration 22 - Task 4.2: Link Templates to Notice Preview
+- **What was implemented**: Added template indicator showing custom vs default template in preview
+- **Files changed**:
+  - `src/lib/templateService.ts` - Added `TemplateRenderResult` type and `renderNoticeWithTemplateInfo()` function
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Added templateInfo state, updated to use new function, added visual indicators
+  - `PRD.md` - Marked Task 4.2 complete with implementation notes
+- **Key findings**:
+  - Template fetching and rendering was **already implemented** - the system already:
+    - Fetches custom templates via `getTemplateForDepartment()` RPC function
+    - Uses `renderNoticeWithTemplate()` to render with custom template or fallback to default
+    - Gets `DEPARTMENT_ID` from `templateDraft` when user selects council
+  - What was missing: **No visual indicator** showing which template type was being used
+- **Implementation details**:
+  - Added `TemplateRenderResult` interface with `isCustomTemplate`, `templateName`, `templateId` fields
+  - Created `renderNoticeWithTemplateInfo()` that returns both text and metadata
+  - Updated existing `renderNoticeWithTemplate()` to use new function internally
+  - Added `templateInfo` state in NewPublishFlow.tsx to track template metadata
+  - Added visual badge in Step 2 preview (green for custom, gray for default)
+  - Added same badge in Step 3 editable preview
+- **Learnings for future iterations**:
+  - When adding features, check if the underlying functionality already exists - often just the UI/UX is missing
+  - The pattern for extending an async function: create a new function returning richer type, have original function wrap it
+  - 49 failing tests remain pre-existing (same count as before) - Phase 6 work
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing and not blocking
+  - Next is Task 4.3: Fix Westminster Auto-Detection Workaround
+---
+

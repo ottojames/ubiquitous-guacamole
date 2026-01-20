@@ -26,6 +26,17 @@ interface CustomTemplate {
 }
 
 /**
+ * Result type for renderNoticeWithTemplateInfo
+ * Contains both the rendered text and metadata about the template used
+ */
+export interface TemplateRenderResult {
+  text: string;
+  isCustomTemplate: boolean;
+  templateName?: string;
+  templateId?: string;
+}
+
+/**
  * Fetch the active custom template for a department and notice type
  *
  * @param departmentId - UUID of the department
@@ -73,6 +84,24 @@ export async function renderNoticeWithTemplate(
   departmentId?: string,
   noticeTypeId?: string
 ): Promise<string> {
+  const result = await renderNoticeWithTemplateInfo(notice, departmentId, noticeTypeId);
+  return result.text;
+}
+
+/**
+ * Render a notice using custom template if available, otherwise fallback to default
+ * Returns both the rendered text and metadata about the template used
+ *
+ * @param notice - Notice data to render
+ * @param departmentId - Optional department ID for custom template lookup
+ * @param noticeTypeId - Notice type ID (e.g. 'licensing-premises-new') for template lookup
+ * @returns Rendered notice text with template metadata
+ */
+export async function renderNoticeWithTemplateInfo(
+  notice: NoticeBase,
+  departmentId?: string,
+  noticeTypeId?: string
+): Promise<TemplateRenderResult> {
   // Try to fetch custom template if department ID provided
   if (departmentId && noticeTypeId) {
     try {
@@ -92,7 +121,12 @@ export async function renderNoticeWithTemplate(
         // Render using custom template
         const rendered = renderTemplate(customTemplate.template_text, tokens);
 
-        return rendered;
+        return {
+          text: rendered,
+          isCustomTemplate: true,
+          templateName: customTemplate.name,
+          templateId: customTemplate.id,
+        };
       } else {
         console.log('[Template Service] ❌ No custom template found for:', noticeTypeId);
       }
@@ -104,7 +138,10 @@ export async function renderNoticeWithTemplate(
 
   // Fallback to default template rendering
   console.log('[Template Service] Using default template for:', notice.noticeType);
-  return renderDefaultTemplate(notice);
+  return {
+    text: renderDefaultTemplate(notice),
+    isCustomTemplate: false,
+  };
 }
 
 /**

@@ -398,11 +398,36 @@ Fixed `DepartmentSwitcher` component at `/switch-department`:
 - [x] Only show council dropdown for relevant notice types (licensing, planning - NOT probate, GVOL)
 
 ### 4.2 Link Templates to Notice Preview
-- [ ] When council is selected, fetch their template for this notice type
-- [ ] Use `GET /api/departments/:deptId/templates?notice_type=X`
-- [ ] If custom template exists, use it for preview rendering
-- [ ] If no custom template, use default template
-- [ ] Show indicator when using custom vs default template
+- [x] When council is selected, fetch their template for this notice type
+- [x] Use `GET /api/departments/:deptId/templates?notice_type=X`
+- [x] If custom template exists, use it for preview rendering
+- [x] If no custom template, use default template
+- [x] Show indicator when using custom vs default template
+
+#### Implementation Notes (Task 4.2)
+
+Template linking was **already implemented** in `src/lib/templateService.ts` and integrated into `NewPublishFlow.tsx`. The implementation uses:
+
+1. **`getTemplateForDepartment(departmentId, noticeTypeId)`** - RPC function that fetches active template from database
+2. **`renderNoticeWithTemplate(notice, departmentId, noticeTypeId)`** - Renders notice with custom template if available, falls back to default
+
+What was added in this iteration:
+
+1. **`TemplateRenderResult` type** - New export from templateService.ts that includes:
+   - `text: string` - The rendered notice text
+   - `isCustomTemplate: boolean` - Whether a custom council template was used
+   - `templateName?: string` - Name of the custom template (if used)
+   - `templateId?: string` - UUID of the custom template (if used)
+
+2. **`renderNoticeWithTemplateInfo()` function** - New function that returns both text and metadata
+
+3. **`templateInfo` state in NewPublishFlow.tsx** - Tracks which template type is being used
+
+4. **Template indicator UI** - Visual badge shown in preview panels:
+   - Green badge with checkmark: "Using council template: {name}" (when custom template found)
+   - Gray badge with document icon: "Using default template" (when using fallback)
+   - Shows in Step 2 preview rail (template mode only)
+   - Shows in Step 3 editable preview (template mode only)
 
 ### 4.3 Fix Westminster Auto-Detection Workaround
 - [ ] Remove hardcoded "Westminster" string matching in `NewPublishFlow.tsx:878-918`

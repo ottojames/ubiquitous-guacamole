@@ -10,7 +10,7 @@ import PaymentStep from "./steps/PaymentStep";
 import { getNoticeBuilder } from "@/next/publish/schema/registry";
 import { validateWindowRules, type WindowRuleIssue } from "@/next/publish/validation/windowRules";
 import { getNoticeTemplateRenderer } from "@/next/publish/templates";
-import { renderNoticeWithTemplate } from "@/lib/templateService";
+import { renderNoticeWithTemplateInfo, type TemplateRenderResult } from "@/lib/templateService";
 import { buildSampleDraft } from "@/next/publish/sampleData";
 import { getNested, setNested } from "@/next/publish/utils/object";
 import { getMandatoryFieldsForOCR } from "@/next/publish/config/formBlueprints";
@@ -862,11 +862,13 @@ export default function NewPublishFlow() {
   }, [builder, templateDraft, definition?.id]);
 
   const [templateText, setTemplateText] = useState("");
+  const [templateInfo, setTemplateInfo] = useState<TemplateRenderResult | null>(null);
 
   // Render notice text with custom template support
   useEffect(() => {
     if (!templateNotice) {
       setTemplateText("");
+      setTemplateInfo(null);
       return;
     }
 
@@ -928,10 +930,15 @@ export default function NewPublishFlow() {
         console.log('[NewPublishFlow] Authority Name:', templateDraft?.AUTHORITY_NAME);
 
         // Use the template service which handles custom templates and fallback
-        const rendered = await renderNoticeWithTemplate(templateNotice, departmentId, noticeTypeId);
+        const result = await renderNoticeWithTemplateInfo(templateNotice, departmentId, noticeTypeId);
 
         if (!cancelled) {
-          setTemplateText(rendered);
+          setTemplateText(result.text);
+          setTemplateInfo(result);
+          console.log('[NewPublishFlow] Template info:', {
+            isCustomTemplate: result.isCustomTemplate,
+            templateName: result.templateName,
+          });
         }
       } catch (err) {
         console.error('[NewPublishFlow] Error rendering template text:', err);
@@ -940,11 +947,14 @@ export default function NewPublishFlow() {
           if (templateRenderer) {
             try {
               setTemplateText(templateRenderer.renderText(templateNotice) ?? "");
+              setTemplateInfo({ text: '', isCustomTemplate: false });
             } catch {
               setTemplateText("");
+              setTemplateInfo(null);
             }
           } else {
             setTemplateText("");
+            setTemplateInfo(null);
           }
         }
       }
@@ -1197,7 +1207,35 @@ export default function NewPublishFlow() {
             </div>
           </div>
         ) : (
-          <LazyNoticePreview text={templateText} />
+          <div className="space-y-3">
+            {/* Template indicator - shows whether using custom council template or default */}
+            {templateInfo && (
+              <div
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
+                  templateInfo.isCustomTemplate
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-slate-50 text-slate-600 border border-slate-200'
+                }`}
+              >
+                {templateInfo.isCustomTemplate ? (
+                  <>
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Using council template: <strong>{templateInfo.templateName}</strong></span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Using default template</span>
+                  </>
+                )}
+              </div>
+            )}
+            <LazyNoticePreview text={templateText} />
+          </div>
         )}
       </React.Suspense>
     );
@@ -1735,7 +1773,33 @@ export default function NewPublishFlow() {
               onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
               isPortalContext={isPortalContext}
               preview={
-                <div className="rounded-xl border border-slate-200 p-3">
+                <div className="rounded-xl border border-slate-200 p-3 space-y-3">
+                  {/* Template indicator for Step 3 - only show when using template mode */}
+                  {uploadMethod === "template" && templateInfo && (
+                    <div
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
+                        templateInfo.isCustomTemplate
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-slate-50 text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      {templateInfo.isCustomTemplate ? (
+                        <>
+                          <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Using council template: <strong>{templateInfo.templateName}</strong></span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>Using default template</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                   <React.Suspense
                     fallback={
                       <div className="flex h-40 items-center justify-center text-sm text-slate-500">
