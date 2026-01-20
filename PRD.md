@@ -116,7 +116,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.7b**: Apply `firm_notice_templates` migration to Supabase. (Applied 2026-01-20 via psql - table created with 14 columns, 5 indexes including partial index on is_active, 3 FKs to organizations/firm_departments/auth.users, 4 RLS policies for select/insert/update/delete, update trigger)
 
 ### 8.2 Default Workflow Seeds
-- [ ] **Task 8.8a**: Create `create_default_premises_licence_workflow()` function migration. Copy from Task 8.8. Seeds 10 stages with correct deadlines.
+- [x] **Task 8.8a**: Create `create_default_premises_licence_workflow()` function migration. Copy from Task 8.8. Seeds 10 stages with correct deadlines. (Created 2026-01-20 - File: supabase/migrations/20260120290000_create_default_premises_licence_workflow.sql)
 - [ ] **Task 8.8b**: Apply premises licence workflow function to Supabase.
 - [ ] **Task 8.9a**: Create `create_default_probate_workflow()` function migration. Copy from Task 8.9. Seeds 6 stages with 60-day waiting period.
 - [ ] **Task 8.9b**: Apply probate workflow function to Supabase.
