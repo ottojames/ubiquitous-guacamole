@@ -8,6 +8,22 @@ type CachedResult = { expiresAt: number; items: AddressItem[] };
 const cache = new Map<string, CachedResult>();
 const TTL_MS = 2 * 60 * 1000;
 
+// Determine if mock mode is active based on ADDRESS_PROVIDER env var
+// Default to 'getaddress' in production - mock mode must be explicitly enabled
+function isMockMode(): boolean {
+  const provider = (process.env.ADDRESS_PROVIDER || 'getaddress').toLowerCase().trim();
+  return provider === 'mock';
+}
+
+// Log mock mode status on module load
+const mockModeActive = isMockMode();
+if (mockModeActive) {
+  console.log('[address-provider] ⚠️  MOCK MODE ACTIVE - ADDRESS_PROVIDER=mock');
+  console.log('[address-provider] Set ADDRESS_PROVIDER to a real provider (e.g., getaddress) for production');
+} else {
+  console.log(`[address-provider] Using provider: ${process.env.ADDRESS_PROVIDER || 'getaddress'}`);
+}
+
 const suggestSchema = z.object({
   suggestions: z.array(z.object({ id: z.string().optional(), address: z.string() })),
 });
@@ -75,10 +91,8 @@ router.get('/addresses', async (req, res) => {
   const q = getQ(req.query.q);
   if (q.length < 2) return res.json({ items: [], source: 'none' });
 
-  const key = resolveKey();
-
-  // If no key, provide mock data for development
-  if (!key) {
+  // Check if mock mode is explicitly enabled via ADDRESS_PROVIDER=mock
+  if (isMockMode()) {
     // Mock addresses for common UK postcodes - now with postcode field
     const mockData: Record<string, AddressItem[]> = {
       'sw1a 1aa': [
@@ -145,6 +159,17 @@ router.get('/addresses', async (req, res) => {
     }
 
     return res.json({ items, source: 'mock' });
+  }
+
+  // Real provider mode - require API key
+  const key = resolveKey();
+  if (!key) {
+    console.error('[address-provider] ERROR: No API key configured but ADDRESS_PROVIDER is not "mock"');
+    console.error('[address-provider] Set GETADDRESS_API_KEY or ADDRESS_API_KEY, or set ADDRESS_PROVIDER=mock for development');
+    return res.status(500).json({
+      error: 'Address provider not configured. Set ADDRESS_PROVIDER=mock for development or provide GETADDRESS_API_KEY.',
+      source: 'error'
+    });
   }
 
   // Normalize postcode to uppercase if it looks like a postcode

@@ -562,10 +562,37 @@ Replaced all mock data and simulated API calls in EmailAlerts.tsx with actual AP
    - Removed `last_sent_at` (not needed in frontend)
 
 ### 5.4 Fix Address Provider Mock Mode
-- [ ] Review `server/routes/address.ts:82-147` mock address data
-- [ ] Ensure mock mode only activates when `ADDRESS_PROVIDER=mock` in env
-- [ ] Default to real address provider in production
-- [ ] Add clear logging when mock mode is active
+- [x] Review `server/routes/address.ts:82-147` mock address data
+- [x] Ensure mock mode only activates when `ADDRESS_PROVIDER=mock` in env
+- [x] Default to real address provider in production
+- [x] Add clear logging when mock mode is active
+
+#### Implementation Notes (Task 5.4)
+
+Updated `server/routes/address.ts` to properly use `ADDRESS_PROVIDER` environment variable:
+
+1. **Added `isMockMode()` function** that checks `ADDRESS_PROVIDER` env var:
+   - Returns `true` only when `ADDRESS_PROVIDER=mock` (case-insensitive)
+   - Defaults to `'getaddress'` when env var is not set
+   - This means production deployments without explicit config will use real provider
+
+2. **Added startup logging**:
+   - When mock mode active: `[address-provider] ⚠️  MOCK MODE ACTIVE - ADDRESS_PROVIDER=mock`
+   - When real mode: `[address-provider] Using provider: getaddress`
+
+3. **Changed mock mode activation**:
+   - OLD: Mock mode activated when no API key was found
+   - NEW: Mock mode ONLY activates when `ADDRESS_PROVIDER=mock`
+
+4. **Added API key validation for real mode**:
+   - If `ADDRESS_PROVIDER` is not `mock` but no API key is configured, returns 500 error
+   - Error message guides user to either set mock mode or provide API key
+   - Logs detailed error to console for debugging
+
+5. **Environment variables**:
+   - `ADDRESS_PROVIDER=mock` - Explicitly enable mock mode for development
+   - `ADDRESS_PROVIDER=getaddress` (default) - Use real getaddress.io API
+   - API key env vars checked: `VITE_GETADDRESS_KEY`, `VITE_GETADDRESS_API_KEY`, `ADDRESS_API_KEY`, `GETADDRESS_API_KEY`
 
 ### 5.5 Remove Demo Council Logic
 - [ ] Search for `isDemoMode` checks throughout codebase

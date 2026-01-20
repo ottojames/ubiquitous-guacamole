@@ -670,3 +670,28 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task is Task 5.4: Fix Address Provider Mock Mode
 ---
 
+## Iteration 28 - Task 5.4: Fix Address Provider Mock Mode
+- **What was implemented**: Updated address provider to use ADDRESS_PROVIDER env var for mock mode control
+- **Files changed**:
+  - `server/routes/address.ts` - Refactored mock mode logic
+  - `PRD.md` - Marked Task 5.4 complete, added implementation notes
+- **Key changes to server/routes/address.ts**:
+  - Added `isMockMode()` function that checks `ADDRESS_PROVIDER` env var
+  - Default is now 'getaddress' (real provider) - mock must be explicitly enabled
+  - Added startup logging showing which mode is active with clear warnings for mock mode
+  - Changed `/addresses` route to check `isMockMode()` instead of checking for API key absence
+  - Added API key validation for real mode - returns 500 with helpful error if missing
+  - Mock data block only executes when `ADDRESS_PROVIDER=mock`
+- **Behavior change**:
+  - OLD: No API key → use mock data (silent fallback)
+  - NEW: `ADDRESS_PROVIDER=mock` → use mock data; otherwise require API key
+  - This ensures production deployments never accidentally use mock data
+- **Learnings for future iterations**:
+  - The `server/services/addressProvider.ts` is a separate service file not used by routes - routes use direct API calls
+  - Mock mode logging on module load provides visibility at server startup
+  - Address tests (8 tests) all pass - changes don't break existing functionality
+  - 49 failing tests remain pre-existing (schema drift) - same count as before (Phase 6 work)
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and not blocking
+  - Next task is Task 5.5: Remove Demo Council Logic
+---
+
