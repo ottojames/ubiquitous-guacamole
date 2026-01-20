@@ -1400,3 +1400,25 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - SQL migration file doesn't affect TypeScript compilation
   - Next task is Task 8.9b: Apply probate workflow function to Supabase
 ---
+
+## Iteration 62 - Task 8.9b: Apply probate workflow function to Supabase
+- **What was implemented**: Applied the probate workflow function migration to Supabase
+- **Command used**: `psql DATABASE_URL -f supabase/migrations/20260120300000_create_default_probate_workflow.sql`
+- **Output**: `CREATE FUNCTION` and `GRANT` - both successful
+- **Verification**:
+  - Confirmed function exists in `pg_proc` with `prosecdef=t` (SECURITY DEFINER enabled)
+  - Confirmed EXECUTE privileges granted to authenticated role via `information_schema.routine_privileges`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.9b complete
+- **Test results**: All 486 tests pass (2 skipped), no regressions
+- **Function details**:
+  - Name: `create_default_probate_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Tables affected: `workflow_configs` (1 row), `workflow_stages` (6 rows)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+- **Learnings for future iterations**:
+  - Continue using psql for migrations since MCP Supabase tool lacks access token
+  - Probate workflow function follows same pattern as premises licence function
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, src/ files don't affect test suite
+  - Next task is Task 8.10a: Create `create_default_planning_workflow()` function migration
+---
