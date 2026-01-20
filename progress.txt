@@ -1422,3 +1422,43 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, src/ files don't affect test suite
   - Next task is Task 8.10a: Create `create_default_planning_workflow()` function migration
 ---
+
+## Iteration 37 - Task 8.10a: Create create_default_planning_workflow() function migration
+- **What was implemented**: Created SQL migration for the planning workflow seed function
+- **Files changed**:
+  - `supabase/migrations/20260120310000_create_default_planning_workflow.sql` - NEW FILE
+  - `PRD.md` - Marked Task 8.10a complete
+- **Function details**:
+  - Name: `create_default_planning_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Creates workflow_config for 'planning' notice type
+  - Creates 12 workflow_stages: Pre-Application, Submitted, Validation, Consultation (21-day deadline), Site Visit, Amendments, Officer Report, Committee/Delegated (56-day deadline), Decision, Discharge Conditions, Appeal, Complete
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+- **Learnings for future iterations**:
+  - Planning workflow has 12 stages compared to 6 for probate and 10 for premises licence
+  - Two stages have deadlines: Consultation (21 days) and Committee/Delegated (56 days / 8 weeks)
+  - Next task is Task 8.10b: Apply planning workflow function to Supabase
+---
+
+## Iteration 38 - Task 8.10b: Apply planning workflow function to Supabase
+- **What was implemented**: Applied the planning workflow function migration to Supabase
+- **Command used**: `psql DATABASE_URL -f supabase/migrations/20260120310000_create_default_planning_workflow.sql`
+- **Output**: `CREATE FUNCTION` and `GRANT` - both successful
+- **Verification**:
+  - Confirmed function exists in `information_schema.routines` with security_type=DEFINER
+  - Confirmed EXECUTE privileges granted to authenticated role
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.10b complete
+- **Test results**: All 486 tests pass (2 skipped), no regressions
+- **Function details**:
+  - Name: `create_default_planning_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Tables affected: `workflow_configs` (1 row), `workflow_stages` (12 rows)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+  - Stages: Pre-Application, Submitted, Validation, Consultation (21-day), Site Visit, Amendments, Officer Report, Committee/Delegated (56-day), Decision, Discharge Conditions, Appeal, Complete
+- **Learnings for future iterations**:
+  - Continue using psql for migrations since MCP Supabase tool lacks access token
+  - Planning workflow has most stages (12) of all workflow types so far
+  - Two stages have deadlines: Consultation (21 days) and Committee/Delegated (56 days / 8 weeks)
+  - Next task is Task 8.11a: Create TRO workflow function migration
+---
