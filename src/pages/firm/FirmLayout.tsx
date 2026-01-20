@@ -11,34 +11,30 @@ interface Organization {
   practice_areas?: string[];
 }
 
-interface UserMembership {
-  role: string;
-  organization_id: string;
-}
-
 export default function FirmLayout() {
   const { firmSlug } = useParams<{ firmSlug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut: authSignOut } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { signOut: authSignOut, user, session, loading: authLoading } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
   const [firm, setFirm] = useState<Organization | null>(null);
   const [userRole, setUserRole] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    loadFirmData();
-  }, [firmSlug]);
+    if (!authLoading) {
+      loadFirmData();
+    }
+  }, [firmSlug, authLoading]);
 
   const loadFirmData = async () => {
+    // Use session from UnifiedAuthContext instead of direct supabase call
+    if (!session || !user) {
+      navigate('/auth/sign-in');
+      return;
+    }
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        navigate('/auth/sign-in');
-        return;
-      }
-
       // Look up firm by slug
       const { data: firmData, error: firmError } = await supabase
         .from('organizations')
@@ -55,7 +51,7 @@ export default function FirmLayout() {
       const { data: membership, error: membershipError } = await supabase
         .from('organization_memberships')
         .select('role, organization_id')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('organization_id', firmData.id)
         .single();
 
@@ -71,7 +67,7 @@ export default function FirmLayout() {
 
       setFirm(firmData as Organization);
       setUserRole(role);
-      setLoading(false);
+      setDataLoading(false);
 
       // Save firm context for publish flow
       sessionStorage.setItem('lastAccessedFirm', JSON.stringify({ slug: firmData.slug }));
@@ -80,7 +76,7 @@ export default function FirmLayout() {
       await supabase
         .from('organization_memberships')
         .update({ last_accessed_at: new Date().toISOString() })
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('organization_id', firmData.id);
     } catch (err) {
       console.error('Failed to load firm:', err);
@@ -111,7 +107,7 @@ export default function FirmLayout() {
     { path: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' }
   ];
 
-  if (loading) {
+  if (authLoading || dataLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
