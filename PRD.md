@@ -38,7 +38,7 @@ The codebase has solid foundations but multiple issues blocking production launc
 ### 1.1 Audit Current Auth State
 - [x] Document all imports of `AuthContext` across codebase
 - [x] Document all imports of `AdminAuthContext` across codebase
-- [ ] Document all imports of `UnifiedAuthContext` across codebase
+- [x] Document all imports of `UnifiedAuthContext` across codebase
 - [ ] Create migration plan showing which context each file should use
 
 #### AuthContext Import Audit Results
@@ -68,6 +68,50 @@ The file provides (unused):
 - Login, logout, verify2FA, refreshSession, checkSession methods
 
 **Recommendation**: This file can be safely deleted in task 1.4 as it's completely unused.
+
+#### UnifiedAuthContext Import Audit Results
+**Files importing `useAuth` from `@/contexts/UnifiedAuthContext`**: 18 files
+
+**Admin Pages** (6 files):
+1. `src/pages/admin/Login.tsx:5`
+2. `src/pages/admin/AdminLayout.tsx:3`
+3. `src/pages/admin/Dashboard.tsx:16`
+4. `src/pages/admin/AccountManagement.tsx:22`
+5. `src/pages/admin/Settings.tsx:2`
+6. `src/pages/admin/AuditLog.tsx:18`
+7. `src/pages/admin/AdminNotices.tsx:17`
+
+**Council Pages** (6 files):
+1. `src/pages/council/CouncilLayout.tsx:4`
+2. `src/pages/council/Billing.tsx:4`
+3. `src/pages/council/Settings.tsx:4`
+4. `src/pages/council/Team.tsx:4`
+5. `src/pages/council/PendingSubmissions.tsx:3`
+6. `src/pages/council/Drafts.tsx:4`
+
+**Firm Pages** (1 file):
+1. `src/pages/firm/FirmLayout.tsx:4`
+
+**Publish Flow** (2 files):
+1. `src/next/publish/flow/NewPublishFlow.tsx:45`
+2. `src/next/publish/flow/steps/PaymentStep.tsx:7`
+
+**Components** (2 files):
+1. `src/components/auth/ProtectedRoute.tsx:3`
+2. `src/components/DynamicCouncilSelect.tsx:3`
+
+**Debug** (1 file):
+1. `src/pages/AuthDebug.tsx:1`
+
+**App Root** (1 file):
+1. `src/App.tsx:60` - imports `UnifiedAuthProvider`
+
+**Key Observation**: `AdminProtectedRoute.tsx` does NOT use UnifiedAuthContext - it directly calls `supabase.auth.getSession()` instead.
+
+**Recommendation for Migration Plan**:
+- `AdminProtectedRoute` should be updated to use `useAuth()` from UnifiedAuthContext
+- The 2 files using legacy AuthContext (`council/Notices.tsx`, `council/Dashboard.tsx`) should migrate to UnifiedAuthContext
+- UnifiedAuthContext is already the primary auth context across the codebase
 
 ### 1.2 Consolidate to UnifiedAuthContext
 - [ ] Update `UnifiedAuthContext.tsx` to handle all user types (public, council, firm, admin)
