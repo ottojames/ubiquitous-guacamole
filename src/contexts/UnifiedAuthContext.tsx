@@ -107,6 +107,12 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
         userEmail: session?.user?.email,
         isInitialized: true,
       });
+    }).catch((error) => {
+      // Task 7.1: Handle auth initialization errors gracefully
+      console.error('[UnifiedAuthContext] Failed to get initial session:', error);
+      setLoading(false);
+      setIsInitialized(true);
+      // User will be in logged-out state; any subsequent auth actions will work normally
     });
 
     // Listen for auth changes

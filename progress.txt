@@ -803,3 +803,58 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task is Task 7.1 second subtask: Add error boundaries around major page sections
 ---
 
+## Iteration 33 - Task 7.1: Add error boundaries around major page sections
+- **What was implemented**: Created SectionErrorBoundary component and wrapped major page sections
+- **Files changed**:
+  - `src/components/error/SectionErrorBoundary.tsx` - NEW FILE: Production-ready error boundary component
+  - `src/App.tsx` - Added error boundaries around Admin, Council, Firm portals and Publish Wizard
+  - `PRD.md` - Marked Task 7.1 second subtask complete
+- **Key features of SectionErrorBoundary**:
+  - User-friendly error UI with section-specific messages
+  - "Try again" retry button to re-render the section
+  - "Go to homepage" fallback navigation
+  - Development mode: shows error message and component stack trace
+  - Production mode: clean UI without technical details
+  - Uses AlertTriangle and RefreshCw icons from lucide-react
+  - Gray/blue color scheme matching existing UI
+- **Sections wrapped**:
+  - Council Portal (`/c/:orgSlug/:deptSlug`)
+  - Firm Portal (`/f/:firmSlug`)
+  - Admin Portal (`/admin`)
+  - Publish Wizard (`/next/publish/*`)
+- **Test results**: All 461 tests pass (was 461, unchanged)
+- **Learnings for future iterations**:
+  - Error boundaries must be class components (can't use hooks for getDerivedStateFromError)
+  - The existing `src/components/dev/ErrorBoundary.tsx` wraps entire app in main.tsx
+  - New SectionErrorBoundary provides more granular error isolation per portal
+  - Use `import.meta.env.DEV` to check for development mode in Vite projects
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing
+  - Next task is Task 7.1 third subtask: Ensure API errors don't crash the app
+---
+
+## Iteration 34 - Task 7.1: Ensure API errors don't crash the app
+- **What was implemented**: Added error handling to prevent API errors from crashing the app
+- **Files changed**:
+  - `src/contexts/UnifiedAuthContext.tsx` - Added .catch() to getSession() promise
+  - `src/pages/Notices.tsx` - Added try/catch and error handling to councils fetch
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Added user feedback toast for template rendering failures
+  - `PRD.md` - Marked Task 7.1 complete
+- **Key changes**:
+  - **UnifiedAuthContext.tsx line 110**: Added `.catch()` block to `supabase.auth.getSession()` that logs error and sets initialized state. User stays logged out but app doesn't crash.
+  - **Notices.tsx lines 126-147**: Wrapped councils fetch in try/catch, added error check on Supabase response, shows toast notification to user on failure.
+  - **NewPublishFlow.tsx line 983**: Added toast notification when template rendering fails and falls back to default template.
+- **Error handling pattern used**:
+  - Log the error for debugging
+  - Show user-friendly message via toast
+  - Gracefully degrade (use fallback/default) rather than crash
+  - Continue app operation even when one feature fails
+- **Test results**: All 461 tests pass (unchanged)
+- **Learnings for future iterations**:
+  - The toast API in this project only takes a single string argument (no options object)
+  - Pre-existing TypeScript errors in UnifiedAuthContext (line 4) and NewPublishFlow (various lines) are unrelated to these changes
+  - Auth initialization errors should set `isInitialized = true` so protected routes don't get stuck loading
+  - Silent failures (just logging) should be upgraded to user feedback where reasonable
+  - Task 7.1 (Error Handling) is now COMPLETE - all 3 subtasks done
+  - Next is Task 7.2: Loading States
+---
+

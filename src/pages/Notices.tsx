@@ -124,13 +124,25 @@ export default function NoticesPage() {
   // Fetch councils for the dropdown
   useEffect(() => {
     const fetchCouncils = async () => {
-      const { data, error } = await supabase
-        .from('councils')
-        .select('id, name, slug')
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('councils')
+          .select('id, name, slug')
+          .order('name');
 
-      if (!error && data) {
-        setCouncils(data);
+        if (error) {
+          console.error('[Notices] Failed to fetch councils:', error);
+          toast('Unable to load council filter. Please refresh the page.');
+          return;
+        }
+
+        if (data) {
+          setCouncils(data);
+        }
+      } catch (err) {
+        // Task 7.1: Handle unexpected errors gracefully
+        console.error('[Notices] Unexpected error fetching councils:', err);
+        toast('Unable to load council filter. Please refresh the page.');
       }
     };
 

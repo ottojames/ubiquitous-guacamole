@@ -931,7 +931,10 @@ export default function NewPublishFlow() {
                   console.log('[NewPublishFlow] Matched council:', broaderData.name);
                   console.log('[NewPublishFlow] Matched department:', broaderData.departments[0].name);
                 } else {
+                  // Task 7.1: Inform user that council-specific template couldn't be found
                   console.warn('[NewPublishFlow] ⚠️ No council found matching:', authorityName);
+                  // Note: We don't show a toast here since this is a common scenario when user
+                  // types a council name not in the database - they'll still get the default template
                 }
               }
             } else if (data?.departments && Array.isArray(data.departments) && data.departments.length > 0) {
@@ -943,7 +946,9 @@ export default function NewPublishFlow() {
               console.warn('[NewPublishFlow] ⚠️ Council found but no', departmentType, 'department');
             }
           } catch (err) {
+            // Task 7.1: Handle council lookup exceptions gracefully
             console.error('[NewPublishFlow] ❌ Exception during council lookup:', err);
+            // Don't crash - will use default template instead
           }
         } else if (departmentId) {
           console.log('[NewPublishFlow] Using department ID from dropdown selection:', departmentId);
@@ -979,7 +984,9 @@ export default function NewPublishFlow() {
       } catch (err) {
         console.error('[NewPublishFlow] Error rendering template text:', err);
         if (!cancelled) {
-          // Fallback to default renderer
+          // Fallback to default renderer with user notification
+          // Task 7.1: Notify user of template rendering issue
+          toast("Using default template format. Custom template could not be loaded.");
           if (templateRenderer) {
             try {
               setTemplateText(templateRenderer.renderText(templateNotice) ?? "");

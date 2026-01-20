@@ -32,7 +32,7 @@ A digital replacement for newspaper public notice publication in the UK. Central
 ### 7.1 Error Handling
 - [x] Add user-friendly error messages for auth failures (Implemented 2026-01-20 - src/lib/authErrors.ts)
 - [x] Add error boundaries around major page sections (Implemented 2026-01-20 - src/components/error/SectionErrorBoundary.tsx wraps Admin, Council, Firm portals and Publish Wizard)
-- [ ] Ensure API errors don't crash the app
+- [x] Ensure API errors don't crash the app (Implemented 2026-01-20 - Added .catch() to auth initialization, error handling to council fetch, user feedback for template rendering failures)
 
 ### 7.2 Loading States
 - [ ] Ensure all async operations show loading indicators
