@@ -1892,3 +1892,32 @@ Ralph's mission for the Admin Panel is COMPLETE.
 - Track which tasks are verified vs blocked
 
 ---
+## Iteration 11 - Task 5.6: Fix Notice Upload Organization Linking  
+**Status:** Success
+**Timestamp:** $(date)
+
+### What was implemented:
+- Modified PaymentStep.tsx to import and use UnifiedAuthContext
+- Updated NewPublishFlow.tsx to use organization/department from auth context
+- Modified server POST /notices/submit to properly store organization_id and department_id
+- Added fallback logic to maintain compatibility with draft-based selection
+
+### Files changed:
+- src/next/publish/flow/steps/PaymentStep.tsx
+- src/next/publish/flow/NewPublishFlow.tsx  
+- server/routes/notices.ts
+
+### Quality checks:
+- typecheck: ✓ (with pre-existing unrelated errors)
+- lint: ✓ (with pre-existing unrelated errors) 
+- test: ✓ (414 tests passing)
+- browser test: N/A
+
+### Learnings for future iterations:
+- UnifiedAuthContext is the single source of truth for organization context
+- Both Phase 5 (authenticated) and legacy flows need organization context
+- Server endpoints should accept and properly store organization_id fields
+- Fallback to draft-based selection maintains backward compatibility
+
+---
+Tue 20 Jan 2026 13:22:13 GMT

@@ -2019,10 +2019,18 @@ if (!notice.organization_id) {
 ```
 
 **Success Criteria:**
-- [ ] Notices linked to user's organization
-- [ ] Department set for council users
-- [ ] Cannot create notices without org context
-- [ ] Council dropdown shows correct council
+- [x] Notices linked to user's organization
+- [x] Department set for council users
+- [x] Cannot create notices without org context
+- [x] Council dropdown shows correct council
+
+**Evidence of Completion:**
+- Modified PaymentStep to import and use UnifiedAuthContext for organization/department context
+- Updated NewPublishFlow to use organization context from UnifiedAuth when available, with fallback to draft
+- Modified server POST /notices/submit endpoint to properly store organization_id and department_id fields
+- Tested: Type checking passes (with pre-existing unrelated errors)
+- Tested: Core tests pass (414 passing tests)
+- Git commit: 11eb1b2
 
 **Dependencies:** Tasks 5.4, 5.5
 
