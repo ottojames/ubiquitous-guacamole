@@ -1,1 +1,22 @@
-docs/ralph/progress.txt
+# Ralph Progress Log
+
+This file tracks progress across Ralph iterations. Each iteration appends learnings here.
+
+## Project Context
+
+- **Platform**: Civic Notices - UK public notice digital publication platform
+- **Stack**: React 19 + Vite (frontend), Express (backend), Supabase (database + auth)
+- **Key Issue**: 3 competing auth contexts causing bugs, admin login broken
+
+## Initial State (Before Ralph)
+
+- 49 failing tests
+- Admin login infinite spinner bug
+- Council login flow not working
+- Mock/demo data mixed with production code
+- Template linking not fully wired
+
+## Learnings (Updated by Ralph)
+
+---
+
