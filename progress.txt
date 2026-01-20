@@ -1225,3 +1225,29 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Consistent with established pattern from previous iterations
   - Next task is Task 8.6a: Create deadline_reminders table migration
 ---
+
+## Iteration 49 - Task 8.6a: Create deadline_reminders table migration
+- **What was implemented**: Created SQL migration for `deadline_reminders` table with RLS policies
+- **Files created**:
+  - `supabase/migrations/20260120270000_create_deadline_reminders.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.6a complete
+- **Key features of the migration**:
+  - Table with: id (UUID), notice_id (FK to notices), workflow_status_id (FK to notice_workflow_status), firm_id (FK to organizations)
+  - Reminder details: reminder_type (CHECK constraint for 5 types: deadline_upcoming, deadline_today, deadline_overdue, representation_received, stage_reminder)
+  - Scheduling: scheduled_for, sent_at, status (pending/sent/cancelled/failed)
+  - Delivery: channel (email/sms/push), recipient_email, recipient_phone, recipient_user_id (FK to auth.users)
+  - Content: subject, message, related_deadline_date, sent_error
+  - 5 indexes: on notice_id, firm_id, scheduled_for (partial for pending), status, composite (scheduled_for, status) partial
+  - Trigger for automatic updated_at timestamp
+  - RLS enabled with 2 policies:
+    - Firm members can view their reminders (SELECT)
+    - Firm admins can manage reminders (ALL for owner/admin roles)
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Migration follows established pattern from previous workflow tables
+  - SQL directly copied from implementation plan with timestamp updated
+  - The deadline_reminders table supports multiple notification channels (email, sms, push)
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated to migrations
+  - Next task is Task 8.6b: Apply deadline_reminders migration to Supabase
+---
