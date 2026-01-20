@@ -358,10 +358,32 @@ Created `src/components/council/CouncilProtectedRoute.tsx` which:
 - [x] Handle invitation acceptance flow (set password, redirect to dashboard)
 
 ### 3.4 Fix Department Switching
-- [ ] Ensure `DepartmentSwitcher` component works correctly
-- [ ] Update context when department changes
-- [ ] Reload dashboard data for new department
+- [x] Ensure `DepartmentSwitcher` component works correctly
+- [x] Update context when department changes
+- [x] Reload dashboard data for new department
 - [ ] Test: user with multiple departments can switch between them
+
+#### Implementation Notes (Task 3.4)
+
+Fixed `DepartmentSwitcher` component at `/switch-department`:
+
+1. **Now uses UnifiedAuthContext**: Added `useAuth()` to get user session and `isInitialized` flag
+2. **Loads user's actual departments**: Queries both `department_memberships` and `organization_memberships` to find all departments the user has access to
+3. **Shows departments from multiple orgs**: If user has access to departments in multiple organizations, shows count of organizations
+4. **Handles demo accounts**: Falls back to Westminster demo departments for known demo accounts
+5. **Shows error messages**: Displays error from redirect state (e.g., when CouncilProtectedRoute redirects)
+6. **Waits for auth**: Shows spinner until `isInitialized` is true to prevent flashes
+
+**Context update on department switch**:
+- When user clicks department, navigates to `/c/:orgSlug/:deptSlug/dashboard`
+- `CouncilProtectedRoute` validates access
+- `CouncilLayout` detects URL change, calls `loadDepartmentData()`
+- `loadDepartmentData()` calls `loadPermissions()` to update UnifiedAuthContext
+
+**Dashboard data reload**:
+- Dashboard component uses `useOutletContext()` to get department from CouncilLayout
+- Has `useEffect([department.id])` that calls `loadDashboardData()` when department changes
+- All department-specific data reloads automatically
 
 ---
 
