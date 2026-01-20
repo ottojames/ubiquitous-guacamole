@@ -16,8 +16,9 @@ CREATE TABLE IF NOT EXISTS public.notice_workflow_status (
   entered_stage_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deadline_date TIMESTAMPTZ, -- Calculated from stage settings
 
-  -- Tracking
-  is_overdue BOOLEAN GENERATED ALWAYS AS (deadline_date IS NOT NULL AND deadline_date < NOW()) STORED,
+  -- Tracking (computed at query time: deadline_date IS NOT NULL AND deadline_date < NOW())
+  -- Note: Cannot use GENERATED column with NOW() as it's not immutable
+  -- Instead, calculate is_overdue in application layer or use a view
 
   -- Metadata
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -33,7 +34,8 @@ CREATE INDEX idx_notice_workflow_status_workflow ON public.notice_workflow_statu
 CREATE INDEX idx_notice_workflow_status_stage ON public.notice_workflow_status(current_stage_id);
 CREATE INDEX idx_notice_workflow_status_firm ON public.notice_workflow_status(firm_id);
 CREATE INDEX idx_notice_workflow_status_deadline ON public.notice_workflow_status(deadline_date) WHERE deadline_date IS NOT NULL;
-CREATE INDEX idx_notice_workflow_status_overdue ON public.notice_workflow_status(firm_id, is_overdue) WHERE is_overdue = TRUE;
+-- Composite index for finding overdue notices per firm (query: WHERE firm_id = ? AND deadline_date < NOW())
+CREATE INDEX idx_notice_workflow_status_firm_deadline ON public.notice_workflow_status(firm_id, deadline_date);
 
 -- Trigger for updated_at
 CREATE TRIGGER update_notice_workflow_status_updated_at

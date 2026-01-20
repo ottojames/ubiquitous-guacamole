@@ -1119,3 +1119,59 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - RLS policies for child tables (workflow_stages) should join through parent tables (workflow_configs) to verify access
   - Next task is Task 8.4a: Create notice_workflow_status table migration
 ---
+
+## Iteration 45 - Task 8.4a: Create notice_workflow_status table migration
+- **What was implemented**: Created SQL migration for `notice_workflow_status` table with RLS policies
+- **Files created**:
+  - `supabase/migrations/20260120250000_create_notice_workflow_status.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.4a complete
+- **Key features of the migration**:
+  - Table with: id (UUID), notice_id (FK to notices), workflow_id (FK to workflow_configs), current_stage_id (FK to workflow_stages)
+  - Firm context: firm_id (FK to organizations) denormalized for RLS efficiency
+  - Stage tracking: entered_stage_at, deadline_date
+  - Computed column: is_overdue BOOLEAN GENERATED ALWAYS AS (deadline_date IS NOT NULL AND deadline_date < NOW()) STORED
+  - Unique constraint on notice_id (one workflow status per notice)
+  - Six indexes: on notice_id, workflow_id, current_stage_id, firm_id, partial on deadline_date, partial on overdue
+  - Trigger for automatic updated_at timestamp
+  - RLS enabled with 3 policies:
+    - Firm members can view their notice statuses (SELECT)
+    - Firm editors/admins can update statuses (UPDATE with role check)
+    - Firm members can insert statuses (INSERT)
+- **TypeScript check**: Pre-existing errors in src/ files remain (unchanged from before)
+- **Learnings for future iterations**:
+  - Migration follows established pattern from previous workflow tables
+  - Generated columns (GENERATED ALWAYS AS ... STORED) are useful for computed boolean flags like is_overdue
+  - Denormalizing firm_id improves RLS query performance (avoids joins)
+  - SQL directly copied from implementation plan with timestamp updated
+  - Pre-existing TypeScript errors in council/Dashboard.tsx, firm/Team.tsx etc. are unrelated to migrations
+  - Next task is Task 8.4b: Apply notice_workflow_status migration to Supabase
+---
+
+## Iteration 46 - Task 8.4b: Apply notice_workflow_status migration to Supabase
+- **What was implemented**: Applied the notice_workflow_status migration to the remote Supabase database
+- **Method used**: psql with DATABASE_URL (consistent with established pattern from Iteration 40)
+- **Files changed**:
+  - `supabase/migrations/20260120250000_create_notice_workflow_status.sql` - Fixed is_overdue column issue
+  - `PRD.md` - Marked Task 8.4b complete
+- **Issue encountered and fixed**:
+  - Original migration had `is_overdue BOOLEAN GENERATED ALWAYS AS (deadline_date IS NOT NULL AND deadline_date < NOW()) STORED`
+  - PostgreSQL requires GENERATED column expressions to be immutable
+  - `NOW()` is not immutable (changes with time), so this caused "generation expression is not immutable" error
+  - **Fix**: Removed the is_overdue column; overdue status should be calculated at query time: `WHERE deadline_date IS NOT NULL AND deadline_date < NOW()`
+- **Verification**:
+  - Table created with 9 columns (id, notice_id, workflow_id, current_stage_id, firm_id, entered_stage_at, deadline_date, created_at, updated_at)
+  - Primary key (id), unique constraint on notice_id (one status per notice)
+  - 7 indexes including composite index on (firm_id, deadline_date) for overdue queries
+  - Foreign keys to notices(CASCADE), workflow_configs(RESTRICT), workflow_stages(RESTRICT), organizations(CASCADE)
+  - 3 RLS policies: select for members, update for editors/admins, insert for members
+  - Update trigger for automatic updated_at timestamps
+  - Migration recorded in supabase_migrations.schema_migrations table
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - PostgreSQL GENERATED columns can only use IMMUTABLE expressions (no NOW(), CURRENT_TIMESTAMP, etc.)
+  - For computed columns involving current time, calculate at query time or use views
+  - Alternative: Use a trigger to update a regular column periodically, but this adds complexity
+  - The `deadline_date < NOW()` condition should be added in queries/views, not stored
+  - Next task is Task 8.5a: Create workflow_stage_history table migration
+---
