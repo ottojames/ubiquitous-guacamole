@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Building2, AlertCircle, Lock, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
+import { getAuthErrorMessage, getAuthErrorAction } from '@/lib/authErrors';
 
 interface DepartmentMembership {
   department_id: string;
@@ -28,6 +29,7 @@ export default function CouncilLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Department selection states
@@ -100,6 +102,7 @@ export default function CouncilLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
+    setErrorHint(null);
 
     if (!email || !password) {
       setLocalError('Please enter email and password');
@@ -112,7 +115,9 @@ export default function CouncilLogin() {
       await signIn(email, password);
       // After signIn, the useEffect will check memberships and redirect
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Invalid email or password');
+      // Note: signIn already returns user-friendly messages via getAuthErrorMessage
+      setLocalError(err instanceof Error ? err.message : getAuthErrorMessage(err));
+      setErrorHint(getAuthErrorAction(err));
       setIsSubmitting(false);
     }
   };
@@ -226,9 +231,14 @@ export default function CouncilLogin() {
           <form className="space-y-6" onSubmit={handleLogin}>
             {/* Error Alert */}
             {localError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2 text-red-700">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm">{localError}</span>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-sm">{localError}</span>
+                </div>
+                {errorHint && (
+                  <p className="text-xs text-red-600 mt-2 ml-7">{errorHint}</p>
+                )}
               </div>
             )}
 

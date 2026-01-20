@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import type { Organization, Department } from '@/types';
 import type { PermissionName, RoleName } from '@/types/permissions';
 import { PERMISSIONS, ROLES } from '@/types/permissions';
+import { getAuthErrorMessage } from '@/lib/authErrors';
 
 // User type based on authentication status and organization membership
 export type UserType = 'anonymous' | 'council_staff' | 'firm_staff' | 'platform_admin';
@@ -202,7 +203,10 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
-    if (error) throw error;
+    if (error) {
+      // Throw with user-friendly error message
+      throw new Error(getAuthErrorMessage(error));
+    }
   };
 
   // Admin-specific sign in that checks admin access immediately and signs out if not authorized
@@ -214,7 +218,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: getAuthErrorMessage(error) };
       }
 
       if (!data.session) {
@@ -242,8 +246,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err: unknown) {
       console.error('Admin login error:', err);
-      const message = err instanceof Error ? err.message : 'Login failed';
-      return { success: false, error: message };
+      return { success: false, error: getAuthErrorMessage(err) };
     }
   };
 

@@ -775,3 +775,31 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next could be Task 6.3 (server tests) or Task 6.4 (snapshots)
 ---
 
+## Iteration 32 - Task 7.1: Add user-friendly error messages for auth failures
+- **What was implemented**: Created centralized auth error message utility and integrated it across all auth pages
+- **Files changed**:
+  - `src/lib/authErrors.ts` - NEW FILE: Converts technical Supabase errors to user-friendly messages
+  - `src/contexts/UnifiedAuthContext.tsx` - Updated signIn() and signInAsAdmin() to use friendly errors
+  - `src/pages/auth/SignIn.tsx` - Added error hints, uses getAuthErrorMessage and getAuthErrorAction
+  - `src/pages/auth/CouncilLogin.tsx` - Added error hints, uses friendly error functions
+  - `src/pages/admin/Login.tsx` - Added error hints, uses getAuthErrorAction
+  - `src/pages/auth/ForgotPassword.tsx` - Uses getAuthErrorMessage
+  - `PRD.md` - Marked Task 7.1 first subtask complete
+- **Key features of authErrors.ts**:
+  - `getAuthErrorMessage(error)` - Converts raw errors to user-friendly messages
+  - `getAuthErrorAction(error)` - Returns helpful action hints (e.g., "Check spam folder")
+  - `isRetriableAuthError(error)` - Identifies temporary errors for retry logic
+  - Handles 15+ common Supabase error patterns including:
+    - Invalid credentials → "The email or password you entered is incorrect"
+    - Rate limiting → "Too many sign-in attempts. Please wait a few minutes"
+    - Session expired → "Your session has expired. Please sign in again"
+    - Network errors → "Unable to connect to the server"
+- **Test results**: All 460 tests pass (was 460, unchanged)
+- **Learnings for future iterations**:
+  - Supabase auth errors come through as `error.message` strings, not error codes
+  - The error mapping approach uses partial string matching for flexibility
+  - Action hints provide extra guidance without cluttering the main error message
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing
+  - Next task is Task 7.1 second subtask: Add error boundaries around major page sections
+---
+

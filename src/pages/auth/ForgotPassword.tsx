@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { getAuthErrorMessage } from '@/lib/authErrors';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -23,7 +24,7 @@ export default function ForgotPassword() {
 
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send reset email');
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
+import { getAuthErrorMessage, getAuthErrorAction } from '@/lib/authErrors';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
@@ -15,6 +17,7 @@ export default function SignIn() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setErrorHint(null);
 
     // Check if this is a demo account (regardless of demo mode)
     const isKnownDemoAccount =
@@ -77,7 +80,8 @@ export default function SignIn() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid email or password');
+      setError(getAuthErrorMessage(err));
+      setErrorHint(getAuthErrorAction(err));
     } finally {
       setLoading(false);
     }
@@ -239,6 +243,9 @@ export default function SignIn() {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                 <p className="text-sm text-red-800">{error}</p>
+                {errorHint && (
+                  <p className="text-xs text-red-600 mt-2">{errorHint}</p>
+                )}
               </div>
             )}
 

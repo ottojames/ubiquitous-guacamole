@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, AlertCircle, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { getAuthErrorAction } from '@/lib/authErrors';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Debug: Log all state on every render
@@ -47,6 +49,7 @@ export default function AdminLogin() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
+    setErrorHint(null);
 
     if (!email || !password) {
       setLocalError('Please enter email and password');
@@ -61,7 +64,9 @@ export default function AdminLogin() {
       // Navigate immediately - don't wait for context to update
       navigate('/admin/dashboard', { replace: true });
     } else {
+      // signInAsAdmin already returns user-friendly error messages
       setLocalError(result.error || 'Login failed');
+      setErrorHint(getAuthErrorAction(result.error));
       setIsSubmitting(false);
     }
   };
@@ -87,9 +92,14 @@ export default function AdminLogin() {
           <form className="space-y-6" onSubmit={handleLogin}>
             {/* Error Alert */}
             {localError && (
-              <div className="p-3 bg-red-900/20 border border-red-800 rounded-lg flex items-center space-x-2 text-red-400">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm">{localError}</span>
+              <div className="p-3 bg-red-900/20 border border-red-800 rounded-lg text-red-400">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-sm">{localError}</span>
+                </div>
+                {errorHint && (
+                  <p className="text-xs text-red-500/80 mt-2 ml-7">{errorHint}</p>
+                )}
               </div>
             )}
 
