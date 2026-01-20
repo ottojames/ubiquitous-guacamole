@@ -532,3 +532,53 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 4.3: Fix Westminster Auto-Detection Workaround
 ---
 
+## Iteration 23 - Task 4.3: Fix Westminster Auto-Detection Workaround
+- **What was implemented**: Replaced hardcoded Westminster-only lookup with generic council lookup
+- **Files changed**:
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Replaced workaround code (lines 880-956)
+  - `PRD.md` - Marked Task 4.3 code subtasks complete, added implementation notes
+- **Key changes**:
+  - Added import for `getDepartmentTypeForCategory` from categoryToDepartment.ts
+  - Removed hardcoded `authorityName.includes('westminster')` check
+  - Now uses `getDepartmentTypeForCategory(definition.category)` to determine department type:
+    - licensing/gambling notices → search for 'licensing' departments
+    - planning notices → search for 'planning' departments
+    - gvol/tro notices → search for 'traffic' departments
+    - probate notices → search for 'other' departments
+  - Implemented two-phase lookup:
+    1. Exact match: `ilike('name', '%${authorityName}%')` with department type filter
+    2. Broader search: Extract keywords by removing common words (City, Council, Borough, etc.)
+  - Added comprehensive logging showing authority name, category, department type, and matched results
+- **Learnings for future iterations**:
+  - The workaround was only checking for "Westminster" which meant other councils wouldn't have their custom templates loaded
+  - The `categoryToDepartment.ts` module already had the mapping logic - just needed to be imported
+  - Common UK council name words to filter: City, Council, Borough, Metropolitan, District, County
+  - Supabase `ilike` with wildcards works well for fuzzy council name matching
+  - 49 failing tests remain pre-existing (same count as before) - Phase 6 work
+  - TypeScript errors in src/ are pre-existing (lines 852, 1527, 1619, 1620, 1781 in NewPublishFlow.tsx)
+  - Next is Task 4.4: Ensure Published Notice Links to Council
+---
+
+## Iteration 24 - Task 4.4: Ensure Published Notice Links to Council
+- **What was implemented**: Fixed legacy publish flow to properly pass department_id for anonymous users
+- **Files changed**:
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Added fallback logic to use templateDraft.DEPARTMENT_ID
+  - `src/lib/notices.ts` - Added organization_id, department_id, contact_email to SubmitNoticePayload type
+  - `PRD.md` - Marked Task 4.4 code subtasks complete, added implementation notes
+- **Key changes**:
+  - Legacy flow now checks `templateDraft.DEPARTMENT_ID` when no auth context IDs exist
+  - Looks up organization_id from the department when using dropdown selection
+  - Both IDs properly passed in submitNotice payload
+  - TypeScript type now correctly reflects the fields being sent
+- **Learnings for future iterations**:
+  - The Phase 5 flow (authenticated users) already had proper fallback logic for templateDraft.DEPARTMENT_ID
+  - The legacy flow (anonymous users) was missing this fallback - needed to mirror the Phase 5 approach
+  - The backend at server/routes/notices.ts:556-557 was already accepting and storing these fields
+  - Council notices pages already query by department_id (e.g., Notices.tsx:136-140)
+  - TemplateDraft type is `Record<string, unknown> | null` - need type assertion when accessing fields
+  - Pre-existing TypeScript errors remain in src/ files (same as before, Phase 6 work)
+  - 49 failing tests remain pre-existing (schema drift) - same count as before (Phase 6 work)
+  - Phase 4 (Publishing Wizard Template Linking) is now mostly complete - only manual test subtasks remain
+  - Next is Phase 5: Remove Mock/Demo Data (Task 5.1)
+---
+

@@ -1637,6 +1637,30 @@ export default function NewPublishFlow() {
 
         console.log("[NewPublishFlow] Publishing via legacy endpoint (no auth)...");
 
+        // Determine department and organization IDs
+        // Priority: 1) UnifiedAuth context, 2) templateDraft.DEPARTMENT_ID from dropdown selection
+        let legacyDepartmentId: string | null = department?.id || null;
+        let legacyOrganizationId: string | null = organization?.id || null;
+
+        // If no context IDs but user selected a council from dropdown, use that
+        const draftDeptId = templateDraft?.DEPARTMENT_ID as string | undefined;
+        if (!legacyDepartmentId && draftDeptId) {
+          legacyDepartmentId = draftDeptId;
+          console.log("[NewPublishFlow] Using department_id from template dropdown:", legacyDepartmentId);
+
+          // Look up the organization_id for this department
+          const { data: deptData } = await supabase
+            .from('departments')
+            .select('organization_id')
+            .eq('id', legacyDepartmentId)
+            .single();
+
+          if (deptData?.organization_id) {
+            legacyOrganizationId = deptData.organization_id;
+            console.log("[NewPublishFlow] Resolved organization_id:", legacyOrganizationId);
+          }
+        }
+
         // Transform data to match submitNotice payload
         const payload = {
           notice_type: definition?.id || "premises-licence",
@@ -1646,10 +1670,12 @@ export default function NewPublishFlow() {
           premises: noticeData.premises || {},
           consultation: noticeData.consultation || {},
           extras: noticeData.extras || {},
-          // Include organization context if available
-          organization_id: organization?.id || null,
-          department_id: department?.id || null,
+          // Include organization context - from auth context or template dropdown
+          organization_id: legacyOrganizationId,
+          department_id: legacyDepartmentId,
         };
+
+        console.log("[NewPublishFlow] Legacy publish payload department_id:", payload.department_id);
 
         const result = await submitNotice(payload);
 

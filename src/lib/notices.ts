@@ -137,6 +137,9 @@ export type SubmitNoticePayload = {
   extras?: Record<string, unknown>;
   latitude?: number | null;
   longitude?: number | null;
+  organization_id?: string | null;
+  department_id?: string | null;
+  contact_email?: string;
 };
 
 export async function submitNotice(payload: SubmitNoticePayload) {

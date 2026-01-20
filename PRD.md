@@ -454,10 +454,32 @@ Replaced the hardcoded Westminster-only workaround with a generic council lookup
 4. **Better logging**: Added comprehensive logs showing authority name, category, expected department type, and matched results
 
 ### 4.4 Ensure Published Notice Links to Council
-- [ ] When notice is published, store `department_id` in notices table
-- [ ] This links the notice to the council for representations
-- [ ] Council can then see all notices published for their area
+- [x] When notice is published, store `department_id` in notices table
+- [x] This links the notice to the council for representations
+- [x] Council can then see all notices published for their area
 - [ ] Test: published notice appears in council's notices list
+
+#### Implementation Notes (Task 4.4)
+
+Fixed the legacy publish flow to properly pass `department_id` when publishing notices:
+
+1. **Problem identified**: In the legacy publish flow (used by anonymous/public users), the code only checked `organization?.id` and `department?.id` from UnifiedAuthContext. But for anonymous users who selected a council from the dropdown, `templateDraft.DEPARTMENT_ID` was being ignored.
+
+2. **Solution implemented** in `NewPublishFlow.tsx` lines 1640-1661:
+   - Added fallback logic to check `templateDraft.DEPARTMENT_ID` when no auth context IDs exist
+   - When a department ID is found from the dropdown, looks up the corresponding `organization_id`
+   - Both IDs are now properly passed in the `submitNotice` payload
+
+3. **TypeScript type update** in `src/lib/notices.ts`:
+   - Added missing fields to `SubmitNoticePayload`: `organization_id`, `department_id`, `contact_email`
+   - These fields were already being used but not typed
+
+4. **How it works now**:
+   - **Authenticated users**: Uses `organization?.id` and `department?.id` from UnifiedAuthContext
+   - **Anonymous users with dropdown selection**: Uses `templateDraft.DEPARTMENT_ID` (set by CouncilDepartmentSelect component)
+   - Backend at `server/routes/notices.ts:556-557` already saves these fields to the database
+
+5. **Council notices page** already queries by department_id (see `src/pages/council/Notices.tsx:136-140`)
 
 ---
 
