@@ -105,7 +105,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.2a**: Create `workflow_configs` table migration. File: `supabase/migrations/20260120230000_create_workflow_configs.sql`. Fields: firm_id, department_id, notice_type, name, is_active, is_default, RLS policies for firm members. (Created 2026-01-20)
 - [x] **Task 8.2b**: Apply `workflow_configs` migration to Supabase. (Applied 2026-01-20 via psql - table created with indexes, FK constraints, RLS policies, and update trigger)
 - [x] **Task 8.3a**: Create `workflow_stages` table migration. File: `supabase/migrations/20260120240000_create_workflow_stages.sql`. Fields: workflow_id, name, slug, position, color, is_initial, is_terminal, has_deadline, deadline_type, deadline_days. Includes: FK to workflow_configs, unique constraints on (workflow_id, position) and (workflow_id, slug), update trigger, RLS policies for firm members. (Created 2026-01-20)
-- [ ] **Task 8.3b**: Apply `workflow_stages` migration to Supabase.
+- [x] **Task 8.3b**: Apply `workflow_stages` migration to Supabase. (Applied 2026-01-20 via psql - table created with 17 columns, 5 indexes including 2 unique constraints, FK to workflow_configs with CASCADE delete, 2 RLS policies, and update trigger)
 - [ ] **Task 8.4a**: Create `notice_workflow_status` table migration. Copy from Task 8.4. Fields: notice_id, workflow_id, current_stage_id, firm_id, deadline_date, is_overdue (generated). RLS: firm members only.
 - [ ] **Task 8.4b**: Apply `notice_workflow_status` migration to Supabase.
 - [ ] **Task 8.5a**: Create `workflow_stage_history` table migration. Copy from Task 8.5. Fields: notice_id, from_stage_id, to_stage_id, transition_type, notes, transitioned_by.

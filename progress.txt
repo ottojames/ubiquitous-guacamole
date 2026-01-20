@@ -1070,3 +1070,52 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Verify table structure with `\d public.table_name` after applying migration
   - Next task is Task 8.3a: Create workflow_stages table migration
 ---
+
+## Iteration 43 - Task 8.3a: Create workflow_stages table migration
+- **What was implemented**: Created SQL migration for `workflow_stages` table with RLS policies
+- **Files created**:
+  - `supabase/migrations/20260120240000_create_workflow_stages.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.3a complete
+- **Key features of the migration**:
+  - Table with: id (UUID), workflow_id (FK to workflow_configs)
+  - Stage details: name, slug, description
+  - Position & UI: position (INTEGER), color (TEXT hex), icon (optional)
+  - Stage behavior: is_initial, is_terminal, auto_transition_days
+  - Deadline settings: has_deadline, deadline_type (fixed_days/calendar_date/calculated), deadline_days, deadline_working_days, deadline_name
+  - Unique constraints on (workflow_id, position) and (workflow_id, slug)
+  - Three indexes: on workflow_id, position composite, and partial on is_initial
+  - Trigger for automatic updated_at timestamp
+  - RLS enabled with 2 policies:
+    - Firm members can view stages (SELECT via workflow_configs join)
+    - Firm admins can manage stages (ALL for owner/admin roles)
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Migration follows established pattern from firm_departments and workflow_configs
+  - SQL directly copied from implementation plan with timestamp updated
+  - RLS policies inherit access checks through workflow_configs table
+  - Pre-existing TypeScript errors in src/ files are unrelated to this migration
+  - Next task is Task 8.3b: Apply workflow_stages migration to Supabase
+---
+
+## Iteration 44 - Task 8.3b: Apply workflow_stages migration to Supabase
+- **What was implemented**: Applied the workflow_stages migration to the remote Supabase database
+- **Method used**: psql with DATABASE_URL (consistent with established pattern from Iteration 40)
+- **Files unchanged**: No code changes - database schema update only
+- **Verification**:
+  - Table created with 17 columns (id, workflow_id, name, slug, description, position, color, icon, is_initial, is_terminal, auto_transition_days, has_deadline, deadline_type, deadline_days, deadline_working_days, deadline_name, created_at, updated_at)
+  - Primary key (id), two unique constraints: (workflow_id, position) and (workflow_id, slug)
+  - Check constraint on deadline_type: fixed_days, calendar_date, or calculated
+  - Foreign key to workflow_configs(id) with CASCADE delete
+  - Three indexes: on workflow_id, position composite, and partial on is_initial
+  - 2 RLS policies: select for firm members, all for admins (via workflow_configs join)
+  - Update trigger for automatic updated_at timestamps
+  - Migration recorded in supabase_migrations.schema_migrations table
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - schema_migrations table has columns: version, statements (text[]), name - NOT statements_hash
+  - For simple migration tracking, use: `INSERT INTO ... (version, name) VALUES (...)`
+  - CASCADE delete on FK means deleting a workflow_config automatically deletes its stages
+  - RLS policies for child tables (workflow_stages) should join through parent tables (workflow_configs) to verify access
+  - Next task is Task 8.4a: Create notice_workflow_status table migration
+---
