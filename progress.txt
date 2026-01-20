@@ -1175,3 +1175,53 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The `deadline_date < NOW()` condition should be added in queries/views, not stored
   - Next task is Task 8.5a: Create workflow_stage_history table migration
 ---
+
+## Iteration 47 - Task 8.5a: Create workflow_stage_history table migration
+- **What was implemented**: Created SQL migration for `workflow_stage_history` table with RLS policies
+- **Files created**:
+  - `supabase/migrations/20260120260000_create_workflow_stage_history.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.5a complete
+- **Key features of the migration**:
+  - Table with: id (UUID), notice_id (FK to notices), workflow_status_id (FK to notice_workflow_status)
+  - Transition details: from_stage_id, to_stage_id (FKs to workflow_stages)
+  - Metadata: transitioned_at, transitioned_by (FK to auth.users), transition_type (manual/automatic/system), notes
+  - Firm context: firm_id (FK to organizations) denormalized for RLS efficiency
+  - 4 indexes: on notice_id, workflow_status_id, firm_id, and transitioned_at (for chronological queries)
+  - RLS enabled with 2 policies:
+    - Firm members can view stage history (SELECT)
+    - Firm members can insert stage history (INSERT)
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Migration follows established pattern from previous workflow tables
+  - The from_stage_id uses ON DELETE SET NULL (allows null for initial transitions)
+  - The to_stage_id uses ON DELETE RESTRICT (must always have a valid target stage)
+  - SQL directly copied from implementation plan with timestamp updated
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated
+  - Next task is Task 8.5b: Apply workflow_stage_history migration to Supabase
+---
+
+## Iteration 48 - Task 8.5b: Apply workflow_stage_history migration to Supabase
+- **What was implemented**: Applied the workflow_stage_history migration to the remote Supabase database
+- **Method used**: psql with DATABASE_URL (consistent with established pattern from Iteration 40)
+- **Files unchanged**: No code changes - database schema update only
+- **Verification**:
+  - Table created with 10 columns (id, notice_id, workflow_status_id, from_stage_id, to_stage_id, transitioned_at, transitioned_by, transition_type, notes, firm_id)
+  - Primary key (id)
+  - Check constraint on transition_type: manual, automatic, or system
+  - 4 indexes: on notice_id, workflow_status_id, firm_id, and transitioned_at
+  - 5 foreign keys:
+    - notice_id → notices(id) ON DELETE CASCADE
+    - workflow_status_id → notice_workflow_status(id) ON DELETE CASCADE
+    - from_stage_id → workflow_stages(id) ON DELETE SET NULL (allows null for initial transitions)
+    - to_stage_id → workflow_stages(id) ON DELETE RESTRICT (must always have valid target)
+    - transitioned_by → auth.users(id)
+    - firm_id → organizations(id) ON DELETE CASCADE
+  - 2 RLS policies: select/insert for firm members
+  - Migration recorded in supabase_migrations.schema_migrations table
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - psql pattern continues to work well for migrations
+  - Consistent with established pattern from previous iterations
+  - Next task is Task 8.6a: Create deadline_reminders table migration
+---
