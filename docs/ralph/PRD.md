@@ -1972,7 +1972,7 @@ export default function DynamicCouncilSelect({
 
 ---
 
-### Task 5.6: Fix Notice Upload Organization Linking
+### ✅ Task 5.6: Fix Notice Upload Organization Linking
 
 **Files to Modify:**
 - `/Users/ottoclarke/projects/Ralph's Civic Notices/src/next/publish/flow/steps/StepReview.tsx`
