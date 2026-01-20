@@ -3,7 +3,7 @@ import { useOutletContext, useNavigate, useParams, Link, useSearchParams } from 
 import { supabase } from '@/lib/supabase';
 import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
-import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {

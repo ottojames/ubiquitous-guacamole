@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {

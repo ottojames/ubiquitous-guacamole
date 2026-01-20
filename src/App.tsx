@@ -54,7 +54,7 @@ import ApiDocs from "@/pages/ApiDocs";
 import ConferenceLanding from "@/pages/ConferenceLanding";
 import ShowcaseLanding from "@/pages/ShowcaseLanding";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
+import { UnifiedAuthProvider } from "@/contexts/UnifiedAuthContext";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminLogin from "@/pages/admin/Login";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -65,7 +65,7 @@ import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 
 export default function App() {
   return (
-    <AdminAuthProvider>
+    <UnifiedAuthProvider>
       <BrowserRouter>
         <Routes>
         <Route path="/" element={<Home />} />
@@ -155,6 +155,6 @@ export default function App() {
         <Route path="*" element={<Home />} />
       </Routes>
     </BrowserRouter>
-    </AdminAuthProvider>
+    </UnifiedAuthProvider>
   );
 }

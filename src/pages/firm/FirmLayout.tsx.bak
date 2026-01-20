@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Organization {
   id: string;
