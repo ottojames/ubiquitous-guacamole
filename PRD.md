@@ -100,7 +100,7 @@ npm run lint         # ESLint check
 **IMPORTANT**: After creating each migration, apply it using Supabase MCP tool `apply_migration`.
 
 ### 8.1 Core Tables
-- [ ] **Task 8.1a**: Create `firm_departments` table migration. File: `supabase/migrations/[timestamp]_create_firm_departments.sql`. Copy full SQL from `plans/feat-firm-portal-implementation.md` Task 8.1. Includes: table with firm_id, name, slug, status, RLS policies for firm members.
+- [x] **Task 8.1a**: Create `firm_departments` table migration. File: `supabase/migrations/20260120220000_create_firm_departments.sql`. Includes: table with firm_id, name, slug, status, RLS policies for firm members. (Created 2026-01-20)
 - [ ] **Task 8.1b**: Apply `firm_departments` migration to Supabase using MCP tool `apply_migration` with project_id from environment.
 - [ ] **Task 8.2a**: Create `workflow_configs` table migration. File: `supabase/migrations/[timestamp]_create_workflow_configs.sql`. Copy from implementation plan Task 8.2. Fields: firm_id, department_id, notice_type, name, is_active, is_default.
 - [ ] **Task 8.2b**: Apply `workflow_configs` migration to Supabase.
