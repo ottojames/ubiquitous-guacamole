@@ -1304,3 +1304,29 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated to migrations
   - Next task is Task 8.7b: Apply firm_notice_templates migration to Supabase
 ---
+
+## Iteration 52 - Task 8.7b: Apply firm_notice_templates migration to Supabase
+- **What was implemented**: Applied the firm_notice_templates migration to the remote Supabase database
+- **Method used**: psql with DATABASE_URL (consistent with established pattern)
+- **Files unchanged**: No code changes - database schema update only
+- **Verification**:
+  - Table created with 14 columns (id, firm_id, department_id, name, description, notice_type, template_data, is_active, is_shared, usage_count, created_at, updated_at, created_by, last_used_at)
+  - Primary key (id)
+  - 5 indexes: on firm_id, department_id, notice_type, and partial index on is_active
+  - 3 foreign keys:
+    - firm_id → organizations(id) ON DELETE CASCADE
+    - department_id → firm_departments(id) ON DELETE SET NULL
+    - created_by → auth.users(id)
+  - 4 RLS policies:
+    - "Firm members can view shared templates" for SELECT (shared OR own templates)
+    - "Firm members can create templates" for INSERT
+    - "Template owners can update" for UPDATE (owner OR firm admin)
+    - "Template owners can delete" for DELETE (owner OR firm admin)
+  - Update trigger for automatic updated_at timestamps
+  - Migration recorded in supabase_migrations.schema_migrations table
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - psql pattern continues to work reliably for applying migrations
+  - All Phase 8.1 Core Tables are now complete (firm_departments, workflow_configs, workflow_stages, notice_workflow_status, workflow_stage_history, deadline_reminders, firm_notice_templates)
+  - Next task is Task 8.8a: Create create_default_premises_licence_workflow() function migration
+---
