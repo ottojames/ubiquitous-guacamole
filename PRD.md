@@ -118,7 +118,7 @@ npm run lint         # ESLint check
 ### 8.2 Default Workflow Seeds
 - [x] **Task 8.8a**: Create `create_default_premises_licence_workflow()` function migration. Copy from Task 8.8. Seeds 10 stages with correct deadlines. (Created 2026-01-20 - File: supabase/migrations/20260120290000_create_default_premises_licence_workflow.sql)
 - [x] **Task 8.8b**: Apply premises licence workflow function to Supabase. (Applied 2026-01-20 via psql - function created with SECURITY DEFINER, grants EXECUTE to authenticated role, creates workflow_config and 10 workflow_stages for premises licence)
-- [ ] **Task 8.9a**: Create `create_default_probate_workflow()` function migration. Copy from Task 8.9. Seeds 6 stages with 60-day waiting period.
+- [x] **Task 8.9a**: Create `create_default_probate_workflow()` function migration. Copy from Task 8.9. Seeds 6 stages with 60-day waiting period. (Created 2026-01-20 - File: supabase/migrations/20260120300000_create_default_probate_workflow.sql)
 - [ ] **Task 8.9b**: Apply probate workflow function to Supabase.
 - [ ] **Task 8.10a**: Create `create_default_planning_workflow()` function migration. Copy from Task 8.10. Seeds 12 stages.
 - [ ] **Task 8.10b**: Apply planning workflow function to Supabase.
