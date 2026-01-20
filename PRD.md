@@ -173,11 +173,11 @@ The file provides (unused):
 - UnifiedAuthContext is already the primary auth context across the codebase
 
 ### 1.2 Consolidate to UnifiedAuthContext
-- [ ] Update `UnifiedAuthContext.tsx` to handle all user types (public, council, firm, admin)
-- [ ] Add `userType` field: 'anonymous' | 'council_staff' | 'firm_staff' | 'platform_admin'
-- [ ] Add `organizationType` field: null | 'council' | 'firm'
-- [ ] Ensure `canAccessAdmin()` checks `app_metadata.is_platform_admin` correctly
-- [ ] Ensure `hasPermission()` works for department-level permissions
+- [x] Update `UnifiedAuthContext.tsx` to handle all user types (public, council, firm, admin)
+- [x] Add `userType` field: 'anonymous' | 'council_staff' | 'firm_staff' | 'platform_admin'
+- [x] Add `organizationType` field: null | 'council' | 'firm'
+- [x] Ensure `canAccessAdmin()` checks `app_metadata.is_platform_admin` correctly
+- [x] Ensure `hasPermission()` works for department-level permissions
 
 ### 1.3 Migrate Components to UnifiedAuthContext
 - [ ] Update `src/pages/admin/Login.tsx` to use only UnifiedAuthContext

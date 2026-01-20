@@ -2,6 +2,14 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Organization, Department } from '@/types';
+import type { PermissionName, RoleName } from '@/types/permissions';
+import { PERMISSIONS, ROLES } from '@/types/permissions';
+
+// User type based on authentication status and organization membership
+export type UserType = 'anonymous' | 'council_staff' | 'firm_staff' | 'platform_admin';
+
+// Organization type for the current user's organization
+export type OrganizationType = 'council' | 'firm' | null;
 
 interface UnifiedAuthContextType {
   // Core auth
@@ -20,6 +28,14 @@ interface UnifiedAuthContextType {
   isPlatformAdmin: boolean;
   adminRole: 'super_admin' | 'admin' | 'support' | null;
 
+  // New user type fields (Task 1.2)
+  userType: UserType;
+  organizationType: OrganizationType;
+
+  // Department-level permissions (from legacy AuthContext)
+  permissions: PermissionName[];
+  departmentId: string | null;
+
   // Actions
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -27,8 +43,13 @@ interface UnifiedAuthContextType {
   switchDepartment: (deptId: string) => Promise<void>;
   refreshSession: () => Promise<void>;
 
+  // Permission loading (from legacy AuthContext)
+  loadPermissions: (departmentId: string, demoRole?: RoleName) => Promise<void>;
+
   // Permissions
-  hasPermission: (permission: string) => boolean;
+  hasPermission: (permission: string | PermissionName) => boolean;
+  hasAnyPermission: (...permissions: PermissionName[]) => boolean;
+  hasAllPermissions: (...permissions: PermissionName[]) => boolean;
   canAccessAdmin: () => boolean;
 }
 
@@ -43,11 +64,29 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
 
+  // Department-level permissions state (from legacy AuthContext)
+  const [permissions, setPermissions] = useState<PermissionName[]>([]);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
+
   // Extract metadata from JWT claims
   const appMetadata = session?.user?.app_metadata || {};
   const isPlatformAdmin = appMetadata.is_platform_admin || false;
   const adminRole = appMetadata.admin_role || null;
   const role = appMetadata.role || 'viewer';
+
+  // Compute userType based on auth state and organization
+  const userType: UserType = (() => {
+    if (!user) return 'anonymous';
+    if (isPlatformAdmin) return 'platform_admin';
+    if (organization?.type === 'council') return 'council_staff';
+    if (organization?.type === 'firm') return 'firm_staff';
+    return 'anonymous';
+  })();
+
+  // Compute organizationType from current organization
+  const organizationType: OrganizationType = organization?.type === 'council' || organization?.type === 'firm'
+    ? organization.type
+    : null;
 
   useEffect(() => {
     // Get initial session
@@ -143,6 +182,9 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     setDepartment(null);
     setOrganizations([]);
     setDepartments([]);
+    // Clear department-level permissions
+    setPermissions([]);
+    setDepartmentId(null);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -196,19 +238,126 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const hasPermission = (permission: string): boolean => {
+  // Load permissions for a specific department (from legacy AuthContext)
+  const loadPermissions = async (deptId: string, demoRole?: RoleName) => {
+    try {
+      // If a demoRole is provided, bypass database and use mock permissions
+      if (demoRole) {
+        console.log('[UnifiedAuthContext] Loading demo permissions for role:', demoRole);
+
+        // Get all permissions for this role
+        let permissionNames: PermissionName[];
+
+        if (demoRole === ROLES.ORG_ADMIN || demoRole === ROLES.DEPT_ADMIN) {
+          // Admins get all permissions
+          permissionNames = Object.values(PERMISSIONS);
+        } else if (demoRole === ROLES.OFFICER) {
+          permissionNames = [
+            PERMISSIONS.NOTICES_CREATE,
+            PERMISSIONS.NOTICES_READ,
+            PERMISSIONS.NOTICES_UPDATE,
+            PERMISSIONS.NOTICES_PUBLISH,
+            PERMISSIONS.NOTICES_EXPORT,
+            PERMISSIONS.REPRESENTATIONS_READ,
+            PERMISSIONS.REPRESENTATIONS_UPDATE,
+            PERMISSIONS.REPRESENTATIONS_COMMENT,
+            PERMISSIONS.REPRESENTATIONS_EXPORT,
+            PERMISSIONS.TEAM_READ,
+            PERMISSIONS.TEMPLATES_READ,
+            PERMISSIONS.SETTINGS_READ,
+          ];
+        } else {
+          // Viewer gets read-only permissions
+          permissionNames = [
+            PERMISSIONS.NOTICES_READ,
+            PERMISSIONS.REPRESENTATIONS_READ,
+            PERMISSIONS.TEAM_READ,
+            PERMISSIONS.TEMPLATES_READ,
+          ];
+        }
+
+        setPermissions(permissionNames);
+        setDepartmentId(deptId);
+
+        console.log('[UnifiedAuthContext] Loaded demo permissions:', permissionNames);
+        return;
+      }
+
+      // Normal authenticated user flow - load from database
+      if (!user) {
+        console.warn('[UnifiedAuthContext] Cannot load permissions without user');
+        return;
+      }
+
+      // Load user's role for this department
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        p_user_id: user.id,
+        p_department_id: deptId
+      });
+
+      if (roleError) {
+        console.error('[UnifiedAuthContext] Error loading role:', roleError);
+        return;
+      }
+
+      if (roleData && roleData.length > 0) {
+        // Note: role state is managed by the session metadata, this is for permissions
+        console.log('[UnifiedAuthContext] Loaded department role:', roleData[0].role_name);
+      }
+
+      // Load user's permissions for this department
+      const { data: permsData, error: permsError } = await supabase.rpc('get_user_permissions', {
+        p_user_id: user.id,
+        p_department_id: deptId
+      });
+
+      if (permsError) {
+        console.error('[UnifiedAuthContext] Error loading permissions:', permsError);
+        return;
+      }
+
+      const permissionNames = permsData?.map((p: { permission_name: string }) => p.permission_name as PermissionName) || [];
+      setPermissions(permissionNames);
+      setDepartmentId(deptId);
+
+      console.log('[UnifiedAuthContext] Loaded permissions:', permissionNames);
+    } catch (error) {
+      console.error('[UnifiedAuthContext] Error in loadPermissions:', error);
+    }
+  };
+
+  const hasPermission = (permission: string | PermissionName): boolean => {
     // Platform admins have all permissions
     if (isPlatformAdmin) return true;
 
-    // Implement role-based permission checking
-    const permissions: Record<string, string[]> = {
+    // Check department-level permissions first (if loaded)
+    if (permissions.length > 0) {
+      return permissions.includes(permission as PermissionName);
+    }
+
+    // Fallback to role-based permission checking
+    const rolePermissions: Record<string, string[]> = {
       'admin': ['manage_notices', 'manage_users', 'view_analytics', 'manage_departments'],
       'editor': ['create_notices', 'edit_notices', 'view_analytics'],
       'viewer': ['view_notices', 'view_analytics']
     };
 
     const userRole = role || 'viewer';
-    return permissions[userRole]?.includes(permission) || false;
+    return rolePermissions[userRole]?.includes(permission) || false;
+  };
+
+  const hasAnyPermission = (...requiredPermissions: PermissionName[]): boolean => {
+    // Platform admins have all permissions
+    if (isPlatformAdmin) return true;
+
+    return requiredPermissions.some(perm => permissions.includes(perm));
+  };
+
+  const hasAllPermissions = (...requiredPermissions: PermissionName[]): boolean => {
+    // Platform admins have all permissions
+    if (isPlatformAdmin) return true;
+
+    return requiredPermissions.every(perm => permissions.includes(perm));
   };
 
   const canAccessAdmin = (): boolean => {
@@ -228,23 +377,38 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const value = {
+  const value: UnifiedAuthContextType = {
+    // Core auth
     user,
     session,
     loading,
+    // Organization context
     organization,
     department,
     organizations,
     departments,
+    // User metadata
     role,
     isPlatformAdmin,
     adminRole,
+    // New user type fields (Task 1.2)
+    userType,
+    organizationType,
+    // Department-level permissions (from legacy AuthContext)
+    permissions,
+    departmentId,
+    // Actions
     signIn,
     signOut,
     switchOrganization,
     switchDepartment,
     refreshSession,
+    // Permission loading
+    loadPermissions,
+    // Permission checks
     hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
     canAccessAdmin,
   };
 
