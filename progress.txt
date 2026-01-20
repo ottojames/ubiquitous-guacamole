@@ -333,3 +333,25 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 2.3 final subtask: Test admin login flow manually, then Task 2.4
 ---
 
+## Iteration 16 - Task 2.4: Fix Admin Login Form
+- **What was implemented**: Added "Forgot Password" link to admin login form and verified existing error/success handling
+- **Files changed**:
+  - `src/pages/admin/Login.tsx` - Added Link import and "Forgot password?" link
+  - `PRD.md` - Marked Task 2.4 subtasks complete
+- **Key changes**:
+  - Added `Link` to imports from `react-router-dom`
+  - Added "Forgot password?" link next to password label, linking to `/forgot-password`
+  - Link uses styling consistent with dark theme: `text-blue-400 hover:text-blue-300`
+- **Verification**:
+  - Error handling already existed: `localError` state shows errors in red alert box (lines 89-94)
+  - Success redirect already worked: `navigate('/admin/dashboard', { replace: true })` (line 62)
+  - ForgotPassword page exists at `src/pages/auth/ForgotPassword.tsx` with route `/forgot-password`
+  - TypeScript compiles without errors for `admin/Login.tsx`
+- **Learnings for future iterations**:
+  - Login.tsx already had good error handling via `signInAsAdmin()` which returns `{ success, error }`
+  - The form uses proper disabled states during submission (`isSubmitting` state)
+  - Pre-existing TypeScript errors are in cypress/, e2e/, scripts/, server/ directories only
+  - Test subtask (2.4 final) and test subtask (2.3 final) are manual testing - not code tasks
+  - Next actionable code task is Phase 3: Council Portal Authentication
+---
+

@@ -296,9 +296,9 @@ This prevents the redirect loop where:
 - AdminProtectedRoute sees stale state and redirects back to login
 
 ### 2.4 Fix Admin Login Form
-- [ ] Ensure form shows appropriate error messages on failed login
-- [ ] Ensure successful login navigates to `/admin/dashboard`
-- [ ] Add "Forgot Password" link for admin users
+- [x] Ensure form shows appropriate error messages on failed login
+- [x] Ensure successful login navigates to `/admin/dashboard`
+- [x] Add "Forgot Password" link for admin users
 - [ ] Test: invalid credentials show error, valid credentials redirect correctly
 
 ---
