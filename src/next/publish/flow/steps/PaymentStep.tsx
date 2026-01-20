@@ -4,6 +4,7 @@ import type { NoticeDefinition } from "@/next/publish/config/noticeTypes";
 import type { NoticeBase } from "@/types/notice";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/UnifiedAuthContext";
 
 export type PaymentStepProps = {
   definition: NoticeDefinition;
@@ -33,6 +34,7 @@ interface SubscriptionInfo {
 
 export default function PaymentStep({ definition, notice, onBack, onSubmit, submitting, firmSlug }: PaymentStepProps) {
   const { createCheckoutSession, isProcessing, error: paymentError, isConfigured } = useStripePayment();
+  const { organization, department } = useAuth(); // Get organization context from UnifiedAuth
   const [allowanceInfo, setAllowanceInfo] = useState<AllowanceInfo | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loadingAllowance, setLoadingAllowance] = useState(true);

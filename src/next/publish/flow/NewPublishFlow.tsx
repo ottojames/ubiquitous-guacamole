@@ -42,6 +42,7 @@ import StickyRailLayout from "./components/StickyRailLayout";
 import PublishSuccessModal from "@/components/publish/PublishSuccessModal";
 import { supabase } from "@/lib/supabase";
 import type { PublishNoticeResponse } from "@/lib/notices";
+import { useAuth } from "@/contexts/UnifiedAuthContext";
 
 type Step = (typeof wizardSteps)[number]["id"];
 type TemplateDraft = Record<string, unknown> | null;
@@ -164,6 +165,7 @@ class WizardBoundary extends React.Component<WizardBoundaryProps, WizardBoundary
 export default function NewPublishFlow() {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
+  const { organization, department } = useAuth(); // Get organization context from UnifiedAuth
   const currentStep = stepFromPath(pathname);
   const [definitionId, setDefinitionId] = useState<string | null>(null);
 
@@ -1461,32 +1463,45 @@ export default function NewPublishFlow() {
         // Phase 5: Authenticated firm publishing (goes live immediately with billing)
         const { publishNotice } = await import("@/lib/notices");
 
-        // Get department ID from draft (set when user clicks Westminster dropdown)
-        const draftDepartmentId = templateDraft?.DEPARTMENT_ID;
+        // Prefer organization context from UnifiedAuth if available, otherwise use draft
+        let councilId: string | null = null;
+        let departmentId: string | null = null;
+        let councilName = "Unknown Council";
 
-        if (!draftDepartmentId) {
-          toast("Please select a licensing authority (e.g., Westminster City Council)");
-          return;
+        // First try to use context from UnifiedAuth (for logged-in firms)
+        if (organization?.id && department?.id) {
+          console.log("[NewPublishFlow] Using organization context from UnifiedAuth");
+          councilId = organization.id;
+          departmentId = department.id;
+          councilName = organization.name || "Unknown Council";
+        } else {
+          // Fallback to draft department ID (from dropdown selection)
+          const draftDepartmentId = templateDraft?.DEPARTMENT_ID;
+
+          if (!draftDepartmentId) {
+            toast("Please select a licensing authority (e.g., Westminster City Council)");
+            return;
+          }
+
+          console.log("[NewPublishFlow] Looking up department and council for:", draftDepartmentId);
+
+          // Query Supabase to get both department and its organization (council)
+          const { data: deptData, error: deptError } = await supabase
+            .from('departments')
+            .select('id, organization_id, organizations(id, name)')
+            .eq('id', draftDepartmentId)
+            .single();
+
+          if (deptError || !deptData) {
+            console.error("[NewPublishFlow] Department lookup failed:", deptError);
+            toast("Failed to find licensing authority. Please try selecting it again from the dropdown.");
+            return;
+          }
+
+          councilId = deptData.organization_id;
+          departmentId = deptData.id;
+          councilName = (deptData as any).organizations?.name || "Unknown Council";
         }
-
-        console.log("[NewPublishFlow] Looking up department and council for:", draftDepartmentId);
-
-        // Query Supabase to get both department and its organization (council)
-        const { data: deptData, error: deptError } = await supabase
-          .from('departments')
-          .select('id, organization_id, organizations(id, name)')
-          .eq('id', draftDepartmentId)
-          .single();
-
-        if (deptError || !deptData) {
-          console.error("[NewPublishFlow] Department lookup failed:", deptError);
-          toast("Failed to find licensing authority. Please try selecting it again from the dropdown.");
-          return;
-        }
-
-        const councilId = deptData.organization_id;
-        const departmentId = deptData.id;
-        const councilName = (deptData as any).organizations?.name || "Unknown Council";
 
         console.log("[NewPublishFlow] Publishing to:", { councilName, councilId, departmentId });
 
@@ -1522,6 +1537,9 @@ export default function NewPublishFlow() {
           premises: noticeData.premises || {},
           consultation: noticeData.consultation || {},
           extras: noticeData.extras || {},
+          // Include organization context if available
+          organization_id: organization?.id || null,
+          department_id: department?.id || null,
         };
 
         const result = await submitNotice(payload);

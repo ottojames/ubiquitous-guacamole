@@ -541,7 +541,7 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       }
     }
 
-    // Prepare data with geocoding
+    // Prepare data with geocoding and organization context
     const noticeData = {
       ...payload,
       status: 'published', // Auto-publish instead of 'submitted'
@@ -552,6 +552,9 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       location: latitude && longitude
         ? `POINT(${longitude} ${latitude})`
         : null,
+      // Ensure organization context is set if provided
+      organization_id: payload.organization_id || null,
+      department_id: payload.department_id || null,
     };
 
     // Add postcode to premises if extracted
