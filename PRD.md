@@ -120,7 +120,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.8b**: Apply premises licence workflow function to Supabase. (Applied 2026-01-20 via psql - function created with SECURITY DEFINER, grants EXECUTE to authenticated role, creates workflow_config and 10 workflow_stages for premises licence)
 - [x] **Task 8.9a**: Create `create_default_probate_workflow()` function migration. Copy from Task 8.9. Seeds 6 stages with 60-day waiting period. (Created 2026-01-20 - File: supabase/migrations/20260120300000_create_default_probate_workflow.sql)
 - [x] **Task 8.9b**: Apply probate workflow function to Supabase. (Applied 2026-01-20 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, creates workflow_config and 6 workflow_stages for probate notices with 60-day waiting period)
-- [ ] **Task 8.10a**: Create `create_default_planning_workflow()` function migration. Copy from Task 8.10. Seeds 12 stages.
+- [x] **Task 8.10a**: Create `create_default_planning_workflow()` function migration. Copy from Task 8.10. Seeds 12 stages. (Created 2026-01-20 - File: supabase/migrations/20260120310000_create_default_planning_workflow.sql)
 - [ ] **Task 8.10b**: Apply planning workflow function to Supabase.
 - [ ] **Task 8.11a**: Create TRO workflow function migration. Copy TRO function from Task 8.11 (first function only).
 - [ ] **Task 8.11b**: Apply TRO workflow function to Supabase.
