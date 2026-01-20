@@ -582,3 +582,91 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Phase 5: Remove Mock/Demo Data (Task 5.1)
 ---
 
+## Iteration 25 - Task 5.1: Remove Demo Users
+- **What was implemented**: Removed all demo user functionality from UploadMethodStep.tsx
+- **Files changed**:
+  - `src/next/publish/flow/steps/UploadMethodStep.tsx` - Removed DEMO_USERS, related state, handler, and UI
+  - `PRD.md` - Marked Task 5.1 complete with implementation notes
+- **Key removals**:
+  - DEMO_USERS array (5 hardcoded demo users with names and emails)
+  - `selectedDemoUser` useState hook
+  - `handleDemoUserSelect` function
+  - "Quick select (demo)" dropdown UI in Contact Email Card
+  - `setSelectedDemoUser("")` call in email onChange handler
+- **Learnings for future iterations**:
+  - The UploadMethodStep.test.tsx was already failing before this change (49 failing tests count unchanged)
+  - Test fails because `upload-dropzone` testid search doesn't work after clicking "Upload via File" button
+  - This is a pre-existing test issue documented to be fixed in Phase 6 (Task 6.2)
+  - The `email` and `onEmailChange` props on UploadMethodStep were already required - test was missing them
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing and not blocking
+  - Next task is Task 5.2: Remove Mock Data from Firm Portal
+---
+
+## Iteration 26 - Task 5.2: Remove Mock Data from Firm Portal
+- **What was implemented**: Replaced all mock data in Firm Portal with actual database queries
+- **Files changed**:
+  - `src/pages/firm/Clients.tsx` - Replaced mock clients with database queries
+  - `src/pages/firm/Billing.tsx` - Replaced mock invoices/subscription with database queries
+  - `PRD.md` - Marked Task 5.2 complete, added implementation notes
+- **Key changes to Clients.tsx**:
+  - `loadClients()` now queries `firm_clients` view with fallback to `client_relationships` table
+  - `handleSave()` uses `add_client_to_firm` RPC function for new clients
+  - `handleDeleteClient()` properly deletes from `client_relationships` table
+  - Removed 3 hardcoded mock client businesses
+  - Removed "prototype interface" disclaimer from modal
+- **Key changes to Billing.tsx**:
+  - `loadBillingData()` queries `firm_subscriptions` with joined `subscription_tiers`
+  - Uses `get_subscription_usage` RPC to get notice usage stats
+  - Queries `monthly_invoices` for invoice history
+  - Fetches payment method from Stripe API if `stripe_customer_id` exists
+  - Fixed context to use `firm` (from FirmLayout) instead of `organization`
+  - Added error state handling and improved subscription UI with status badges
+- **Database schema used**:
+  - `firm_clients` view - joins client_relationships with organizations + notice counts
+  - `client_relationships` table - firm-to-client associations
+  - `firm_subscriptions` table - subscription details with tier reference
+  - `subscription_tiers` table - tier pricing and allowances
+  - `monthly_invoices` table - invoice history
+  - `get_subscription_usage()` RPC - usage statistics
+  - `add_client_to_firm()` RPC - creates client org and relationship
+- **Learnings for future iterations**:
+  - FirmLayout provides `firm` not `organization` in the outlet context
+  - The `firm_clients` is a VIEW not a table - may fail on some Supabase setups, so fallback to direct queries
+  - Supabase nested selects return arrays for foreign keys even for single results - need `as any` casting
+  - 49 failing tests remain pre-existing (same count as before) - Phase 6 work
+  - TypeScript errors in src/ files are mostly in other pages (Dashboard, Callback, etc.)
+  - Next task is Task 5.3: Remove Mock Data from Public Pages (EmailAlerts.tsx)
+---
+
+## Iteration 27 - Task 5.3: Remove Mock Data from Public Pages (EmailAlerts.tsx)
+- **What was implemented**: Replaced all mock data and simulated API calls with actual API endpoints
+- **Files changed**:
+  - `src/pages/EmailAlerts.tsx` - Complete refactor to use /api/subscriptions endpoints
+  - `PRD.md` - Marked Task 5.3 complete, added implementation notes
+- **Key changes to EmailAlerts.tsx**:
+  - Added `useSearchParams` for URL parameter handling (?verified, ?unsubscribed, ?token)
+  - Added `loadSubscriptionByToken()` to fetch subscription from email link
+  - Changed `handleSubscribe()` to call `POST /api/subscriptions/create`
+  - Changed `handleUpdateSettings()` to call `PUT /api/subscriptions/update/:id`
+  - Changed `handleUnsubscribe()` to redirect to `GET /api/subscriptions/unsubscribe/:token`
+  - Removed entire verify step UI (verification is via email link, not code)
+  - Updated Subscription interface: `active: boolean` → `status: 'pending' | 'active' | ...`
+  - Added `managementToken` state for token-based management
+  - Status display now shows actual database status with color coding
+- **API endpoints used** (already existed in server/routes/subscriptions.ts):
+  - `POST /api/subscriptions/create` - creates pending subscription, sends verification email
+  - `GET /api/subscriptions/verify/:token` - verifies and activates subscription
+  - `GET /api/subscriptions/unsubscribe/:token` - marks subscription as unsubscribed
+  - `POST /api/subscriptions/manage` - fetches subscription details by token/email
+  - `PUT /api/subscriptions/update/:id` - updates subscription preferences
+- **Database table**: `email_subscriptions` (from server/sql/create_email_subscriptions.sql)
+- **Learnings for future iterations**:
+  - The backend API for email subscriptions was already complete - just needed frontend integration
+  - Token-based management (verification_token, unsubscribe_token) allows users to manage subscriptions from email links
+  - The step state type changed from 3-step ('subscribe' | 'verify' | 'manage') to 2-step ('subscribe' | 'manage')
+  - TypeScript errors in EmailAlerts.tsx: NONE (clean)
+  - Pre-existing TypeScript errors in src/ files remain (same as before)
+  - 49 failing tests remain pre-existing (Phase 6 work)
+  - Next task is Task 5.4: Fix Address Provider Mock Mode
+---
+

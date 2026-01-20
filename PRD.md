@@ -505,14 +505,61 @@ Removed all demo user functionality from UploadMethodStep.tsx:
 The email input field now works as a simple form input without any demo user shortcuts. The upload step functionality remains unchanged - users enter their email manually for confirmation receipts.
 
 ### 5.2 Remove Mock Data from Firm Portal
-- [ ] Remove mock clients from `src/pages/firm/Clients.tsx:69-128`
-- [ ] Replace with actual database query for firm's clients
-- [ ] Remove mock invoices from `src/pages/firm/Billing.tsx:54-97`
-- [ ] Replace with actual Stripe invoice data
+- [x] Remove mock clients from `src/pages/firm/Clients.tsx:69-128`
+- [x] Replace with actual database query for firm's clients
+- [x] Remove mock invoices from `src/pages/firm/Billing.tsx:54-97`
+- [x] Replace with actual Stripe invoice data
+
+#### Implementation Notes (Task 5.2)
+
+Replaced all mock data in Firm Portal with actual database queries:
+
+**Clients.tsx changes:**
+1. `loadClients()` now queries `firm_clients` view (with fallback to `client_relationships` table)
+2. `handleSave()` uses `add_client_to_firm` RPC function for new clients, or direct updates for existing
+3. `handleDeleteClient()` deletes from `client_relationships` table
+4. Removed hardcoded mockClients array (3 fake businesses)
+5. Removed "prototype interface" note from modal
+
+**Billing.tsx changes:**
+1. `loadBillingData()` queries `firm_subscriptions` table with joined `subscription_tiers`
+2. Uses `get_subscription_usage` RPC function to get notice usage stats
+3. Queries `monthly_invoices` table for invoice history
+4. Fetches payment method from Stripe API if `stripe_customer_id` exists
+5. Added error state handling
+6. Updated subscription display to show: tier name, usage stats, status badge
+7. Fixed context to use `firm` instead of `organization`
 
 ### 5.3 Remove Mock Data from Public Pages
-- [ ] Remove mock subscription data from `src/pages/EmailAlerts.tsx:110-122`
-- [ ] Replace with actual subscription lookup
+- [x] Remove mock subscription data from `src/pages/EmailAlerts.tsx:110-122`
+- [x] Replace with actual subscription lookup
+
+#### Implementation Notes (Task 5.3)
+
+Replaced all mock data and simulated API calls in EmailAlerts.tsx with actual API endpoints:
+
+1. **Removed mock verification flow**: The verification code input UI was removed since verification is done via email link (GET /api/subscriptions/verify/:token) that redirects back with `?verified=true`
+
+2. **handleSubscribe()** now calls `POST /api/subscriptions/create` which:
+   - Validates postcode via postcodes.io
+   - Creates subscription record in `email_subscriptions` table with status='pending'
+   - Sends verification email with magic link
+   - Returns success/error appropriately
+
+3. **loadSubscriptionByToken()** added to fetch subscription details via `POST /api/subscriptions/manage` when user arrives from email link with token
+
+4. **handleUpdateSettings()** now calls `PUT /api/subscriptions/update/:id` with token-based authorization
+
+5. **handleUnsubscribe()** redirects to `GET /api/subscriptions/unsubscribe/:token` which updates status and redirects back
+
+6. **URL parameter handling** via `useSearchParams`:
+   - `?verified=true` - shows success message after verification
+   - `?unsubscribed=true` - shows unsubscribed confirmation
+   - `?token=xxx` - loads subscription for management
+
+7. **Updated Subscription interface** to match database schema:
+   - Changed `active: boolean` to `status: 'pending' | 'active' | 'unsubscribed' | 'bounced'`
+   - Removed `last_sent_at` (not needed in frontend)
 
 ### 5.4 Fix Address Provider Mock Mode
 - [ ] Review `server/routes/address.ts:82-147` mock address data

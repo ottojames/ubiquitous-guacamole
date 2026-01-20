@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 interface Subscription {
   id: string;
@@ -8,13 +7,16 @@ interface Subscription {
   postcode: string;
   radius_km: number;
   notice_types: string[];
-  active: boolean;
+  status: 'pending' | 'active' | 'unsubscribed' | 'bounced';
   created_at: string;
-  last_sent_at: string | null;
 }
 
+// API base URL
+const API_BASE = '/api/subscriptions';
+
 export default function EmailAlerts() {
-  const [step, setStep] = useState<'subscribe' | 'verify' | 'manage'>('subscribe');
+  const [searchParams] = useSearchParams();
+  const [step, setStep] = useState<'subscribe' | 'manage'>('subscribe');
   const [email, setEmail] = useState('');
   const [postcode, setPostcode] = useState('');
   const [radiusKm, setRadiusKm] = useState(5);
@@ -22,8 +24,55 @@ export default function EmailAlerts() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [verificationCode, setVerificationCode] = useState('');
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [managementToken, setManagementToken] = useState<string | null>(null);
+
+  // Handle URL params from email links (verified, unsubscribed)
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      setSuccess('Email verified! Your subscription is now active.');
+    }
+    if (searchParams.get('unsubscribed') === 'true') {
+      setSuccess('You have been unsubscribed from email alerts.');
+    }
+    // If there's a token in the URL (from email link), fetch subscription details
+    const token = searchParams.get('token');
+    if (token) {
+      setManagementToken(token);
+      loadSubscriptionByToken(token);
+    }
+  }, [searchParams]);
+
+  const loadSubscriptionByToken = async (token: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE}/manage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load subscription');
+      }
+
+      const data = await response.json();
+      if (data.subscriptions && data.subscriptions.length > 0) {
+        const sub = data.subscriptions[0];
+        setSubscription(sub);
+        setEmail(sub.email);
+        setPostcode(sub.postcode);
+        setRadiusKm(sub.radius_km);
+        setSelectedNoticeTypes(sub.notice_types || ['all']);
+        setStep('manage');
+      }
+    } catch (err) {
+      console.error('Failed to load subscription:', err);
+      setError('Could not load subscription details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const noticeTypes = [
     { value: 'all', label: 'All Notice Types' },
@@ -63,23 +112,30 @@ export default function EmailAlerts() {
         throw new Error('Please enter a valid email address');
       }
 
-      // TODO: In production, this would:
-      // 1. Create a subscription record in the database
-      // 2. Send a verification email with a code
-      // 3. Return the subscription ID
-
-      console.log('Creating subscription:', {
-        email,
-        postcode,
-        radius_km: radiusKm,
-        notice_types: selectedNoticeTypes
+      // Call the actual API endpoint
+      const response = await fetch(`${API_BASE}/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          postcode,
+          radius_km: radiusKm,
+          notice_types: selectedNoticeTypes,
+        }),
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const data = await response.json();
 
-      setSuccess('Verification code sent! Please check your email.');
-      setStep('verify');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create subscription');
+      }
+
+      setSuccess('Verification email sent! Please check your inbox and click the link to activate your alerts.');
+      // Clear form for next use
+      setEmail('');
+      setPostcode('');
+      setRadiusKm(5);
+      setSelectedNoticeTypes(['all']);
     } catch (err) {
       console.error('Subscription failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to create subscription');
@@ -88,50 +144,16 @@ export default function EmailAlerts() {
     }
   };
 
-  const handleVerify = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!verificationCode) {
-        throw new Error('Please enter the verification code');
-      }
-
-      // TODO: In production, this would:
-      // 1. Verify the code matches the one sent via email
-      // 2. Activate the subscription
-      // 3. Return subscription details
-
-      console.log('Verifying code:', verificationCode);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock subscription data
-      const mockSubscription: Subscription = {
-        id: 'sub-' + Date.now(),
-        email,
-        postcode,
-        radius_km: radiusKm,
-        notice_types: selectedNoticeTypes,
-        active: true,
-        created_at: new Date().toISOString(),
-        last_sent_at: null
-      };
-
-      setSubscription(mockSubscription);
-      setSuccess('Email alerts activated! You\'ll receive notifications when new notices are published in your area.');
-      setStep('manage');
-    } catch (err) {
-      console.error('Verification failed:', err);
-      setError(err instanceof Error ? err.message : 'Invalid verification code');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Note: Verification is done via email link (GET /api/subscriptions/verify/:token)
+  // which redirects back to this page with ?verified=true
 
   const handleUnsubscribe = async () => {
     if (!confirm('Are you sure you want to unsubscribe from email alerts?')) {
+      return;
+    }
+
+    if (!managementToken) {
+      setError('No management token available. Please use the unsubscribe link in your email.');
       return;
     }
 
@@ -139,20 +161,11 @@ export default function EmailAlerts() {
       setLoading(true);
       setError(null);
 
-      // TODO: In production, this would delete/deactivate the subscription
-      console.log('Unsubscribing:', subscription?.id);
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setSuccess('Successfully unsubscribed from email alerts');
-      setSubscription(null);
-      setStep('subscribe');
-      setEmail('');
-      setPostcode('');
+      // Redirect to the unsubscribe endpoint (it handles the update and redirects back)
+      window.location.href = `${API_BASE}/unsubscribe/${managementToken}`;
     } catch (err) {
       console.error('Unsubscribe failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to unsubscribe');
-    } finally {
       setLoading(false);
     }
   };
@@ -162,25 +175,29 @@ export default function EmailAlerts() {
       setLoading(true);
       setError(null);
 
-      if (!subscription) return;
+      if (!subscription || !managementToken) {
+        setError('No subscription or management token available');
+        return;
+      }
 
-      // TODO: In production, this would update the subscription in the database
-      console.log('Updating subscription:', {
-        id: subscription.id,
-        postcode,
-        radius_km: radiusKm,
-        notice_types: selectedNoticeTypes
+      // Call the actual API endpoint
+      const response = await fetch(`${API_BASE}/update/${subscription.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          radius_km: radiusKm,
+          notice_types: selectedNoticeTypes,
+          token: managementToken,
+        }),
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const data = await response.json();
 
-      setSubscription({
-        ...subscription,
-        postcode,
-        radius_km: radiusKm,
-        notice_types: selectedNoticeTypes
-      });
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update subscription');
+      }
 
+      setSubscription(data.subscription);
       setSuccess('Alert settings updated successfully');
     } catch (err) {
       console.error('Update failed:', err);
@@ -333,76 +350,6 @@ export default function EmailAlerts() {
             </div>
           )}
 
-          {/* Verify Step */}
-          {step === 'verify' && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8 text-green-600"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
-                  </svg>
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Check Your Email
-                </h1>
-                <p className="text-gray-600">
-                  We've sent a verification code to <strong>{email}</strong>
-                </p>
-              </div>
-
-              {success && (
-                <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-sm text-green-800">{success}</p>
-                </div>
-              )}
-
-              {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-sm text-red-800">{error}</p>
-                </div>
-              )}
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Verification Code
-                  </label>
-                  <input
-                    type="text"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl tracking-widest"
-                    placeholder="123456"
-                    maxLength={6}
-                  />
-                </div>
-
-                <button
-                  onClick={handleVerify}
-                  disabled={loading || !verificationCode}
-                  className="w-full bg-green-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl disabled:opacity-50"
-                >
-                  {loading ? 'Verifying...' : 'Verify Email'}
-                </button>
-
-                <button
-                  onClick={() => setStep('subscribe')}
-                  className="w-full text-gray-600 hover:text-gray-900 font-semibold"
-                >
-                  ← Back to Subscription
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Manage Step */}
           {step === 'manage' && subscription && (
             <div>
@@ -446,7 +393,13 @@ export default function EmailAlerts() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Status:</span>
-                      <span className="font-semibold text-green-600">Active</span>
+                      <span className={`font-semibold ${
+                        subscription.status === 'active' ? 'text-green-600' :
+                        subscription.status === 'pending' ? 'text-yellow-600' :
+                        'text-gray-600'
+                      }`}>
+                        {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Email:</span>
