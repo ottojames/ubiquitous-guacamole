@@ -430,9 +430,28 @@ What was added in this iteration:
    - Shows in Step 3 editable preview (template mode only)
 
 ### 4.3 Fix Westminster Auto-Detection Workaround
-- [ ] Remove hardcoded "Westminster" string matching in `NewPublishFlow.tsx:878-918`
-- [ ] Replace with proper council lookup from selected dropdown value
+- [x] Remove hardcoded "Westminster" string matching in `NewPublishFlow.tsx:878-918`
+- [x] Replace with proper council lookup from selected dropdown value
 - [ ] Test: selecting any council loads their template correctly
+
+#### Implementation Notes (Task 4.3)
+
+Replaced the hardcoded Westminster-only workaround with a generic council lookup:
+
+1. **Uses category-based department type lookup**: `getDepartmentTypeForCategory(definition.category)` maps notice category to department type:
+   - licensing, gambling → 'licensing'
+   - planning → 'planning'
+   - gvol, tro → 'traffic'
+   - probate → 'other'
+
+2. **Two-phase council lookup**:
+   - First tries exact match: `ilike('name', '%${authorityName}%')`
+   - If no match, extracts key words (removing "City", "Council", "Borough", etc.) and tries broader search
+   - Example: "Westminster City Council" → extract "Westminster" → find match
+
+3. **Filters by correct department type**: Query includes `.eq('departments.type', departmentType)` to ensure we get the correct department for this notice type
+
+4. **Better logging**: Added comprehensive logs showing authority name, category, expected department type, and matched results
 
 ### 4.4 Ensure Published Notice Links to Council
 - [ ] When notice is published, store `department_id` in notices table

@@ -21,6 +21,7 @@ import { useSafeTransition } from "@/wizard/useSafeTransition";
 import { getDraftId as getStoredDraftId, setDraftId as persistDraftId } from "@/wizard/draftStore";
 import { toast } from "@/lib/ui/toast";
 import type { Council } from "@/components/DynamicCouncilSelect";
+import { getDepartmentTypeForCategory } from "@/next/publish/config/categoryToDepartment";
 import {
   APPLICATION_TYPE_OPTIONS,
   createInitialLegalDetails,
@@ -879,43 +880,78 @@ export default function NewPublishFlow() {
         // Get department ID from template draft (populated by CouncilDepartmentSelect)
         let departmentId = templateDraft?.DEPARTMENT_ID as string | undefined;
 
-        // WORKAROUND: If user typed "Westminster City Council" without selecting from dropdown,
-        // automatically look up the department ID
-        if (!departmentId && templateDraft?.AUTHORITY_NAME) {
-          const authorityName = String(templateDraft.AUTHORITY_NAME).toLowerCase();
-          console.log('[NewPublishFlow] Checking authority name for auto-detection:', authorityName);
-          if (authorityName.includes('westminster')) {
-            console.log('[NewPublishFlow] 🔍 Westminster detected without DEPARTMENT_ID, looking up...');
-            console.log('[NewPublishFlow] Template draft:', templateDraft);
-            try {
-              const { data, error } = await supabase
-                .from('organizations')
-                .select('id, departments!inner(id, type)')
-                .ilike('name', '%westminster%')
-                .eq('departments.type', 'licensing')
-                .eq('type', 'council')
-                .limit(1)
-                .single();
+        // Auto-detect department ID from authority name if user typed council name without selecting from dropdown
+        // This works for ANY council, not just Westminster
+        if (!departmentId && templateDraft?.AUTHORITY_NAME && definition?.category) {
+          const authorityName = String(templateDraft.AUTHORITY_NAME).trim();
+          const departmentType = getDepartmentTypeForCategory(definition.category);
 
-              console.log('[NewPublishFlow] Westminster query result:', { data, error });
+          console.log('[NewPublishFlow] 🔍 Auto-detecting department from authority name...');
+          console.log('[NewPublishFlow] Authority Name:', authorityName);
+          console.log('[NewPublishFlow] Notice Category:', definition.category);
+          console.log('[NewPublishFlow] Expected Department Type:', departmentType);
 
-              if (error) {
-                console.error('[NewPublishFlow] ❌ Westminster query error:', error);
-              } else if (data && data.departments && data.departments.length > 0) {
-                departmentId = data.departments[0].id;
-                console.log('[NewPublishFlow] ✅ Auto-detected Westminster department ID:', departmentId);
-              } else {
-                console.warn('[NewPublishFlow] ⚠️ Westminster found but no licensing department');
+          try {
+            // Search for council by name, filtering to the correct department type for this notice category
+            const { data, error } = await supabase
+              .from('organizations')
+              .select('id, name, departments!inner(id, type, name)')
+              .ilike('name', `%${authorityName}%`)
+              .eq('departments.type', departmentType)
+              .eq('type', 'council')
+              .limit(1)
+              .single();
+
+            console.log('[NewPublishFlow] Council lookup result:', { data, error });
+
+            if (error) {
+              console.log('[NewPublishFlow] Council lookup returned no exact match, trying broader search...');
+              // Try a broader search - maybe user typed partial name like "Westminster" instead of "Westminster City Council"
+              // Extract key words from the authority name (remove common words like "City", "Council", "Borough")
+              const keyWords = authorityName
+                .replace(/\b(city|council|borough|of|the|metropolitan|district|county)\b/gi, '')
+                .trim()
+                .split(/\s+/)
+                .filter(w => w.length > 2)
+                .join('%');
+
+              if (keyWords) {
+                const { data: broaderData, error: broaderError } = await supabase
+                  .from('organizations')
+                  .select('id, name, departments!inner(id, type, name)')
+                  .ilike('name', `%${keyWords}%`)
+                  .eq('departments.type', departmentType)
+                  .eq('type', 'council')
+                  .limit(1)
+                  .single();
+
+                if (!broaderError && broaderData?.departments && Array.isArray(broaderData.departments) && broaderData.departments.length > 0) {
+                  departmentId = broaderData.departments[0].id;
+                  console.log('[NewPublishFlow] ✅ Auto-detected department ID from broader search:', departmentId);
+                  console.log('[NewPublishFlow] Matched council:', broaderData.name);
+                  console.log('[NewPublishFlow] Matched department:', broaderData.departments[0].name);
+                } else {
+                  console.warn('[NewPublishFlow] ⚠️ No council found matching:', authorityName);
+                }
               }
-            } catch (err) {
-              console.error('[NewPublishFlow] ❌ Exception during Westminster lookup:', err);
+            } else if (data?.departments && Array.isArray(data.departments) && data.departments.length > 0) {
+              departmentId = data.departments[0].id;
+              console.log('[NewPublishFlow] ✅ Auto-detected department ID:', departmentId);
+              console.log('[NewPublishFlow] Matched council:', data.name);
+              console.log('[NewPublishFlow] Matched department:', data.departments[0].name);
+            } else {
+              console.warn('[NewPublishFlow] ⚠️ Council found but no', departmentType, 'department');
             }
+          } catch (err) {
+            console.error('[NewPublishFlow] ❌ Exception during council lookup:', err);
           }
+        } else if (departmentId) {
+          console.log('[NewPublishFlow] Using department ID from dropdown selection:', departmentId);
         } else {
-          console.log('[NewPublishFlow] Auto-detection skipped:', {
+          console.log('[NewPublishFlow] Auto-detection skipped (no authority name or category):', {
             hasDepartmentId: !!departmentId,
             hasAuthorityName: !!templateDraft?.AUTHORITY_NAME,
-            authorityName: templateDraft?.AUTHORITY_NAME
+            hasCategory: !!definition?.category
           });
         }
 
