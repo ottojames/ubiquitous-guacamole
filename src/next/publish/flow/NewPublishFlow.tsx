@@ -20,7 +20,7 @@ import { wizardSteps } from "@/wizard/wizardSteps";
 import { useSafeTransition } from "@/wizard/useSafeTransition";
 import { getDraftId as getStoredDraftId, setDraftId as persistDraftId } from "@/wizard/draftStore";
 import { toast } from "@/lib/ui/toast";
-import type { Council } from "@/components/CouncilSelect";
+import type { Council } from "@/components/DynamicCouncilSelect";
 import {
   APPLICATION_TYPE_OPTIONS,
   createInitialLegalDetails,

@@ -14,7 +14,7 @@ import {
 } from "@/next/publish/config/formBlueprints";
 import { addDays, addMonths, toISODate } from "@/next/publish/utils/date";
 import ActivitiesSelector, { type ActivityKey } from "@/components/publish/ActivitiesSelector";
-import CouncilSelect, { type Council } from "@/components/CouncilSelect";
+import { type Council } from "@/components/DynamicCouncilSelect";
 import CouncilDepartmentSelect, { type CouncilDepartment } from "@/components/CouncilDepartmentSelect";
 import { getDepartmentTypeForCategory } from "@/next/publish/config/categoryToDepartment";
 
