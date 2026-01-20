@@ -181,7 +181,7 @@ The file provides (unused):
 
 ### 1.3 Migrate Components to UnifiedAuthContext
 - [x] Update `src/pages/admin/Login.tsx` to use only UnifiedAuthContext
-- [ ] Update `src/pages/admin/AdminLayout.tsx` to use only UnifiedAuthContext
+- [x] Update `src/pages/admin/AdminLayout.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/components/admin/AdminProtectedRoute.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/pages/council/CouncilLayout.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/pages/firm/FirmLayout.tsx` to use only UnifiedAuthContext

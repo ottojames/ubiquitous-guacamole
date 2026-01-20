@@ -18,7 +18,7 @@ import {
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: adminUser, signOut: logout, session } = useAuth();
+  const { user: adminUser, signOut: logout, role: adminRole } = useAuth();
   const sessionExpiresAt = null; // Session expiry temporarily disabled
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -154,7 +154,7 @@ export default function AdminLayout() {
               <div className="mt-3">
                 <p className="text-sm text-gray-400">{adminUser.email}</p>
                 <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded bg-red-900 text-red-200">
-                  {formatRole(adminUser.role)}
+                  {formatRole(adminRole || 'viewer')}
                 </span>
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function AdminLayout() {
             <div className="p-4 border-b border-gray-800">
               <p className="text-sm text-gray-400">{adminUser.email}</p>
               <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded bg-red-900 text-red-200">
-                {formatRole(adminUser.role)}
+                {formatRole(adminRole || 'viewer')}
               </span>
             </div>
             <nav className="p-4 space-y-2">
@@ -341,15 +341,15 @@ export default function AdminLayout() {
             <div className="flex items-center gap-3 pl-4 border-l border-gray-800">
               <div className="text-right">
                 <div className="text-sm font-medium text-white">
-                  {adminUser.email.split('@')[0]}
+                  {adminUser.email?.split('@')[0] || 'Admin'}
                 </div>
                 <div className="text-xs text-gray-400">
-                  {formatRole(adminUser.role)}
+                  {formatRole(adminRole || 'viewer')}
                 </div>
               </div>
               <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
                 <span className="text-white font-bold text-sm">
-                  {adminUser.email.charAt(0).toUpperCase()}
+                  {adminUser.email?.charAt(0).toUpperCase() || 'A'}
                 </span>
               </div>
             </div>

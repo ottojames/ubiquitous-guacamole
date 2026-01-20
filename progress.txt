@@ -125,3 +125,18 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The next task (AdminLayout.tsx) should be simpler since it likely already uses UnifiedAuthContext correctly
 ---
 
+## Iteration 7 - Task 1.3.2: Update AdminLayout.tsx to use only UnifiedAuthContext
+- **What was implemented**: Fixed AdminLayout.tsx to correctly use role from UnifiedAuthContext instead of accessing `user.role`
+- **Files changed**:
+  - `src/pages/admin/AdminLayout.tsx` - Fixed destructuring and role access
+- **Key changes**:
+  - Line 21: Changed `const { user: adminUser, signOut: logout, session } = useAuth()` to `const { user: adminUser, signOut: logout, role: adminRole } = useAuth()`
+  - Lines 157, 269, 347: Changed `adminUser.role` to `adminRole || 'viewer'` since role is a separate property in UnifiedAuthContext, not a property on user
+  - Lines 344, 352: Fixed TypeScript errors by adding optional chaining: `adminUser.email?.split()` and `adminUser.email?.charAt()` since email can be undefined in Supabase User type
+- **Learnings for future iterations**:
+  - AdminLayout.tsx was already importing from UnifiedAuthContext, but was incorrectly trying to access `user.role` when `role` is actually a separate property on the context
+  - Supabase `User` type has `email?: string` (optional), so direct access like `user.email.split()` causes TypeScript errors - need optional chaining
+  - The 49 failing tests are still pre-existing (same count as before) - these are schema drift issues to be fixed in Phase 6
+  - The `session` variable was being destructured but never used - removed it to clean up unused variable
+---
+
