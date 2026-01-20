@@ -43,7 +43,7 @@ export default function CouncilLayout() {
         'solicitor@wilsonpartners.com'
       ];
 
-      const isAuthenticatedDemoAccount = session && demoAccounts.includes(session.user.email?.toLowerCase());
+      const isAuthenticatedDemoAccount = session && session.user.email && demoAccounts.includes(session.user.email.toLowerCase());
 
       // Demo mode paths for showcase
       const demoPaths = [
@@ -110,8 +110,10 @@ export default function CouncilLayout() {
       }
 
       // Real authenticated user flow
+      // Note: CouncilProtectedRoute already verified the user is authenticated,
+      // but we keep this check as a fallback safety net
       if (!session) {
-        navigate('/auth/sign-in');
+        navigate('/auth/council-login');
         return;
       }
 
@@ -219,13 +221,16 @@ export default function CouncilLayout() {
       }
     } catch (err) {
       console.error('Failed to load department:', err);
-      navigate('/switch-context');
+      // Redirect to department picker where user can select a valid department
+      navigate('/switch-department', {
+        state: { error: err instanceof Error ? err.message : 'Failed to load department' }
+      });
     }
   };
 
   const handleSignOut = async () => {
     await authSignOut();
-    navigate('/auth/sign-in');
+    navigate('/auth/council-login');
   };
 
   const formatRoleName = (role: string) => {

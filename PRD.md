@@ -314,10 +314,42 @@ This prevents the redirect loop where:
 - [x] Handle users with multiple department memberships (show picker)
 
 ### 3.2 Fix Council Protected Routes
-- [ ] Update `CouncilProtectedRoute` to check department membership
-- [ ] Ensure loading states don't cause redirect loops
-- [ ] Handle case where user has org membership but no department membership
+- [x] Update `CouncilProtectedRoute` to check department membership
+- [x] Ensure loading states don't cause redirect loops
+- [x] Handle case where user has org membership but no department membership
 - [ ] Test: council user can reach their department dashboard
+
+#### Implementation Notes (Task 3.2)
+
+Created `src/components/council/CouncilProtectedRoute.tsx` which:
+
+1. **Uses `isInitialized` flag** from UnifiedAuthContext to prevent redirect loops (same pattern as AdminProtectedRoute)
+
+2. **Checks department membership** by:
+   - Looking up organization by slug (must be type='council')
+   - Looking up department by organization_id + slug
+   - Checking both `department_memberships` and `organization_memberships` tables
+   - Granting access if user has either org-level OR department-level membership
+
+3. **Handles edge cases**:
+   - User with org membership but no dept → redirects to department picker at `/switch-department`
+   - User with dept membership in this org but wrong dept slug → redirects to department picker
+   - User without any access → shows access denied screen with options to sign in or switch department
+   - Demo accounts → bypasses database checks for known demo emails
+
+4. **Updated App.tsx** to wrap council routes with `CouncilProtectedRoute`:
+   ```jsx
+   <Route path="/c/:orgSlug/:deptSlug" element={
+     <CouncilProtectedRoute>
+       <CouncilLayout />
+     </CouncilProtectedRoute>
+   }>
+   ```
+
+5. **Updated CouncilLayout.tsx**:
+   - Changed error redirect from `/switch-context` to `/switch-department` with error state
+   - Changed sign-out redirect from `/auth/sign-in` to `/auth/council-login`
+   - Kept internal data loading logic (fetches department details, permissions)
 
 ### 3.3 Implement Council Staff Invitation
 - [ ] Add "Invite Team Member" button to `/c/:org/:dept/team` page

@@ -67,6 +67,7 @@ import AdminAuditLog from "@/pages/admin/AuditLog";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminNotices from "@/pages/admin/AdminNotices";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
+import CouncilProtectedRoute from "@/components/council/CouncilProtectedRoute";
 import AuthDebug from "@/pages/AuthDebug";
 
 export default function App() {
@@ -129,8 +130,12 @@ export default function App() {
         <Route path="/register/council" element={<CouncilRegistration />} />
         <Route path="/register/firm" element={<FirmRegistration />} />
 
-        {/* Council Portal Routes - Auth handled by CouncilLayout (supports demo mode) */}
-        <Route path="/c/:orgSlug/:deptSlug" element={<CouncilLayout />}>
+        {/* Council Portal Routes - Auth handled by CouncilProtectedRoute */}
+        <Route path="/c/:orgSlug/:deptSlug" element={
+          <CouncilProtectedRoute>
+            <CouncilLayout />
+          </CouncilProtectedRoute>
+        }>
           <Route path="dashboard" element={<CouncilDashboard />} />
           <Route path="notices" element={<CouncilNotices />} />
           <Route path="notices/new" element={<NoticeEditor />} />
