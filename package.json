@@ -28,7 +28,8 @@
     "test:all": "./test-all.sh",
     "test:suite": "./scripts/run-test-suite.sh",
     "test:api": "tsx scripts/test-api-endpoints.ts",
-    "test:email": "tsx scripts/test-representation-email.ts"
+    "test:email": "tsx scripts/test-representation-email.ts",
+    "migrate:admin-users": "tsx scripts/migrate-admin-users.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
