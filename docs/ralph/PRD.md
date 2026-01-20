@@ -2583,10 +2583,10 @@ export default function AuthDebug() {
 - [x] Task 5.3: Create Custom JWT Claims Hook ✅
 - [x] Task 5.4: Create Unified Auth Context ✅
 - [x] Task 5.5: Replace Static Council Dropdown ✅
-- [ ] Task 5.6: Fix Notice Upload Organization Linking
-- [ ] Task 5.7: Update RLS Policies
-- [ ] Task 5.8: Migrate Existing Admin Users
-- [ ] Task 5.9: Update App.tsx to Use Unified Auth
+- [x] Task 5.6: Fix Notice Upload Organization Linking ✅
+- [x] Task 5.7: Update RLS Policies ✅
+- [x] Task 5.8: Migrate Existing Admin Users ✅
+- [x] Task 5.9: Update App.tsx to Use Unified Auth ✅
 - [x] Task 5.10: Create Auth Debug Page ✅
 
 ### Success Metrics:

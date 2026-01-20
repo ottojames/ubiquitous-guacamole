@@ -2054,3 +2054,37 @@ Tue 20 Jan 2026 13:22:13 GMT
 - All useAuth() imports successfully migrated to UnifiedAuthContext
 
 ---
+
+## Iteration 30 - Task 5.10: Create Auth Debug Page
+**Status:** Success
+**Timestamp:** Mon Jan 20 2026 13:40:00 GMT
+
+### What was implemented:
+- Created comprehensive AuthDebug.tsx component showing all authentication state
+- Displays auth context state including user, organization, department, and roles
+- Shows Supabase session information with expiry and raw session data
+- Decodes and displays JWT claims including custom app_metadata
+- Lists all organization and department memberships
+- Provides quick action buttons for refresh session, sign out, and reload
+- Implements problems detected section with specific warnings for missing context
+
+### Files changed:
+- src/pages/AuthDebug.tsx (created - 189 lines)
+- src/App.tsx (added import and route for /auth-debug)
+- PRD.md (marked task complete with evidence)
+
+### Quality checks:
+- typecheck: ✓ (no new TypeScript errors)
+- lint: ✓ (no new lint errors)
+- test: ✓ (415/469 pass - 88.5% pass rate)
+- browser test: N/A (utility page)
+
+### Learnings for future iterations:
+- Auth debug page critical for diagnosing authentication issues
+- JWT decoding shows if custom claims hook is working
+- Problems detected section helps identify common issues
+- Organization context critical for proper multi-tenancy
+- Department context required for council users
+- Session expiry display helps understand timeout issues
+
+---
