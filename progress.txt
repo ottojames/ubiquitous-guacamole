@@ -34,3 +34,16 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - TypeScript has many errors in test/script files but core app should compile
 ---
 
+## Iteration 2 - Task 1.1.2: Document AdminAuthContext Imports
+- **What was implemented**: Audited all imports of AdminAuthContext across the codebase
+- **Files that import from `@/contexts/AdminAuthContext`**: NONE
+- **Files changed**: PRD.md (marked task complete, added audit results)
+- **Learnings for future iterations**:
+  - AdminAuthContext.tsx exists but is COMPLETELY UNUSED - no file imports it
+  - App.tsx only uses UnifiedAuthProvider (not AdminAuthProvider)
+  - The useAdminAuth hook is defined but never called anywhere
+  - This file can be safely deleted in task 1.4 without breaking anything
+  - AdminAuthContext has features not in UnifiedAuthContext (2FA, session timeout, IP allowlist) that may need to be considered for future admin security requirements
+  - TypeScript errors remain in test/script files but not in core src/ code
+---
+

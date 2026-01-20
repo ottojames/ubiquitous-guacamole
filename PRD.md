@@ -37,7 +37,7 @@ The codebase has solid foundations but multiple issues blocking production launc
 
 ### 1.1 Audit Current Auth State
 - [x] Document all imports of `AuthContext` across codebase
-- [ ] Document all imports of `AdminAuthContext` across codebase
+- [x] Document all imports of `AdminAuthContext` across codebase
 - [ ] Document all imports of `UnifiedAuthContext` across codebase
 - [ ] Create migration plan showing which context each file should use
 
@@ -51,6 +51,23 @@ The legacy `AuthContext.tsx` file exists at `src/contexts/AuthContext.tsx` and p
 - Role-based permissions (loadPermissions, hasPermission, hasAnyPermission, hasAllPermissions)
 - Department-scoped permission loading
 - Demo mode support for mock permissions
+
+#### AdminAuthContext Import Audit Results
+**Files importing from `@/contexts/AdminAuthContext`: NONE**
+
+The `AdminAuthContext.tsx` file exists at `src/contexts/AdminAuthContext.tsx` but is NOT used anywhere:
+- `AdminAuthProvider` - defined but never imported into App.tsx or any other file
+- `useAdminAuth` hook - defined but never called anywhere in the codebase
+- App.tsx only wraps with `UnifiedAuthProvider` (line 60, 88)
+
+The file provides (unused):
+- AdminUser state with roles: 'super_admin' | 'admin' | 'support'
+- Session management with 2-hour timeout and 10-minute warning
+- Two-factor authentication support
+- IP allowlist checking
+- Login, logout, verify2FA, refreshSession, checkSession methods
+
+**Recommendation**: This file can be safely deleted in task 1.4 as it's completely unused.
 
 ### 1.2 Consolidate to UnifiedAuthContext
 - [ ] Update `UnifiedAuthContext.tsx` to handle all user types (public, council, firm, admin)
