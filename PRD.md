@@ -392,10 +392,10 @@ Fixed `DepartmentSwitcher` component at `/switch-department`:
 **Goal**: When user selects a council, their custom template is used
 
 ### 4.1 Add Council Selection to Wizard
-- [ ] In Step 1 or Step 2, add council dropdown for notice types that require it
-- [ ] Fetch councils from database (not hardcoded)
-- [ ] Store selected council's department ID in draft state
-- [ ] Only show council dropdown for relevant notice types (licensing, planning - NOT probate, GVOL)
+- [x] In Step 1 or Step 2, add council dropdown for notice types that require it
+- [x] Fetch councils from database (not hardcoded)
+- [x] Store selected council's department ID in draft state
+- [x] Only show council dropdown for relevant notice types (licensing, planning - NOT probate, GVOL)
 
 ### 4.2 Link Templates to Notice Preview
 - [ ] When council is selected, fetch their template for this notice type

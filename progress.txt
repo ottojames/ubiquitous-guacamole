@@ -445,3 +445,63 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task is 3.4: Fix Department Switching
 ---
 
+## Iteration 20 - Task 3.4: Fix Department Switching
+- **What was implemented**: Fixed DepartmentSwitcher to show user's actual departments instead of hardcoded Westminster
+- **Files changed**:
+  - `src/pages/council/DepartmentSwitcher.tsx` - Major refactor to use real data
+  - `PRD.md` - Marked Task 3.4 subtasks complete, added implementation notes
+- **Key changes to DepartmentSwitcher**:
+  - Added `useAuth()` to get `user`, `session`, `loading: authLoading`, `isInitialized`
+  - Added `useLocation()` to get error state from redirects
+  - Queries `department_memberships` AND `organization_memberships` to find all accessible departments
+  - Org-level membership grants access to all departments in that org
+  - Shows departments from multiple organizations if user has cross-org access
+  - Added error message display for redirect errors
+  - Waits for both `!authLoading` and `isInitialized` before loading
+  - Falls back to Westminster demo departments for demo accounts
+- **Context update verified**:
+  - URL-based navigation (`/c/:orgSlug/:deptSlug/dashboard`) triggers CouncilLayout
+  - CouncilLayout has `[orgSlug, deptSlug, authLoading, session]` useEffect dependencies
+  - On URL change, `loadDepartmentData()` is called which calls `loadPermissions()`
+  - UnifiedAuthContext permissions are updated correctly
+- **Dashboard reload verified**:
+  - Dashboard component has `useEffect([department.id])` dependency
+  - When department changes via Outlet context, `loadDashboardData()` is called
+  - All department-specific data reloads automatically
+- **Learnings for future iterations**:
+  - The `switchDepartment()` function in UnifiedAuthContext is for programmatic switching (dropdowns)
+  - URL-based navigation already handles department switching correctly via CouncilLayout
+  - Supabase nested selects with `!inner` still return arrays - need `as unknown as Type` casting
+  - 49 failing tests remain pre-existing (schema drift) - same count as before (Phase 6 work)
+  - TypeScript errors in src/ files are pre-existing and unrelated to this task
+  - Phase 3 (Council Portal Authentication) is now mostly complete - only manual test subtask remains
+  - Next is Phase 4: Fix Publishing Wizard Template Linking (Task 4.1)
+---
+
+## Iteration 21 - Task 4.1: Add Council Selection to Wizard
+- **What was implemented**: Verified that council selection was already implemented in the wizard
+- **Files verified** (no changes needed):
+  - `src/next/publish/flow/TemplateBuilderForm.tsx` - Already has CouncilDepartmentSelect for AUTHORITY_NAME field
+  - `src/components/CouncilDepartmentSelect.tsx` - Database-driven dropdown fetching from departments table
+  - `src/next/publish/config/categoryToDepartment.ts` - Maps notice categories to department types
+  - `src/next/publish/config/formBlueprints.ts` - AUTHORITY_NAME in licensing/planning/TRO blueprints, auto-value for GVOL, absent for probate
+- **Key findings**:
+  - **Council dropdown already exists**: When user selects "Structured template" in Step 2, the AUTHORITY_NAME field renders `CouncilDepartmentSelect`
+  - **Database fetch**: CouncilDepartmentSelect queries `departments` table with organization join
+  - **Department filtering**: Uses `getDepartmentTypeForCategory(definition.category)` to filter dropdown:
+    - licensing/gambling notices → show licensing departments only
+    - planning notices → show planning departments only
+    - TRO notices → show traffic departments only
+  - **Department ID stored**: Line 626 in TemplateBuilderForm: `setValue("DEPARTMENT_ID", department.id, { fromAuto: true })`
+  - **Correct exclusions**:
+    - GVOL notices: AUTHORITY_NAME has auto-value "The Traffic Commissioner" (no dropdown)
+    - Probate notices: No AUTHORITY_NAME field at all (no council needed)
+- **PRD.md**: Marked all Task 4.1 subtasks complete
+- **Learnings for future iterations**:
+  - Task 4.1 was already implemented but not documented as complete
+  - CouncilDepartmentSelect auto-populates related fields (AUTHORITY_ADDRESS, AUTHORITY_EMAIL) from council_settings
+  - The category-to-department mapping correctly routes gambling notices to licensing departments (since local council licensing departments handle Gambling Act 2005)
+  - TypeScript errors in src/ are pre-existing and unrelated to this verification
+  - Next is Task 4.2: Link Templates to Notice Preview
+---
+
