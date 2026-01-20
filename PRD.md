@@ -39,7 +39,66 @@ The codebase has solid foundations but multiple issues blocking production launc
 - [x] Document all imports of `AuthContext` across codebase
 - [x] Document all imports of `AdminAuthContext` across codebase
 - [x] Document all imports of `UnifiedAuthContext` across codebase
-- [ ] Create migration plan showing which context each file should use
+- [x] Create migration plan showing which context each file should use
+
+#### Migration Plan: Auth Context Consolidation
+
+**Target State**: All authentication handled by `UnifiedAuthContext` exclusively.
+
+##### Files Requiring Migration
+
+| File | Current Context | Action | Priority |
+|------|----------------|--------|----------|
+| `src/pages/council/Notices.tsx:6` | Legacy AuthContext | Change import to UnifiedAuthContext | High |
+| `src/pages/council/Dashboard.tsx:6` | Legacy AuthContext | Change import to UnifiedAuthContext | High |
+| `src/components/admin/AdminProtectedRoute.tsx` | Direct supabase call | Refactor to use useAuth() from UnifiedAuthContext | High |
+
+##### Files Already Using UnifiedAuthContext (No Changes Needed)
+
+**Admin Pages** (7 files): Login.tsx, AdminLayout.tsx, Dashboard.tsx, AccountManagement.tsx, Settings.tsx, AuditLog.tsx, AdminNotices.tsx
+
+**Council Pages** (6 files): CouncilLayout.tsx, Billing.tsx, Settings.tsx, Team.tsx, PendingSubmissions.tsx, Drafts.tsx
+
+**Firm Pages** (1 file): FirmLayout.tsx
+
+**Publish Flow** (2 files): NewPublishFlow.tsx, PaymentStep.tsx
+
+**Components** (2 files): ProtectedRoute.tsx, DynamicCouncilSelect.tsx
+
+**Other** (2 files): AuthDebug.tsx, App.tsx
+
+##### Files to Delete (Task 1.4)
+
+| File | Reason |
+|------|--------|
+| `src/contexts/AuthContext.tsx` | Legacy context, replaced by UnifiedAuthContext |
+| `src/contexts/AdminAuthContext.tsx` | Completely unused (0 imports anywhere) |
+
+##### Migration Steps
+
+1. **Update UnifiedAuthContext** (Task 1.2): Add missing features from legacy AuthContext:
+   - `loadPermissions(departmentId)` - for department-level permissions
+   - `hasPermission(permission)` - single permission check
+   - `hasAnyPermission(permissions)` - any of multiple permissions
+   - `hasAllPermissions(permissions)` - all of multiple permissions
+   - `userType` field: 'anonymous' | 'council_staff' | 'firm_staff' | 'platform_admin'
+   - `organizationType` field: null | 'council' | 'firm'
+
+2. **Migrate Legacy Files** (Task 1.3):
+   - `council/Notices.tsx`: Change `import { useAuth } from '@/contexts/AuthContext'` to `import { useAuth } from '@/contexts/UnifiedAuthContext'`
+   - `council/Dashboard.tsx`: Same import change
+   - `AdminProtectedRoute.tsx`: Remove direct supabase.auth calls, use useAuth() hook instead
+
+3. **Delete Legacy Files** (Task 1.4):
+   - Delete `src/contexts/AuthContext.tsx`
+   - Delete `src/contexts/AdminAuthContext.tsx`
+   - Verify no import errors after deletion
+
+##### Key Considerations
+
+- **Permission Functions**: Legacy AuthContext has `hasPermission`, `hasAnyPermission`, `hasAllPermissions` that UnifiedAuthContext needs before migration
+- **Demo Mode**: Legacy AuthContext supports demo mode permissions - evaluate if this should be preserved or removed (Phase 5 addresses demo removal)
+- **Admin Features**: AdminAuthContext has 2FA, session timeout, IP allowlist - these are NOT currently used but may be needed for future security enhancements
 
 #### AuthContext Import Audit Results
 Files importing from legacy `@/contexts/AuthContext`:
