@@ -18,6 +18,7 @@ import SignIn from "@/pages/auth/SignIn";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import Callback from "@/pages/auth/Callback";
 import SwitchContext from "@/pages/auth/SwitchContext";
+import CouncilLogin from "@/pages/auth/CouncilLogin";
 import DepartmentSwitcher from "@/pages/council/DepartmentSwitcher";
 import CreateOrganization from "@/pages/onboarding/CreateOrganization";
 import CouncilRegistration from "@/pages/onboarding/CouncilRegistration";
@@ -119,6 +120,7 @@ export default function App() {
         <Route path="/auth/sign-in" element={<SignIn />} />
         <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/callback" element={<Callback />} />
+        <Route path="/auth/council-login" element={<CouncilLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/switch-context" element={<SwitchContext />} />
         <Route path="/switch-department" element={<DepartmentSwitcher />} />

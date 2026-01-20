@@ -308,10 +308,10 @@ This prevents the redirect loop where:
 **Goal**: Council staff can log in and access their department dashboard
 
 ### 3.1 Create Council Login Flow
-- [ ] Create `/auth/council-login` page for council staff
-- [ ] Implement email/password login via Supabase
-- [ ] After login, redirect to `/c/:orgSlug/:deptSlug/dashboard`
-- [ ] Handle users with multiple department memberships (show picker)
+- [x] Create `/auth/council-login` page for council staff
+- [x] Implement email/password login via Supabase
+- [x] After login, redirect to `/c/:orgSlug/:deptSlug/dashboard`
+- [x] Handle users with multiple department memberships (show picker)
 
 ### 3.2 Fix Council Protected Routes
 - [ ] Update `CouncilProtectedRoute` to check department membership
