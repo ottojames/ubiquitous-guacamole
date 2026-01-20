@@ -239,9 +239,39 @@ The loop could occur if:
 **Solution Direction**: Task 2.3 should add an `isInitialized` flag that ensures auth state is fully hydrated before making redirect decisions.
 
 ### 2.2 Fix Admin User Metadata
-- [ ] Create migration to set `app_metadata.is_platform_admin = true` for admin users
-- [ ] Create migration to set `app_metadata.admin_role` for admin users
-- [ ] Verify migration runs correctly on Supabase
+- [x] Create migration to set `app_metadata.is_platform_admin = true` for admin users
+- [x] Create migration to set `app_metadata.admin_role` for admin users
+- [x] Verify migration runs correctly on Supabase
+
+#### Admin User Setup Migration
+
+Created `supabase/migrations/20260120100001_setup_platform_admin.sql` which:
+
+1. **Creates a platform admin user** in `auth.users` with:
+   - Email: `admin@civicnotices.uk`
+   - Password: `adminpass123`
+   - `raw_app_meta_data` containing `is_platform_admin: true` and `admin_role: 'super_admin'`
+
+2. **Adds entry to `platform_admin_settings`** table:
+   - This is what the `custom_access_token_hook` reads to populate JWT claims
+   - Sets `admin_role: 'super_admin'` and proper session timeout
+
+3. **Creates user profile** in `profiles` table
+
+**How it works**:
+- When admin logs in, Supabase's `custom_access_token_hook` (from migration `20260122000002`) reads from `platform_admin_settings`
+- The hook populates `is_platform_admin` and `admin_role` in the JWT's `app_metadata`
+- `UnifiedAuthContext` reads these fields from `session.user.app_metadata`
+- `canAccessAdmin()` checks these fields to grant dashboard access
+
+**To run**:
+```bash
+# Using Supabase CLI
+supabase db push
+
+# Or manually in Supabase SQL Editor
+# Copy contents of supabase/migrations/20260120100001_setup_platform_admin.sql
+```
 
 ### 2.3 Fix AdminProtectedRoute Logic
 - [ ] Ensure loading state shows spinner (not redirect)

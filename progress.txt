@@ -276,3 +276,31 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 2.2: Fix Admin User Metadata (create migration for app_metadata)
 ---
 
+## Iteration 14 - Task 2.2: Fix Admin User Metadata
+- **What was implemented**: Created SQL migration to set up platform admin user with proper app_metadata
+- **Files changed**:
+  - `supabase/migrations/20260120100001_setup_platform_admin.sql` - NEW FILE
+  - `PRD.md` - Marked Task 2.2 subtasks complete, added documentation
+- **Key changes**:
+  - Created `create_platform_admin_user()` SQL function that:
+    - Creates user in auth.users with `raw_app_meta_data` containing `is_platform_admin: true` and `admin_role`
+    - Adds entry to `platform_admin_settings` table (this is what the JWT hook reads)
+    - Creates user profile in profiles table
+  - Default admin credentials: `admin@civicnotices.uk` / `adminpass123`
+  - Migration is idempotent - can be run multiple times safely (uses ON CONFLICT DO UPDATE)
+- **How admin auth flow works**:
+  1. Admin logs in via Supabase Auth
+  2. `custom_access_token_hook` (from 20260122000002) reads from `platform_admin_settings` table
+  3. Hook populates JWT `app_metadata` with `is_platform_admin` and `admin_role`
+  4. `UnifiedAuthContext` reads these from `session.user.app_metadata`
+  5. `canAccessAdmin()` checks these fields
+- **Learnings for future iterations**:
+  - The system has two places where admin status is stored:
+    1. `auth.users.raw_app_meta_data` - pre-populated for immediate access on first login
+    2. `platform_admin_settings` table - what the JWT hook reads on subsequent logins
+  - The JWT hook automatically syncs from `platform_admin_settings` to JWT claims
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing and not blocking
+  - Next is Task 2.3: Fix AdminProtectedRoute Logic (add isInitialized flag)
+---
+
