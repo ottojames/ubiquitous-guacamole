@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, AlertCircle, Lock } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { user, loading, canAccessAdmin } = useAuth();
+  const { user, loading, canAccessAdmin, signInAsAdmin } = useAuth();
 
   // Form states
   const [email, setEmail] = useState('');
@@ -21,7 +20,7 @@ export default function AdminLogin() {
     }
   }, [user, loading, canAccessAdmin, navigate]);
 
-  // Handle login submission - DIRECT approach, no waiting for context
+  // Handle login submission using UnifiedAuthContext
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
@@ -33,46 +32,13 @@ export default function AdminLogin() {
 
     setIsSubmitting(true);
 
-    try {
-      // Sign in directly with Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const result = await signInAsAdmin(email, password);
 
-      if (error) {
-        throw error;
-      }
-
-      if (!data.session) {
-        throw new Error('No session returned');
-      }
-
-      // Check admin access directly from the session we just got
-      const appMetadata = data.session.user?.app_metadata || {};
-      const isPlatformAdmin = appMetadata.is_platform_admin === true;
-      const adminRole = appMetadata.admin_role;
-      const hasAdminAccess = isPlatformAdmin || adminRole === 'super_admin' || adminRole === 'admin';
-
-      console.log('Login successful, checking admin access:', {
-        email: data.session.user?.email,
-        appMetadata,
-        hasAdminAccess
-      });
-
-      if (hasAdminAccess) {
-        // Navigate immediately - don't wait for context to update
-        navigate('/admin/dashboard', { replace: true });
-      } else {
-        // Sign out since they don't have admin access
-        await supabase.auth.signOut();
-        setLocalError('This account does not have admin access. Please contact support.');
-        setIsSubmitting(false);
-      }
-    } catch (err: any) {
-      console.error('Login error:', err);
-      const message = err.message || 'Login failed';
-      setLocalError(message);
+    if (result.success) {
+      // Navigate immediately - don't wait for context to update
+      navigate('/admin/dashboard', { replace: true });
+    } else {
+      setLocalError(result.error || 'Login failed');
       setIsSubmitting(false);
     }
   };

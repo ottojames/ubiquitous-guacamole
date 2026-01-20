@@ -180,7 +180,7 @@ The file provides (unused):
 - [x] Ensure `hasPermission()` works for department-level permissions
 
 ### 1.3 Migrate Components to UnifiedAuthContext
-- [ ] Update `src/pages/admin/Login.tsx` to use only UnifiedAuthContext
+- [x] Update `src/pages/admin/Login.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/pages/admin/AdminLayout.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/components/admin/AdminProtectedRoute.tsx` to use only UnifiedAuthContext
 - [ ] Update `src/pages/council/CouncilLayout.tsx` to use only UnifiedAuthContext

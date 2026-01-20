@@ -47,3 +47,81 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - TypeScript errors remain in test/script files but not in core src/ code
 ---
 
+## Iteration 3 - Task 1.1.3: Document UnifiedAuthContext Imports
+- **What was implemented**: Audited all imports of UnifiedAuthContext across the codebase
+- **Files that import from `@/contexts/UnifiedAuthContext`**: 18 files total
+  - Admin pages (7): Login, AdminLayout, Dashboard, AccountManagement, Settings, AuditLog, AdminNotices
+  - Council pages (6): CouncilLayout, Billing, Settings, Team, PendingSubmissions, Drafts
+  - Firm pages (1): FirmLayout
+  - Publish flow (2): NewPublishFlow, PaymentStep
+  - Components (2): ProtectedRoute, DynamicCouncilSelect
+  - Other (2): AuthDebug, App.tsx (provider)
+- **Files changed**: PRD.md (marked task complete, added audit results)
+- **Learnings for future iterations**:
+  - UnifiedAuthContext is already the primary auth context - most files use it
+  - **CRITICAL FINDING**: AdminProtectedRoute.tsx does NOT use UnifiedAuthContext - it directly calls `supabase.auth.getSession()` instead. This inconsistency should be fixed in task 1.3
+  - Only 2 files (council/Notices.tsx, council/Dashboard.tsx) use the legacy AuthContext
+  - AdminAuthContext is completely unused (can be deleted in 1.4)
+  - The migration plan for task 1.1.4 is straightforward: migrate 2 legacy AuthContext files + make AdminProtectedRoute use UnifiedAuthContext
+  - TypeScript still has ~73 errors in src/ but they are pre-existing and unrelated to auth context work
+---
+
+## Iteration 4 - Task 1.1.4: Create Migration Plan
+- **What was implemented**: Comprehensive migration plan added to PRD.md showing which context each file should use
+- **Files changed**: PRD.md (marked task complete, added detailed migration plan)
+- **Migration plan summary**:
+  - 3 files need migration: council/Notices.tsx, council/Dashboard.tsx, AdminProtectedRoute.tsx
+  - 18 files already use UnifiedAuthContext correctly (no changes needed)
+  - 2 files to delete: AuthContext.tsx, AdminAuthContext.tsx
+- **Learnings for future iterations**:
+  - Task 1.2 needs to add permission functions (hasPermission, hasAnyPermission, hasAllPermissions, loadPermissions) to UnifiedAuthContext before migration
+  - Task 1.2 also needs to add userType and organizationType fields
+  - Task 1.3 migrations are straightforward import changes for 2 files, but AdminProtectedRoute needs refactoring from direct supabase calls to useAuth() hook
+  - Task 1.4 can delete both legacy context files since AdminAuthContext has 0 imports and AuthContext will have 0 after Task 1.3
+  - Demo mode in legacy AuthContext needs evaluation - might be removed in Phase 5 anyway
+  - 49 failing tests are pre-existing (schema drift) - not related to this documentation work
+---
+
+## Iteration 5 - Task 1.2: Consolidate to UnifiedAuthContext
+- **What was implemented**: Added all missing features to UnifiedAuthContext that were in legacy AuthContext
+- **Files changed**:
+  - `src/contexts/UnifiedAuthContext.tsx` - Major additions
+  - `PRD.md` - Marked all Task 1.2 subtasks complete
+- **Additions to UnifiedAuthContext**:
+  - `userType` field: 'anonymous' | 'council_staff' | 'firm_staff' | 'platform_admin'
+  - `organizationType` field: 'council' | 'firm' | null
+  - `permissions` state array for department-level permissions
+  - `departmentId` state for tracking which department's permissions are loaded
+  - `loadPermissions(departmentId, demoRole?)` - migrated from legacy AuthContext
+  - `hasAnyPermission(...permissions)` - checks if user has any of specified permissions
+  - `hasAllPermissions(...permissions)` - checks if user has all of specified permissions
+  - Updated `hasPermission()` to check department-level permissions first, fallback to role-based
+  - Updated `clearContext()` to also clear permissions state
+- **Learnings for future iterations**:
+  - UnifiedAuthContext now has feature parity with legacy AuthContext
+  - The `@/types` import error in UnifiedAuthContext is pre-existing (Organization/Department types not centralized)
+  - 49 failing tests are still pre-existing (snapshot dates, test ID issues, server tests) - Phase 6 addresses these
+  - TypeScript errors in cypress/, e2e/, scripts/ directories are pre-existing and not blocking
+  - Task 1.3 can now proceed: just need to update imports in council/Notices.tsx, council/Dashboard.tsx
+  - AdminProtectedRoute.tsx needs refactoring in Task 1.3 to use useAuth() instead of direct supabase calls
+---
+
+## Iteration 6 - Task 1.3.1: Update admin/Login.tsx to use only UnifiedAuthContext
+- **What was implemented**: Migrated admin/Login.tsx from direct supabase calls to using UnifiedAuthContext exclusively
+- **Files changed**:
+  - `src/contexts/UnifiedAuthContext.tsx` - Added `signInAsAdmin()` method that checks admin access immediately after login and signs out if not authorized
+  - `src/pages/admin/Login.tsx` - Removed direct `supabase` import, now uses `signInAsAdmin()` from useAuth()
+- **Key changes to UnifiedAuthContext**:
+  - Added `signInAsAdmin(email, password)` method to context interface and implementation
+  - This method returns `{ success: boolean; error?: string }` instead of throwing
+  - On successful login, it immediately checks `app_metadata.is_platform_admin` and `admin_role`
+  - If user is not admin, it automatically signs them out and returns an error message
+- **Learnings for future iterations**:
+  - Login.tsx was already using `useAuth()` for `canAccessAdmin()` but also had direct supabase calls for the actual login flow
+  - The key insight: admin login needs to check permissions immediately from the returned session (before context state updates), hence the `signInAsAdmin()` method
+  - 49 failing tests remain pre-existing (not from this change) - these are addressed in Phase 6
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, server/ directories are not blocking core src/ code
+  - Pre-existing lint errors (708 total) are not from this change - the modified files pass lint
+  - The next task (AdminLayout.tsx) should be simpler since it likely already uses UnifiedAuthContext correctly
+---
+

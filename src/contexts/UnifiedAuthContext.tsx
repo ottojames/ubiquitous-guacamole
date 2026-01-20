@@ -38,6 +38,7 @@ interface UnifiedAuthContextType {
 
   // Actions
   signIn: (email: string, password: string) => Promise<void>;
+  signInAsAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   switchOrganization: (orgId: string) => Promise<void>;
   switchDepartment: (deptId: string) => Promise<void>;
@@ -193,6 +194,48 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
       password,
     });
     if (error) throw error;
+  };
+
+  // Admin-specific sign in that checks admin access immediately and signs out if not authorized
+  const signInAsAdmin = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (!data.session) {
+        return { success: false, error: 'No session returned' };
+      }
+
+      // Check admin access directly from the session we just got
+      const appMetadata = data.session.user?.app_metadata || {};
+      const isPlatformAdminCheck = appMetadata.is_platform_admin === true;
+      const adminRoleCheck = appMetadata.admin_role;
+      const hasAdminAccess = isPlatformAdminCheck || adminRoleCheck === 'super_admin' || adminRoleCheck === 'admin';
+
+      console.log('Admin login check:', {
+        email: data.session.user?.email,
+        appMetadata,
+        hasAdminAccess
+      });
+
+      if (hasAdminAccess) {
+        return { success: true };
+      } else {
+        // Sign out since they don't have admin access
+        await supabase.auth.signOut();
+        return { success: false, error: 'This account does not have admin access. Please contact support.' };
+      }
+    } catch (err: unknown) {
+      console.error('Admin login error:', err);
+      const message = err instanceof Error ? err.message : 'Login failed';
+      return { success: false, error: message };
+    }
   };
 
   const signOut = async () => {
@@ -399,6 +442,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     departmentId,
     // Actions
     signIn,
+    signInAsAdmin,
     signOut,
     switchOrganization,
     switchDepartment,
