@@ -70,6 +70,7 @@ import AdminNotices from "@/pages/admin/AdminNotices";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import CouncilProtectedRoute from "@/components/council/CouncilProtectedRoute";
 import AuthDebug from "@/pages/AuthDebug";
+import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
 
 export default function App() {
   // Demo mode toggle: Cmd+Shift+D (Mac) or Ctrl+Shift+D (Windows/Linux)
@@ -134,9 +135,11 @@ export default function App() {
 
         {/* Council Portal Routes - Auth handled by CouncilProtectedRoute */}
         <Route path="/c/:orgSlug/:deptSlug" element={
-          <CouncilProtectedRoute>
-            <CouncilLayout />
-          </CouncilProtectedRoute>
+          <SectionErrorBoundary sectionName="Council Portal">
+            <CouncilProtectedRoute>
+              <CouncilLayout />
+            </CouncilProtectedRoute>
+          </SectionErrorBoundary>
         }>
           <Route path="dashboard" element={<CouncilDashboard />} />
           <Route path="notices" element={<CouncilNotices />} />
@@ -154,7 +157,11 @@ export default function App() {
         </Route>
 
         {/* Firm Portal Routes */}
-        <Route path="/f/:firmSlug" element={<FirmLayout />}>
+        <Route path="/f/:firmSlug" element={
+          <SectionErrorBoundary sectionName="Firm Portal">
+            <FirmLayout />
+          </SectionErrorBoundary>
+        }>
           <Route path="dashboard" element={<FirmDashboard />} />
           <Route path="clients" element={<FirmClients />} />
           <Route path="notices" element={<FirmNotices />} />
@@ -169,9 +176,11 @@ export default function App() {
         {/* Admin Portal Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={
-          <AdminProtectedRoute>
-            <AdminLayout />
-          </AdminProtectedRoute>
+          <SectionErrorBoundary sectionName="Admin Portal">
+            <AdminProtectedRoute>
+              <AdminLayout />
+            </AdminProtectedRoute>
+          </SectionErrorBoundary>
         }>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -182,7 +191,11 @@ export default function App() {
         </Route>
 
         {NEW_PUBLISH_FLOW && (
-          <Route path="/next/publish/*" element={<NewPublishFlow />} />
+          <Route path="/next/publish/*" element={
+            <SectionErrorBoundary sectionName="Publish Wizard">
+              <NewPublishFlow />
+            </SectionErrorBoundary>
+          } />
         )}
         <Route path="/auth-debug" element={<AuthDebug />} />
         <Route path="*" element={<Home />} />

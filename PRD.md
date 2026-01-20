@@ -31,7 +31,7 @@ A digital replacement for newspaper public notice publication in the UK. Central
 
 ### 7.1 Error Handling
 - [x] Add user-friendly error messages for auth failures (Implemented 2026-01-20 - src/lib/authErrors.ts)
-- [ ] Add error boundaries around major page sections
+- [x] Add error boundaries around major page sections (Implemented 2026-01-20 - src/components/error/SectionErrorBoundary.tsx wraps Admin, Council, Firm portals and Publish Wizard)
 - [ ] Ensure API errors don't crash the app
 
 ### 7.2 Loading States
