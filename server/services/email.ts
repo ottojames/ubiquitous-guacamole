@@ -92,6 +92,15 @@ export interface TeamInvitationData {
   loginUrl: string;
 }
 
+export interface CouncilDepartmentInvitationData {
+  councilName: string;
+  departmentName: string;
+  inviterEmail: string;
+  role: 'department_admin' | 'editor' | 'viewer';
+  invitationToken: string;
+  acceptUrl: string;
+}
+
 /**
  * Send team invitation email
  */
@@ -229,6 +238,168 @@ This invitation was sent by ${data.inviterEmail}
 
   } catch (error: any) {
     console.error('[Email] Failed to send team invitation:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Send council department invitation email with magic link
+ */
+export async function sendCouncilDepartmentInvitation(
+  to: string,
+  data: CouncilDepartmentInvitationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] RESEND_API_KEY not configured, skipping council invitation email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const roleDescriptions: Record<string, string> = {
+      'department_admin': 'Department Administrator with full access to manage the department',
+      'editor': 'Editor with the ability to create and edit notices',
+      'viewer': 'Viewer with read-only access to department notices'
+    };
+
+    const roleLabels: Record<string, string> = {
+      'department_admin': 'Department Admin',
+      'editor': 'Editor',
+      'viewer': 'Viewer'
+    };
+
+    const subject = `You've been invited to join ${data.departmentName} at ${data.councilName} on CivicNotices`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header h1 { color: white; margin: 0; font-size: 24px; }
+          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+          .greeting { font-size: 18px; color: #111827; margin-bottom: 20px; }
+          .info-box { background: #f0fdf4; border-left: 4px solid #059669; padding: 15px; margin: 20px 0; border-radius: 4px; }
+          .role-badge { display: inline-block; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+          .button { display: inline-block; background: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+          .button:hover { background: #047857; }
+          .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+          .note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 20px 0; border-radius: 4px; font-size: 14px; color: #92400e; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Council Portal Invitation</h1>
+          </div>
+          <div class="content">
+            <p class="greeting">Hello!</p>
+
+            <p>You've been invited to join <strong>${data.departmentName}</strong> at <strong>${data.councilName}</strong> on CivicNotices.</p>
+
+            <div class="info-box">
+              <p style="margin: 0;"><strong>Your Role:</strong> <span class="role-badge">${roleLabels[data.role]}</span></p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #065f46;">${roleDescriptions[data.role]}</p>
+            </div>
+
+            <p>CivicNotices is a platform for managing public notices. As a member of ${data.departmentName}, you'll be able to:</p>
+
+            <ul style="color: #4b5563;">
+              ${data.role === 'department_admin' ? `
+                <li>View and respond to public representations</li>
+                <li>Manage department notices and settings</li>
+                <li>Invite and manage team members</li>
+                <li>Access department analytics and reports</li>
+              ` : data.role === 'editor' ? `
+                <li>View and respond to public representations</li>
+                <li>Create and edit department notices</li>
+                <li>Access department resources</li>
+              ` : `
+                <li>View public representations on notices</li>
+                <li>Access department notices and resources</li>
+              `}
+            </ul>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.acceptUrl}" class="button">Accept Invitation</a>
+            </div>
+
+            <div class="note">
+              <strong>Note:</strong> This invitation link will expire in 7 days. If you already have a CivicNotices account, you'll be added to the department automatically. Otherwise, you'll be prompted to create an account.
+            </div>
+
+            <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+              If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+            </p>
+          </div>
+          <div class="footer">
+            <p>CivicNotices - Public Notice Management</p>
+            <p style="font-size: 12px; color: #9ca3af;">This invitation was sent by ${data.inviterEmail}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Council Portal Invitation - CivicNotices
+
+Hello!
+
+You've been invited to join ${data.departmentName} at ${data.councilName} on CivicNotices.
+
+Your Role: ${roleLabels[data.role]}
+${roleDescriptions[data.role]}
+
+CivicNotices is a platform for managing public notices. As a member of ${data.departmentName}, you'll be able to:
+
+${data.role === 'department_admin' ? `
+- View and respond to public representations
+- Manage department notices and settings
+- Invite and manage team members
+- Access department analytics and reports
+` : data.role === 'editor' ? `
+- View and respond to public representations
+- Create and edit department notices
+- Access department resources
+` : `
+- View public representations on notices
+- Access department notices and resources
+`}
+
+Accept your invitation: ${data.acceptUrl}
+
+Note: This invitation link will expire in 7 days. If you already have a CivicNotices account, you'll be added to the department automatically. Otherwise, you'll be prompted to create an account.
+
+If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+
+---
+CivicNotices - Public Notice Management
+This invitation was sent by ${data.inviterEmail}
+    `;
+
+    console.log('[Email] Sending council department invitation to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Council department invitation sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send council department invitation:', error);
     return { success: false, error: error.message || 'Unknown error' };
   }
 }

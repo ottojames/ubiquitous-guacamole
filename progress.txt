@@ -355,3 +355,93 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next actionable code task is Phase 3: Council Portal Authentication
 ---
 
+## Iteration 17 - Task 3.1: Create Council Login Flow
+- **What was implemented**: Created dedicated council login page at /auth/council-login with full authentication and department picker
+- **Files changed**:
+  - `src/pages/auth/CouncilLogin.tsx` - NEW FILE (320+ lines)
+  - `src/App.tsx` - Added import and route for CouncilLogin
+  - `PRD.md` - Marked all Task 3.1 subtasks complete
+- **Key features**:
+  - Email/password login via UnifiedAuthContext's `signIn()` method
+  - After successful login, fetches user's department_memberships from Supabase
+  - Filters to only council organizations (type === 'council')
+  - If user has 1 department: redirect directly to `/c/:orgSlug/:deptSlug/dashboard`
+  - If user has multiple departments: show picker UI with list of departments
+  - If user has 0 council departments: show error message and sign them out
+  - Uses emerald/teal color scheme (distinct from admin's blue/gray)
+  - Includes "Forgot password?" link and support contact
+- **Learnings for future iterations**:
+  - Supabase nested selects with foreign keys (departments -> organizations) return single objects, but TypeScript infers arrays
+  - Fix is to cast through `unknown` first: `(data as unknown as DesiredType[])`
+  - The existing SignIn page at `/auth/sign-in` also handles council redirects but uses a simpler single-redirect approach
+  - Council login is more specialized with the multi-department picker feature
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - Next task is 3.2: Fix Council Protected Routes
+---
+
+## Iteration 18 - Task 3.2: Fix Council Protected Routes
+- **What was implemented**: Created CouncilProtectedRoute component and integrated it into App.tsx
+- **Files changed**:
+  - `src/components/council/CouncilProtectedRoute.tsx` - NEW FILE (260+ lines)
+  - `src/App.tsx` - Added import and wrapped council routes with CouncilProtectedRoute
+  - `src/pages/council/CouncilLayout.tsx` - Updated redirects and fixed TypeScript error
+  - `PRD.md` - Marked Task 3.2 subtasks complete with implementation notes
+- **Key features of CouncilProtectedRoute**:
+  - Uses `isInitialized` flag from UnifiedAuthContext (same pattern as AdminProtectedRoute)
+  - Checks both `department_memberships` AND `organization_memberships` tables
+  - Grants access if user has org-level OR department-level membership
+  - Handles edge cases:
+    - User with org access but wrong dept → redirects to `/switch-department`
+    - User without any access → shows access denied screen
+    - Demo accounts → bypassed for known demo emails
+- **Learnings for future iterations**:
+  - The pattern for protected routes is: check `loading`, wait for `isInitialized`, then verify access
+  - CouncilLayout still loads department data separately - ProtectedRoute just verifies access
+  - Organization membership grants access to all departments within that org
+  - Department membership grants access to only that specific department
+  - The `includes()` method on arrays requires exact string type, not `string | undefined`
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - Next task is 3.3: Implement Council Staff Invitation
+---
+
+## Iteration 19 - Task 3.3: Implement Council Staff Invitation
+- **What was implemented**: Complete council staff invitation system with email sending and acceptance flow
+- **Files changed**:
+  - `server/services/email.ts` - Added `CouncilDepartmentInvitationData` interface and `sendCouncilDepartmentInvitation()` function
+  - `server/routes/team.ts` - Updated POST /team/invite to generate tokens, hash them, fetch department/council info, and send invitation emails
+  - `src/pages/auth/AcceptInvitation.tsx` - NEW FILE: Invitation acceptance page with signup and login options
+  - `src/App.tsx` - Added route for `/auth/accept-invitation`
+  - `PRD.md` - Marked all Task 3.3 subtasks complete
+- **Key features implemented**:
+  - **Email service**:
+    - Green-themed HTML email template for council invitations
+    - Role-specific descriptions (department_admin, editor, viewer)
+    - Magic link with token to accept invitation
+    - 7-day expiration notice
+  - **Team invite endpoint**:
+    - Generates URL-safe token using `crypto.randomBytes(24).toString('base64url')`
+    - Creates bcrypt hash for `token_hash` column
+    - Fetches department and organization info for email
+    - Sends email via `sendCouncilDepartmentInvitation()`
+    - Returns `emailSent` status in response
+  - **Acceptance page** (`/auth/accept-invitation?token=...`):
+    - Validates token and shows invitation details
+    - Auto-accepts if user is already logged in with matching email
+    - Shows signup form for new users (email prefilled from invitation)
+    - Shows sign-in link for existing users
+    - Handles expired/accepted/cancelled invitations
+    - Calls `accept_invitation` RPC function to create membership
+    - Redirects to department dashboard after acceptance
+- **Database usage**:
+  - Uses existing `invitations` table with `token`, `token_hash`, `expires_at` columns
+  - Uses existing `accept_invitation(p_token, p_user_id)` RPC function
+- **Learnings for future iterations**:
+  - bcrypt and crypto need to be imported with `import * as bcrypt from 'bcrypt'` in TypeScript
+  - The `invitations` table already had token generation trigger, but we generate our own for the email
+  - Supabase nested selects return arrays for foreign keys - need type casting
+  - Pre-existing TypeScript errors in test/script files don't block server compilation
+  - Build has pre-existing Vite config issue with vite-plugin-node-polyfills
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - Next task is 3.4: Fix Department Switching
+---
+

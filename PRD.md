@@ -352,10 +352,10 @@ Created `src/components/council/CouncilProtectedRoute.tsx` which:
    - Kept internal data loading logic (fetches department details, permissions)
 
 ### 3.3 Implement Council Staff Invitation
-- [ ] Add "Invite Team Member" button to `/c/:org/:dept/team` page
-- [ ] Create invitation API endpoint `POST /api/departments/:deptId/invitations`
-- [ ] Send invitation email with magic link
-- [ ] Handle invitation acceptance flow (set password, redirect to dashboard)
+- [x] Add "Invite Team Member" button to `/c/:org/:dept/team` page
+- [x] Create invitation API endpoint `POST /api/departments/:deptId/invitations`
+- [x] Send invitation email with magic link
+- [x] Handle invitation acceptance flow (set password, redirect to dashboard)
 
 ### 3.4 Fix Department Switching
 - [ ] Ensure `DepartmentSwitcher` component works correctly

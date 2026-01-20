@@ -1,8 +1,18 @@
 import { Router } from 'express';
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { requireAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
 import { getServiceSupabaseClient } from '../lib/supabase';
+import { sendCouncilDepartmentInvitation } from '../services/email';
 
 const router = Router();
+
+/**
+ * Generate a URL-safe random token
+ */
+function generateInvitationToken(): string {
+  return crypto.randomBytes(24).toString('base64url');
+}
 
 /**
  * GET /api/departments/:deptId/team
@@ -176,15 +186,51 @@ router.post(
         });
       }
 
-      // User doesn't exist - create invitation
-      const { error: inviteError } = await supabase
+      // User doesn't exist - create invitation with token
+
+      // Generate token and hash
+      const token = generateInvitationToken();
+      const tokenHash = await bcrypt.hash(token, 10);
+
+      // Get department and organization info for the email
+      const { data: departmentData, error: deptError } = await supabase
+        .from('departments')
+        .select(`
+          id,
+          name,
+          slug,
+          organization_id,
+          organizations (
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq('id', deptId)
+        .single();
+
+      if (deptError || !departmentData) {
+        console.error('Error fetching department:', deptError);
+        return res.status(500).json({ error: 'Failed to fetch department information' });
+      }
+
+      // Get inviter's email for the email
+      const { data: inviterData } = await supabase.auth.admin.getUserById(userId);
+      const inviterEmail = inviterData?.user?.email || 'support@civicnotices.uk';
+
+      // Create invitation with token
+      const { data: invitationData, error: inviteError } = await supabase
         .from('invitations')
         .insert({
           department_id: deptId,
           email: email,
           role: role,
+          token: token,
+          token_hash: tokenHash,
           invited_by: userId
-        });
+        })
+        .select('id, token')
+        .single();
 
       if (inviteError) {
         console.error('Error creating invitation:', inviteError);
@@ -199,9 +245,33 @@ router.post(
         return res.status(500).json({ error: 'Failed to create invitation' });
       }
 
+      // Build the accept URL
+      const baseUrl = process.env.VITE_APP_URL || 'http://localhost:5173';
+      const acceptUrl = `${baseUrl}/auth/accept-invitation?token=${token}`;
+
+      // Get organization name (handle type casting for nested select)
+      const org = departmentData.organizations as unknown as { id: string; name: string; slug: string };
+      const councilName = org?.name || 'Unknown Council';
+
+      // Send invitation email
+      const emailResult = await sendCouncilDepartmentInvitation(email, {
+        councilName,
+        departmentName: departmentData.name,
+        inviterEmail,
+        role: role as 'department_admin' | 'editor' | 'viewer',
+        invitationToken: token,
+        acceptUrl
+      });
+
+      if (!emailResult.success) {
+        console.warn('[Team Invite] Email sending failed:', emailResult.error);
+        // Don't fail the request - the invitation is still created
+      }
+
       res.status(201).json({
         message: 'Invitation sent successfully',
         email: email,
+        emailSent: emailResult.success,
         note: 'User will be added to the department once they accept the invitation'
       });
     } catch (error) {
