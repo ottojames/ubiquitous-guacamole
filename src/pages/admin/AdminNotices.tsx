@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
+import { NoticeTableSkeleton } from '@/components/skeletons';
 
 interface Notice {
   id: string;
@@ -190,8 +191,27 @@ export default function AdminNotices() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
+            <div className="h-5 bg-gray-100 rounded w-80 mt-2 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Filters skeleton */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="h-10 bg-gray-100 rounded-lg w-64 animate-pulse" />
+            <div className="h-10 bg-gray-100 rounded-lg w-36 animate-pulse" />
+            <div className="h-10 bg-gray-100 rounded-lg w-36 animate-pulse" />
+            <div className="h-10 bg-gray-100 rounded-lg w-32 ml-auto animate-pulse" />
+          </div>
+        </div>
+
+        {/* Table skeleton */}
+        <NoticeTableSkeleton rows={10} />
       </div>
     );
   }

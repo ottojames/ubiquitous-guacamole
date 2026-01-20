@@ -5,6 +5,7 @@ import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
+import { NoticeTableSkeleton } from '@/components/skeletons';
 
 interface Department {
   id: string;
@@ -61,7 +62,7 @@ export default function Notices() {
   const [csvImportFile, setCsvImportFile] = useState<File | null>(null);
 
   // Check if we're in demo mode
-  const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster' || orgSlug === 'westminster-city-of-council' || orgSlug === 'bristol-council';
+  const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster' || orgSlug === 'westminster-city-of-council' || orgSlug === 'bristol-council' || orgSlug === 'sampleton-borough-council';
   const isDemoSampleBorough = orgSlug === 'sample-borough';
 
   // Read status from URL on mount
@@ -443,8 +444,33 @@ export default function Notices() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 bg-gray-200 rounded w-32 animate-pulse" />
+            <div className="h-5 bg-gray-100 rounded w-64 animate-pulse" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-12 bg-purple-200 rounded-xl w-28 animate-pulse" />
+            <div className="h-12 bg-blue-200 rounded-xl w-36 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Filters skeleton */}
+        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="h-10 bg-gray-100 rounded-lg flex-1 max-w-md animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-10 bg-gray-100 rounded-lg w-20 animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded-lg w-24 animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded-lg w-20 animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        {/* Table skeleton */}
+        <NoticeTableSkeleton rows={8} />
       </div>
     );
   }

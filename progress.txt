@@ -858,3 +858,27 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 7.2: Loading States
 ---
 
+
+## Iteration 35 - Task 7.2: Loading States (Skeleton Loaders)
+- **What was implemented**: Created comprehensive skeleton loader components and integrated them across all major pages
+- **Files created**:
+  - `src/components/skeletons/CardSkeleton.tsx` - CardSkeleton, StatCardSkeleton, SubscriptionCardSkeleton
+  - `src/components/skeletons/TableRowSkeleton.tsx` - TableRowSkeleton, NoticeTableSkeleton, UserListSkeleton
+  - `src/components/skeletons/ListItemSkeleton.tsx` - ListItemSkeleton, RecentNoticesSkeleton, ActivityFeedSkeleton, RepresentationsSkeleton, DeadlinesSkeleton
+  - `src/components/skeletons/index.ts` - Barrel export for all skeleton components
+- **Files changed**:
+  - `src/pages/council/Dashboard.tsx` - Uses CardSkeleton and RecentNoticesSkeleton
+  - `src/pages/firm/Dashboard.tsx` - Uses CardSkeleton, SubscriptionCardSkeleton, TableRowSkeleton, DeadlinesSkeleton
+  - `src/pages/admin/Dashboard.tsx` - Uses CardSkeleton and ActivityFeedSkeleton
+  - `src/pages/council/Notices.tsx` - Uses NoticeTableSkeleton
+  - `src/pages/admin/AdminNotices.tsx` - Uses NoticeTableSkeleton
+  - `src/components/home/SearchResults.tsx` - Added SearchResultSkeleton for grid and list layouts
+  - `PRD.md` - Marked Task 7.2 complete
+- **Learnings for future iterations**:
+  - Skeleton loaders should match the layout structure of the actual content
+  - Create specialized skeletons (NoticeTableSkeleton, SubscriptionCardSkeleton) for common patterns
+  - The animate-pulse Tailwind class provides a nice shimmer effect
+  - All 465 tests pass, no regressions
+  - Pre-existing TypeScript errors in src/pages/council/Dashboard.tsx etc. are unrelated to this work
+  - Next is Task 7.3: Email Notifications
+---

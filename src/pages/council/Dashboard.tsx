@@ -5,6 +5,7 @@ import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
+import { CardSkeleton, RecentNoticesSkeleton } from '@/components/skeletons';
 
 interface Department {
   id: string;
@@ -322,8 +323,34 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 bg-gray-200 rounded w-40 animate-pulse" />
+            <div className="h-5 bg-gray-100 rounded w-56 animate-pulse" />
+          </div>
+          <div className="h-12 bg-gray-200 rounded-xl w-40 animate-pulse" />
+        </div>
+
+        {/* Stats grid skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <CardSkeleton count={5} />
+        </div>
+
+        {/* Recent notices skeleton */}
+        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="h-6 bg-gray-200 rounded w-36 animate-pulse" />
+            <div className="h-5 bg-gray-200 rounded w-20 animate-pulse" />
+          </div>
+          <RecentNoticesSkeleton count={5} />
+        </div>
+
+        {/* Quick actions skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardSkeleton count={3} />
+        </div>
       </div>
     );
   }

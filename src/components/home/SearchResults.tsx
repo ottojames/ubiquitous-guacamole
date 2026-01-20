@@ -4,6 +4,60 @@ import { ArrowRight } from 'lucide-react';
 import type { NoticeSearchItem } from '@/lib/notices';
 import * as UI from '@/styles/ui';
 
+/**
+ * SearchResultSkeleton - Skeleton loader for search result cards
+ */
+function SearchResultSkeleton({ layout = 'grid' }: { layout?: 'grid' | 'list' }) {
+  const count = layout === 'list' ? 6 : 6;
+
+  if (layout === 'list') {
+    return (
+      <div className="space-y-4 animate-pulse">
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="rounded-xl bg-white p-3 shadow-sm border border-slate-200">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 bg-slate-200 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-slate-200 rounded w-3/4" />
+                <div className="h-3 bg-slate-100 rounded w-full" />
+                <div className="h-3 bg-slate-100 rounded w-2/3" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-200/60">
+          <div className="space-y-4">
+            {/* Type badge */}
+            <div className="h-6 bg-slate-200 rounded-full w-24" />
+            {/* Title */}
+            <div className="space-y-2">
+              <div className="h-5 bg-slate-200 rounded w-full" />
+              <div className="h-5 bg-slate-200 rounded w-3/4" />
+            </div>
+            {/* Address */}
+            <div className="space-y-1">
+              <div className="h-4 bg-slate-100 rounded w-full" />
+              <div className="h-4 bg-slate-100 rounded w-2/3" />
+            </div>
+            {/* Date/stats */}
+            <div className="flex items-center gap-4 pt-2">
+              <div className="h-4 bg-slate-100 rounded w-24" />
+              <div className="h-4 bg-slate-100 rounded w-20" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 type SearchResultsProps = {
   results: NoticeSearchItem[];
   query: string;
@@ -53,11 +107,9 @@ export default function SearchResults({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
-          <p className="text-base text-slate-600">{loadingMessage ?? `Searching for "${query}"...`}</p>
-        </div>
+      <div className="space-y-4">
+        <p className="text-sm text-slate-500">{loadingMessage ?? `Searching for "${query}"...`}</p>
+        <SearchResultSkeleton layout={layout} />
       </div>
     );
   }

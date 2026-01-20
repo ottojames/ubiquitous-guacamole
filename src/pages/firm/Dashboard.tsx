@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import QuickPublishWidget from '@/components/firm/QuickPublishWidget';
 import RecentRepresentations from '@/components/firm/RecentRepresentations';
 import UpcomingDeadlines from '@/components/firm/UpcomingDeadlines';
+import { CardSkeleton, SubscriptionCardSkeleton, TableRowSkeleton, DeadlinesSkeleton } from '@/components/skeletons';
 
 interface FirmContext {
   firm: {
@@ -206,8 +207,60 @@ export default function FirmDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 bg-gray-200 rounded w-36 animate-pulse" />
+            <div className="h-5 bg-gray-100 rounded w-48 animate-pulse" />
+          </div>
+          <div className="h-12 bg-purple-200 rounded-xl w-36 animate-pulse" />
+        </div>
+
+        {/* Subscription card skeleton */}
+        <SubscriptionCardSkeleton />
+
+        {/* Stats cards skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <CardSkeleton count={4} />
+        </div>
+
+        {/* Quick publish and actions skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-gray-100 animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-32 mb-4" />
+            <div className="space-y-3">
+              <div className="h-10 bg-gray-100 rounded" />
+              <div className="h-10 bg-gray-100 rounded" />
+              <div className="h-10 bg-purple-100 rounded" />
+            </div>
+          </div>
+          <div className="lg:col-span-2 bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-gray-100">
+            <div className="h-6 bg-gray-200 rounded w-32 mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardSkeleton count={3} showIcon={false} />
+            </div>
+          </div>
+        </div>
+
+        {/* Deadlines skeleton */}
+        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-gray-100">
+          <div className="h-6 bg-gray-200 rounded w-40 mb-4 animate-pulse" />
+          <DeadlinesSkeleton count={4} />
+        </div>
+
+        {/* Recent notices table skeleton */}
+        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="h-6 bg-gray-200 rounded w-32 animate-pulse" />
+              <div className="h-5 bg-gray-200 rounded w-20 animate-pulse" />
+            </div>
+          </div>
+          <div className="p-6">
+            <TableRowSkeleton rows={5} columns={6} />
+          </div>
+        </div>
       </div>
     );
   }

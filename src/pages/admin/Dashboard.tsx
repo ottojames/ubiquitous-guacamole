@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
+import { CardSkeleton, ActivityFeedSkeleton } from '@/components/skeletons';
 
 interface DashboardStats {
   totalCouncils: number;
@@ -192,8 +193,54 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center">
+          <div className="h-9 bg-gray-200 rounded w-48 animate-pulse" />
+          <div className="h-5 bg-gray-100 rounded w-32 animate-pulse" />
+        </div>
+
+        {/* Statistics cards skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <CardSkeleton count={5} />
+        </div>
+
+        {/* Activity feed and side panels skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Activity feed skeleton */}
+          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <div className="h-6 bg-gray-200 rounded w-44 animate-pulse" />
+            </div>
+            <div className="p-6">
+              <ActivityFeedSkeleton count={6} />
+            </div>
+          </div>
+
+          {/* Side panels skeleton */}
+          <div className="space-y-6">
+            {/* System health skeleton */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="h-6 bg-gray-200 rounded w-32 mb-4 animate-pulse" />
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-100 rounded w-full animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded w-2/3 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Quick actions skeleton */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="h-6 bg-gray-200 rounded w-28 mb-4 animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-10 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 bg-gray-100 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

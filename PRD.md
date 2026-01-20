@@ -35,9 +35,9 @@ A digital replacement for newspaper public notice publication in the UK. Central
 - [x] Ensure API errors don't crash the app (Implemented 2026-01-20 - Added .catch() to auth initialization, error handling to council fetch, user feedback for template rendering failures)
 
 ### 7.2 Loading States
-- [ ] Ensure all async operations show loading indicators
-- [ ] No blank screens during data fetching
-- [ ] Skeleton loaders for list pages
+- [x] Ensure all async operations show loading indicators (Implemented 2026-01-20 - Created skeleton loader components: CardSkeleton, TableRowSkeleton, ListItemSkeleton, etc.)
+- [x] No blank screens during data fetching (Implemented 2026-01-20 - Dashboards and list pages now show skeleton placeholders)
+- [x] Skeleton loaders for list pages (Implemented 2026-01-20 - Council Notices, Admin Notices, Public Search Results all use skeleton loaders)
 
 ### 7.3 Email Notifications
 - [ ] Implement representation notification to council staff
