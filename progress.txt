@@ -1330,3 +1330,47 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - All Phase 8.1 Core Tables are now complete (firm_departments, workflow_configs, workflow_stages, notice_workflow_status, workflow_stage_history, deadline_reminders, firm_notice_templates)
   - Next task is Task 8.8a: Create create_default_premises_licence_workflow() function migration
 ---
+
+## Iteration 53 - Task 8.8a: Create create_default_premises_licence_workflow() function migration
+- **What was implemented**: Created SQL migration for the default premises licence workflow function
+- **Files created**:
+  - `supabase/migrations/20260120290000_create_default_premises_licence_workflow.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.8a complete
+- **Key features of the migration**:
+  - Function `create_default_premises_licence_workflow(p_firm_id UUID)` returns UUID
+  - Creates workflow_config with notice_type 'premises-licence', is_default TRUE
+  - Seeds 10 stages with correct positions and colors:
+    - Draft (initial, gray), Pre-Application (purple), Submitted (blue)
+    - Advertising (amber, 10 working days deadline), Consultation (yellow, 28 days)
+    - Awaiting Decision (indigo, 40 days), Hearing Scheduled (orange, calendar_date)
+    - Decision (purple), Appeal Period (red, 21 days), Complete (terminal, green)
+  - SECURITY DEFINER function with GRANT EXECUTE to authenticated users
+- **Test results**: All 486 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Migration follows established pattern from previous workflow tables
+  - SQL directly copied from implementation plan with timestamp updated
+  - The deadline_working_days column is for specifying if deadline uses working days vs calendar days
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, server/ directories are unrelated to migrations
+  - Next task is Task 8.8b: Apply premises licence workflow function to Supabase
+---
+
+## Iteration 60 - Task 8.8b: Apply premises licence workflow function to Supabase
+- **What was implemented**: Applied the premises licence workflow function migration to Supabase
+- **Command used**: `psql DATABASE_URL -f supabase/migrations/20260120290000_create_default_premises_licence_workflow.sql`
+- **Output**: `CREATE FUNCTION` and `GRANT` - both successful
+- **Verification**: Confirmed function exists in `information_schema.routines`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.8b complete
+- **Test results**: All 486 tests pass (2 skipped), no regressions
+- **Function details**:
+  - Name: `create_default_premises_licence_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Tables affected: `workflow_configs` (1 row), `workflow_stages` (10 rows)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+- **Learnings for future iterations**:
+  - MCP Supabase tool requires access token which isn't configured - use psql instead
+  - The function is now available for firms to call when they want default premises licence workflow
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and don't affect test suite
+  - Next task is Task 8.9a: Create `create_default_probate_workflow()` function migration
+---
