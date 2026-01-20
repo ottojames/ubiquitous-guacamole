@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Building2,
   Users,
@@ -18,7 +19,7 @@ import {
   Loader2,
   X
 } from 'lucide-react';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 
 type TabType = 'councils' | 'firms' | 'users';
@@ -178,7 +179,8 @@ function AccountDetailModal({ isOpen, onClose, item, type }: DetailModalProps) {
 }
 
 export default function AccountManagement() {
-  const { adminUser } = useAdminAuth();
+  const { user: adminUser } = useAuth();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('councils');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -195,35 +197,108 @@ export default function AccountManagement() {
   const [sortField, setSortField] = useState<string>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
+  // Handle URL parameters on mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const status = params.get('status');
+    if (status) {
+      setStatusFilter(status);
+    }
+  }, [location.search]);
+
   // Fetch data based on active tab
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      let url = '';
+      let data: any[] = [];
 
       switch (activeTab) {
-        case 'councils':
-          url = `/api/admin/accounts/councils?page=1&limit=50&status=${statusFilter}`;
-          break;
-        case 'firms':
-          url = `/api/admin/accounts/firms?page=1&limit=50&status=${statusFilter}`;
-          break;
-        case 'users':
-          url = `/api/admin/accounts/users?page=1&limit=50`;
-          break;
-      }
+        case 'councils': {
+          let query = supabase
+            .from('organizations')
+            .select(`
+              *,
+              organization_memberships (
+                count
+              )
+            `)
+            .eq('type', 'council');
 
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`
+          if (statusFilter !== 'all') {
+            query = query.eq('status', statusFilter);
+          }
+
+          const { data: councils, error } = await query.order('created_at', { ascending: false });
+
+          if (!error && councils) {
+            // Map the data to include users_count
+            data = councils.map(council => ({
+              ...council,
+              users_count: council.organization_memberships?.[0]?.count || 0
+            }));
+          }
+          break;
         }
-      });
+        case 'firms': {
+          let query = supabase
+            .from('organizations')
+            .select(`
+              *,
+              organization_memberships (
+                count
+              )
+            `)
+            .eq('type', 'firm');
 
-      if (response.ok) {
-        const data = await response.json();
-        setAccounts(data.data || []);
+          if (statusFilter !== 'all') {
+            query = query.eq('status', statusFilter);
+          }
+
+          const { data: firms, error } = await query.order('created_at', { ascending: false });
+
+          if (!error && firms) {
+            data = firms.map(firm => ({
+              ...firm,
+              users_count: firm.organization_memberships?.[0]?.count || 0
+            }));
+          }
+          break;
+        }
+        case 'users': {
+          // Get users from organization_memberships with user details
+          const { data: memberships, error } = await supabase
+            .from('organization_memberships')
+            .select(`
+              *,
+              organization:organizations (
+                name,
+                type
+              )
+            `)
+            .order('created_at', { ascending: false });
+
+          if (!error && memberships) {
+            // Get unique user IDs
+            const userIds = [...new Set(memberships.map(m => m.user_id))];
+
+            // Fetch user details from auth.users (if we have access)
+            // For now, we'll use the membership data
+            data = memberships.map(membership => ({
+              id: membership.user_id,
+              email: membership.user_email || 'Unknown',
+              role: membership.role,
+              organization_id: membership.organization_id,
+              organization_name: membership.organization?.name,
+              created_at: membership.created_at,
+              last_sign_in_at: membership.updated_at,
+              status: 'active'
+            }));
+          }
+          break;
+        }
       }
+
+      setAccounts(data);
     } catch (error) {
       console.error('Failed to fetch accounts:', error);
     } finally {
@@ -269,34 +344,51 @@ export default function AccountManagement() {
 
   // Handle actions
   const handleAction = async (action: string, itemId: string) => {
-    const token = localStorage.getItem('adminToken');
-
     try {
       switch (action) {
         case 'suspend':
-          await fetch(`/api/admin/accounts/${itemId}/suspend`, {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
+          // Update organization status to suspended
+          const { error: suspendError } = await supabase
+            .from('organizations')
+            .update({ status: 'suspended', updated_at: new Date().toISOString() })
+            .eq('id', itemId);
+
+          if (suspendError) throw suspendError;
           break;
+
         case 'activate':
-          await fetch(`/api/admin/accounts/${itemId}/activate`, {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
+          // Update organization status to active
+          const { error: activateError } = await supabase
+            .from('organizations')
+            .update({ status: 'active', updated_at: new Date().toISOString() })
+            .eq('id', itemId);
+
+          if (activateError) throw activateError;
           break;
+
         case 'delete':
-          if (confirm('Are you sure you want to delete this account?')) {
-            await fetch(`/api/admin/accounts/${itemId}`, {
-              method: 'DELETE',
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            });
+          if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+            // Soft delete by updating status to deleted
+            const { error: deleteError } = await supabase
+              .from('organizations')
+              .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+              .eq('id', itemId);
+
+            if (deleteError) throw deleteError;
+          }
+          break;
+
+        case 'reset_password':
+          // For user password reset, we would need to implement this via Supabase Auth
+          // This would typically send a password reset email
+          alert('Password reset functionality coming soon');
+          break;
+
+        case 'view':
+          // Find the item in the current accounts
+          const item = accounts.find(acc => acc.id === itemId);
+          if (item) {
+            setDetailModal({ isOpen: true, item });
           }
           break;
       }
@@ -305,6 +397,7 @@ export default function AccountManagement() {
       setShowActionMenu(null);
     } catch (error) {
       console.error('Action failed:', error);
+      alert('Failed to perform action. Please try again.');
     }
   };
 
@@ -312,36 +405,74 @@ export default function AccountManagement() {
   const handleBulkAction = async (action: string) => {
     if (selectedItems.size === 0) return;
 
-    const token = localStorage.getItem('adminToken');
-
     try {
       if (action === 'suspend') {
-        await fetch('/api/admin/accounts/bulk/suspend', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ ids: Array.from(selectedItems) })
-        });
+        // Bulk suspend organizations
+        const { error } = await supabase
+          .from('organizations')
+          .update({ status: 'suspended', updated_at: new Date().toISOString() })
+          .in('id', Array.from(selectedItems));
+
+        if (error) throw error;
+        alert(`${selectedItems.size} accounts suspended successfully`);
+
+      } else if (action === 'activate') {
+        // Bulk activate organizations
+        const { error } = await supabase
+          .from('organizations')
+          .update({ status: 'active', updated_at: new Date().toISOString() })
+          .in('id', Array.from(selectedItems));
+
+        if (error) throw error;
+        alert(`${selectedItems.size} accounts activated successfully`);
+
       } else if (action === 'export') {
-        const response = await fetch('/api/admin/accounts/bulk/export', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ ids: Array.from(selectedItems) })
+        // Export selected items to CSV
+        const selectedAccounts = sortedAccounts.filter(acc => selectedItems.has(acc.id));
+
+        // Create CSV content
+        const headers = activeTab === 'users'
+          ? ['ID', 'Email', 'Role', 'Organization', 'Created', 'Last Sign In']
+          : ['ID', 'Name', 'Type', 'Status', 'Created', 'Users Count'];
+
+        const rows = selectedAccounts.map(acc => {
+          if (activeTab === 'users') {
+            const user = acc as User;
+            return [
+              user.id,
+              user.email,
+              user.role,
+              user.organization_name || 'N/A',
+              new Date(user.created_at).toLocaleDateString(),
+              user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Never'
+            ];
+          } else {
+            const org = acc as Organization;
+            return [
+              org.id,
+              org.name,
+              org.type,
+              org.status,
+              new Date(org.created_at).toLocaleDateString(),
+              org.users_count || 0
+            ];
+          }
         });
 
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${activeTab}-export.csv`;
-          a.click();
-        }
+        // Generate CSV string
+        const csvContent = [
+          headers.join(','),
+          ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        // Download CSV
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${activeTab}-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
       }
 
       setSelectedItems(new Set());

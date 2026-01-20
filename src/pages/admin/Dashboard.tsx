@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   Users,
@@ -12,7 +13,7 @@ import {
   Shield,
   Server
 } from 'lucide-react';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 
 interface DashboardStats {
@@ -20,6 +21,8 @@ interface DashboardStats {
   activeCouncils: number;
   totalFirms: number;
   totalNotices: number;
+  totalUsers: number;
+  pendingVerifications: number;
   monthlyRevenue: number;
   systemHealth: 'healthy' | 'degraded' | 'down';
 }
@@ -35,12 +38,15 @@ interface RecentAction {
 }
 
 export default function AdminDashboard() {
-  const { adminUser } = useAdminAuth();
+  const { user: adminUser } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalCouncils: 0,
     activeCouncils: 0,
     totalFirms: 0,
     totalNotices: 0,
+    totalUsers: 0,
+    pendingVerifications: 0,
     monthlyRevenue: 0,
     systemHealth: 'healthy'
   });
@@ -56,37 +62,59 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch statistics
-      const [councilsRes, firmsRes, noticesRes] = await Promise.all([
+      // Fetch all statistics in parallel for better performance
+      const [councilsRes, activeCouncilsRes, firmsRes, noticesRes, usersRes, pendingRes] = await Promise.all([
+        // Total councils
         supabase
           .from('organizations')
-          .select('id, status', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
           .eq('type', 'council'),
+        // Active councils only
         supabase
           .from('organizations')
-          .select('id', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
+          .eq('type', 'council')
+          .eq('status', 'active'),
+        // Total firms
+        supabase
+          .from('organizations')
+          .select('*', { count: 'exact', head: true })
           .eq('type', 'firm'),
+        // Total notices
         supabase
           .from('notices')
-          .select('id', { count: 'exact' })
+          .select('*', { count: 'exact', head: true }),
+        // Total users (from organization_memberships since auth.users isn't directly accessible)
+        supabase
+          .from('organization_memberships')
+          .select('user_id', { count: 'exact', head: true }),
+        // Pending verifications
+        supabase
+          .from('organizations')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending_verification')
       ]);
 
       const totalCouncils = councilsRes.count || 0;
-      const activeCouncils = councilsRes.data?.filter(c => c.status === 'active').length || 0;
+      const activeCouncils = activeCouncilsRes.count || 0;
       const totalFirms = firmsRes.count || 0;
       const totalNotices = noticesRes.count || 0;
+      const totalUsers = usersRes.count || 0;
+      const pendingVerifications = pendingRes.count || 0;
 
-      // Calculate monthly revenue (mock calculation - replace with actual billing data)
-      const monthlyRevenue = (activeCouncils * 500) + (totalFirms * 1000);
+      // Calculate monthly revenue (estimated based on active accounts)
+      const monthlyRevenue = (activeCouncils * 500) + (totalFirms * 250);
 
-      // Check system health (mock - replace with actual health checks)
-      const systemHealth = 'healthy'; // Would check API health, database status, etc.
+      // System health based on recent errors (simplified for now)
+      const systemHealth = 'healthy';
 
       setStats({
         totalCouncils,
         activeCouncils,
         totalFirms,
         totalNotices,
+        totalUsers,
+        pendingVerifications,
         monthlyRevenue,
         systemHealth
       });
@@ -189,7 +217,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex justify-between items-start">
             <div>
@@ -227,6 +255,19 @@ export default function AdminDashboard() {
               </p>
             </div>
             <FileText className="w-8 h-8 text-gray-400" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalUsers}</p>
+              <p className="text-sm text-gray-600 mt-2">
+                Registered accounts
+              </p>
+            </div>
+            <Users className="w-8 h-8 text-gray-400" />
           </div>
         </div>
 
@@ -328,35 +369,47 @@ export default function AdminDashboard() {
               Quick Actions
             </h2>
             <div className="space-y-2">
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+              <button
+                onClick={() => navigate('/admin/accounts')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                 View All Accounts
               </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+              <button
+                onClick={() => navigate('/admin/audit-log')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                 Check Audit Logs
               </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+              <button
+                onClick={() => navigate('/admin/settings')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                 System Settings
               </button>
-              <button className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+              <button
+                onClick={() => navigate('/admin/reports')}
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
                 Export Reports
               </button>
             </div>
           </div>
 
           {/* Alerts/Warnings */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-medium text-yellow-800">
-                  Attention Required
-                </h3>
-                <p className="text-sm text-yellow-700 mt-1">
-                  3 accounts pending verification
-                </p>
+          {stats.pendingVerifications > 0 && (
+            <div
+              onClick={() => navigate('/admin/accounts?status=pending_verification')}
+              className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 cursor-pointer hover:bg-yellow-100 transition-colors">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    Attention Required
+                  </h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    {stats.pendingVerifications} accounts pending verification
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

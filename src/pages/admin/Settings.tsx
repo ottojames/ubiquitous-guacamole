@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useAuth } from "@/contexts/UnifiedAuthContext";
 import { Settings as SettingsIcon, Key, Globe, Bell, Shield } from "lucide-react";
 
 export default function AdminSettings() {
-  const { adminUser } = useAdminAuth();
+  const { user: adminUser } = useAuth();
   const [activeTab, setActiveTab] = useState("general");
 
   const tabs = [

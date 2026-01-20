@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 interface AuditLogEntry {
   id: string;
@@ -38,7 +38,7 @@ interface AuditLogEntry {
 }
 
 export default function AuditLog() {
-  const { adminUser } = useAdminAuth();
+  const { user: adminUser } = useAuth();
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

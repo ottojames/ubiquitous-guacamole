@@ -1,337 +1,182 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertCircle, Lock, CheckCircle } from 'lucide-react';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { Shield, AlertCircle, Lock } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { adminUser, login, verify2FA, error, loading } = useAdminAuth();
+  const { user, loading, canAccessAdmin } = useAuth();
 
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [rememberDevice, setRememberDevice] = useState(false);
-
-  // UI states
-  const [showTwoFactor, setShowTwoFactor] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState('');
   const [localError, setLocalError] = useState('');
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already logged in
+  // Redirect if already logged in as admin
   useEffect(() => {
-    if (adminUser && !showTwoFactor) {
-      navigate('/admin/dashboard');
+    if (!loading && user && canAccessAdmin()) {
+      navigate('/admin/dashboard', { replace: true });
     }
-  }, [adminUser, showTwoFactor, navigate]);
+  }, [user, loading, canAccessAdmin, navigate]);
 
-  // Handle login submission
+  // Handle login submission - DIRECT approach, no waiting for context
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
-    setSuccessMessage('');
 
-    // Basic validation
     if (!email || !password) {
       setLocalError('Please enter email and password');
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const result = await login(email, password);
+      // Sign in directly with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (result.requiresTwoFactor) {
-        // Show 2FA input
-        setShowTwoFactor(true);
-        setPendingEmail(email);
-        setSuccessMessage('Please enter your 2FA code');
-      } else if (result.success) {
-        // Direct login success (no 2FA)
-        navigate('/admin/dashboard');
+      if (error) {
+        throw error;
       }
-    } catch (err: any) {
-      const message = err.message || 'Login failed';
 
-      // Handle specific error cases
-      if (message.includes('locked')) {
-        setIsLocked(true);
-        setLocalError('Account locked due to multiple failed attempts. Please try again in 30 minutes.');
-        setFailedAttempts(5);
-      } else if (message.includes('Invalid') || message.includes('incorrect')) {
-        const attempts = failedAttempts + 1;
-        setFailedAttempts(attempts);
+      if (!data.session) {
+        throw new Error('No session returned');
+      }
 
-        if (attempts >= 3) {
-          setLocalError(`Invalid credentials. ${5 - attempts} attempts remaining before account lock.`);
-        } else {
-          setLocalError('Invalid email or password');
-        }
+      // Check admin access directly from the session we just got
+      const appMetadata = data.session.user?.app_metadata || {};
+      const isPlatformAdmin = appMetadata.is_platform_admin === true;
+      const adminRole = appMetadata.admin_role;
+      const hasAdminAccess = isPlatformAdmin || adminRole === 'super_admin' || adminRole === 'admin';
+
+      console.log('Login successful, checking admin access:', {
+        email: data.session.user?.email,
+        appMetadata,
+        hasAdminAccess
+      });
+
+      if (hasAdminAccess) {
+        // Navigate immediately - don't wait for context to update
+        navigate('/admin/dashboard', { replace: true });
       } else {
-        setLocalError(message);
-      }
-    }
-  };
-
-  // Handle 2FA verification
-  const handle2FAVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocalError('');
-
-    if (!twoFactorCode || twoFactorCode.length !== 6) {
-      setLocalError('Please enter a valid 6-digit code');
-      return;
-    }
-
-    try {
-      const result = await verify2FA(pendingEmail, twoFactorCode);
-
-      if (result.success) {
-        // Store remember device preference if needed
-        if (rememberDevice && result.sessionToken) {
-          localStorage.setItem('admin_device_trusted', 'true');
-        }
-
-        navigate('/admin/dashboard');
+        // Sign out since they don't have admin access
+        await supabase.auth.signOut();
+        setLocalError('This account does not have admin access. Please contact support.');
+        setIsSubmitting(false);
       }
     } catch (err: any) {
-      setLocalError(err.message || '2FA verification failed');
+      console.error('Login error:', err);
+      const message = err.message || 'Login failed';
+      setLocalError(message);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-red-900/20 backdrop-blur-sm rounded-full mb-4 border border-red-900/30">
-            <Shield className="w-10 h-10 text-red-600" />
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+              <Shield className="h-12 w-12 text-white" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Portal</h1>
-          <p className="text-gray-400">Secure administrative access</p>
+          <h2 className="text-3xl font-bold text-white">Admin Portal</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Sign in with your administrator credentials
+          </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700/50 p-8">
-          {!showTwoFactor ? (
-            /* Login Form */
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-                  placeholder="admin@civicnotices.co.uk"
-                  disabled={loading || isLocked}
-                  autoComplete="email"
-                  required
-                />
+        {/* Login Form */}
+        <div className="bg-gray-800 rounded-xl shadow-2xl p-8">
+          <form className="space-y-6" onSubmit={handleLogin}>
+            {/* Error Alert */}
+            {localError && (
+              <div className="p-3 bg-red-900/20 border border-red-800 rounded-lg flex items-center space-x-2 text-red-400">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm">{localError}</span>
               </div>
+            )}
 
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-                  placeholder="Enter your password"
-                  disabled={loading || isLocked}
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                disabled={isSubmitting}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="ottoclarke@icloud.com"
+              />
+            </div>
 
-              {/* Remember Device */}
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  checked={rememberDevice}
-                  onChange={(e) => setRememberDevice(e.target.checked)}
-                  className="w-4 h-4 bg-gray-900 border-gray-600 rounded text-red-600 focus:ring-red-600"
-                  disabled={loading || isLocked}
-                />
-                <label htmlFor="remember" className="ml-2 text-sm text-gray-400">
-                  Remember this device
-                </label>
-              </div>
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                disabled={isSubmitting}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Enter your password"
+              />
+            </div>
 
-              {/* Error Message */}
-              {(localError || error) && (
-                <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-900/30 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-400">{localError || error}</p>
-                </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Sign In
+                </>
               )}
+            </button>
+          </form>
 
-              {/* Failed Attempts Warning */}
-              {failedAttempts > 0 && failedAttempts < 5 && !isLocked && (
-                <div className="flex items-start gap-2 p-3 bg-amber-900/20 border border-amber-900/30 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-amber-400">
-                    {5 - failedAttempts} login attempts remaining
-                  </p>
-                </div>
-              )}
-
-              {/* Account Locked Message */}
-              {isLocked && (
-                <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-900/30 rounded-lg">
-                  <Lock className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-red-400">Account Locked</p>
-                    <p className="text-xs text-red-400/80 mt-1">
-                      Too many failed login attempts. Please try again in 30 minutes or contact a super admin.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading || isLocked}
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                  isLocked
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-gray-900'
-                }`}
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <Shield className="w-5 h-5" />
-                    <span>Sign In</span>
-                  </>
-                )}
-              </button>
-            </form>
-          ) : (
-            /* 2FA Form */
-            <form onSubmit={handle2FAVerification} className="space-y-6">
-              {/* Success Message */}
-              {successMessage && (
-                <div className="flex items-start gap-2 p-3 bg-green-900/20 border border-green-900/30 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-green-400">{successMessage}</p>
-                </div>
-              )}
-
-              {/* 2FA Instructions */}
-              <div className="text-center">
-                <Lock className="w-12 h-12 text-red-600 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-white mb-2">Two-Factor Authentication</h3>
-                <p className="text-sm text-gray-400">
-                  Enter the 6-digit code from your authenticator app
-                </p>
-              </div>
-
-              {/* 2FA Code Input */}
-              <div>
-                <label htmlFor="2fa-code" className="block text-sm font-medium text-gray-300 mb-2">
-                  Verification Code
-                </label>
-                <input
-                  id="2fa-code"
-                  type="text"
-                  value={twoFactorCode}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setTwoFactorCode(value);
-                  }}
-                  className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg text-white text-center text-2xl font-mono tracking-wider placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition-all"
-                  placeholder="000000"
-                  maxLength={6}
-                  pattern="\d{6}"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  disabled={loading}
-                  autoFocus
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Enter the code from Google Authenticator or similar app
-                </p>
-              </div>
-
-              {/* Error Message */}
-              {(localError || error) && (
-                <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-900/30 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-red-400">{localError || error}</p>
-                </div>
-              )}
-
-              {/* Buttons */}
-              <div className="space-y-3">
-                <button
-                  type="submit"
-                  disabled={loading || twoFactorCode.length !== 6}
-                  className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                    twoFactorCode.length !== 6
-                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-gray-900'
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Verifying...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-5 h-5" />
-                      <span>Verify & Sign In</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowTwoFactor(false);
-                    setTwoFactorCode('');
-                    setPendingEmail('');
-                    setSuccessMessage('');
-                  }}
-                  className="w-full py-3 px-4 rounded-lg font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 transition-all"
-                >
-                  Back to Login
-                </button>
-              </div>
-
-              {/* Help Text */}
-              <p className="text-xs text-center text-gray-500">
-                Lost your device? Contact a super admin for assistance.
-              </p>
-            </form>
-          )}
+          {/* Security Notice */}
+          <div className="mt-6 p-3 bg-gray-700/50 rounded-lg">
+            <p className="text-xs text-gray-400 text-center">
+              This is a secure area. All login attempts are monitored and logged for security purposes.
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center">
+        <div className="text-center">
           <p className="text-sm text-gray-500">
-            Civic Notices Admin Portal • Enterprise Security
-          </p>
-          <p className="text-xs text-gray-600 mt-2">
-            All login attempts are logged and monitored
+            &copy; {new Date().getFullYear()} Civic Notices. All rights reserved.
           </p>
         </div>
       </div>

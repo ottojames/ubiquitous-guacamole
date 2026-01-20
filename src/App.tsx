@@ -61,6 +61,7 @@ import AdminDashboard from "@/pages/admin/Dashboard";
 import AccountManagement from "@/pages/admin/AccountManagement";
 import AdminAuditLog from "@/pages/admin/AuditLog";
 import AdminSettings from "@/pages/admin/Settings";
+import AdminNotices from "@/pages/admin/AdminNotices";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import AuthDebug from "@/pages/AuthDebug";
 
@@ -146,6 +147,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="accounts" element={<AccountManagement />} />
+          <Route path="notices" element={<AdminNotices />} />
           <Route path="audit" element={<AdminAuditLog />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>

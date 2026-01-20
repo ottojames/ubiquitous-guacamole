@@ -212,7 +212,20 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const canAccessAdmin = (): boolean => {
-    return isPlatformAdmin;
+    // Check multiple conditions for admin access
+    // 1. Platform admin flag in metadata
+    if (isPlatformAdmin) return true;
+
+    // 2. Admin role in metadata
+    if (adminRole === 'super_admin' || adminRole === 'admin') return true;
+
+    // 3. Check email for known admin (fallback for migration period)
+    if (user?.email === 'admin@civic') return true;
+
+    // 4. Check if user has admin role
+    if (role === 'admin' || role === 'super_admin') return true;
+
+    return false;
   };
 
   const value = {

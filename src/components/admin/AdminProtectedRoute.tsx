@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface AdminProtectedRouteProps {
@@ -8,14 +8,14 @@ interface AdminProtectedRouteProps {
 }
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
-  const { adminUser, loading } = useAdminAuth();
+  const { user, loading, canAccessAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !adminUser) {
+    if (!loading && (!user || !canAccessAdmin || !canAccessAdmin())) {
       navigate('/admin/login', { replace: true });
     }
-  }, [loading, adminUser, navigate]);
+  }, [loading, user, canAccessAdmin, navigate]);
 
   if (loading) {
     return (
@@ -28,7 +28,7 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
     );
   }
 
-  if (!adminUser) {
+  if (!user || !canAccessAdmin || !canAccessAdmin()) {
     return null; // Will redirect in useEffect
   }
 

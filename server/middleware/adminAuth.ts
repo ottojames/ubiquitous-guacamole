@@ -26,39 +26,20 @@ export async function requireAdmin(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  // TEMPORARY: Bypass admin auth while migrating to unified authentication
-  // TODO: Remove this bypass after Phase 5 Authentication Unification is complete
-  console.warn('⚠️ Admin auth bypassed during migration to unified authentication');
-  req.adminUser = {
-    id: 'migration-admin',
-    userId: 'migration-admin',
-    email: 'admin@migration.temp',
-    role: 'super_admin' as const,
-    twoFactorEnabled: false,
-    sessionId: 'migration-session'
-  };
-  next();
-  return;
-
-  /* ORIGINAL CODE - RE-ENABLE AFTER MIGRATION
   try {
-    // Extract session token from cookie or Authorization header
-    let sessionToken: string | undefined;
+    // Extract JWT token from Authorization header or cookie
+    let token: string | undefined;
 
-    // Check cookies first (preferred for admin panel)
-    if (req.cookies?.adminSessionToken) {
-      sessionToken = req.cookies.adminSessionToken;
+    // Check Authorization header first (standard for API calls)
+    if (req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.substring(7);
     }
-    // Fall back to Authorization header
-    else if (req.headers.authorization?.startsWith('Bearer ')) {
-      sessionToken = req.headers.authorization.substring(7);
-    }
-    // Also check custom header
-    else if (req.headers['x-admin-session']) {
-      sessionToken = req.headers['x-admin-session'] as string;
+    // Fall back to cookie (for browser-based admin panel)
+    else if (req.cookies?.access_token) {
+      token = req.cookies.access_token;
     }
 
-    if (!sessionToken) {
+    if (!token) {
       res.status(401).json({
         error: 'Unauthorized',
         message: 'Admin authentication required'
@@ -66,33 +47,52 @@ export async function requireAdmin(
       return;
     }
 
-    // Validate session via Supabase RPC
+    // Verify the JWT token using Supabase
     const supabase = getServiceSupabaseClient();
-    const { data, error } = await supabase.rpc('validate_admin_session', {
-      p_session_token: sessionToken
-    });
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    if (error || !data || data.length === 0) {
-      console.error('[Admin Auth] Session validation failed:', error);
+    if (error || !user) {
+      console.error('[Admin Auth] Token validation failed:', error);
       res.status(401).json({
         error: 'Unauthorized',
-        message: 'Invalid or expired admin session'
+        message: 'Invalid or expired token'
       });
       return;
     }
 
-    const adminData = data[0];
+    // Check if user has platform admin privileges
+    const isPlatformAdmin = user.app_metadata?.is_platform_admin === true;
+    const userRole = user.app_metadata?.role || 'user';
+
+    if (!isPlatformAdmin) {
+      console.warn(`[Admin Auth] Access denied for user ${user.email} - not a platform admin`);
+      res.status(403).json({
+        error: 'Forbidden',
+        message: 'Platform admin access required'
+      });
+      return;
+    }
+
+    // Check for admin role in platform_admin_settings table
+    const { data: adminSettings, error: adminError } = await supabase
+      .from('platform_admin_settings')
+      .select('admin_role')
+      .eq('user_id', user.id)
+      .single();
+
+    const adminRole = adminSettings?.admin_role || 'admin';
 
     // Attach admin user to request
     req.adminUser = {
-      id: adminData.admin_user_id,
-      userId: adminData.user_id,
-      email: adminData.email,
-      role: adminData.role,
-      twoFactorEnabled: adminData.two_factor_enabled,
-      sessionId: sessionToken
+      id: user.id,
+      userId: user.id,
+      email: user.email || '',
+      role: adminRole as 'super_admin' | 'admin' | 'support',
+      twoFactorEnabled: user.app_metadata?.two_factor_enabled || false,
+      sessionId: token
     };
 
+    console.log(`[Admin Auth] Authorized admin access for ${user.email} with role: ${adminRole}`);
     next();
   } catch (error) {
     console.error('[Admin Auth] Middleware error:', error);
@@ -101,7 +101,6 @@ export async function requireAdmin(
       message: 'Failed to validate admin authentication'
     });
   }
-  END OF ORIGINAL CODE */
 }
 
 /**

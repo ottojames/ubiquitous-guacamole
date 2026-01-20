@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import {
   LayoutDashboard,
   Building2,
@@ -18,7 +18,8 @@ import {
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { adminUser, logout, sessionExpiresAt } = useAdminAuth();
+  const { user: adminUser, signOut: logout, session } = useAuth();
+  const sessionExpiresAt = null; // Session expiry temporarily disabled
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sessionWarning, setSessionWarning] = useState(false);
