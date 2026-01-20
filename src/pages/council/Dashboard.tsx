@@ -3,7 +3,7 @@ import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom
 import { supabase } from '@/lib/supabase';
 import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
 
 interface Department {

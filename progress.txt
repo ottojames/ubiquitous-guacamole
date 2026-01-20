@@ -181,3 +181,48 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task (1.3.5) is FirmLayout.tsx - likely has similar pattern to CouncilLayout
 ---
 
+## Iteration 10 - Task 1.3.5: Update FirmLayout.tsx to use only UnifiedAuthContext
+- **What was implemented**: Refactored FirmLayout to use session and user from UnifiedAuthContext instead of calling supabase.auth.getSession()
+- **Files changed**:
+  - `src/pages/firm/FirmLayout.tsx` - Auth refactor
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Removed unused `UserMembership` interface
+  - Changed `useAuth()` destructuring to include `user`, `session`, `loading: authLoading`
+  - Renamed local `loading` state to `dataLoading` to distinguish from auth loading
+  - Removed `supabase.auth.getSession()` call - now uses `session` and `user` from context
+  - Added `authLoading` to useEffect dependencies to wait for auth before loading data
+  - Updated loading check to show spinner while either auth or data is loading
+  - Changed `session.user.id` to `user.id` for database queries
+  - Note: Still imports `supabase` for database queries (organizations, memberships) - correct since those are data queries not auth queries
+- **Learnings for future iterations**:
+  - FirmLayout followed the exact same pattern as CouncilLayout - consistent approach confirmed
+  - Task 1.3 (Migrate Components to UnifiedAuthContext) is now COMPLETE - all 5 subtasks done
+  - Next is Task 1.4: Remove Legacy Auth Contexts (delete AuthContext.tsx and AdminAuthContext.tsx)
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing and not blocking
+---
+
+## Iteration 11 - Task 1.4: Remove Legacy Auth Contexts
+- **What was implemented**: Deleted both legacy auth context files and migrated remaining imports
+- **Files changed**:
+  - `src/pages/council/Notices.tsx` - Changed import from AuthContext to UnifiedAuthContext
+  - `src/pages/council/Dashboard.tsx` - Changed import from AuthContext to UnifiedAuthContext
+  - `src/contexts/AuthContext.tsx` - DELETED
+  - `src/contexts/AdminAuthContext.tsx` - DELETED
+  - `PRD.md` - Marked all Task 1.4 subtasks complete
+- **Key changes**:
+  - Found 2 remaining files importing legacy AuthContext (council/Notices.tsx, council/Dashboard.tsx)
+  - Updated both to import from UnifiedAuthContext instead
+  - Verified no more imports of AuthContext exist (grep returned empty)
+  - Deleted both AuthContext.tsx and AdminAuthContext.tsx files
+  - Verified App.tsx already only uses UnifiedAuthProvider (no changes needed)
+- **Learnings for future iterations**:
+  - Phase 1 Authentication Consolidation is now COMPLETE (Tasks 1.1-1.4 all done)
+  - The codebase now has a single auth context: UnifiedAuthContext
+  - There were 10+ .bak files also importing AuthContext but grep skips them appropriately
+  - TypeScript errors in src/ are pre-existing (RecentNotice interface, council/Dashboard.tsx:600-615 etc.)
+  - Pre-existing errors in cypress/, e2e/, scripts/ directories - not blocking
+  - Next is Task 1.5: Fix Server-Side Auth Middleware
+---
+

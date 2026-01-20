@@ -187,9 +187,9 @@ The file provides (unused):
 - [x] Update `src/pages/firm/FirmLayout.tsx` to use only UnifiedAuthContext
 
 ### 1.4 Remove Legacy Auth Contexts
-- [ ] Delete `src/contexts/AuthContext.tsx` (after all imports removed)
-- [ ] Delete `src/contexts/AdminAuthContext.tsx` (after all imports removed)
-- [ ] Update `src/App.tsx` to only wrap with UnifiedAuthProvider
+- [x] Delete `src/contexts/AuthContext.tsx` (after all imports removed)
+- [x] Delete `src/contexts/AdminAuthContext.tsx` (after all imports removed)
+- [x] Update `src/App.tsx` to only wrap with UnifiedAuthProvider
 
 ### 1.5 Fix Server-Side Auth Middleware
 - [ ] Update `server/middleware/adminAuth.ts` to consistently check `app_metadata.is_platform_admin`
