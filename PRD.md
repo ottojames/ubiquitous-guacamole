@@ -41,8 +41,8 @@ A digital replacement for newspaper public notice publication in the UK. Central
 
 ### 7.3 Email Notifications
 - [x] Implement representation notification to council staff (Implemented 2026-01-20 - sendRepresentationNotificationToCouncil() in email.ts, integrated in representations.ts POST endpoint)
-- [ ] Implement notice publication confirmation to publisher
-- [ ] Verify email templates render correctly
+- [x] Implement notice publication confirmation to publisher (Already implemented - sendNoticeConfirmation() in email.ts, integrated in notices.ts POST /submit, stripe.ts after payment, publish.ts after publishing)
+- [x] Verify email templates render correctly (Implemented 2026-01-20 - Created server/__tests__/emailTemplates.test.ts with 21 tests covering all 9 email functions)
 
 ### 7.4 Security Review
 - [ ] Verify RLS policies cover all tables with user data

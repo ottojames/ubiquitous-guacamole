@@ -908,3 +908,33 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, server/ directories are unrelated
   - Next is Task 7.3 second subtask: Implement notice publication confirmation to publisher
 ---
+
+## Iteration 37 - Task 7.3: Notice publication confirmation & verify email templates
+- **What was implemented**: Verified notice publication confirmation was already implemented, created comprehensive email template tests
+- **Files changed**:
+  - `server/__tests__/emailTemplates.test.ts` - NEW FILE: 21 tests covering all 9 email functions
+  - `PRD.md` - Marked Task 7.3 remaining subtasks complete
+- **Key findings**:
+  - `sendNoticeConfirmation()` was already fully implemented in `server/services/email.ts`
+  - Already integrated in 3 places:
+    - `server/routes/notices.ts` POST `/submit` (when contact_email provided)
+    - `server/routes/stripe.ts` (after successful payment)
+    - `server/routes/publish.ts` (after publishing)
+- **Email template tests created**:
+  - sendTeamInvitation (2 tests: admin, member roles)
+  - sendCouncilDepartmentInvitation (3 tests: department_admin, editor, viewer)
+  - sendNoticeConfirmation (2 tests: with/without optional fields)
+  - sendRepresentationConfirmation (3 tests: support, object, comment)
+  - sendRepresentationNotificationToCouncil (3 tests: support, objection, comment)
+  - sendDeadlineReminder (2 tests: urgent 24h, standard 48h)
+  - sendDailySummary (2 tests: with/without representations)
+  - sendSubscriptionVerification (2 tests: small/large radius)
+  - sendAlertEmail (2 tests: single/multiple notices)
+- **Test results**: All 486 tests pass (21 new + 465 existing)
+- **Learnings for future iterations**:
+  - Before implementing something, check if it already exists - can save significant time
+  - Use vi.mock() to mock external services (Resend) in tests to prevent actual API calls
+  - Each email function handles both HTML and plain text versions
+  - Task 7.3 (Email Notifications) is now COMPLETE
+  - Next is Task 7.4: Security Review
+---
