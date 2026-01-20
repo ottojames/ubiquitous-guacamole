@@ -169,6 +169,9 @@ export default function NewPublishFlow() {
   const currentStep = stepFromPath(pathname);
   const [definitionId, setDefinitionId] = useState<string | null>(null);
 
+  // Detect if user is in a portal context (firm or council account)
+  const isPortalContext = pathname.startsWith('/f/') || pathname.startsWith('/c/');
+
   // Firm practice area filtering
   const [firmPracticeAreas, setFirmPracticeAreas] = useState<string[] | null>(null);
   const [firmSlug, setFirmSlug] = useState<string | null>(null);
@@ -269,9 +272,6 @@ export default function NewPublishFlow() {
       navigate(buildStepUrl(1), { replace: true });
     }
   }, [buildStepUrl, currentStep, navigate, pathname]);
-
-  // Detect portal context (firm or council)
-  const isPortalContext = pathname.startsWith('/f/') || pathname.startsWith('/c/');
 
   // Load firm practice areas if publishing from firm context
   useEffect(() => {
@@ -425,7 +425,8 @@ export default function NewPublishFlow() {
       legalDetails.representationDeadline,
     ]
   );
-  const shouldShowRequiredDetails = hasNoticeUpload || hasMeaningfulManualDetails;
+  // Show form if: (1) OCR extracted text, (2) user manually entered data, OR (3) upload completed (even if OCR failed)
+  const shouldShowRequiredDetails = hasNoticeUpload || hasMeaningfulManualDetails || (uploadStatus === 'ready' && uploadMethod === 'notice');
 
   // Debug logging for upload flow
   useEffect(() => {
@@ -759,9 +760,22 @@ export default function NewPublishFlow() {
 
   const handleBackToStep1 = React.useCallback(() => goToStep(1), [goToStep]);
   const handleBackToStep2 = React.useCallback(() => goToStep(2), [goToStep]);
+
+  // Forward declaration for handleSubmit
+  const handleSubmitRef = React.useRef<(() => Promise<void>) | null>(null);
+
   const { run: handleContinueToPayment, pending: step3Pending } = useSafeTransition(async () => {
-    const id = await ensureDraftId();
-    goToStep(4, { draftOverride: id });
+    // For portal users (firm/council accounts), skip payment and submit directly
+    if (isPortalContext) {
+      console.log('[NewPublishFlow] Portal context detected - submitting directly without payment step');
+      if (handleSubmitRef.current) {
+        await handleSubmitRef.current();
+      }
+    } else {
+      // For public users, go to payment step
+      const id = await ensureDraftId();
+      goToStep(4, { draftOverride: id });
+    }
   });
 
   const stepGuards = useMemo(
@@ -878,6 +892,7 @@ export default function NewPublishFlow() {
                 .ilike('name', '%westminster%')
                 .eq('departments.type', 'licensing')
                 .eq('type', 'council')
+                .limit(1)
                 .single();
 
               console.log('[NewPublishFlow] Westminster query result:', { data, error });
@@ -991,6 +1006,10 @@ export default function NewPublishFlow() {
       onChange: updateTemplateDraftPath,
       errors: templateFieldErrors,
       onSwitchToTemplate: () => handleMethodChange("template"),
+      // Callbacks for Load Sample Data button to populate legalDetails
+      onDetailChange: handleDetailChange,
+      onCouncilSelect: handleCouncilSelect,
+      setLegalDetails,
     }),
     [
       definition,
@@ -1002,6 +1021,9 @@ export default function NewPublishFlow() {
       updateTemplateDraftPath,
       templateFieldErrors,
       handleMethodChange,
+      handleDetailChange,
+      handleCouncilSelect,
+      setLegalDetails,
     ]
   );
 
@@ -1110,6 +1132,10 @@ export default function NewPublishFlow() {
     const isOcrProcessing =
       uploadMethod === "notice" && (uploadStatus === 'uploading' || uploadStatus === 'ocr');
 
+    // Get extracted OCR text for display
+    const extractedOcrText = String((templateDraft as any)?.ocrText ?? "");
+    const hasExtractedText = extractedOcrText.trim().length > 0;
+
     const previewContent = (
       <React.Suspense
         fallback={
@@ -1130,13 +1156,20 @@ export default function NewPublishFlow() {
               </div>
               <p className="text-xs text-slate-500">Extracting text…</p>
             </div>
-          ) : (
+          ) : hasExtractedText ? (
             <LazyNoticePreview
-              text={String((templateDraft as any)?.ocrText ?? "")}
+              text={extractedOcrText}
               highlights={undefined}
               activeHighlight={null}
               onHighlightClick={undefined}
             />
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-medium text-amber-900 mb-1">⚠️ No text extracted</p>
+              <p className="text-xs text-amber-700">
+                The document was uploaded but text extraction failed or returned empty. Please complete the form fields manually below.
+              </p>
+            </div>
           )
         ) : uploadMethod === "notice" ? (
           <div className="space-y-3 text-sm text-slate-700">
@@ -1245,8 +1278,10 @@ export default function NewPublishFlow() {
       <>
         <section className="rounded-2xl border border-slate-200/40 bg-white/50 p-4 shadow-none backdrop-blur-sm md:p-5 opacity-80 hover:opacity-100 transition-opacity duration-300">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Preview</h3>
-            <PreviewTabs source={previewSource} onSource={setPreviewSource} />
+            <h3 className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
+              {uploadMethod === "notice" && hasExtractedText ? "Extracted Text" : "Preview"}
+            </h3>
+            {uploadMethod === "notice" && <PreviewTabs source={previewSource} onSource={setPreviewSource} />}
           </div>
           <div className="rounded-xl border border-slate-200/30 bg-slate-50/50 p-3 shadow-inner transition-opacity duration-200">
             {previewContent}
@@ -1585,6 +1620,11 @@ export default function NewPublishFlow() {
     }
   });
 
+  // Assign handleSubmit to ref so handleContinueToPayment can call it for portal users
+  React.useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  }, [handleSubmit]);
+
   const boundaryContextKey = useMemo(
     () => `${currentStep ?? "none"}:${definition?.id ?? "none"}:${uploadMethod ?? "none"}`,
     [currentStep, definition?.id, uploadMethod]
@@ -1693,6 +1733,7 @@ export default function NewPublishFlow() {
               continuePending={step3Pending}
               ocrText={uploadMethod === "notice" ? ocrText : undefined}
               onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
+              isPortalContext={isPortalContext}
               preview={
                 <div className="rounded-xl border border-slate-200 p-3">
                   <React.Suspense

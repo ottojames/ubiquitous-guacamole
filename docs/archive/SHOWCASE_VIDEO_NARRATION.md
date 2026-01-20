@@ -1,187 +1,131 @@
 # Showcase Demo Video Narration Scripts
 
-## Segment 1: Introduction & General Public Journey
-**Duration**: ~2 minutes | **Persona**: Rachael, Local Resident
+## Segment 1: Public Journey - Finding & Responding to Notices
+**Duration**: ~1 minute | **Persona**: Rachael, Local Resident
 
 ---
 
-"Welcome to Civic Notices - a digital platform transforming how statutory public notices are published, discovered, and engaged with across the UK.
+"So this is Civic Notices - it makes it much easier for residents to find and respond to public notices in their area. We're talking licensing applications, planning applications, traffic orders - all the statutory notices that affect your neighbourhood.
 
-Today, we'll explore how this platform serves four distinct user groups, starting with the general public.
+Let me show you the public side first. I'm going to search for notices near Westminster - just enter a postcode and you immediately get this interactive map showing all the active notices nearby.
 
-Meet Rachael, a resident in central London who's just learned about a new late-night venue applying for a premises license on her street. Using Civic Notices, Rachael can quickly find and respond to this application.
+Here's a premises licence application - you can see all the details, what they're applying for, the consultation deadline. And you can see other residents have already submitted their representations.
 
-From the homepage, Rachael enters her postcode - SW1A 2AB. The platform immediately displays an interactive map showing all active public notices in her area. A red pin marks her searched location, with several notice markers clustered nearby. Notice how clustering makes it easy to explore multiple applications at once.
+If I want to respond, I just click here, fill out the form - name, address, what I'm concerned about - and submit my representation.
 
-Rachael clicks on the Parliament View Wine Bar application at 12 Parliament Street - just around the corner from her home. She can now see the full legal notice, including the applicant's details (Westminster Hospitality Ltd), the proposed licensed activities - sale of alcohol, late night refreshment, live music, and recorded music - and critically, the operating hours: until 2am on Friday and Saturday nights. The consultation deadline is clearly displayed.
+That's it. Done in about two minutes. No more searching through newspaper classified sections or navigating confusing council websites. Everything's searchable, mapped, and you can engage with it directly.
 
-Scrolling down, Rachael discovers that 14 other residents have already submitted representations on this application. Eleven are objections citing concerns about noise and public nuisance, while three express support for the economic benefits.
-
-Rachael decides to submit her own objection. She selects the 'Prevention of Public Nuisance' licensing objective, enters her details, and writes a brief statement about her concerns regarding late-night noise levels from a venue operating until 2am on weekends.
-
-Upon submission, Rachael receives a unique reference number - REP-004821 - and an email confirmation. She can now track the status of her representation through the platform.
-
-This is civic engagement made accessible. Residents no longer need to navigate complex council websites or postal systems. Civic Notices brings transparency and participation directly to those affected by licensing and planning decisions in their communities."
+It's a straightforward way for residents to have their say on what's happening in their neighbourhood."
 
 ---
 
-## Segment 2: Legal Firm Journey
-**Duration**: ~2 minutes | **Persona**: James Wilson, Solicitor at Wilson & Partners LLP
+## Segment 2: Legal Firm Journey - Publishing a Notice
+**Duration**: ~1 minute | **Persona**: James Wilson, Solicitor at Wilson & Partners LLP
 
 ---
 
-"Now let's see how the platform serves legal professionals who manage the complex process of publishing statutory notices on behalf of their clients.
+"Now from the solicitor's perspective. Wilson & Partners have a firm account, so they can publish any statutory notices for their clients with monthly billing. Licensing, planning, traffic orders, probate - whatever their clients need. No more calling newspaper classified departments.
 
-Meet James Wilson, a solicitor at Wilson & Partners LLP. James regularly handles premises license applications, planning submissions, and traffic order notices for various clients across London. Traditionally, this meant coordinating with multiple newspapers, managing classified ad bookings, and tracking individual invoices - a time-consuming administrative burden.
+I'm logged into the firm portal. I need to publish a premises licence application. Click 'Publish Notice', select the notice type - there's a range of different statutory types to choose from - I'll select premises licence and upload via file.
 
-Upon logging into the firm portal, James immediately sees his dashboard. His practice currently has 22 active notices across licensing and gambling categories, with £749.85 in outstanding billing from clients. The platform consolidates everything in one place.
+I'll drag in the Blue Notice PDF that the client signed. The OCR extracts all the text automatically - you can see the preview on the right.
 
-Today, James needs to publish a new premises license application for a client opening a craft brewery in Shoreditch. He clicks 'Publish Notice' and is guided through an intelligent multi-step wizard.
+For the demo I'll use 'Load sample data' to speed things up, but normally you'd just fill in the form from the extracted text. Applicant name, premises address, licensing authority, deadline date.
 
-First, he selects the notice type - Premises License, New Application. The platform presents over 50 statutory notice types across six regulatory categories, each with pre-configured templates meeting legal requirements.
+Quick review to make sure everything looks right, maybe tweak the formatting, and click 'Submit notice'.
 
-Next, James chooses his upload method. He has two options: build from a structured template, or upload an existing Blue Notice. Since his client already has a signed Blue Notice in PDF format, James selects 'Upload via File' and drags the document into the upload zone.
-
-Within seconds, the platform's OCR technology extracts all the text from the PDF Blue Notice. The extracted text appears on screen, preserving the exact wording from the original document. Now James simply needs to complete the required fields: applicant name, premises address, and consultation deadline. These mandatory fields ensure the notice meets statutory publication requirements.
-
-James fills in the details from the Blue Notice - the applicant name, the full premises address including postcode, and confirms the 28-day consultation period. The platform validates each field against statutory requirements, ensuring postcodes are correctly formatted and deadlines comply with the Licensing Act 2003.
-
-With all required details completed, James previews the final notice text. The preview shows exactly how the notice will appear to the public - properly formatted with all legal wording in place, combining the extracted Blue Notice text with the validated statutory details.
-
-Satisfied, James submits the notice for publication at £49.99 - compared to the traditional £280 newspaper advertisement. The notice goes live immediately, and James's client is automatically invoiced. That's an 80% time saving and 82% cost reduction.
-
-For legal firms, Civic Notices transforms statutory notice publication from an administrative headache into a streamlined, compliant, and profitable service."
+Done. It's live immediately. The client gets a confirmation email. No payment step because it's all on the firm account. That's an 80% cost saving compared to newspaper advertisements, and it's completed in minutes instead of days."
 
 ---
 
-## Segment 3: Council Officer Journey
-**Duration**: ~2 minutes | **Persona**: Emma Martinez, Senior Licensing Officer at Westminster City Council
+## Segment 3: Council Officer Journey - Managing Representations
+**Duration**: ~1:30 minutes | **Persona**: Emma Martinez, Senior Licensing Officer at Westminster
 
 ---
 
-"Let's now explore how council licensing and planning officers use the platform to manage submissions, representations, and regulatory workflows.
+"Now the council side. I'm logged in as a licensing officer at Westminster Council. Different departments use this - licensing, planning, highways - each managing their own statutory notices.
 
-Emma Martinez is a Senior Licensing Officer at Westminster City Council's licensing department. Her responsibilities include reviewing applications from solicitors and agents, managing public consultations, processing representations from residents, and ensuring all statutory procedures are followed correctly.
+This is my dashboard. I can see all the active notices that have been published, and critically - how many representations have come in from residents. That's what I'm here to manage.
 
-Emma logs into the Westminster City Council portal. The platform shows that Westminster has multiple departments - Licensing, Planning, and Highways - each handling different types of statutory notices. Emma has access only to the Licensing department, demonstrating proper access control and separation of duties. She cannot view or manage Planning or Highways notices, ensuring departmental data security.
+Let me go to the notices list. These are all the published notices currently in consultation. You can see each one shows how many representations it's received - this one here has 14 representations with 11 objections, so that needs attention.
 
-Emma's Licensing dashboard provides immediate situational awareness. She can see that her department currently has 47 published notices, 5 pending submissions awaiting review, and importantly - 15 unread representations requiring attention. The system uses visual indicators: amber dots highlight urgent items with approaching deadlines.
+I can sort by deadline - soonest first - so I know which consultations are closing soon and need my immediate focus. I can also filter to show only notices with objections, or notices with high activity.
 
-Emma clicks on 'Pending Submissions'. Here she finds five notices recently submitted by local law firms through the platform. These require council verification before publication. Emma selects a premises license application from Wilson & Partners.
+Let me click into this one - Parliament View Wine Bar. I can see all the representations that have come in. Some are objections about noise concerns, public safety. Some are supporting the application.
 
-The platform presents the complete application in a structured format. Emma can verify that all mandatory fields are complete, that the proposed activities fall within licensable categories, and that the consultation period is correctly calculated. Unlike email-based workflows, everything is centralized and auditable.
+As a licensing officer, I need to review all of these before the committee hearing. I can see who submitted them, what their concerns are, everything documented in one place.
 
-After reviewing, Emma clicks 'Approve for Publication'. The notice immediately becomes visible to the public, and the statutory consultation period begins. The solicitor is automatically notified.
-
-Next, Emma navigates to the Representations section. She selects a controversial application - Westminster Bridge Bistro on Westminster Bridge Road - that has received 12 objections and 3 letters of support. Emma can filter representations by licensing objective: some cite prevention of crime and disorder, others focus on public nuisance concerns.
-
-Emma reviews each representation carefully, marking them as read as she goes. This helps her team coordinate - they can see at a glance which objections have been assessed and which still require attention.
-
-The deadline indicator shows this consultation closes tomorrow. Emma will now prepare her recommendation report for the licensing sub-committee hearing, drawing on these 15 representations from local residents and businesses in Westminster.
-
-The platform also supports template management. Emma's team has created standard notice templates for routine variations and minor application types, significantly speeding up publication for straightforward cases.
-
-For council officers, Civic Notices provides end-to-end workflow management - from receiving professional submissions, through public consultation, to decision-making. Everything is tracked, auditable, and compliant with statutory timescales."
+Back on the dashboard - I can track deadline compliance, see which notices are getting the most public engagement, and make sure nothing falls through the cracks. Everything's auditable, everything's tracked. That's what matters when you're managing statutory consultations."
 
 ---
 
-## Segment 4: Council Manager Journey
-**Duration**: ~2 minutes | **Persona**: David Chen, Head of Regulatory Services at Westminster Council
+## Segment 4: Council Management - Analytics & Oversight
+**Duration**: ~1 minute | **Persona**: David Chen, Head of Regulatory Services
 
 ---
 
-"Finally, let's see how senior council management uses the platform to gain strategic oversight, demonstrate value, and ensure regulatory compliance.
+"Finally, the management view. This is what senior council leadership sees.
 
-David Chen is the Head of Regulatory Services at Westminster City Council, overseeing licensing, planning, and highways departments. David's priorities are accountability, efficiency, cost control, and statutory compliance. He needs evidence-based insights to report to elected members and senior leadership.
+I've got this analytics dashboard showing all the key metrics - how many notices we've published, how many representations we're getting from residents, what our approval times look like across different departments.
 
-David's analytics dashboard immediately presents key performance indicators. Westminster has published 245 notices over the past quarter, with 189 currently active. The platform has facilitated 1,342 public representations - demonstrating strong civic engagement.
+Here's the interesting part - cost savings. We used to spend around £280 per notice in local newspapers. Now it's all digital, significantly cheaper, and we can see exactly how much we're saving.
 
-But here's where the value becomes tangible: the cost savings calculator. Traditionally, Westminster would publish statutory notices through local newspapers at approximately £280 per insertion. Using the digital platform at £49.99 per notice, the council has saved over £56,000 this quarter alone. That's an 82% cost reduction, and those savings flow directly to public services.
+I can compare performance between departments - licensing, planning, highways - see who's hitting deadlines, where we might need more resources.
 
-David clicks into the department comparison view. He can now see performance metrics side-by-side: the Licensing department has processed 142 notices with an average 4.2-day approval time, while Planning has handled 78 notices with a 6.1-day average. This granular insight helps David identify best practices and areas for improvement.
+And compliance tracking - this is critical for audit purposes. I can see our deadline adherence rate, which notices are approaching deadlines, everything that elected members and audit committees need to see.
 
-The compliance dashboard is particularly important. Westminster's statutory deadline adherence rate stands at 98.5% - meaning the vast majority of notices are published and consulted upon within legal timescales. Only two notices are currently overdue for representation review, both flagged for immediate attention.
-
-David examines the monthly trends chart, showing notice volumes by type over the past year. There's a clear seasonal pattern: licensing variations peak in spring as premises prepare for summer trading, while traffic regulation orders concentrate in autumn during major roadworks planning.
-
-The platform also tracks user engagement. David can see that 67% of published notices have received at least one representation, significantly higher than the previous paper-based system where engagement averaged around 35%. Digital accessibility is clearly driving public participation.
-
-When it's time to report to the council's regulatory committee, David clicks 'Export Report'. The platform generates a comprehensive PDF and CSV dataset covering all key metrics, ready for presentation. He can also access the full audit log - every action taken by officers, every status change, every deadline met or missed. This level of transparency is essential for local government accountability.
-
-For senior management, Civic Notices transforms statutory notices from an administrative obligation into a strategic asset - demonstrating efficiency, ensuring compliance, and proving public value."
-
----
-
-## Segment 5: Conclusion & Platform Value
-**Duration**: ~2 minutes
-
----
-
-"Civic Notices demonstrates how digital transformation can modernize centuries-old statutory processes while maintaining legal rigor and public trust.
-
-Let's recap what we've seen across these four user journeys.
-
-For residents like Rachael, the platform makes civic participation accessible and transparent. No more hunting through small print in local newspapers or complex council websites. Public notices are searchable by postcode, mapped geographically, and engagement is as simple as filling out a web form. Democracy becomes more participatory when the barriers to engagement are removed.
-
-For legal professionals like James, the platform transforms inefficiency into competitive advantage. What once required phone calls to classified ad departments, manual data entry, and invoice reconciliation is now an intelligent workflow. OCR technology extracts information from existing documents, validation ensures compliance, and clients receive a faster, cheaper service. That 80% time saving allows solicitors to focus on high-value legal work, not administrative coordination.
-
-For council officers like Emma, the platform provides the tools modern regulation requires: centralized submission management, representation tracking, deadline monitoring, and complete audit trails. Officers can confidently manage dozens of concurrent consultations knowing that nothing falls through the cracks. Statutory procedures are built into the workflow, reducing compliance risk.
-
-For senior management like David, the platform delivers what elected members and audit committees demand: evidence of value, proof of compliance, and transparent accountability. The cost savings are measurable and significant - over £56,000 per quarter for Westminster alone. The compliance rates are trackable and reportable. The public engagement is demonstrably higher than legacy systems.
-
-But beyond the individual user journeys, Civic Notices represents something more fundamental: the recognition that statutory transparency and digital accessibility are not contradictory. We can maintain the legal protections and consultation rights that safeguard proper process while delivering them through modern, efficient channels.
-
-This platform is already serving multiple councils across England, processing hundreds of notices monthly, and facilitating thousands of representations from engaged citizens. It demonstrates that local government digital transformation need not be complex or expensive - it simply requires understanding user needs across the entire ecosystem.
-
-Whether you're a council considering adoption, a legal firm seeking operational efficiency, or a civic technology advocate, Civic Notices shows what's possible when we apply modern technology to enduring democratic principles.
-
-The future of statutory public notices is digital, accessible, and transparent. And that future is already here.
-
-Thank you for exploring Civic Notices with us today. For more information, visit our platform or contact our team to discuss implementation for your authority."
+When I need to report to the council, I just export all this data. It's all there - transparent, trackable, and it demonstrates we're delivering value. That's what matters when you're reporting to councillors and taxpayers."
 
 ---
 
 ## Video Production Notes
 
 ### Timing Guidelines
-- Each segment: 280-320 words
-- Speaking pace: 140-150 words per minute
+- Each segment: ~140-150 words
+- Speaking pace: 140-150 words per minute (conversational)
 - Natural pauses for visual demonstration
-- Allow 10-15 seconds for transitions between segments
+- Total runtime: ~4 minutes
 
 ### Visual Recommendations
 **Segment 1 (Public)**:
-- Screen recording of map interaction
-- Close-ups of representation submission form
-- Email confirmation mockup
+- Homepage search with postcode entry
+- Map view with notice markers
+- Individual notice detail page
+- Representation submission form
 
 **Segment 2 (Firm)**:
-- Dashboard overview with active notices highlighted
-- OCR upload and extraction process in action
-- Preview comparison showing extracted vs. formatted text
+- Firm dashboard overview
+- Notice type selection
+- OCR upload demonstration
+- Form population with sample data
+- Preview and submit flow
 
 **Segment 3 (Officer)**:
-- Dashboard with amber urgency indicators
-- Representation review interface
-- Approval workflow animation
+- Council officer dashboard
+- Pending submissions list
+- Application review interface
+- Representations management view
+- Approval workflow
 
 **Segment 4 (Manager)**:
-- Analytics dashboard with dynamic charts
-- Cost savings calculator visualization
-- Department comparison cards
-
-**Segment 5 (Conclusion)**:
-- Split-screen showing all four user journeys
-- Key metrics overlay
-- Platform logo and contact information
+- Analytics dashboard overview
+- Cost savings metrics
+- Department comparison view
+- Compliance tracking
+- Export functionality
 
 ### Tone & Delivery
-- Professional but accessible language
-- Emphasize real-world benefits over technical features
-- Use specific numbers to build credibility (£12,450 saved, 98.5% compliance)
-- Conclude each segment with clear value statement
+- Professional but conversational (like you're presenting to colleagues)
+- First person throughout ("I'm going to...", "Let me show you...")
+- Focus on what's visible on screen
+- Natural pauses to let UI actions complete
+- Clear and confident delivery
+- Don't rush - let the demo breathe
 
-### Background Music Suggestions
-- Corporate/technology background track at 20% volume
-- Subtle, non-intrusive
-- Increase slightly during conclusion for emphasis
+### Recording Tips
+- do a quick dry run to time each bit
+- have your demo data ready (postcode, PDF file, etc.)
+- clear browser cache before recording so everything looks fresh
+- cursor highlighting helps if you've got it
+- keep mouse movements smooth but don't stress about it
+- if you mess up just pause and redo that sentence, you can edit later

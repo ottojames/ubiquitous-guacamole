@@ -37,11 +37,11 @@ describe('UploadMethodStep', () => {
       />
     );
 
-    const uploadButton = screen.getByRole('button', { name: /upload & ocr/i });
+    const uploadButton = await screen.findByRole('button', { name: /upload via file/i });
     await user.click(uploadButton);
-    expect(screen.getByTestId('upload-dropzone')).toBeInTheDocument();
+    expect(await screen.findByTestId('upload-dropzone')).toBeInTheDocument();
 
-    const templateButton = screen.getByRole('button', { name: /structured template/i });
+    const templateButton = await screen.findByRole('button', { name: /structured template/i });
     await user.click(templateButton);
 
     await waitFor(() => expect(handleMethodChange).toHaveBeenCalledWith('template'));

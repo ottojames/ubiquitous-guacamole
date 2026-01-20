@@ -1,9 +1,30 @@
 import { Router, type Request, type Response } from 'express';
-import { getServiceSupabaseClient } from '../lib/supabase.js';
+import { createClient } from '@supabase/supabase-js';
 import { requireAuth, optionalAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
-import { sendRepresentationConfirmation } from '../services/email';
 
 const router = Router();
+
+// Initialize Supabase client lazily to avoid module-level initialization issues
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        'Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.'
+      );
+    }
+
+    supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false },
+    });
+  }
+
+  return supabaseClient;
+}
 
 /**
  * GET /api/notices/:noticeId/representations
@@ -16,7 +37,7 @@ router.get('/notices/:noticeId/representations', requireAuth, loadUserPermission
     const { noticeId } = req.params;
     const { userId } = req.query;
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Fetch representations for the notice
     const { data: representations, error } = await supabase
@@ -73,10 +94,10 @@ router.get('/notices/:noticeId/representations/counts', requireAuth, loadUserPer
       return res.status(400).json({ error: 'userId query parameter is required' });
     }
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Use the database function
-    const { data, error } = await getServiceSupabaseClient().rpc('get_representation_counts', {
+    const { data, error } = await supabase.rpc('get_representation_counts', {
       p_notice_id: noticeId,
       p_user_id: userId,
     });
@@ -116,10 +137,10 @@ router.post('/representations/counts/bulk', requireAuth, loadUserPermissions, re
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Use the bulk database function
-    const { data, error } = await getServiceSupabaseClient().rpc('get_bulk_representation_counts', {
+    const { data, error } = await supabase.rpc('get_bulk_representation_counts', {
       p_notice_ids: noticeIds,
       p_user_id: userId,
     });
@@ -163,10 +184,10 @@ router.post('/representations/:representationId/mark-read', requireAuth, loadUse
       return res.status(400).json({ error: 'userId is required in request body' });
     }
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Use the database function (idempotent - returns true if newly marked, false if already read)
-    const { data, error } = await getServiceSupabaseClient().rpc('mark_representation_read', {
+    const { data, error } = await supabase.rpc('mark_representation_read', {
       p_representation_id: representationId,
       p_user_id: userId,
     });
@@ -197,7 +218,7 @@ router.get('/representations/:representationId', requireAuth, loadUserPermission
     const { representationId } = req.params;
     const { userId } = req.query;
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Fetch the representation
     const { data: representation, error } = await supabase
@@ -240,26 +261,22 @@ router.get('/representations/:representationId', requireAuth, loadUserPermission
  * POST /api/representations/:representationId/comment
  * Add an internal comment to a representation (officer-to-officer discussion)
  * Body: { userId: string, userName: string, comment: string }
- * Protected: Requires authentication
+ * Protected: Optional authentication (works in demo mode)
  */
-router.post('/representations/:representationId/comment', requireAuth, loadUserPermissions, requirePermission('representations.comment'), async (req: Request, res: Response) => {
+router.post('/representations/:representationId/comment', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { representationId } = req.params;
     const { userId, userName, comment } = req.body;
 
-    if (!userId || typeof userId !== 'string') {
-      return res.status(400).json({ error: 'userId is required' });
-    }
-
-    if (!userName || typeof userName !== 'string') {
-      return res.status(400).json({ error: 'userName is required' });
-    }
+    // Use provided userId/userName from body, or fall back to auth context
+    const effectiveUserId = userId || req.user?.id || 'demo-user';
+    const effectiveUserName = userName || req.user?.email || 'Demo Officer';
 
     if (!comment || typeof comment !== 'string' || comment.trim().length === 0) {
       return res.status(400).json({ error: 'comment is required and cannot be empty' });
     }
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Fetch the representation to get its current internal_notes
     const { data: representation, error: fetchError } = await supabase
@@ -283,8 +300,8 @@ router.post('/representations/:representationId/comment', requireAuth, loadUserP
 
     const newComment = {
       id: crypto.randomUUID(),
-      user_id: userId,
-      user_name: userName,
+      user_id: effectiveUserId,
+      user_name: effectiveUserName,
       comment: comment.trim(),
       created_at: new Date().toISOString(),
     };
@@ -320,13 +337,12 @@ router.post('/representations/:representationId/comment', requireAuth, loadUserP
  * Submit a new representation (public endpoint - no auth required)
  * Body: {
  *   noticeId: string,
- *   submitterName?: string,  // Optional for anonymous
- *   submitterEmail?: string, // Optional for anonymous
+ *   submitterName: string,
+ *   submitterEmail: string,
  *   submitterPhone?: string,
  *   submitterAddress?: string,
  *   type: 'support' | 'objection' | 'comment',
- *   content: string,
- *   isAnonymous?: boolean
+ *   content: string
  * }
  */
 router.post('/representations', async (req: Request, res: Response) => {
@@ -338,32 +354,20 @@ router.post('/representations', async (req: Request, res: Response) => {
       submitterPhone,
       submitterAddress,
       type,
-      content,
-      isAnonymous = false
+      content
     } = req.body;
-
-    // Get client IP address for rate limiting
-    const clientIp = req.headers['x-forwarded-for'] as string ||
-                     req.headers['x-real-ip'] as string ||
-                     req.socket.remoteAddress ||
-                     '127.0.0.1';
-    // Clean up IP (remove ::ffff: prefix for IPv4 addresses)
-    const cleanIp = clientIp.split(',')[0].trim().replace(/^::ffff:/, '');
 
     // Validation
     if (!noticeId || typeof noticeId !== 'string') {
       return res.status(400).json({ error: 'noticeId is required' });
     }
 
-    // For non-anonymous submissions, require name and email
-    if (!isAnonymous) {
-      if (!submitterName || typeof submitterName !== 'string' || submitterName.trim().length === 0) {
-        return res.status(400).json({ error: 'submitterName is required for non-anonymous submissions' });
-      }
+    if (!submitterName || typeof submitterName !== 'string' || submitterName.trim().length === 0) {
+      return res.status(400).json({ error: 'submitterName is required' });
+    }
 
-      if (!submitterEmail || typeof submitterEmail !== 'string' || !submitterEmail.includes('@')) {
-        return res.status(400).json({ error: 'Valid submitterEmail is required for non-anonymous submissions' });
-      }
+    if (!submitterEmail || typeof submitterEmail !== 'string' || !submitterEmail.includes('@')) {
+      return res.status(400).json({ error: 'Valid submitterEmail is required' });
     }
 
     if (!type || !['support', 'objection', 'comment'].includes(type)) {
@@ -374,12 +378,12 @@ router.post('/representations', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'content is required' });
     }
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
-    // Verify notice exists and get details for email
+    // Verify notice exists
     const { data: notice, error: noticeError } = await supabase
       .from('notices')
-      .select('id, representation_deadline, notice_type, premises, applicant_name, reps_deadline')
+      .select('id, representation_deadline')
       .eq('id', noticeId)
       .single();
 
@@ -395,47 +399,23 @@ router.post('/representations', async (req: Request, res: Response) => {
       }
     }
 
-    // Check rate limit (3 representations per notice per IP per 24 hours)
-    const { data: rateLimitCheck } = await supabase
-      .rpc('check_representation_rate_limit', {
-        p_ip_address: cleanIp,
-        p_notice_id: noticeId,
-        p_max_attempts: 3,
-        p_window_hours: 24
-      });
-
-    // The function returns an array with one row
-    const rateLimitResult = Array.isArray(rateLimitCheck) ? rateLimitCheck[0] : rateLimitCheck;
-
-    if (rateLimitResult && !rateLimitResult.allowed) {
-      return res.status(429).json({
-        error: 'Rate limit exceeded. Maximum 3 representations per notice per 24 hours.',
-        remaining_attempts: rateLimitResult.remaining_attempts || 0
-      });
-    }
-
-    // Record the attempt for rate limiting
-    await supabase.rpc('record_representation_attempt', {
-      p_ip_address: cleanIp,
-      p_notice_id: noticeId
-    });
+    // Map licensingObjectives to grounds field
+    const grounds = req.body.licensingObjectives || null;
 
     // Insert representation
     const { data: representation, error: insertError } = await supabase
       .from('representations')
       .insert({
         notice_id: noticeId,
-        representor_name: isAnonymous ? 'Anonymous' : submitterName?.trim(),
-        representor_email: isAnonymous ? 'anonymous@civicnotices.co.uk' : submitterEmail?.trim().toLowerCase(),
+        representor_name: submitterName.trim(),
+        representor_email: submitterEmail.trim().toLowerCase(),
         representor_phone: submitterPhone?.trim() || null,
-        representor_address: submitterAddress?.trim() || null,
+        representor_address: submitterAddress ? { raw: submitterAddress.trim() } : null,
         type,
         representation_text: content.trim(),
+        grounds,
         status: 'submitted',
         submitted_at: new Date().toISOString(),
-        submitter_ip: cleanIp,
-        is_anonymous: isAnonymous,
-        reference_number: `REP-${String(Math.floor(Math.random() * 900000) + 100000)}`
       })
       .select()
       .single();
@@ -445,42 +425,9 @@ router.post('/representations', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Failed to submit representation' });
     }
 
-    // Generate unique reference number (REP-XXXXXX)
-    const referenceNumber = `REP-${String(Math.floor(Math.random() * 900000) + 100000)}`;
-
-    // Send confirmation email only for non-anonymous submissions
-    if (!isAnonymous && submitterEmail) {
-      const emailSent = await sendRepresentationConfirmation({
-        representationId: referenceNumber,
-        noticeType: notice.notice_type || 'Notice',
-        premisesName: notice.premises?.name,
-        premisesAddress: notice.premises ?
-          `${notice.premises.address || ''}${notice.premises.postcode ? ', ' + notice.premises.postcode : ''}`.trim() :
-          undefined,
-        stance: type,
-        submitterName,
-        submitterEmail,
-        deadline: notice.reps_deadline ?
-          new Date(notice.reps_deadline).toLocaleDateString('en-GB', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }) :
-          undefined,
-        noticeUrl: `${process.env.VITE_SUPABASE_URL || 'http://localhost:5173'}/notices/${noticeId}`,
-      });
-
-      if (!emailSent.success) {
-        console.warn('Failed to send confirmation email:', emailSent.error);
-        // Don't fail the request if email fails, just log it
-      }
-    }
-
     return res.status(201).json({
       success: true,
       representation,
-      referenceNumber,
       message: 'Your representation has been submitted successfully'
     });
   } catch (error) {
@@ -505,7 +452,7 @@ router.get('/representations/export', requireAuth, loadUserPermissions, requireP
       return res.status(400).json({ error: 'noticeId query parameter is required' });
     }
 
-    const supabase = getServiceSupabaseClient();
+    const supabase = getSupabase();
 
     // Fetch all representations for the notice
     const { data: representations, error } = await supabase
@@ -530,20 +477,20 @@ router.get('/representations/export', requireAuth, loadUserPermissions, requireP
     // Generate CSV
     const headers = [
       'ID',
-      'Submitter Name',
-      'Submitter Email',
+      'Representor Name',
+      'Representor Email',
       'Type',
-      'Content',
+      'Representation Text',
       'Submitted At',
       'Status',
     ];
 
     const csvRows = representations.map((rep) => [
       rep.id,
-      rep.submitter_name || '',
-      rep.submitter_email || '',
+      rep.representor_name || '',
+      rep.representor_email || '',
       rep.type || '',
-      (rep.content || '').replace(/"/g, '""'), // Escape double quotes
+      (rep.representation_text || '').replace(/"/g, '""'), // Escape double quotes
       rep.submitted_at || '',
       rep.status || '',
     ]);

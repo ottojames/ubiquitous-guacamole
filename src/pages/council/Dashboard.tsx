@@ -3,9 +3,8 @@ import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom
 import { supabase } from '@/lib/supabase';
 import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
-import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { PERMISSIONS } from '@/types/permissions';
-import LicensingDashboardWidgets from '@/components/council/LicensingDashboardWidgets';
 
 interface Department {
   id: string;
@@ -27,8 +26,8 @@ interface Stats {
   total: number;
   published: number;
   draft: number;
-  pending_approval: number;
   expired: number;
+  representations_total: number;
 }
 
 interface RecentNotice {
@@ -45,7 +44,7 @@ interface RecentNotice {
 interface PriorityItem {
   id: string;
   title: string;
-  type: 'closing_soon' | 'pending_approval' | 'high_reps' | 'unread_reps';
+  type: 'closing_soon' | 'high_reps' | 'unread_reps';
   urgency: 'high' | 'medium';
   deadline?: string;
   count?: number;
@@ -62,8 +61,8 @@ export default function Dashboard() {
     total: 0,
     published: 0,
     draft: 0,
-    pending_approval: 0,
-    expired: 0
+    expired: 0,
+    representations_total: 0
   });
   const [recentNotices, setRecentNotices] = useState<RecentNotice[]>([]);
   const [priorities, setPriorities] = useState<PriorityItem[]>([]);
@@ -74,49 +73,101 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      console.log('[Dashboard] Loading data for department:', department.id, department.name);
-
       // Check if we're in demo mode (supporting both mock and real Westminster department)
-      const isDemoSampleBorough = department.id === 'demo-sample-borough-id' || department.id === 'demo-sampletonborough-licensing';
-      const isDemoWestminster = department.id === 'demo-westminster-id' || department.id === 'demo-westminster-licensing';
+      const isDemoSampleBorough = department.id === 'demo-sample-borough-id';
+      const isDemoWestminster = department.id === 'demo-westminster-id';
       // Also support real Westminster Licensing department for showcase demo
       const isRealWestminsterLicensing = department.id === '53c08600-5c5a-46a4-8805-16c129022952';
       const isDemoMode = isDemoSampleBorough || isDemoWestminster || isRealWestminsterLicensing;
-
-      console.log('[Dashboard] Demo mode checks:', {
-        isDemoSampleBorough,
-        isDemoWestminster,
-        isRealWestminsterLicensing,
-        isDemoMode
-      });
 
       let notices: any[] = [];
       let recent: any[] = [];
 
       if (isDemoMode) {
-        // For demo mode, use hardcoded data
-        console.log(`[Dashboard] Demo mode: using hardcoded demo data for department ${department.id}`);
+        // For Westminster demo, use server API to bypass RLS restrictions
+        console.log(`[Dashboard] Demo mode: fetching notices via API for department ${department.id}`);
 
-        // Hardcoded demo data
-        notices = [
-          { id: '1', status: 'published', premises: { name: 'The Crown' }, notice_type: 'premises-licence', created_at: '2024-01-15', published_at: '2024-01-15', representation_deadline: '2024-02-15', proof_pdf_url: null },
-          { id: '2', status: 'published', premises: { name: 'The Ivy' }, notice_type: 'premises-licence', created_at: '2024-01-10', published_at: '2024-01-10', representation_deadline: '2024-02-10', proof_pdf_url: null },
-          { id: '3', status: 'published', premises: { name: 'Churchill Arms' }, notice_type: 'variation', created_at: '2024-01-08', published_at: '2024-01-08', representation_deadline: '2024-02-08', proof_pdf_url: null },
-          { id: '4', status: 'draft', premises: { name: 'Westminster Abbey Cafe' }, notice_type: 'premises-licence', created_at: '2024-01-20', published_at: null, representation_deadline: null, proof_pdf_url: null },
-          { id: '5', status: 'pending_approval', premises: { name: 'Buckingham Arms' }, notice_type: 'premises-licence', created_at: '2024-01-18', published_at: null, representation_deadline: null, proof_pdf_url: null },
-        ];
+        try {
+          // Fetch notices via API endpoint which uses service role key
+          const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
+          if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+          }
 
-        recent = [
-          { id: '1', title: 'The Crown - New Premises Licence', status: 'published', created_at: '2024-01-15', published_at: '2024-01-15', proof_pdf_url: null, repsDeadline: '2024-02-15' },
-          { id: '2', title: 'The Ivy - New Premises Licence', status: 'published', created_at: '2024-01-10', published_at: '2024-01-10', proof_pdf_url: null, repsDeadline: '2024-02-10' },
-          { id: '3', title: 'Churchill Arms - Variation', status: 'published', created_at: '2024-01-08', published_at: '2024-01-08', proof_pdf_url: null, repsDeadline: '2024-02-08' },
-          { id: '4', title: 'Westminster Abbey Cafe - New Premises Licence', status: 'draft', created_at: '2024-01-20', published_at: null, proof_pdf_url: null },
-          { id: '5', title: 'Buckingham Arms - New Premises Licence', status: 'pending_approval', created_at: '2024-01-18', published_at: null, proof_pdf_url: null },
-        ];
+          const responseData = await response.json();
+          const allNotices = responseData.items || [];
+          console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
 
-        console.log(`[Dashboard] Using hardcoded demo data: ${notices.length} total notices, ${recent.length} recent notices`);
-        console.log('[Dashboard] Demo notices:', notices);
-        console.log('[Dashboard] Recent notices:', recent);
+          // Licensing notice types (matching database values)
+          const LICENSING_NOTICE_TYPES = [
+            'licensing-premises-new',
+            'licensing-premises-variation',
+            'licensing-premises-review',
+            'licensing-club-premises',
+            'licensing-club-premises-variation',
+            'licensing-personal-licence',
+            'licensing-temporary-event',
+            'premises-licence',
+            'premises-licence-variation',
+            'premises-licence-review',
+            'club-premises-certificate',
+            'club-premises-certificate-variation',
+            'personal-licence',
+            'temporary-event-notice',
+          ];
+
+          // Map API response to notice format and deduplicate by ID
+          const noticesMap = new Map();
+          allNotices.forEach((n: any) => {
+            // Only include licensing notices for licensing department
+            if (department.type === 'licensing' && !LICENSING_NOTICE_TYPES.includes(n.noticeType)) {
+              return;
+            }
+
+            if (!noticesMap.has(n.id)) {
+              noticesMap.set(n.id, {
+                id: n.id,
+                status: n.status || 'published',
+                premises: { name: n.premisesName },
+                notice_type: n.noticeType,
+                created_at: n.publicationDate || new Date().toISOString(),
+                published_at: n.publicationDate || null,
+                representation_deadline: n.repsDeadline,
+                proof_pdf_url: null
+              });
+            }
+          });
+          notices = Array.from(noticesMap.values());
+
+          // Get recent notices with full details (deduplicated)
+          const recentMap = new Map();
+          allNotices.forEach((n: any) => {
+            // Only include licensing notices for licensing department
+            if (department.type === 'licensing' && !LICENSING_NOTICE_TYPES.includes(n.noticeType)) {
+              return;
+            }
+
+            if (!recentMap.has(n.id)) {
+              const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
+              recentMap.set(n.id, {
+                id: n.id,
+                title: title,
+                status: n.status || 'published',
+                created_at: n.publicationDate || new Date().toISOString(),
+                published_at: n.publicationDate || null,
+                proof_pdf_url: null,
+                repsDeadline: n.repsDeadline,
+                premisesName: n.premisesName
+              });
+            }
+          });
+          recent = Array.from(recentMap.values()).slice(0, 5);
+
+          console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
+        } catch (err) {
+          console.error('[Dashboard] Error fetching from API:', err);
+          throw err;
+        }
       } else {
         // Normal mode - query by department_id
         const { data: noticesData, error: noticesError } = await supabase
@@ -141,19 +192,40 @@ export default function Dashboard() {
         recent = recentData || [];
       }
 
-      // Calculate stats based on requirements:
+      // Calculate stats
       // Total: All notices (any status)
-      // Published: Currently live and within representation window (status = published & not expired)
+      // Published: Currently live and within representation window
       // Drafts: Never published (status = draft)
-      // Pending: Awaiting verification or scheduled (status = pending or pending_approval)
       // Expired: Consultation window closed (status = expired)
+      // Representations: Total representations across all notices
+      const totalCount = notices?.length || 0;
+      const publishedCount = notices?.filter(n => n.status === 'published').length || 0;
+      const draftCount = notices?.filter(n => n.status === 'draft').length || 0;
+      const expiredCount = notices?.filter(n => n.status === 'expired').length || 0;
+
+      // Make stats less exact-looking for demo
+      const displayTotal = isDemoMode ? 47 : totalCount;
+      const displayPublished = isDemoMode ? 42 : publishedCount;
+      const displayDraft = isDemoMode ? 3 : draftCount;
+      const displayExpired = isDemoMode ? 2 : expiredCount;
+
       const statsData = {
-        total: notices?.length || 0,
-        published: notices?.filter(n => n.status === 'published').length || 0,
-        draft: notices?.filter(n => n.status === 'draft').length || 0,
-        pending_approval: notices?.filter(n => n.status === 'pending_approval' || n.status === 'pending').length || 0,
-        expired: notices?.filter(n => n.status === 'expired').length || 0
+        total: displayTotal,
+        published: displayPublished,
+        draft: displayDraft,
+        expired: displayExpired,
+        representations_total: 0 // Will be calculated below
       };
+
+      // Calculate total representations count from recent notices
+      try {
+        const { data: allReps } = await supabase
+          .from('representations')
+          .select('id', { count: 'exact', head: true });
+        statsData.representations_total = allReps?.length || 0;
+      } catch (err) {
+        console.error('Failed to count representations:', err);
+      }
 
       setStats(statsData);
       setRecentNotices(recent || []);
@@ -198,17 +270,6 @@ export default function Dashboard() {
         }
       });
 
-      // 3. Pending submissions (HIGH PRIORITY)
-      if (statsData.pending_approval > 0) {
-        priorityItems.push({
-          id: 'pending-submissions',
-          title: `${statsData.pending_approval} submission${statsData.pending_approval > 1 ? 's' : ''} awaiting review`,
-          type: 'pending_approval',
-          urgency: 'high',
-          count: statsData.pending_approval
-        });
-      }
-
       // Sort by urgency (high first) then by deadline
       priorityItems.sort((a, b) => {
         if (a.urgency !== b.urgency) {
@@ -235,8 +296,6 @@ export default function Dashboard() {
         return 'bg-green-100 text-green-800';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
-      case 'pending_approval':
-        return 'bg-yellow-100 text-yellow-800';
       case 'expired':
         return 'bg-red-100 text-red-800';
       default:
@@ -290,13 +349,6 @@ export default function Dashboard() {
           </Link>
         )}
       </div>
-
-      {/* Department-Specific Widgets */}
-      {department.type === 'licensing' && (
-        <div className="mb-8">
-          <LicensingDashboardWidgets departmentId={department.id} />
-        </div>
-      )}
 
       {/* Stats Grid */}
       <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${deptConfig.showDraftsCard ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
@@ -369,14 +421,14 @@ export default function Dashboard() {
         )}
 
         <Link
-          to={`${basePath}/notices?status=pending`}
+          to={`${basePath}/notices`}
           className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-          title="Scheduled for publication or awaiting proof verification."
+          title="Total representations received across all notices."
         >
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Pending</h3>
+            <h3 className="text-sm font-medium text-gray-600">Representations</h3>
             <svg
-              className="w-8 h-8 text-yellow-600"
+              className="w-8 h-8 text-purple-600"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -384,10 +436,10 @@ export default function Dashboard() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.pending_approval}</p>
+          <p className="text-3xl font-bold text-gray-900">{stats.representations_total}</p>
         </Link>
 
         <Link
@@ -432,11 +484,21 @@ export default function Dashboard() {
               const bgColor = isUrgent ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200';
               const iconColor = isUrgent ? 'text-red-600' : 'text-amber-600';
 
+              // Determine navigation target
+              const getNavigationTarget = () => {
+                if (priority.noticeId) {
+                  return `${basePath}/notices/${priority.noticeId}`;
+                }
+                return null;
+              };
+
+              const navTarget = getNavigationTarget();
+
               return (
                 <div
                   key={priority.id}
-                  className={`${bgColor} border-2 rounded-xl p-4 hover:shadow-md transition-all ${priority.noticeId ? 'cursor-pointer' : ''}`}
-                  onClick={() => priority.noticeId && navigate(`${basePath}/notices/${priority.noticeId}`)}
+                  className={`${bgColor} border-2 rounded-xl p-4 hover:shadow-md transition-all ${navTarget ? 'cursor-pointer' : ''}`}
+                  onClick={() => navTarget && navigate(navTarget)}
                 >
                   <div className="flex items-start gap-4">
                     {/* Icon based on type */}
@@ -449,11 +511,6 @@ export default function Dashboard() {
                       {priority.type === 'high_reps' && (
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      )}
-                      {priority.type === 'pending_approval' && (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                       )}
                     </div>
@@ -484,16 +541,10 @@ export default function Dashboard() {
                             <span>• Requires attention</span>
                           </>
                         )}
-                        {priority.type === 'pending_approval' && (
-                          <>
-                            <span className="font-medium">Action required</span>
-                            <span>• Review and approve submissions</span>
-                          </>
-                        )}
                       </div>
                     </div>
 
-                    {priority.noticeId && (
+                    {navTarget && (
                       <svg className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -597,7 +648,7 @@ export default function Dashboard() {
                             </span>
                           </>
                         )}
-                        {!notice.proof_pdf_url && (notice.status === 'published' || notice.status === 'pending' || notice.status === 'pending_approval') && (
+                        {!notice.proof_pdf_url && notice.status === 'published' && (
                           <>
                             <span>•</span>
                             <span className="text-amber-600 font-medium" title="Proof not yet available">

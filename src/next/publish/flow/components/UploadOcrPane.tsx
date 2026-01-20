@@ -17,6 +17,7 @@ import ActivitiesSelector, { type ActivityKey } from "@/components/publish/Activ
 import { type Council } from "@/components/DynamicCouncilSelect";
 import CouncilDepartmentSelect, { type CouncilDepartment } from "@/components/CouncilDepartmentSelect";
 import { getDepartmentTypeForCategory } from "@/next/publish/config/categoryToDepartment";
+import councils from "@/data/councils.json";
 
 export type UploadOcrPaneProps = {
   definition: NoticeDefinition | null;
@@ -30,6 +31,10 @@ export type UploadOcrPaneProps = {
   onChange: (path: (string | number)[], value: unknown) => void;
   errors: Record<string, string[] | undefined>;
   onSwitchToTemplate: () => void;
+  // Callbacks for Load Sample Data button
+  onDetailChange?: (key: string, value: string) => void;
+  onCouncilSelect?: (council: Council) => void;
+  setLegalDetails?: (details: any) => void;
 };
 
 const GRID_SPAN_CLASSES: Record<number, string> = {
@@ -66,6 +71,25 @@ function computeDeadline(rule: FormBlueprint["deadlineRule"], baseValue: string)
   return null;
 }
 
+function buildPremisesSampleOcrText(deadlineDate: Date): string {
+  const deadlineDisplay = deadlineDate.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  return `LICENSING ACT 2003
+
+Notice is hereby given that Wilson & Partners LLP of 15 Bedford Square, Bloomsbury, London, WC1B 3JA has applied to Westminster City Council for a new premises licence for The Blue Lion at 42 High Street, Westminster, London, SW1A 1AA.
+
+The application seeks authorisation for the sale of alcohol on and off the premises, late night refreshment, and live and recorded music with opening hours Monday to Thursday 11:00–23:30, Friday to Saturday 11:00–00:30, and Sunday 12:00–23:00.
+
+Any person may make representations in writing to the Licensing Team, Westminster City Council, 64 Victoria Street, London SW1E 6QP or by email to licensing@westminster.gov.uk no later than ${deadlineDisplay}. Representations must relate to the licensing objectives.
+
+Signed,
+Wilson & Partners LLP`;
+}
+
 export default function UploadOcrPane({
   definition,
   uploadComponentProps,
@@ -74,35 +98,17 @@ export default function UploadOcrPane({
   onChange,
   errors,
   onSwitchToTemplate,
+  onDetailChange,
+  onCouncilSelect,
+  setLegalDetails,
 }: UploadOcrPaneProps) {
   const [uploadStatus, setUploadStatus] = React.useState<UploadStatus>("idle");
   const [hasScrolledToForm, setHasScrolledToForm] = React.useState(false);
+  const [autoLoadedSampleData, setAutoLoadedSampleData] = React.useState(false);
   const blueprint = React.useMemo(
     () => (definition ? getMandatoryFieldsForOCR(definition) : null),
     [definition]
   );
-
-  // Auto-scroll to form when it appears
-  React.useEffect(() => {
-    if (showRequiredDetails && uploadStatus === "ready" && !hasScrolledToForm) {
-      setHasScrolledToForm(true);
-      setTimeout(() => {
-        const section = document.getElementById("required-details-section");
-        if (section) {
-          section.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 300); // Small delay to let animation start
-    }
-  }, [showRequiredDetails, uploadStatus, hasScrolledToForm]);
-
-  // Get full blueprint for deadline calculation
-  const fullBlueprint = React.useMemo(
-    () => (definition ? getFormBlueprint(definition) : null),
-    [definition]
-  );
-
-  const deadlineManualRef = React.useRef(false);
-  const lastAutoDeadlineRef = React.useRef<string | null>(null);
 
   const getValue = React.useCallback(
     (token: PlaceholderKey): string => {
@@ -120,6 +126,45 @@ export default function UploadOcrPane({
     },
     [onChange]
   );
+
+  const setOcrText = React.useCallback(
+    (text: string) => {
+      onChange(["ocrText"], text);
+    },
+    [onChange]
+  );
+
+  const hasExtractedOcrText = React.useMemo(() => {
+    const raw = templateDraft?.ocrText;
+    if (typeof raw === "string") return raw.trim().length > 0;
+    return false;
+  }, [templateDraft]);
+
+  // Auto-scroll to form when it appears
+  React.useEffect(() => {
+    if (showRequiredDetails && uploadStatus === "ready" && !hasScrolledToForm) {
+      setHasScrolledToForm(true);
+      setTimeout(() => {
+        const section = document.getElementById("required-details-section");
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300); // Small delay to let animation start
+    }
+  }, [showRequiredDetails, uploadStatus, hasScrolledToForm]);
+
+  // DISABLED: Auto-load sample data was interfering with real uploads
+  // Users should click "Load Sample Data" button to load demo data
+  // React.useEffect(() => { ... }, []);
+
+  // Get full blueprint for deadline calculation
+  const fullBlueprint = React.useMemo(
+    () => (definition ? getFormBlueprint(definition) : null),
+    [definition]
+  );
+
+  const deadlineManualRef = React.useRef(false);
+  const lastAutoDeadlineRef = React.useRef<string | null>(null);
 
   // Auto-compute deadline when APPLICATION_DATE or PUBLICATION_DATE changes
   React.useEffect(() => {
@@ -176,16 +221,20 @@ export default function UploadOcrPane({
         </div>
       )}
 
-      <UploadDropzone
-        heading="Upload your notice"
-        description="PDF, DOCX, PNG or JPG up to 25MB."
-        onText={uploadComponentProps.onText}
-        onMeta={uploadComponentProps.onMeta}
-        onStatusChange={(next) => {
-          setUploadStatus(next);
-          uploadComponentProps.onStatusChange(next);
-        }}
-      />
+      {/* Keep upload dropzone mounted but hide after upload starts */}
+      <div className={uploadStatus !== "idle" ? "hidden" : ""}>
+        <UploadDropzone
+          heading="Upload your notice"
+          description="PDF, DOCX, PNG or JPG up to 25MB."
+          onText={uploadComponentProps.onText}
+          onMeta={uploadComponentProps.onMeta}
+          onStatusChange={(next) => {
+            setUploadStatus(next);
+            uploadComponentProps.onStatusChange(next);
+          }}
+        />
+      </div>
+
       {uploadStatus === "idle" && !showRequiredDetails && (
         <p className="text-sm leading-6 text-slate-500 transition-opacity duration-300">
           Don't have a file?{" "}
@@ -198,6 +247,191 @@ export default function UploadOcrPane({
           </button>
           .
         </p>
+      )}
+
+      {/* Load Sample Data Button - Always visible for demo purposes */}
+      {showRequiredDetails && (
+        <div className="rounded-xl border border-blue-200/70 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-4 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1.5">
+                <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p className="text-[14px] font-bold text-blue-900">
+                  Demo Mode
+                </p>
+              </div>
+              <p className="text-[13px] text-blue-700 leading-relaxed">
+                Click to instantly fill the form fields with sample data. Your uploaded document text will be preserved.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                // Preserve the existing OCR text if it exists
+                const existingOcrText = (templateDraft?.ocrText as string) || "";
+                console.log('[Load Sample Data] Existing OCR text length:', existingOcrText.length);
+
+                // Load comprehensive sample data for demo using CORRECT field tokens from Zod schema
+                if (definition?.id === "premises-licence" || definition?.id === "licensing-premises-new") {
+                  // PART 1: Populate templateDraft (form blueprint fields) using setValue
+                  // CRITICAL: Set variant first (required by schema)
+                  setValue("variant", "licensing-premises-new");
+
+                  // Auto-values (required by schema)
+                  setValue("NOTICE_TYPE", "Premises Licence — New");
+                  setValue("ACT_TITLE", "Licensing Act 2003");
+                  setValue("REPRESENTATION_METHOD", "in writing");
+
+                  // Applicant details
+                  setValue("APPLICANT_NAME", "Wilson & Partners LLP");
+                  setValue("APPLICANT_STATUS", "llp");
+                  setValue("APPLICANT_TRADING_AS", "The Blue Lion Pub");
+                  setValue("APPLICANT_ADDRESS", "15 Bedford Square, Bloomsbury, London, WC1B 3JA");
+                  setValue("APPLICANT_COMPANY_NUMBER", "OC123456");
+
+                  // Premises details
+                  setValue("PREMISES_NAME", "The Blue Lion");
+                  setValue("PREMISES_ADDRESS", "42 High Street, Westminster, London, SW1A 1AA");
+
+                  // Licensable activities & hours (REQUIRED)
+                  setValue("LICENSABLE_ACTIVITIES", "Sale of alcohol (on and off premises), Late night refreshment, Live music, Recorded music");
+                  setValue("ACTIVITY_SCHEDULE", "Sale of alcohol (on/off): Mon–Sun 11:00–23:00\nLate night refreshment: Fri–Sat 23:00–00:30\nLive music: Fri–Sat 20:00–23:00\nRecorded music: Mon–Sun 11:00–23:00");
+                  setValue("OPENING_HOURS", "Monday to Thursday: 11:00 - 23:30\nFriday to Saturday: 11:00 - 00:30\nSunday: 12:00 - 23:00");
+                  setValue("DPS_NAME", "Sarah Mitchell");
+                  setValue("DPS_LICENSING_AUTHORITY", "Westminster City Council");
+
+                  // Dates (using correct token: DEADLINE_DATE not REPRESENTATION_DEADLINE)
+                  const today = new Date();
+                  setValue("APPLICATION_DATE", toISODate(today));
+                  setValue("PUBLICATION_DATE", toISODate(addDays(today, 1)));
+                  const deadlineDate = addDays(today, 28);
+                  setValue("DEADLINE_DATE", toISODate(deadlineDate));
+
+                  // CRITICAL: INSPECTION_TIMES is REQUIRED by schema (line 100)
+                  setValue("INSPECTION_TIMES", "The premises licence register entry and plan may be inspected at Westminster City Council, 64 Victoria Street, London SW1E 6QP, Monday to Friday, 9:00 AM to 5:00 PM.");
+
+                  // Authority & contact - set these AFTER selecting council to avoid conflicts
+                  setValue("AUTHORITY_ADDRESS", "Licensing Team, 64 Victoria Street, London, SW1E 6QP");
+                  setValue("AUTHORITY_PHONE", "020 7641 2500");
+                  setValue("ONLINE_REGISTER_URL", "https://www.westminster.gov.uk/licences-and-permits/licensing");
+
+                  // Note: AUTHORITY_NAME and AUTHORITY_EMAIL will be set by onCouncilSelect below
+
+                  // CRITICAL: Schema requires EITHER REPRESENTATION_EMAIL OR REPRESENTATION_ADDRESS (line 119-125)
+                  setValue("REPRESENTATION_EMAIL", "licensing@westminster.gov.uk");
+                  setValue("REPRESENTATION_ADDRESS", "Westminster City Council, Licensing Team, 64 Victoria Street, London, SW1E 6QP");
+
+                  // PART 2: Populate legalDetails (validation fields) using onDetailChange
+                  if (onDetailChange) {
+                    onDetailChange("applicationType", "premises-licence-new");
+                    onDetailChange("applicantName", "Wilson & Partners LLP");
+                    onDetailChange("premisesLine1", "42 High Street");
+                    onDetailChange("premisesCity", "Westminster");
+                    onDetailChange("premisesPostcode", "SW1A 1AA");
+                    onDetailChange("contactEmail", "licensing@wilsonpartners.co.uk");
+                    onDetailChange("contactPhone", "020 7946 0123");
+                    onDetailChange("tradingName", "The Blue Lion Pub");
+                    onDetailChange("premisesName", "The Blue Lion");
+                    onDetailChange("representationDeadline", toISODate(deadlineDate));
+
+                    // CRITICAL: Set council details
+                    onDetailChange("councilName", "Westminster City Council");
+                    onDetailChange("councilEmail", "licensing@westminster.gov.uk");
+                    onDetailChange("councilAddress", "Licensing Team, 64 Victoria Street, London, SW1E 6QP");
+
+                    // CRITICAL: Set recommended fields to avoid warnings
+                    onDetailChange("applicationSummary", "Application for a new premises licence to provide sale of alcohol, late night refreshment, and live and recorded music at The Blue Lion public house.");
+                    onDetailChange("viewingInformation", "The premises licence register entry and plan may be inspected at Westminster City Council, 64 Victoria Street, London SW1E 6QP, Monday to Friday, 9:00 AM to 5:00 PM.");
+                    onDetailChange("representationContact", "Westminster City Council Licensing Team, 64 Victoria Street, London, SW1E 6QP. Email: licensing@westminster.gov.uk");
+                  }
+
+                  // PART 3: Select Westminster council using onCouncilSelect (for council object reference)
+                  if (onCouncilSelect) {
+                    const councilsList = councils as Council[];
+                    console.log('[Load Sample Data] Looking for Westminster in councils:', councilsList.length, 'councils');
+
+                    // Try multiple ways to find Westminster
+                    let westminster = councilsList.find(c => c.name === "Westminster City Council");
+                    if (!westminster) {
+                      westminster = councilsList.find(c => c.name.toLowerCase().includes("westminster"));
+                    }
+                    if (!westminster) {
+                      westminster = councilsList.find(c => c.slug === "westminster");
+                    }
+
+                    console.log('[Load Sample Data] Found Westminster council:', westminster);
+
+                    if (westminster) {
+                      console.log('[Load Sample Data] Calling onCouncilSelect with:', westminster);
+                      onCouncilSelect(westminster);
+
+                      // Also set the form fields directly to populate AUTHORITY_NAME without requiring dropdown confirmation
+                      setValue("AUTHORITY_NAME", westminster.name);
+                      setValue("AUTHORITY_EMAIL", westminster.email || "licensing@westminster.gov.uk");
+                      console.log('[Load Sample Data] Set AUTHORITY fields directly to avoid dropdown confirmation');
+                    } else {
+                      console.error('[Load Sample Data] Westminster council not found in councils list!');
+                      // Fallback: set fields directly if council not found
+                      setValue("AUTHORITY_NAME", "Westminster City Council");
+                      setValue("AUTHORITY_EMAIL", "licensing@westminster.gov.uk");
+                    }
+                  } else {
+                    console.warn('[Load Sample Data] onCouncilSelect callback not available');
+                    // Fallback: set fields directly
+                    setValue("AUTHORITY_NAME", "Westminster City Council");
+                    setValue("AUTHORITY_EMAIL", "licensing@westminster.gov.uk");
+                  }
+
+                  // PART 4: Set activities array in legalDetails
+                  if (setLegalDetails) {
+                    setLegalDetails((prev: any) => ({
+                      ...prev,
+                      activities: ["alcohol-on", "alcohol-off", "late-night-refreshment", "regulated-entertainment"],
+                    }));
+                  }
+
+                  // IMPORTANT: Only set sample OCR text if there's no existing text from upload
+                  if (!existingOcrText || existingOcrText.trim().length === 0) {
+                    const sampleOcrText = buildPremisesSampleOcrText(deadlineDate);
+                    setOcrText(sampleOcrText);
+                    console.log('[Load Sample Data] Set sample OCR text (no existing text)');
+                  } else {
+                    console.log('[Load Sample Data] Preserved existing OCR text from upload');
+                  }
+                } else {
+                  // Generic sample data for other notice types
+                  setValue("APPLICANT_NAME", "Sample Applicant Ltd");
+                  setValue("PREMISES_NAME", "Sample Premises");
+                  setValue("PREMISES_ADDRESS", "123 Sample Street, London, SW1A 1AA");
+                  setValue("AUTHORITY_EMAIL", "contact@example.com");
+
+                  const today = new Date();
+                  setValue("APPLICATION_DATE", toISODate(today));
+
+                  // IMPORTANT: Only set sample OCR text if there's no existing text from upload
+                  if (!existingOcrText || existingOcrText.trim().length === 0) {
+                    setOcrText(
+                      `Sample notice text for ${definition?.label ?? "this notice type"}.\nApplication date: ${toISODate(
+                        today
+                      )}\nPlease complete the remaining fields to generate a full preview.`
+                    );
+                    console.log('[Load Sample Data] Set sample OCR text (no existing text)');
+                  } else {
+                    console.log('[Load Sample Data] Preserved existing OCR text from upload');
+                  }
+                }
+              }}
+              className="ml-4 shrink-0 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-[14px] font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Fill Form with Demo Data
+            </button>
+          </div>
+        </div>
       )}
 
       {(uploadStatus === "uploading" || uploadStatus === "ocr") && (

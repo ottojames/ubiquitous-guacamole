@@ -1,0 +1,34 @@
+# Dependencies (Vercel installs these automatically)
+node_modules
+
+# Large video files
+public/videos
+Civic Notices Showcase Videos
+
+# Build outputs
+dist
+build
+.next
+
+# Development files
+screenshots
+test-results
+coverage
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+
+# Git
+.git
+
+# Environment files (use Vercel dashboard for env vars)
+.env
+.env.*
+
+# Testing
+e2e-results
+playwright-report

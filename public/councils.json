@@ -1,5 +1,493 @@
 [
-  { "name": "Cheshire West and Chester Council", "email": "licensing@cheshirewest.gov.uk" },
-  { "name": "Cheshire East Council", "email": "licensing@cheshireeast.gov.uk" },
-  { "name": "Cardiff Council", "email": "licensing@cardiff.gov.uk" }
+  {
+    "name": "Aberdeen City Council",
+    "email": "pi@aberdeen.gov.uk",
+    "address": "",
+    "aliases": [
+      "Aberdeen"
+    ]
+  },
+  {
+    "name": "Ashfield District Council",
+    "email": "licensing@ashfield-dc.gov.uk",
+    "address": "",
+    "aliases": [
+      "Ashfield"
+    ]
+  },
+  {
+    "name": "Breckland District Council",
+    "email": "licensingteam@breckland.gov.uk",
+    "address": "",
+    "aliases": [
+      "Breckland"
+    ]
+  },
+  {
+    "name": "Brighton & Hove City Council",
+    "email": "ehl.safety@brighton-hove.gov.uk",
+    "address": "",
+    "aliases": [
+      "Brighton",
+      "Brighton and Hove City Council"
+    ]
+  },
+  {
+    "name": "Broadland District Council",
+    "email": "licensing@broadland.gov.uk",
+    "address": "",
+    "aliases": [
+      "Broadland DC",
+      "Broadland"
+    ]
+  },
+  {
+    "name": "Bromsgrove District Council",
+    "email": "enquiries@worcsregservices.gov.uk",
+    "address": "",
+    "aliases": [
+      "Bromsgrove"
+    ]
+  },
+  {
+    "name": "Buckinghamshire Council",
+    "email": "licensing@buckinghamshire.gov.uk",
+    "address": "",
+    "aliases": [
+      "Buckinghamshire"
+    ]
+  },
+  {
+    "name": "Burnley Borough Council",
+    "email": "licensing@burnley.gov.uk",
+    "address": "",
+    "aliases": [
+      "Burnley"
+    ]
+  },
+  {
+    "name": "Carmarthenshire County Council",
+    "email": "direct@carmarthenshire.gov.uk",
+    "address": "",
+    "aliases": [
+      "Carmarthenshire"
+    ]
+  },
+  {
+    "name": "Ceredigion County Council",
+    "email": "licensing@ceredigion.gov.uk",
+    "address": "",
+    "aliases": [
+      "Ceredigion"
+    ]
+  },
+  {
+    "name": "Derbyshire Dales District Council",
+    "email": "licensing@derbyshiredales.gov.uk",
+    "address": "",
+    "aliases": [
+      "Derbyshire",
+      "Derbyshire Dales"
+    ]
+  },
+  {
+    "name": "Eastleigh Borough Council",
+    "email": "liquor.licence@eastleigh.gov.uk",
+    "address": "",
+    "aliases": [
+      "Eastleigh"
+    ]
+  },
+  {
+    "name": "Gravesham Borough Council",
+    "email": "licensing@gravesham.gov.uk",
+    "address": "",
+    "aliases": [
+      "Gravesham"
+    ]
+  },
+  {
+    "name": "Harrogate Borough Council",
+    "email": "licensing@harrogate.gov.uk",
+    "address": "",
+    "aliases": [
+      "Harrogate"
+    ]
+  },
+  {
+    "name": "Hart District Council",
+    "email": "licensing@hart.gov.uk",
+    "address": "",
+    "aliases": [
+      "Hart"
+    ]
+  },
+  {
+    "name": "Hartlepool Borough Council",
+    "email": "licensing@hartlepool.gov.uk",
+    "address": "",
+    "aliases": [
+      "Hartlepool"
+    ]
+  },
+  {
+    "name": "Inverclyde Council",
+    "email": "comments@inverclyde.gov.uk",
+    "address": "",
+    "aliases": [
+      "Inverclyde"
+    ]
+  },
+  {
+    "name": "Isle of Anglesey County Council",
+    "email": "licensing@anglesey.gov.uk",
+    "address": "",
+    "aliases": [
+      "Anglesey"
+    ]
+  },
+  {
+    "name": "Kettering Borough Council",
+    "email": "licensing@kettering.gov.uk",
+    "address": "",
+    "aliases": [
+      "Kettering"
+    ]
+  },
+  {
+    "name": "Leeds City Council",
+    "email": "entertainment.licensing@leeds.gov.uk",
+    "address": "",
+    "aliases": [
+      "Leeds"
+    ]
+  },
+  {
+    "name": "Lichfield District Council",
+    "email": "licensing@lichfielddc.gov.uk",
+    "address": "",
+    "aliases": [
+      "Lichfield"
+    ]
+  },
+  {
+    "name": "London Borough of Barking and Dagenham",
+    "email": "hcs.licensing@lbbd.gov.uk",
+    "address": "",
+    "aliases": [
+      "Barking and Dagenham",
+      "Barking & Dagenham",
+      "Barking & Dagenhamm"
+    ]
+  },
+  {
+    "name": "London Borough of Croydon",
+    "email": "licensing@croydon.gov.uk",
+    "address": "",
+    "aliases": [
+      "Croydon"
+    ]
+  },
+  {
+    "name": "London Borough of Newham",
+    "email": "licensing@newham.gov.uk",
+    "address": "",
+    "aliases": [
+      "Newham"
+    ]
+  },
+  {
+    "name": "London Borough of Redbridge",
+    "email": "licensing.authority@redbridge.gov.uk",
+    "address": "",
+    "aliases": [
+      "Redbridge"
+    ]
+  },
+  {
+    "name": "London Borough of Sutton",
+    "email": "licensing@sutton.gov.uk",
+    "address": "",
+    "aliases": [
+      "Sutton"
+    ]
+  },
+  {
+    "name": "Malvern Hills District Council",
+    "email": "enquiries@worcsregservices.gov.uk",
+    "address": "",
+    "aliases": [
+      "Malvern Hills"
+    ]
+  },
+  {
+    "name": "Melton Borough Council",
+    "email": "licensing@melton.gov.uk",
+    "address": "",
+    "aliases": [
+      "Melton"
+    ]
+  },
+  {
+    "name": "Mendip District Council",
+    "email": "customerservices@mendip.gov.uk",
+    "address": "",
+    "aliases": [
+      "Mendip",
+      "Mendip DC"
+    ]
+  },
+  {
+    "name": "Mid Suffolk District Council",
+    "email": "licensing@midsuffolk.gov.uk",
+    "address": "",
+    "aliases": [
+      "Mid Suffolk"
+    ]
+  },
+  {
+    "name": "Neath Port Talbot County Borough Council",
+    "email": "licensing@npt.gov.uk",
+    "address": "",
+    "aliases": [
+      "Neath Port Talbot"
+    ]
+  },
+  {
+    "name": "North Dorset District Council",
+    "email": "envlicens@north-dorset.gov.uk",
+    "address": "",
+    "aliases": [
+      "North Dorset"
+    ]
+  },
+  {
+    "name": "North Hertfordshire District Council",
+    "email": "licensing@north-herts.gov.uk",
+    "address": "",
+    "aliases": [
+      "North Hertfordshire",
+      "North Herts"
+    ]
+  },
+  {
+    "name": "North West Leicestershire District Council",
+    "email": "licensing@nwleicestershire.gov.uk",
+    "address": "",
+    "aliases": [
+      "North West Leicestershire",
+      "North West"
+    ]
+  },
+  {
+    "name": "Oadby and Wigston Borough Council",
+    "email": "licensing@oadby-wigston.gov.uk",
+    "address": "",
+    "aliases": [
+      "Oadby and Wigston"
+    ]
+  },
+  {
+    "name": "Oldham Council",
+    "email": "licensing@oldham.gov.uk",
+    "address": "",
+    "aliases": [
+      "Oldham"
+    ]
+  },
+  {
+    "name": "Pembrokeshire County Council",
+    "email": "licensing@pembrokeshire.gov.uk",
+    "address": "",
+    "aliases": [
+      "Pembrokeshire"
+    ]
+  },
+  {
+    "name": "Powys County Council",
+    "email": "public.protection@powys.gov.uk",
+    "address": "",
+    "aliases": [
+      "Powys"
+    ]
+  },
+  {
+    "name": "Redcar and Cleveland Borough Council",
+    "email": "licensingadmin@redcar-cleveland.gov.uk",
+    "address": "",
+    "aliases": [
+      "Cleveland and Redcar"
+    ]
+  },
+  {
+    "name": "Redditch Borough Council",
+    "email": "enquiries@worcsregservices.gov.uk",
+    "address": "",
+    "aliases": [
+      "Redditch"
+    ]
+  },
+  {
+    "name": "Richmondshire District Council",
+    "email": "licensing@richmondshire.gov.uk",
+    "address": "",
+    "aliases": [
+      "Richmondshire"
+    ]
+  },
+  {
+    "name": "Rochford District Council",
+    "email": "licensing@rochford.gov.uk",
+    "address": "",
+    "aliases": [
+      "Rochford Council",
+      "Rochford"
+    ]
+  },
+  {
+    "name": "Ryedale District Council",
+    "email": "environmentalhealth@ryedale.gov.uk",
+    "address": "",
+    "aliases": [
+      "Ryedale"
+    ]
+  },
+  {
+    "name": "Sefton Council",
+    "email": "licensing@sefton.gov.uk",
+    "address": "",
+    "aliases": [
+      "Sefton"
+    ]
+  },
+  {
+    "name": "Slough Borough Council",
+    "email": "licensing@slough.gov.uk",
+    "address": "",
+    "aliases": [
+      "Slough"
+    ]
+  },
+  {
+    "name": "South Derbyshire District Council",
+    "email": "licensing@southderbyshire.gov.uk",
+    "address": "",
+    "aliases": [
+      "South Derbyshire"
+    ]
+  },
+  {
+    "name": "St Albans City and District Council",
+    "email": "licensing@stalbans.gov.uk",
+    "address": "",
+    "aliases": [
+      "St Albans"
+    ]
+  },
+  {
+    "name": "Swale Borough Council",
+    "email": "licensing@swale.gov.uk",
+    "address": "",
+    "aliases": [
+      "Swale"
+    ]
+  },
+  {
+    "name": "Tameside Metropolitan Borough Council",
+    "email": "licensing@tameside.gov.uk",
+    "address": "",
+    "aliases": [
+      "Tameside"
+    ]
+  },
+  {
+    "name": "Tamworth Borough Council",
+    "email": "publicprotection@tamworth.gov.uk",
+    "address": "",
+    "aliases": [
+      "Tamworth"
+    ]
+  },
+  {
+    "name": "Thurrock Council",
+    "email": "licensing@thurrock.gov.uk",
+    "address": "",
+    "aliases": [
+      "Thurrock"
+    ]
+  },
+  {
+    "name": "Uttlesford District Council",
+    "email": "licensing@uttlesford.gov.uk",
+    "address": "",
+    "aliases": [
+      "Uttlesford"
+    ]
+  },
+  {
+    "name": "Waveney District Council",
+    "email": "licensing@waveney.gov.uk",
+    "address": "",
+    "aliases": [
+      "Waveney"
+    ]
+  },
+  {
+    "name": "Wealden District Council",
+    "email": "licensing@wealden.gov.uk",
+    "address": "",
+    "aliases": [
+      "Wealden"
+    ]
+  },
+  {
+    "name": "West Suffolk Council",
+    "email": "licensing@westsuffolk.gov.uk",
+    "address": "",
+    "aliases": [
+      "West Suffolk"
+    ]
+  },
+  {
+    "name": "Westminster City Council",
+    "email": "licensing@westminster.gov.uk",
+    "address": "Licensing Team, 64 Victoria Street, London, SW1E 6QP",
+    "aliases": [
+      "Westminster",
+      "City of Westminster"
+    ]
+  },
+  {
+    "name": "Worcester City Council",
+    "email": "wrsenquiries@worcsregservices.gov.uk",
+    "address": "",
+    "aliases": [
+      "Worcester"
+    ]
+  },
+  {
+    "name": "Wrexham County Borough Council",
+    "email": "licensing@wrexham.gov.uk",
+    "address": "",
+    "aliases": [
+      "Wrexham"
+    ]
+  },
+  {
+    "name": "Wycombe District Council",
+    "email": "licensing@wycombe.gov.uk",
+    "address": "",
+    "aliases": [
+      "Wycombe"
+    ]
+  },
+  {
+    "name": "Wyre Forest District Council",
+    "email": "enquiries@worcsregservices.gov.uk",
+    "address": "",
+    "aliases": [
+      "Wyre Forest",
+      "Wyre Borough Council"
+    ]
+  }
 ]

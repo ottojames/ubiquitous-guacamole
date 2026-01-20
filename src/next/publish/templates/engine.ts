@@ -1,20 +1,21 @@
 const CONDITIONAL_REGEX = /\{\{#if\s+([A-Z0-9_]+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
 const TOKEN_REGEX = /\{\{([A-Z0-9_]+)\}\}/g;
 
-function applyConditionals(template: string, tokens: Record<string, string>): string {
+function applyConditionals(template: string, tokens: Record<string, any>): string {
   return template.replace(CONDITIONAL_REGEX, (_match, key: string, block: string) => {
-    const value = tokens[key]?.trim();
-    if (value) {
+    const raw = tokens[key];
+    const value = typeof raw === "string" ? raw.trim() : String(raw || "");
+    if (value && value !== "false") {
       return applyConditionals(block, tokens);
     }
     return "";
   });
 }
 
-function replaceTokens(template: string, tokens: Record<string, string>): string {
+function replaceTokens(template: string, tokens: Record<string, any>): string {
   return template.replace(TOKEN_REGEX, (_match, key: string) => {
     const raw = tokens[key];
-    const value = typeof raw === "string" ? raw.trim() : "";
+    const value = typeof raw === "string" ? raw.trim() : String(raw || "");
     return value.length ? value : `[[missing:${key}]]`;
   });
 }
@@ -37,7 +38,7 @@ function cleanParagraphs(text: string): string {
     .join("\n");
 }
 
-export function renderNoticeTemplate(template: string, tokens: Record<string, string>): string {
+export function renderNoticeTemplate(template: string, tokens: Record<string, any>): string {
   const withConditionals = applyConditionals(template, tokens);
   const withTokens = replaceTokens(withConditionals, tokens);
   const normalised = withTokens.replace(/\n{3,}/g, "\n\n");
