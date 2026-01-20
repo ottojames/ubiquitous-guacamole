@@ -488,9 +488,21 @@ Fixed the legacy publish flow to properly pass `department_id` when publishing n
 **Goal**: No hardcoded test data in production code paths
 
 ### 5.1 Remove Demo Users
-- [ ] Remove `DEMO_USERS` array from `src/next/publish/flow/steps/UploadMethodStep.tsx:25-47`
-- [ ] Remove demo mode logic that uses these users
-- [ ] Ensure upload step works without demo user context
+- [x] Remove `DEMO_USERS` array from `src/next/publish/flow/steps/UploadMethodStep.tsx:25-47`
+- [x] Remove demo mode logic that uses these users
+- [x] Ensure upload step works without demo user context
+
+#### Implementation Notes (Task 5.1)
+
+Removed all demo user functionality from UploadMethodStep.tsx:
+
+1. **Removed DEMO_USERS array** (was lines 25-32): Array of 5 hardcoded demo users with names and emails
+2. **Removed demo user state** (`selectedDemoUser` useState)
+3. **Removed demo user handler** (`handleDemoUserSelect` function)
+4. **Removed demo user dropdown UI**: "Quick select (demo)" dropdown with demo user options
+5. **Simplified email onChange**: Removed `setSelectedDemoUser("")` call that cleared demo selection
+
+The email input field now works as a simple form input without any demo user shortcuts. The upload step functionality remains unchanged - users enter their email manually for confirmation receipts.
 
 ### 5.2 Remove Mock Data from Firm Portal
 - [ ] Remove mock clients from `src/pages/firm/Clients.tsx:69-128`

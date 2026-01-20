@@ -22,15 +22,6 @@ type Props = {
   onEmailChange: (email: string) => void;
 };
 
-// Demo users for quick selection
-const DEMO_USERS = [
-  { name: "James Wilson", email: "james.wilson@wilsonpartners.co.uk" },
-  { name: "Sarah Mitchell", email: "sarah.mitchell@licensing-consultants.co.uk" },
-  { name: "Michael Chen", email: "michael.chen@citylaw.co.uk" },
-  { name: "Emma Thompson", email: "emma.thompson@hospitality-legal.co.uk" },
-  { name: "David Roberts", email: "david.roberts@premises-advisors.co.uk" },
-];
-
 export default function UploadMethodStep({
   definition,
   method,
@@ -46,7 +37,6 @@ export default function UploadMethodStep({
   onEmailChange,
 }: Props) {
   const [emailError, setEmailError] = React.useState("");
-  const [selectedDemoUser, setSelectedDemoUser] = React.useState<string>("");
 
   const validateEmail = (value: string) => {
     if (!value) {
@@ -59,17 +49,6 @@ export default function UploadMethodStep({
     }
     setEmailError("");
     return true;
-  };
-
-  const handleDemoUserSelect = (userName: string) => {
-    setSelectedDemoUser(userName);
-    if (userName) {
-      const user = DEMO_USERS.find(u => u.name === userName);
-      if (user) {
-        onEmailChange(user.email);
-        setEmailError("");
-      }
-    }
   };
 
   console.log('[UploadMethodStep] rightRail:', rightRail ? 'EXISTS' : 'NULL', 'method:', method);
@@ -169,61 +148,36 @@ export default function UploadMethodStep({
         <p className="mb-6 text-sm text-slate-600">
           We'll send your confirmation and receipt to this email address.
         </p>
-        <div className="max-w-md space-y-4">
-          {/* Demo User Dropdown */}
-          <div>
-            <label htmlFor="demo-user" className="block text-sm font-semibold text-slate-900 mb-2">
-              Quick select (demo)
-            </label>
-            <select
-              id="demo-user"
-              value={selectedDemoUser}
-              onChange={(e) => handleDemoUserSelect(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              disabled={continuePending}
-            >
-              <option value="">Select a demo user...</option>
-              {DEMO_USERS.map((user) => (
-                <option key={user.email} value={user.name}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Email Input */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
-              Email address <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => {
-                onEmailChange(e.target.value);
-                setSelectedDemoUser(""); // Clear demo selection when manually typing
-                if (emailError) validateEmail(e.target.value);
-              }}
-              onBlur={() => validateEmail(email)}
-              placeholder="your.email@example.com"
-              className={`w-full rounded-xl border ${
-                emailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
-              } px-4 py-3 text-base text-slate-900 placeholder-slate-600 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-              disabled={continuePending}
-              aria-invalid={!!emailError}
-              aria-describedby={emailError ? "email-error" : undefined}
-              autoComplete="off"
-            />
-            {emailError && (
-              <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
-                <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {emailError}
-              </p>
-            )}
-          </div>
+        <div className="max-w-md">
+          <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+            Email address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => {
+              onEmailChange(e.target.value);
+              if (emailError) validateEmail(e.target.value);
+            }}
+            onBlur={() => validateEmail(email)}
+            placeholder="your.email@example.com"
+            className={`w-full rounded-xl border ${
+              emailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
+            } px-4 py-3 text-base text-slate-900 placeholder-slate-600 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+            disabled={continuePending}
+            aria-invalid={!!emailError}
+            aria-describedby={emailError ? "email-error" : undefined}
+            autoComplete="off"
+          />
+          {emailError && (
+            <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {emailError}
+            </p>
+          )}
         </div>
       </div>
 
