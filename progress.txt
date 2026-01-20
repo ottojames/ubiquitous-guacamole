@@ -20,3 +20,17 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
 
 ---
 
+## Iteration 1 - Task 1.1.1: Document AuthContext Imports
+- **What was implemented**: Audited all imports of the legacy AuthContext across the codebase
+- **Files that import legacy `@/contexts/AuthContext`**:
+  - `src/pages/council/Notices.tsx:6`
+  - `src/pages/council/Dashboard.tsx:6`
+- **Files changed**: PRD.md (marked task complete, added audit results)
+- **Learnings for future iterations**:
+  - Only 2 files use the legacy AuthContext - both are council pages
+  - All other files already use UnifiedAuthContext
+  - The legacy AuthContext provides permission helpers (hasPermission, loadPermissions) that UnifiedAuthContext may need to preserve
+  - Migration should be straightforward - just change the import path
+  - TypeScript has many errors in test/script files but core app should compile
+---
+

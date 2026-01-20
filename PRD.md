@@ -36,10 +36,21 @@ The codebase has solid foundations but multiple issues blocking production launc
 **Goal**: Single auth system via Supabase with proper role handling
 
 ### 1.1 Audit Current Auth State
-- [ ] Document all imports of `AuthContext` across codebase
+- [x] Document all imports of `AuthContext` across codebase
 - [ ] Document all imports of `AdminAuthContext` across codebase
 - [ ] Document all imports of `UnifiedAuthContext` across codebase
 - [ ] Create migration plan showing which context each file should use
+
+#### AuthContext Import Audit Results
+Files importing from legacy `@/contexts/AuthContext`:
+1. `src/pages/council/Notices.tsx:6` - needs migration to UnifiedAuthContext
+2. `src/pages/council/Dashboard.tsx:6` - needs migration to UnifiedAuthContext
+
+The legacy `AuthContext.tsx` file exists at `src/contexts/AuthContext.tsx` and provides:
+- User, session, loading state
+- Role-based permissions (loadPermissions, hasPermission, hasAnyPermission, hasAllPermissions)
+- Department-scoped permission loading
+- Demo mode support for mock permissions
 
 ### 1.2 Consolidate to UnifiedAuthContext
 - [ ] Update `UnifiedAuthContext.tsx` to handle all user types (public, council, firm, admin)
