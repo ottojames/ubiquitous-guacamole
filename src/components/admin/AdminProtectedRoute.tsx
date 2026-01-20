@@ -9,11 +9,12 @@ interface AdminProtectedRouteProps {
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   const navigate = useNavigate();
-  const { user, loading, canAccessAdmin, session, isPlatformAdmin, adminRole, role } = useAuth();
+  const { user, loading, isInitialized, canAccessAdmin, session, isPlatformAdmin, adminRole, role } = useAuth();
 
   // Debug: Log all state on every render
   console.log('[AdminProtectedRoute] Render state:', {
     loading,
+    isInitialized, // Task 2.3: Key flag to prevent premature redirects
     hasUser: !!user,
     userEmail: user?.email,
     hasSession: !!session,
@@ -26,19 +27,21 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
   useEffect(() => {
     console.log('[AdminProtectedRoute] useEffect triggered:', {
       loading,
+      isInitialized, // Task 2.3: Key flag to prevent premature redirects
       hasUser: !!user,
       userEmail: user?.email,
     });
 
-    // Don't redirect while still loading auth state
-    if (loading) {
-      console.log('[AdminProtectedRoute] Still loading, waiting...');
+    // Task 2.3: Don't redirect until auth is fully initialized
+    // This prevents race condition where loading=false but onAuthStateChange hasn't fired yet
+    if (loading || !isInitialized) {
+      console.log('[AdminProtectedRoute] Still loading or not initialized, waiting...', { loading, isInitialized });
       return;
     }
 
     // No user - redirect to login
     if (!user) {
-      console.log('[AdminProtectedRoute] No user found after loading complete, redirecting to login');
+      console.log('[AdminProtectedRoute] No user found after initialization complete, redirecting to login');
       navigate('/admin/login', { replace: true });
       return;
     }
@@ -60,10 +63,11 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
     } else {
       console.log('[AdminProtectedRoute] Admin access granted, rendering children');
     }
-  }, [loading, user, canAccessAdmin, navigate, session, isPlatformAdmin, adminRole, role]);
+  }, [loading, isInitialized, user, canAccessAdmin, navigate, session, isPlatformAdmin, adminRole, role]);
 
-  // Show loading while checking auth state
-  if (loading) {
+  // Task 2.3: Show loading while checking auth state OR while not yet initialized
+  // This prevents the redirect loop by ensuring we wait for auth to be fully stable
+  if (loading || !isInitialized) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">

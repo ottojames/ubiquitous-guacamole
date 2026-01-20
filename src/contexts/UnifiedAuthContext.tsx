@@ -16,6 +16,7 @@ interface UnifiedAuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isInitialized: boolean; // True after initial auth state is fully loaded (Task 2.3)
 
   // Organization context - CRITICAL FOR FIXING NOTICES
   organization: Organization | null;
@@ -60,6 +61,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false); // Task 2.3: Prevents premature redirects
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [department, setDepartment] = useState<Department | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -91,19 +93,25 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session) {
-        loadUserContext(session.user);
+        await loadUserContext(session.user);
       }
       setLoading(false);
+      setIsInitialized(true); // Task 2.3: Mark as initialized after initial load
+      console.log('[UnifiedAuthContext] Initial auth state loaded:', {
+        hasSession: !!session,
+        userEmail: session?.user?.email,
+        isInitialized: true,
+      });
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        console.log('Auth state changed:', _event, session?.user?.email);
+        console.log('[UnifiedAuthContext] Auth state changed:', _event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         if (session) {
@@ -112,6 +120,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
           clearContext();
         }
         setLoading(false);
+        setIsInitialized(true); // Task 2.3: Re-confirm initialized after auth changes
       }
     );
 
@@ -447,6 +456,7 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     loading,
+    isInitialized, // Task 2.3: Prevents premature redirects
     // Organization context
     organization,
     department,

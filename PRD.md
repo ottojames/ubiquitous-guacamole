@@ -274,10 +274,26 @@ supabase db push
 ```
 
 ### 2.3 Fix AdminProtectedRoute Logic
-- [ ] Ensure loading state shows spinner (not redirect)
-- [ ] Ensure redirect only happens after auth state is definitively loaded
-- [ ] Add `isInitialized` flag to prevent premature redirects
+- [x] Ensure loading state shows spinner (not redirect)
+- [x] Ensure redirect only happens after auth state is definitively loaded
+- [x] Add `isInitialized` flag to prevent premature redirects
 - [ ] Test: admin user can reach `/admin/dashboard` after login
+
+#### Implementation Notes (Task 2.3)
+
+Added `isInitialized` flag to `UnifiedAuthContext` that:
+1. Starts as `false`
+2. Becomes `true` only after initial `getSession()` completes
+3. Stays `true` after `onAuthStateChange` fires
+
+`AdminProtectedRoute` now waits for BOTH:
+- `loading === false` (initial load done)
+- `isInitialized === true` (auth state is stable)
+
+This prevents the redirect loop where:
+- Login succeeds and navigates to `/admin/dashboard`
+- But `onAuthStateChange` hasn't updated the context yet
+- AdminProtectedRoute sees stale state and redirects back to login
 
 ### 2.4 Fix Admin Login Form
 - [ ] Ensure form shows appropriate error messages on failed login

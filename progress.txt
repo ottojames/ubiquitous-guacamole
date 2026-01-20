@@ -304,3 +304,32 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 2.3: Fix AdminProtectedRoute Logic (add isInitialized flag)
 ---
 
+## Iteration 15 - Task 2.3: Fix AdminProtectedRoute Logic (isInitialized flag)
+- **What was implemented**: Added `isInitialized` flag to UnifiedAuthContext to prevent premature redirects
+- **Files changed**:
+  - `src/contexts/UnifiedAuthContext.tsx` - Added isInitialized state and exposed in context
+  - `src/components/admin/AdminProtectedRoute.tsx` - Updated to wait for isInitialized before redirecting
+  - `PRD.md` - Marked Task 2.3 subtasks complete, added implementation notes
+- **Key changes**:
+  - Added `isInitialized: boolean` to UnifiedAuthContextType interface
+  - Added `useState` for `isInitialized` (starts `false`)
+  - Set `isInitialized = true` after initial `getSession()` completes
+  - Set `isInitialized = true` after each `onAuthStateChange` event
+  - AdminProtectedRoute now checks `loading || !isInitialized` before making redirect decisions
+  - This prevents the race condition where Login navigates to dashboard before context is updated
+- **The redirect loop bug explained**:
+  1. User calls `signInAsAdmin()` which succeeds
+  2. Login.tsx navigates to `/admin/dashboard` immediately
+  3. But `onAuthStateChange` hasn't fired yet
+  4. AdminProtectedRoute sees `loading=false` (from initial load) but stale `user` state
+  5. It redirects back to login, causing a loop
+  - Fix: `isInitialized` ensures we wait for auth state to be stable after any auth event
+- **Learnings for future iterations**:
+  - The `loading` state in React auth contexts typically means "initial load in progress"
+  - But after initial load, `loading=false` doesn't mean "auth state is current"
+  - Need separate `isInitialized` flag to indicate "auth state represents reality"
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - TypeScript errors in src/contexts/UnifiedAuthContext.tsx line 4 is pre-existing (@/types import)
+  - Next is Task 2.3 final subtask: Test admin login flow manually, then Task 2.4
+---
+
