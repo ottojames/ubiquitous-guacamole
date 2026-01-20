@@ -62,6 +62,7 @@ import AccountManagement from "@/pages/admin/AccountManagement";
 import AdminAuditLog from "@/pages/admin/AuditLog";
 import AdminSettings from "@/pages/admin/Settings";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
+import AuthDebug from "@/pages/AuthDebug";
 
 export default function App() {
   return (
@@ -152,6 +153,7 @@ export default function App() {
         {NEW_PUBLISH_FLOW && (
           <Route path="/next/publish/*" element={<NewPublishFlow />} />
         )}
+        <Route path="/auth-debug" element={<AuthDebug />} />
         <Route path="*" element={<Home />} />
       </Routes>
     </BrowserRouter>
