@@ -192,9 +192,9 @@ The file provides (unused):
 - [x] Update `src/App.tsx` to only wrap with UnifiedAuthProvider
 
 ### 1.5 Fix Server-Side Auth Middleware
-- [ ] Update `server/middleware/adminAuth.ts` to consistently check `app_metadata.is_platform_admin`
-- [ ] Update `server/middleware/auth.ts` to extract org/dept from JWT claims
-- [ ] Add middleware to set user context from Supabase session
+- [x] Update `server/middleware/adminAuth.ts` to consistently check `app_metadata.is_platform_admin`
+- [x] Update `server/middleware/auth.ts` to extract org/dept from JWT claims
+- [x] Add middleware to set user context from Supabase session
 
 ---
 

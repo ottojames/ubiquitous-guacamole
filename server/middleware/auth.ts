@@ -1,25 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getServiceSupabaseClient } from '../lib/supabase.js';
 
-// Lazy initialization - only create Supabase client when actually needed
-let supabaseAdmin: SupabaseClient | null = null;
-
-function getSupabaseAdmin(): SupabaseClient {
-  if (!supabaseAdmin) {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase environment variables (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) are required');
-    }
-
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false }
-    });
-  }
-  return supabaseAdmin;
-}
-
 // Extend Express Request type to include user and permissions
 declare global {
   namespace Express {
@@ -28,8 +9,11 @@ declare global {
         id: string;
         email?: string;
         role?: string;
-        departmentId?: string;
+        organizationId?: string;
+        departmentIds?: string[];
+        departmentId?: string;  // Current department (set by loadUserPermissions)
         permissions?: string[];
+        isPlatformAdmin?: boolean;
       };
     }
   }
@@ -60,7 +44,7 @@ export async function requireAuth(
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify the JWT token using Supabase
-    const { data: { user }, error } = await getSupabaseAdmin().auth.getUser(token);
+    const { data: { user }, error } = await getServiceSupabaseClient().auth.getUser(token);
 
     if (error || !user) {
       res.status(401).json({
@@ -70,11 +54,20 @@ export async function requireAuth(
       return;
     }
 
+    // Extract organization/department info from JWT claims (app_metadata)
+    const appMetadata = user.app_metadata || {};
+    const organizationId = appMetadata.organization_id as string | undefined;
+    const departmentIds = appMetadata.department_ids as string[] | undefined;
+    const isPlatformAdmin = appMetadata.is_platform_admin === true;
+
     // Attach user info to request object
     req.user = {
       id: user.id,
       email: user.email,
-      role: user.user_metadata?.role || user.app_metadata?.role,
+      role: user.user_metadata?.role || appMetadata.role,
+      organizationId,
+      departmentIds,
+      isPlatformAdmin,
     };
 
     next();
@@ -106,19 +99,93 @@ export async function optionalAuth(
     }
 
     const token = authHeader.substring(7);
-    const { data: { user }, error } = await getSupabaseAdmin().auth.getUser(token);
+    const { data: { user }, error } = await getServiceSupabaseClient().auth.getUser(token);
 
     if (!error && user) {
+      const appMetadata = user.app_metadata || {};
       req.user = {
         id: user.id,
         email: user.email,
-        role: user.user_metadata?.role || user.app_metadata?.role,
+        role: user.user_metadata?.role || appMetadata.role,
+        organizationId: appMetadata.organization_id as string | undefined,
+        departmentIds: appMetadata.department_ids as string[] | undefined,
+        isPlatformAdmin: appMetadata.is_platform_admin === true,
       };
     }
 
     next();
   } catch (error) {
     console.error('[Auth Middleware] Error in optional auth:', error);
+    // Continue without user on error
+    next();
+  }
+}
+
+/**
+ * Helper function to extract user info from Supabase user object
+ * Used by multiple middleware functions to ensure consistent user context
+ */
+function extractUserContext(user: {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+  app_metadata?: Record<string, unknown>;
+}): NonNullable<Express.Request['user']> {
+  const appMetadata = user.app_metadata || {};
+  return {
+    id: user.id,
+    email: user.email,
+    role: (user.user_metadata?.role || appMetadata.role) as string | undefined,
+    organizationId: appMetadata.organization_id as string | undefined,
+    departmentIds: appMetadata.department_ids as string[] | undefined,
+    isPlatformAdmin: appMetadata.is_platform_admin === true,
+  };
+}
+
+/**
+ * Middleware to set user context from Supabase session
+ * Supports both Authorization header (Bearer token) and cookie-based sessions
+ * This is the recommended middleware for browser-based requests that may use cookies
+ * Populates req.user if valid session exists, otherwise continues without user
+ */
+export async function setUserContext(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    let token: string | undefined;
+
+    // Check Authorization header first (standard for API calls)
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+    // Fall back to cookie-based token (for browser-based requests)
+    else if (req.cookies?.access_token) {
+      token = req.cookies.access_token;
+    }
+    // Also check sb-access-token cookie (Supabase's default cookie name)
+    else if (req.cookies?.['sb-access-token']) {
+      token = req.cookies['sb-access-token'];
+    }
+
+    if (!token) {
+      // No token provided, continue without user
+      next();
+      return;
+    }
+
+    // Verify the token using Supabase
+    const { data: { user }, error } = await getServiceSupabaseClient().auth.getUser(token);
+
+    if (!error && user) {
+      req.user = extractUserContext(user);
+    }
+
+    next();
+  } catch (error) {
+    console.error('[Auth Middleware] Error in setUserContext:', error);
     // Continue without user on error
     next();
   }
@@ -180,7 +247,7 @@ export function requirePermission(permissionName: string) {
       }
 
       // Check if user has the required permission
-      const { data, error } = await getSupabaseAdmin().rpc('user_has_permission', {
+      const { data, error } = await getServiceSupabaseClient().rpc('user_has_permission', {
         p_user_id: req.user.id,
         p_department_id: departmentId,
         p_permission_name: permissionName
@@ -239,7 +306,7 @@ export async function loadUserPermissions(
     }
 
     // Load all permissions for user in this department
-    const { data: permissions, error } = await getSupabaseAdmin().rpc('get_user_permissions', {
+    const { data: permissions, error } = await getServiceSupabaseClient().rpc('get_user_permissions', {
       p_user_id: req.user.id,
       p_department_id: departmentId
     });
