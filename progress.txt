@@ -1374,3 +1374,29 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and don't affect test suite
   - Next task is Task 8.9a: Create `create_default_probate_workflow()` function migration
 ---
+
+## Iteration 61 - Task 8.9a: Create create_default_probate_workflow() function migration
+- **What was implemented**: Created SQL migration for the default probate workflow function
+- **Files created**:
+  - `supabase/migrations/20260120300000_create_default_probate_workflow.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.9a complete
+- **Key features of the migration**:
+  - Function `create_default_probate_workflow(p_firm_id UUID)` returns UUID
+  - Creates workflow_config with notice_type 'probate', is_default TRUE
+  - Based on Trustee Act 1925 s.27 requirements
+  - Seeds 6 stages with correct positions and colors:
+    - Draft (initial, gray)
+    - Published (blue)
+    - Waiting Period (yellow, 60 days deadline - the statutory 2-month period)
+    - Claims Received (orange)
+    - Period Expired (purple)
+    - Estate Distributed (terminal, green)
+  - SECURITY DEFINER function with GRANT EXECUTE to authenticated users
+- **Test results**: TypeScript typecheck passes (pre-existing errors in cypress/e2e/scripts only)
+- **Learnings for future iterations**:
+  - Probate workflow is simpler than premises licence (6 stages vs 10)
+  - The key deadline is the 60-day waiting period required by Trustee Act 1925
+  - SQL migration file doesn't affect TypeScript compilation
+  - Next task is Task 8.9b: Apply probate workflow function to Supabase
+---
