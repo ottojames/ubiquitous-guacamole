@@ -641,9 +641,25 @@ Fixed multiple files that had hardcoded demo account bypasses that were NOT gate
 **Goal**: All tests pass, CI is green
 
 ### 6.1 Fix Schema Validation Tests
-- [ ] Update `TRAFFIC_AREA` enum in GVOL tests to match actual schema
-- [ ] Fix `src/next/publish/validation/windowRules.test.ts` Zod errors
-- [ ] Update sample drafts to match current schema requirements
+- [x] Update `TRAFFIC_AREA` enum in GVOL tests to match actual schema
+- [x] Fix `src/next/publish/validation/windowRules.test.ts` Zod errors
+- [x] Update sample drafts to match current schema requirements
+
+#### Implementation Notes (Task 6.1)
+
+Fixed two issues in `src/next/publish/sampleData.ts`:
+
+1. **GVOL sample draft**: Changed `TRAFFIC_AREA_NAME: 'North Western'` to `TRAFFIC_AREA: 'North Western'`
+   - The schema at `src/next/publish/schema/gvol.ts` expects `TRAFFIC_AREA` field (not `TRAFFIC_AREA_NAME`)
+   - The field uses `z.enum(TRAFFIC_AREAS)` validation
+
+2. **Gambling sample draft**: Added missing `LICENSABLE_ACTIVITIES: 'Betting, Gaming machines (Category B2, B3, C, D)'`
+   - The schema at `src/next/publish/schema/gambling.ts` requires `LICENSABLE_ACTIVITIES` for non-review, non-transfer variants
+   - This is enforced via `superRefine()` on lines 108-113
+
+**Test results**:
+- `windowRules.test.ts`: All 7 tests now pass (previously 2 failed)
+- The failed tests were "flags gambling site notice shorter than 28 days" and "flags GVOL publication outside ±21 days"
 
 ### 6.2 Fix Component Tests
 - [ ] Fix `UploadMethodStep.test.tsx` - update to match current component structure
