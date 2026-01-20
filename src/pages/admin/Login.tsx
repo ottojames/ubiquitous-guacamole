@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { user, loading, canAccessAdmin, signInAsAdmin } = useAuth();
+  const { user, loading, canAccessAdmin, signInAsAdmin, session, isPlatformAdmin, adminRole, role } = useAuth();
 
   // Form states
   const [email, setEmail] = useState('');
@@ -13,10 +13,33 @@ export default function AdminLogin() {
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Debug: Log all state on every render
+  console.log('[AdminLogin] Render state:', {
+    loading,
+    hasUser: !!user,
+    userEmail: user?.email,
+    hasSession: !!session,
+    isPlatformAdmin,
+    adminRole,
+    role,
+    appMetadata: session?.user?.app_metadata,
+  });
+
   // Redirect if already logged in as admin
   useEffect(() => {
+    console.log('[AdminLogin] useEffect triggered:', {
+      loading,
+      hasUser: !!user,
+      userEmail: user?.email,
+    });
+
     if (!loading && user && canAccessAdmin()) {
+      console.log('[AdminLogin] User is already admin, redirecting to dashboard');
       navigate('/admin/dashboard', { replace: true });
+    } else if (!loading && user && !canAccessAdmin()) {
+      console.log('[AdminLogin] User exists but NOT admin - staying on login page');
+    } else if (!loading && !user) {
+      console.log('[AdminLogin] No user logged in - showing login form');
     }
   }, [user, loading, canAccessAdmin, navigate]);
 

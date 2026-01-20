@@ -404,19 +404,41 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const canAccessAdmin = (): boolean => {
+    console.log('[UnifiedAuthContext.canAccessAdmin] Checking admin access:', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      isPlatformAdmin,
+      adminRole,
+      role,
+      appMetadata: session?.user?.app_metadata,
+    });
+
     // Check multiple conditions for admin access
     // 1. Platform admin flag in metadata
-    if (isPlatformAdmin) return true;
+    if (isPlatformAdmin) {
+      console.log('[UnifiedAuthContext.canAccessAdmin] Access granted: isPlatformAdmin=true');
+      return true;
+    }
 
     // 2. Admin role in metadata
-    if (adminRole === 'super_admin' || adminRole === 'admin') return true;
+    if (adminRole === 'super_admin' || adminRole === 'admin') {
+      console.log('[UnifiedAuthContext.canAccessAdmin] Access granted: adminRole=', adminRole);
+      return true;
+    }
 
     // 3. Check email for known admin (fallback for migration period)
-    if (user?.email === 'admin@civic') return true;
+    if (user?.email === 'admin@civic') {
+      console.log('[UnifiedAuthContext.canAccessAdmin] Access granted: known admin email');
+      return true;
+    }
 
     // 4. Check if user has admin role
-    if (role === 'admin' || role === 'super_admin') return true;
+    if (role === 'admin' || role === 'super_admin') {
+      console.log('[UnifiedAuthContext.canAccessAdmin] Access granted: role=', role);
+      return true;
+    }
 
+    console.log('[UnifiedAuthContext.canAccessAdmin] Access DENIED - no conditions met');
     return false;
   };
 

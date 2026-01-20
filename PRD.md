@@ -203,9 +203,40 @@ The file provides (unused):
 **Goal**: Admin users can log in and access the admin dashboard
 
 ### 2.1 Debug Current Flow
-- [ ] Add console logging to `AdminProtectedRoute` to trace auth state
-- [ ] Add console logging to `UnifiedAuthContext.canAccessAdmin()`
-- [ ] Identify where the redirect loop occurs
+- [x] Add console logging to `AdminProtectedRoute` to trace auth state
+- [x] Add console logging to `UnifiedAuthContext.canAccessAdmin()`
+- [x] Identify where the redirect loop occurs
+
+#### Debug Analysis: Redirect Loop Investigation
+
+Console logging has been added to trace the auth flow:
+
+1. **AdminProtectedRoute.tsx** now logs:
+   - Every render with full state: `loading`, `hasUser`, `userEmail`, `hasSession`, `isPlatformAdmin`, `adminRole`, `role`, `appMetadata`
+   - useEffect triggers showing when auth state changes
+   - Exact reason for redirects (no user vs no admin access)
+   - When access is granted
+
+2. **UnifiedAuthContext.canAccessAdmin()** now logs:
+   - All inputs checked: `hasUser`, `userEmail`, `isPlatformAdmin`, `adminRole`, `role`, `appMetadata`
+   - Which condition granted access (or if access was denied)
+
+3. **Admin Login.tsx** now logs:
+   - Render state with all auth fields
+   - When redirect to dashboard happens (already logged in admin)
+   - When user exists but isn't admin (stays on login)
+   - When no user is logged in (shows login form)
+
+**Potential Redirect Loop Cause Identified**:
+The loop could occur if:
+- Login navigates to `/admin/dashboard` immediately after `signInAsAdmin()` returns success
+- But the UnifiedAuthContext `loading` state may still be `true` (waiting for `onAuthStateChange` to fire)
+- AdminProtectedRoute sees `loading=true` → shows spinner
+- Then `loading=false` but context hasn't fully updated yet with new session
+- AdminProtectedRoute sees `!user` or `!canAccessAdmin()` → redirects to `/admin/login`
+- Login page sees user is logged in but not admin (or still loading) → could redirect back
+
+**Solution Direction**: Task 2.3 should add an `isInitialized` flag that ensures auth state is fully hydrated before making redirect decisions.
 
 ### 2.2 Fix Admin User Metadata
 - [ ] Create migration to set `app_metadata.is_platform_admin = true` for admin users

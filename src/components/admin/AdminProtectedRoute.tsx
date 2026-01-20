@@ -9,31 +9,58 @@ interface AdminProtectedRouteProps {
 
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   const navigate = useNavigate();
-  const { user, loading, canAccessAdmin } = useAuth();
+  const { user, loading, canAccessAdmin, session, isPlatformAdmin, adminRole, role } = useAuth();
+
+  // Debug: Log all state on every render
+  console.log('[AdminProtectedRoute] Render state:', {
+    loading,
+    hasUser: !!user,
+    userEmail: user?.email,
+    hasSession: !!session,
+    isPlatformAdmin,
+    adminRole,
+    role,
+    appMetadata: session?.user?.app_metadata,
+  });
 
   useEffect(() => {
+    console.log('[AdminProtectedRoute] useEffect triggered:', {
+      loading,
+      hasUser: !!user,
+      userEmail: user?.email,
+    });
+
     // Don't redirect while still loading auth state
-    if (loading) return;
+    if (loading) {
+      console.log('[AdminProtectedRoute] Still loading, waiting...');
+      return;
+    }
 
     // No user - redirect to login
     if (!user) {
-      console.log('AdminProtectedRoute: No user, redirecting to login');
+      console.log('[AdminProtectedRoute] No user found after loading complete, redirecting to login');
       navigate('/admin/login', { replace: true });
       return;
     }
 
     // Check admin access using UnifiedAuthContext
     const hasAdminAccess = canAccessAdmin();
-    console.log('AdminProtectedRoute: Checking access', {
+    console.log('[AdminProtectedRoute] Admin access check:', {
       email: user.email,
-      hasAdminAccess
+      hasAdminAccess,
+      isPlatformAdmin,
+      adminRole,
+      role,
+      appMetadata: session?.user?.app_metadata,
     });
 
     if (!hasAdminAccess) {
-      console.log('AdminProtectedRoute: No admin access, redirecting to login');
+      console.log('[AdminProtectedRoute] No admin access, redirecting to login');
       navigate('/admin/login', { replace: true });
+    } else {
+      console.log('[AdminProtectedRoute] Admin access granted, rendering children');
     }
-  }, [loading, user, canAccessAdmin, navigate]);
+  }, [loading, user, canAccessAdmin, navigate, session, isPlatformAdmin, adminRole, role]);
 
   // Show loading while checking auth state
   if (loading) {

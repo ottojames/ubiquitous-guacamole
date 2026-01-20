@@ -226,3 +226,53 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Task 1.5: Fix Server-Side Auth Middleware
 ---
 
+## Iteration 12 - Task 1.5: Fix Server-Side Auth Middleware
+- **What was implemented**: Updated server auth middleware to extract org/dept from JWT claims and added session-based auth
+- **Files changed**:
+  - `server/middleware/auth.ts` - Major refactor
+  - `PRD.md` - Marked all Task 1.5 subtasks complete
+- **Key changes**:
+  - Extended Express Request.user type with: `organizationId`, `departmentIds`, `isPlatformAdmin`
+  - Updated `requireAuth()` to extract org/dept/admin status from `app_metadata`
+  - Updated `optionalAuth()` similarly
+  - Added `setUserContext()` middleware - handles both Authorization header and cookie-based sessions
+  - Added `extractUserContext()` helper for consistent user context extraction
+  - Removed duplicate `getSupabaseAdmin()` function (was using undefined SupabaseClient and createClient)
+  - Now uses `getServiceSupabaseClient()` consistently (already handles lazy initialization)
+  - adminAuth.ts was already correct - line 64 checks `app_metadata.is_platform_admin === true`
+- **Learnings for future iterations**:
+  - Phase 1 (Authentication Consolidation) is now COMPLETE - all tasks 1.1-1.5 done
+  - auth.ts had duplicate Supabase client initialization code that wasn't properly importing types
+  - JWT claims structure per PRD: `{ is_platform_admin, admin_role, organization_id, department_ids }`
+  - Cookie names for session auth: `access_token` and `sb-access-token` (Supabase default)
+  - 49 failing tests remain pre-existing (Phase 6 work) - same count as before
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing and not blocking
+  - Next is Phase 2: Fix Admin Login (Infinite Spinner Bug)
+---
+
+## Iteration 13 - Task 2.1: Debug Current Flow (Admin Login Infinite Spinner)
+- **What was implemented**: Added comprehensive console logging to trace auth state and identify redirect loop cause
+- **Files changed**:
+  - `src/components/admin/AdminProtectedRoute.tsx` - Added detailed logging on every render and useEffect
+  - `src/contexts/UnifiedAuthContext.tsx` - Added logging to `canAccessAdmin()` showing all conditions checked
+  - `src/pages/admin/Login.tsx` - Added render state logging and redirect decision logging
+  - `PRD.md` - Marked Task 2.1 subtasks complete, documented analysis
+- **Key logging added**:
+  - AdminProtectedRoute: logs `loading`, `hasUser`, `userEmail`, `hasSession`, `isPlatformAdmin`, `adminRole`, `role`, `appMetadata` on every render
+  - canAccessAdmin(): logs all inputs and which condition granted/denied access
+  - Admin Login: logs render state and redirect decisions (already admin → dashboard, user but not admin → stay, no user → show form)
+- **Redirect loop cause identified**:
+  - After `signInAsAdmin()` returns success, Login page immediately navigates to `/admin/dashboard`
+  - But UnifiedAuthContext `loading` may still be `true` (waiting for `onAuthStateChange` callback)
+  - AdminProtectedRoute may see partial state (no user yet, or user but context not fully updated)
+  - This could cause redirect back to login, creating a loop
+- **Solution direction for Task 2.3**:
+  - Add `isInitialized` flag to UnifiedAuthContext that only becomes true after initial auth state is fully loaded
+  - AdminProtectedRoute should wait for both `!loading` AND `isInitialized` before making redirect decisions
+- **Learnings for future iterations**:
+  - The race condition is between navigation (immediate) and context state update (async via onAuthStateChange)
+  - 49 failing tests remain pre-existing - same count as before (Phase 6 work)
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and not blocking
+  - Next is Task 2.2: Fix Admin User Metadata (create migration for app_metadata)
+---
+
