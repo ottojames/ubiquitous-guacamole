@@ -45,10 +45,10 @@ A digital replacement for newspaper public notice publication in the UK. Central
 - [x] Verify email templates render correctly (Implemented 2026-01-20 - Created server/__tests__/emailTemplates.test.ts with 21 tests covering all 9 email functions)
 
 ### 7.4 Security Review
-- [ ] Verify RLS policies cover all tables with user data
-- [ ] Ensure service role key never sent to client
-- [ ] Verify admin endpoints require admin authentication
-- [ ] Check for SQL injection vulnerabilities in raw queries
+- [x] Verify RLS policies cover all tables with user data (Verified 2026-01-20 - All 35+ user data tables have RLS enabled via migrations 20251021000007_rls_policies.sql and 20260122000003_unified_rls_policies.sql)
+- [x] Ensure service role key never sent to client (Verified 2026-01-20 - SUPABASE_SERVICE_ROLE_KEY only used server-side in API routes, client uses VITE_SUPABASE_ANON_KEY)
+- [x] Verify admin endpoints require admin authentication (Verified 2026-01-20 - All admin routes use requireAdmin middleware from server/middleware/adminAuth.ts)
+- [x] Check for SQL injection vulnerabilities in raw queries (Verified 2026-01-20 - All RPC calls use parameterized queries with named parameters, no string concatenation in SQL)
 
 ---
 

@@ -938,3 +938,39 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Task 7.3 (Email Notifications) is now COMPLETE
   - Next is Task 7.4: Security Review
 ---
+
+## Iteration 38 - Task 7.4: Security Review
+- **What was verified**: Comprehensive security audit of RLS policies, service role key handling, admin auth, and SQL injection
+- **Files reviewed**:
+  - `supabase/migrations/20251021000007_rls_policies.sql` - Main RLS policies
+  - `supabase/migrations/20260122000003_unified_rls_policies.sql` - Unified RLS policies
+  - `supabase/migrations/20251121000001_public_representations_policy.sql` - Public access policy
+  - `src/lib/supabase.ts` - Client-side Supabase setup
+  - `server/middleware/auth.ts` - Authentication middleware
+  - `server/middleware/adminAuth.ts` - Admin authentication
+  - `server/routes/admin/*.ts` - Admin endpoints
+- **Security findings**:
+  1. **RLS Policies**: All 35+ tables with user data have RLS enabled
+     - organizations, departments, memberships, notices, templates, attachments
+     - invitations, clients, submissions, representations, audit_logs
+     - profiles, firm_clients, internal_comments, admin tables
+     - Tables without RLS are utility tables (postcode_cache, rate_limits)
+  2. **Service Role Key**: Only used in server-side code
+     - Client uses VITE_SUPABASE_ANON_KEY (safe to expose)
+     - SUPABASE_SERVICE_ROLE_KEY only in server/lib and Next.js API routes
+  3. **Admin Endpoints**: All protected with requireAdmin middleware
+     - Admin routes disabled in production until full implementation
+     - IP allowlist enforcement available
+     - Action logging via log_admin_action RPC
+  4. **SQL Injection**: No vulnerabilities found
+     - All RPC calls use parameterized queries
+     - Supabase client handles escaping
+     - No string concatenation in SQL
+- **No code changes needed** - Security is already properly implemented
+- **Learnings for future iterations**:
+  - Supabase RPC with named parameters is safe from SQL injection
+  - RLS helper functions (user_is_org_admin, user_is_dept_member) enable clean policy definitions
+  - VITE_ prefixed env vars are safe for client-side (intentionally public)
+  - Task 7.4 (Security Review) is COMPLETE
+  - All Phase 7 (Production Readiness) tasks are now COMPLETE
+---
