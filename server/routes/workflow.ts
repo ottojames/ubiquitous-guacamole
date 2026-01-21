@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getServiceSupabaseClient } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
+import { sendWebhookEvent } from '../services/webhooks.js';
 
 const router = Router();
 
@@ -210,6 +211,16 @@ router.post('/notices/:noticeId/transition', async (req, res) => {
     if (error) {
       console.error('[workflow/notices/:noticeId/transition] Transition error:', error);
       return res.status(400).json({ error: error.message || 'Failed to transition notice' });
+    }
+
+    // Fire webhook for workflow.stage_changed (async, don't block)
+    if (firmId) {
+      sendWebhookEvent(firmId, 'workflow.stage_changed', data, {
+        notice_id: noticeId,
+        to_stage_id: toStageId,
+        transition_type: 'manual',
+        history_id: data,
+      }).catch(err => console.error('[workflow/transition] Webhook error:', err));
     }
 
     return res.json({ historyId: data, success: true });

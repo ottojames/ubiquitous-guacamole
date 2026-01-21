@@ -6382,3 +6382,65 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Tables are verified with `\d tablename` psql command
   - Next task is Task 22.2c: Create webhook service (~60 lines)
 ---
+
+## Iteration 265 - Task 22.2c: Create webhook service
+- **What was implemented**: Created webhook service for sending events to subscribed endpoints
+- **Files created**:
+  - `server/services/webhooks.ts` (~60 lines)
+- **Files changed**:
+  - `PRD.md` - Marked Task 22.2c complete
+- **Implementation details**:
+  - `sendWebhookEvent(organizationId, event, eventId, data)` - Main export function
+    - Queries `webhooks` table for enabled webhooks subscribed to event type
+    - Uses `.contains('events', [event])` for GIN index-optimized event matching
+    - Returns `{ sent: number, failed: number }` stats
+  - `deliverWebhook(webhook, payload)` - Internal helper
+    - Creates HMAC-SHA256 signature using webhook.secret
+    - Sends POST request with headers: Content-Type, X-Webhook-Signature, X-Webhook-Event
+    - Uses AbortController for configurable timeout (webhook.timeout_ms)
+    - Logs delivery attempt to `webhook_deliveries` table (pending → success/failed)
+    - Updates webhook stats: last_triggered_at, last_success_at/last_failure_at
+  - Payload format: `{ event, event_id, timestamp, data }`
+  - Signature format: `sha256=<hex_digest>`
+- **Test results**: All 506 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Webhook service follows same pattern as other services (deadlineReminders, etc.)
+  - Uses native fetch() API (no axios/node-fetch)
+  - createHmac from 'crypto' module for signature generation
+  - getServiceSupabaseClient() for database access (service role bypasses RLS)
+  - AbortController pattern for request timeout handling
+  - Next task is Task 22.2d: Integrate into endpoints (fire webhooks on notice publish, representation submit, etc.)
+---
+
+## Iteration 266 - Task 22.2d: Integrate webhooks into endpoints
+- **What was implemented**: Integrated webhook service into 4 API endpoints to fire events
+- **Files changed**:
+  - `server/routes/notices.ts` - Added import and webhook calls for notice.published
+  - `server/routes/stripe.ts` - Added import and webhook call for payment.completed
+  - `server/routes/representations.ts` - Added import and webhook call for representation.submitted
+  - `server/routes/workflow.ts` - Added import and webhook call for workflow.stage_changed
+  - `PRD.md` - Marked Task 22.2d complete
+- **Implementation details**:
+  - notices.ts: Fires `notice.published` when notice is submitted (both update and insert paths)
+    - Includes notice_id, notice_type, applicant, premises in payload
+    - Only fires if resolvedOrganizationId is present
+  - stripe.ts: Fires `payment.completed` after successful Stripe checkout
+    - Includes notice_id, payment_intent, amount, currency in payload
+    - Only fires if noticeData.organization_id is present
+  - representations.ts: Fires `representation.submitted` after successful insert
+    - Includes representation_id, notice_id, type, submitter_name, submitted_at in payload
+    - Fires inside the async notification IIFE where organization_id is available
+  - workflow.ts: Fires `workflow.stage_changed` after successful stage transition
+    - Includes notice_id, to_stage_id, transition_type, history_id in payload
+    - Uses firmId (organization context from auth)
+  - All webhook calls are async with `.catch()` to not block response
+- **Test results**: All 506 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only - no new errors
+- **Learnings for future iterations**:
+  - Webhook integration follows pattern: import sendWebhookEvent, call async after success with .catch()
+  - Organization ID source varies by endpoint: resolvedOrganizationId (notices), noticeData.organization_id (stripe), noticeWithOrg.organization_id (representations), firmId (workflow)
+  - Webhooks should fire after the main operation succeeds but before the response is sent
+  - Use .catch() to log errors without blocking the response
+  - Phase 22.2 Webhooks is now complete (22.2a table, 22.2b migration, 22.2c service, 22.2d integration)
+---

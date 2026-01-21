@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getServiceSupabaseClient } from '../lib/supabase';
 import { sendNoticeConfirmation } from '../services/email';
 import { getStripeClient, isStripeConfigured } from '../services/stripe';
+import { sendWebhookEvent } from '../services/webhooks';
 
 const router = Router();
 
@@ -192,6 +193,16 @@ router.post('/webhook', async (req, res) => {
               console.error('Failed to send confirmation email:', emailResult.error);
             } else {
               console.log('Confirmation email sent successfully');
+            }
+
+            // Fire webhook for payment.completed (async, don't block)
+            if (noticeData.organization_id) {
+              sendWebhookEvent(noticeData.organization_id, 'payment.completed', session.id, {
+                notice_id: noticeId,
+                payment_intent: session.payment_intent,
+                amount: session.amount_total,
+                currency: session.currency,
+              }).catch(err => console.error('[stripe-webhook] Webhook error:', err));
             }
 
             // TODO: Generate PDF certificate

@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAuth, optionalAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
 import { sendRepresentationNotificationToCouncil } from '../services/email';
 import { generateIdoxCsv, getIdoxFilename, type RepresentationForExport } from '../services/idoxExport';
+import { sendWebhookEvent } from '../services/webhooks';
 
 const router = Router();
 
@@ -511,6 +512,17 @@ router.post('/representations', async (req: Request, res: Response) => {
         });
 
         console.log(`[Representation] Sent notification to council ${org.name} for representation ${representation.id}`);
+
+        // Fire webhook for representation.submitted (async, don't block)
+        if (noticeWithOrg.organization_id) {
+          sendWebhookEvent(noticeWithOrg.organization_id, 'representation.submitted', representation.id, {
+            representation_id: representation.id,
+            notice_id: noticeId,
+            type,
+            submitter_name: submitterName.trim(),
+            submitted_at: representation.submitted_at,
+          }).catch(err => console.error('[Representation] Webhook error:', err));
+        }
       } catch (emailError) {
         console.error('[Representation] Error sending council notification email:', emailError);
         // Don't fail the request if email fails

@@ -3,6 +3,7 @@ import { getServiceSupabaseClient } from '../lib/supabase.js';
 
 import { ensurePostcodeCoordinates, normalisePostcode as geocodeNormalisePostcode } from '../lib/geocode';
 import { requireAuth, loadUserPermissions, requirePermission, optionalAuth } from '../middleware/auth';
+import { sendWebhookEvent } from '../services/webhooks';
 
 const POSTCODE_RE = /([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})/i;
 
@@ -659,6 +660,16 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
           return res.status(500).json({ error: 'Failed to submit notice', details: error.message });
         }
 
+        // Fire webhook for notice.published (async, don't block response)
+        if (resolvedOrganizationId) {
+          sendWebhookEvent(resolvedOrganizationId, 'notice.published', data.id, {
+            notice_id: data.id,
+            notice_type: noticeData.notice_type,
+            applicant: noticeData.applicant,
+            premises: noticeData.premises,
+          }).catch(err => console.error('[notice-submit] Webhook error:', err));
+        }
+
         return res.status(200).json({ id: data.id, success: true });
       }
       // If draft doesn't exist, fall through to create new
@@ -680,6 +691,16 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       console.error('   - Notice type:', noticeData.notice_type);
       console.error('   - Applicant:', noticeData.applicant?.name);
       return res.status(500).json({ error: 'Failed to submit notice', details: error.message });
+    }
+
+    // Fire webhook for notice.published (async, don't block response)
+    if (resolvedOrganizationId) {
+      sendWebhookEvent(resolvedOrganizationId, 'notice.published', data.id, {
+        notice_id: data.id,
+        notice_type: noticeData.notice_type,
+        applicant: noticeData.applicant,
+        premises: noticeData.premises,
+      }).catch(err => console.error('[notice-submit] Webhook error:', err));
     }
 
     // Send confirmation email if contact_email is provided
