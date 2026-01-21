@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useToastController } from '@/lib/ui/toast';
 import InternalComments from '@/components/council/InternalComments';
 import AssignRepresentationModal from '@/components/council/AssignRepresentationModal';
 import RepresentationAnalysisSummary from '@/components/council/RepresentationAnalysisSummary';
@@ -71,6 +72,7 @@ export default function CouncilRepresentations() {
   const context = useOutletContext<ContextType>();
   const department = context?.department;
   const userRole = context?.userRole || 'viewer';
+  const toastMessage = useToastController();
   const [representations, setRepresentations] = useState<Representation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -798,6 +800,13 @@ export default function CouncilRepresentations() {
             setAssigningRep(null);
           }}
         />
+      )}
+
+      {/* Toast notification */}
+      {toastMessage && (
+        <div className="fixed bottom-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg animate-fade-in">
+          {toastMessage}
+        </div>
       )}
     </div>
   );

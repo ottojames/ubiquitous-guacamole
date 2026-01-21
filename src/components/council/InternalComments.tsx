@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
+import { toast } from '@/lib/ui/toast';
 
 interface InternalComment {
   id: string;
@@ -31,7 +32,7 @@ export default function InternalComments({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     loadComments();
@@ -88,12 +89,17 @@ export default function InternalComments({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+
+    // Validate empty comment with inline error message
+    if (!newComment.trim()) {
+      setValidationError('Please enter a comment before submitting');
+      return;
+    }
 
     try {
       setSubmitting(true);
       setError(null);
-      setSuccessMessage(null);
+      setValidationError(null);
 
       const token = await getAuthToken();
 
@@ -126,10 +132,7 @@ export default function InternalComments({
       }
 
       setNewComment('');
-      setSuccessMessage('Comment added successfully');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
+      toast('Comment added');
 
       await loadComments();
     } catch (err) {
@@ -208,18 +211,22 @@ export default function InternalComments({
         <div className="relative">
           <textarea
             value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
+            onChange={(e) => {
+              setNewComment(e.target.value);
+              // Clear validation error when user starts typing
+              if (validationError) setValidationError(null);
+            }}
             placeholder="Add an internal comment (visible to team members based on your role)"
             rows={3}
             className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             disabled={submitting}
           />
         </div>
+        {validationError && (
+          <p className="mt-2 text-sm text-red-600">{validationError}</p>
+        )}
         {error && (
           <p className="mt-2 text-sm text-red-600">{error}</p>
-        )}
-        {successMessage && (
-          <p className="mt-2 text-sm text-green-600">{successMessage}</p>
         )}
         <div className="mt-2 flex items-center justify-between">
           <p className="text-xs text-slate-500">

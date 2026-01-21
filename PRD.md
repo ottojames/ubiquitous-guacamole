@@ -155,7 +155,7 @@ Major refactoring and bug fixes following user walkthrough review.
   DROP POLICY IF EXISTS "Department members can view comments" ON internal_comments;
   ```
 
-- [ ] `[MEDIUM]` `[S]` **Add success toast and improved error handling** - Show confirmation when comment added, show helpful error message on failure.
+- [x] `[MEDIUM]` `[S]` **Add success toast and improved error handling** - Show confirmation when comment added, show helpful error message on failure.
 
   **File**: `src/components/council/InternalComments.tsx`
 
