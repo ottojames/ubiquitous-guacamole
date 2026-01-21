@@ -98,30 +98,6 @@ const pricingPlans = {
     ctaHref: "#contact",
     popular: false,
   },
-  business: {
-    name: "Business",
-    description: "For mid-size firms publishing 10-20 notices per month",
-    priceMonthly: 400,
-    priceAnnual: 3840,
-    includedNotices: 15,
-    overageRate: 40,
-    avgPerNotice: 26.67,
-    features: [
-      "15 notices included per month",
-      "Overage at £40 per notice",
-      "Average £26.67 per notice (47% savings)",
-      "Everything in Professional, plus:",
-      "Advanced analytics & reporting",
-      "Client portal access",
-      "API access for integrations",
-      "Priority phone & email support",
-      "Dedicated onboarding",
-      "Custom notice templates",
-    ],
-    cta: "Start free trial",
-    ctaHref: "/auth/sign-in",
-    popular: true,
-  },
   enterprise: {
     name: "Enterprise",
     description: "For large firms with dedicated licensing departments",
@@ -438,8 +414,8 @@ export default function Pricing() {
             <p className="mt-4 text-lg text-slate-600">Volume-based pricing with professional tools and support</p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
-            {['business', 'enterprise'].map((key) => {
+          <div className="mx-auto max-w-lg">
+            {['enterprise'].map((key) => {
               const plan = pricingPlans[key as keyof typeof pricingPlans];
               const price =
                 plan.priceAnnual && billingCycle === "annual"

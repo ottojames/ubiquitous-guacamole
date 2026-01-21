@@ -317,7 +317,7 @@ npm run lint         # ESLint check
 
 ### 15.1 Remove Old Pricing Data
 - [x] **Task 15.1a**: Delete `pricingPlans.professional` object. **Success**: Object removed, no TypeScript errors. (Completed 2026-01-21 - Removed lines 101-124, updated Law Firms grid from 3 cols to 2 cols, 494 tests pass)
-- [ ] **Task 15.1b**: Delete `pricingPlans.business` object. **Success**: Object removed, no TypeScript errors.
+- [x] **Task 15.1b**: Delete `pricingPlans.business` object. **Success**: Object removed, no TypeScript errors. (Completed 2026-01-21 - Removed lines 101-124, updated Law Firms rendering to enterprise only with max-w-lg container, 494 tests pass)
 - [ ] **Task 15.1c**: Delete `pricingPlans.enterprise` object. **Success**: Object removed, no TypeScript errors.
 - [ ] **Task 15.1d**: Delete `pricingPlans.councilSmall` object (Parish & Town). **Success**: Object removed.
 - [ ] **Task 15.1e**: Delete `pricingPlans.councilMedium` object (District Council). **Success**: Object removed.
