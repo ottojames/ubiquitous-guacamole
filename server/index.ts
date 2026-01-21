@@ -46,6 +46,7 @@ import adminStatsRouter from './routes/admin/stats';
 import complianceRouter from './routes/compliance';
 import draftingRouter from './routes/drafting';
 import representationAnalysisRouter from './routes/representation-analysis';
+import internalCommentsRouter from './routes/internal-comments';
 import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth';
 import { setupSwagger } from './lib/swagger';
 
@@ -98,6 +99,7 @@ app.use('/api/firm/templates', firmTemplatesRouter);
 app.use('/api/compliance', complianceRouter);
 app.use('/api/drafting', draftingRouter);
 app.use('/api/representation-analysis', representationAnalysisRouter);
+app.use('/api/internal-comments', internalCommentsRouter);
 app.use('/api', testCertificateRouter);
 app.use('/api', testEmailRouter);
 app.use('/api/migration', applyMigrationRouter);

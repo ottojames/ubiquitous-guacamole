@@ -31,25 +31,56 @@ export default function InternalComments({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadComments();
   }, [representationId]);
 
+  // Get auth token for API calls
+  const getAuthToken = async (): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  };
+
   const loadComments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('internal_comments')
-        .select('*')
-        .eq('representation_id', representationId)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      const token = await getAuthToken();
+
+      if (!token) {
+        // Fall back to direct Supabase query for demo mode
+        const { data, error } = await supabase
+          .from('internal_comments')
+          .select('*')
+          .eq('representation_id', representationId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        setComments(data || []);
+        return;
+      }
+
+      // Use API endpoint for authenticated users
+      const response = await fetch(`/api/internal-comments/${representationId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to load comments');
+      }
+
+      const data = await response.json();
       setComments(data || []);
     } catch (err) {
       console.error('Failed to load internal comments:', err);
+      // Don't show error for empty comments
     } finally {
       setLoading(false);
     }
@@ -62,22 +93,44 @@ export default function InternalComments({
     try {
       setSubmitting(true);
       setError(null);
+      setSuccessMessage(null);
 
-      const { error: insertError } = await supabase
-        .from('internal_comments')
-        .insert({
-          representation_id: representationId,
-          department_id: departmentId,
-          author_id: userId,
-          author_name: userName,
-          author_role: userRole,
-          comment_text: newComment.trim(),
-          visibility: 'department' // Default to department visibility
-        });
+      const token = await getAuthToken();
 
-      if (insertError) throw insertError;
+      if (!token) {
+        // For demo mode without auth, show helpful error
+        setError('Please log in to add comments. Demo mode requires authentication for this feature.');
+        return;
+      }
+
+      // Use API endpoint for authenticated users
+      const response = await fetch('/api/internal-comments', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          representationId,
+          departmentId,
+          authorName: userName,
+          authorRole: userRole,
+          commentText: newComment.trim(),
+          visibility: 'department'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to add comment');
+      }
 
       setNewComment('');
+      setSuccessMessage('Comment added successfully');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+
       await loadComments();
     } catch (err) {
       console.error('Failed to add comment:', err);
@@ -92,8 +145,11 @@ export default function InternalComments({
       head: 'bg-purple-100 text-purple-800',
       admin: 'bg-purple-100 text-purple-800',
       owner: 'bg-purple-100 text-purple-800',
+      org_admin: 'bg-purple-100 text-purple-800',
+      dept_admin: 'bg-blue-100 text-blue-800',
       senior: 'bg-blue-100 text-blue-800',
       editor: 'bg-blue-100 text-blue-800',
+      officer: 'bg-blue-100 text-blue-800',
       junior: 'bg-slate-100 text-slate-800',
       viewer: 'bg-slate-100 text-slate-800',
       member: 'bg-slate-100 text-slate-800'
@@ -162,14 +218,17 @@ export default function InternalComments({
         {error && (
           <p className="mt-2 text-sm text-red-600">{error}</p>
         )}
+        {successMessage && (
+          <p className="mt-2 text-sm text-green-600">{successMessage}</p>
+        )}
         <div className="mt-2 flex items-center justify-between">
           <p className="text-xs text-slate-500">
-            {userRole === 'head' || userRole === 'admin' ? (
-              <>👁️ All officers will see your comment</>
-            ) : userRole === 'senior' || userRole === 'editor' ? (
-              <>👥 Department members will see your comment</>
+            {userRole === 'head' || userRole === 'admin' || userRole === 'owner' || userRole === 'org_admin' ? (
+              <>All officers will see your comment</>
+            ) : userRole === 'senior' || userRole === 'editor' || userRole === 'officer' || userRole === 'dept_admin' ? (
+              <>Department members will see your comment</>
             ) : (
-              <>🔒 Only you and heads will see your comment</>
+              <>Only you and heads will see your comment</>
             )}
           </p>
           <button

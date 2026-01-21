@@ -123,7 +123,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[HIGH]` `[M]` **Debug and fix comment insertion failure** - Open DevTools, attempt to add comment, capture error. Likely causes: missing RLS INSERT policy, incorrect field mapping, or auth context not passed.
+- [x] `[HIGH]` `[M]` **Debug and fix comment insertion failure** - Open DevTools, attempt to add comment, capture error. Likely causes: missing RLS INSERT policy, incorrect field mapping, or auth context not passed.
 
   **File**: `src/components/council/InternalComments.tsx:58-88`
 

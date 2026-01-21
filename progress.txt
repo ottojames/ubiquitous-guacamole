@@ -8469,3 +8469,49 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - When auditing for department isolation, check stats/aggregate queries as well as list queries
   - The `head: true` option with `count: 'exact'` returns only the count without row data - efficient for aggregations
 ---
+
+## Iteration 358 - Add database-level RLS policies for department isolation
+- **What was implemented**: Created a new Supabase migration adding explicit RLS policies for department-level data isolation as defense-in-depth
+- **Files changed**: 
+  - `supabase/migrations/20260121100001_department_isolation_rls.sql` (new) - Migration adding two new RLS policies
+  - `PRD.md` - Marked task complete
+- **Migration details**:
+  - "Users see notices in their departments" policy on notices table
+  - "Users see representations for their department notices" policy on representations table
+  - Both policies also allow org admins (owner, org_admin roles) to see all data in their organization
+  - Policies are idempotent (DROP IF EXISTS before CREATE)
+- **Existing policies analysis**:
+  - `20251021000007_rls_policies.sql` already has `notices_select_policy` using `user_is_dept_member()` function
+  - `20260122000003_unified_rls_policies.sql` has additional overlapping policies
+  - New policies provide explicit, clearly-named isolation as a second layer of defense
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/, e2e/, scripts/ directories only (not core app)
+- **Learnings for future iterations**:
+  - Supabase RLS policies can overlap - multiple SELECT policies are OR'd together
+  - Defense-in-depth: database-level RLS prevents bypassing frontend filters
+  - Migration filenames use timestamps (YYYYMMDDHHMMSS format) to ensure proper ordering
+  - The `user_is_dept_member()` and `user_is_org_admin()` helper functions are already defined in earlier migrations
+---
+
+## Iteration 5 - Debug and fix internal_comments INSERT failure
+- **Root cause identified**: The `InternalComments` component was making direct Supabase client calls which rely on RLS policies using `auth.uid()`. In demo mode or when session isn't properly maintained, `auth.uid()` returns null and the RLS INSERT policy fails.
+- **Solution implemented**: Created server-side API route `/api/internal-comments` that:
+  1. Validates user's JWT token via `requireAuth` middleware
+  2. Validates user has access to the department via `department_memberships` or `organization_memberships` queries
+  3. Uses the service role key to insert comments (bypasses RLS)
+  4. Provides proper error messages for each failure scenario
+- **Files changed**:
+  - `server/routes/internal-comments.ts` (new) - API endpoints for GET (list), POST (create), DELETE (soft-delete) comments
+  - `server/index.ts` - Registered new route at `/api/internal-comments`
+  - `src/components/council/InternalComments.tsx` - Updated to use API endpoints instead of direct Supabase calls
+- **API design decisions**:
+  - GET `/:representationId` - Lists comments with role-based visibility filtering
+  - POST `/` - Creates comment, validates department access, sets visibility
+  - DELETE `/:commentId` - Soft deletes (sets deleted_at), author or admin can delete
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **Learnings for future iterations**:
+  - Client-side RLS with `auth.uid()` requires proper Supabase auth session - demo mode users won't have this
+  - Server-side API routes with service role key provide more reliable access control
+  - The pattern used in `server/routes/representations.ts` is the established way to handle authenticated operations
+  - Always cast Supabase query results with `as any` when using untyped client
+---
