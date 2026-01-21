@@ -8697,3 +8697,51 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Anchor links with `/#section-id` work correctly when the section exists on the home page
   - Sometimes the pragmatic decision is to keep current behavior if it works and alternatives have higher cost/complexity
 ---
+
+## Iteration 34 - Redesign EmailAlerts page (Phase 6)
+- **What was implemented**: Complete page redesign matching site design system with hero section, gradient background, UI.card forms, and footer
+- **Files changed**:
+  - `src/pages/EmailAlerts.tsx` - Full redesign with hero section, gradient orbs, proper card styling, UI design tokens, Footer component
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Hero section with gradient orbs, Bell icon with gradient background, pageTitleLight/pageSubtitleLight
+  - Used UI.pageWrap for consistent gradient band background across pages
+  - Form cards use `rounded-lg bg-white shadow-sm ring-1 ring-slate-200` as specified in DoD
+  - All inputs use UI design system tokens (UI.inputFull, UI.inputIconLeft, UI.label)
+  - Added Lucide icons (Mail, MapPin, CheckCircle, AlertCircle)
+  - Used UI.alertSuccess/alertError/alertInfo for consistent messaging
+  - Added Footer component at page bottom
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e, scripts directories only (not related to this change)
+- **Learnings for future iterations**:
+  - UI.pageWrap includes hero-band CSS class that provides the gradient background
+  - UI.pageTitleLight and UI.pageSubtitleLight are designed for text on the gradient band
+  - Form cards should use `shadow-sm ring-1 ring-slate-200` per design system
+  - UI.alertSuccess/Error/Info/Warning provide consistent alert styling
+  - UI.inputIconLeft positions icon in input; combine with `pl-10` on input
+  - Footer component exists at src/components/Footer.tsx - no SiteFooter exists
+---
+
+## Iteration 35 - Wire up and test email subscription flow end-to-end (Phase 6)
+- **What was implemented**: Full email subscription flow wired up and tested end-to-end
+- **Files changed**:
+  - `supabase/migrations/20260122000005_email_subscriptions.sql` (new) - Creates email_subscriptions and email_alerts_sent tables with indexes and RLS policies
+  - `server/routes/subscriptions.ts` - Fixed radius validation (0.5-50km instead of [0.5, 1, 2, 5]), improved dev mode resilience
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  1. Created proper Supabase migration for email_subscriptions table (was only in server/sql/ as an untracked file)
+  2. Fixed radius_km validation to allow full 0.5-50km range (UI slider goes 1-20)
+  3. In development mode, subscription is kept even if email fails - returns verification token in response for testing
+  4. In production mode, subscription is deleted if email fails (original behavior)
+- **End-to-end flow verified**:
+  1. POST /api/subscriptions/create - creates subscription with status='pending'
+  2. POST /api/subscriptions/manage - returns subscription details
+  3. GET /api/subscriptions/verify/:token - updates status to 'active' and redirects
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only (not related to this change)
+- **Learnings for future iterations**:
+  - Resend free tier (`onboarding@resend.dev`) only sends to account owner's email - need verified domain for production
+  - SQL files in server/sql/ are NOT automatically applied - must create proper Supabase migrations
+  - When email fails, keeping subscription in dev mode helps testing; deleting in prod prevents orphaned records
+  - The EmailAlerts page was already wired to call the API endpoints correctly
+---

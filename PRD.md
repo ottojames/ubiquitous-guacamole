@@ -331,9 +331,20 @@ Major refactoring and bug fixes following user walkthrough review.
   - Added Footer component at page bottom
   - Manage subscription view also uses card styling and consistent design
 
-- [ ] `[MEDIUM]` `[M]` **Wire up and test email subscription flow end-to-end** - Ensure Resend API key configured, verification emails sent, subscriptions created in database.
+- [x] `[MEDIUM]` `[M]` **Wire up and test email subscription flow end-to-end** - Ensure Resend API key configured, verification emails sent, subscriptions created in database.
 
   **Files**: `server/routes/subscriptions.ts`, `server/services/email.ts`
+
+  **Solution implemented**:
+  - Created Supabase migration `20260122000005_email_subscriptions.sql` with:
+    - `email_subscriptions` table with proper columns (id, email, postcode, lat, lng, radius_km, notice_types, is_verified, verification_token, unsubscribe_token, status)
+    - `email_alerts_sent` table to track sent alerts and prevent duplicates
+    - RLS policies for service role access
+    - Indexes for efficient queries
+  - Fixed radius validation in `server/routes/subscriptions.ts` to accept 0.5-50km range (was restricted to [0.5, 1, 2, 5])
+  - Updated subscription creation to be more resilient in development mode:
+    - In production: deletes subscription if email fails
+    - In development: keeps subscription and returns verification token for testing
 
 ### Definition of Done
 

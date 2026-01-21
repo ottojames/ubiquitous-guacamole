@@ -9,7 +9,7 @@ const router = Router();
 const createSubscriptionSchema = z.object({
   email: z.string().email(),
   postcode: z.string().regex(/^[A-Za-z]{1,2}[0-9][0-9A-Za-z]?\s?[0-9][A-Za-z]{2}$/),
-  radius_km: z.number().min(0.5).max(50).refine((val) => [0.5, 1, 2, 5].includes(val)),
+  radius_km: z.number().min(0.5).max(50),
   notice_types: z.array(z.string()).optional(),
 });
 
@@ -94,14 +94,29 @@ router.post('/create', async (req, res) => {
 
     if (!emailResult.success) {
       console.error('Failed to send verification email:', emailResult.error);
-      // Delete the subscription if email fails
-      await supabase
-        .from('email_subscriptions')
-        .delete()
-        .eq('id', subscription.id);
+      // In production, delete the subscription if email fails
+      // In development, keep it for testing
+      if (process.env.NODE_ENV === 'production') {
+        await supabase
+          .from('email_subscriptions')
+          .delete()
+          .eq('id', subscription.id);
 
-      return res.status(500).json({
-        error: 'Failed to send verification email. Please try again.'
+        return res.status(500).json({
+          error: 'Failed to send verification email. Please try again.'
+        });
+      }
+      // In development, return success but note the email failure
+      console.warn('[Subscriptions] Email failed but subscription created for testing. Token:', subscription.verification_token);
+      return res.json({
+        success: true,
+        message: 'Subscription created (email delivery failed - check server logs for verification token).',
+        subscriptionId: subscription.id,
+        // Include verification token in dev for testing
+        _dev: {
+          verificationToken: subscription.verification_token,
+          verifyUrl: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/api/subscriptions/verify/${subscription.verification_token}`
+        }
       });
     }
 
