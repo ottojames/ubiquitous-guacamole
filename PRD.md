@@ -360,7 +360,7 @@ npm run lint         # ESLint check
 
 ### 15.7 Update Final CTA Section
 - [x] **Task 15.7a**: Remove "40+ UK councils", use generic text. **Success**: Removed. (Completed 2026-01-21 - Changed to "Publish legally compliant notices in seconds — no newspapers, no waiting")
-- [ ] **Task 15.7b**: Update primary CTA to "Publish a Notice - £50". **Success**: Updated.
+- [x] **Task 15.7b**: Update primary CTA to "Publish a Notice - £50". **Success**: Updated. (Completed 2026-01-21 - Changed line 426 from "Publish your first notice" to "Publish a Notice - £50")
 - [ ] **Task 15.7c**: Add secondary CTA "Register as a Firm". **Success**: Added.
 - [ ] **Task 15.7d**: Add council link "Get free portal access". **Success**: Added.
 

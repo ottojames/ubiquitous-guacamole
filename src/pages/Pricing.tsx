@@ -423,7 +423,7 @@ export default function Pricing() {
                   href="/publish"
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
                 >
-                  Publish your first notice
+                  Publish a Notice - £50
                   <ArrowRight className="h-5 w-5" />
                 </a>
                 <a

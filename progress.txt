@@ -3474,3 +3474,42 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Remaining FAQ tasks: 15.6e (publish without subscription), 15.6f (free council portal)
   - Next task is Task 15.6e: Add FAQ "Can I publish without subscription?"
 ---
+
+## Iteration 93 - Task 15.6e: Add FAQ "Can I publish without subscription?"
+- **What was implemented**: Added new FAQ explaining that users can publish without a subscription using One-Off Publishing
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Added new FAQ object with question "Can I publish without a subscription?"
+  - PRD.md - Marked task complete with implementation notes
+- **FAQ Answer**: "Absolutely! Our One-Off Publishing option lets anyone publish a notice for £50 with no account or subscription required. You get instant publication, full audit trail, and a PDF certificate. The subscription is only needed if you want team collaboration, workflow management, and other professional features."
+- **Test results**: All 494 tests pass
+- **Learnings for future iterations**:
+  - The FAQ section now has 7 items
+  - Remaining FAQ tasks: 15.6f (free council portal)
+  - Next task is Task 15.6f: Add FAQ "What's in free council portal?"
+---
+
+## Iteration 94 - Task 15.6f: Add FAQ "What's in free council portal?"
+- **What was implemented**: Added new FAQ explaining the Council Portal features
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Added new FAQ object with question "What's in the free council portal?"
+  - PRD.md - Marked task complete with implementation notes
+- **FAQ Answer**: "The Council Portal gives local authorities free access to view all notices published in their jurisdiction, manage public representations and objections, and track community engagement. Councils can also set up department-level access controls, create customised notice templates, and export data in IDOX-compatible format. The portal is completely free — councils only pay £19.99 per notice when they choose to publish their own notices."
+- **Test results**: All 494 tests pass
+- **TypeScript check**: Pre-existing errors in council/firm pages only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The FAQ section now has 8 items - all pricing FAQ tasks (15.6a-15.6f) are complete
+  - Task 15.6 (FAQ Section) is now COMPLETE
+  - Next section is Task 15.7: Update Final CTA Section
+---
+
+## Iteration 95 - Task 15.7b: Update primary CTA to "Publish a Notice - £50"
+- **What was implemented**: Updated the primary CTA button in the Final CTA section
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Line 426: Changed "Publish your first notice" to "Publish a Notice - £50"
+  - PRD.md - Marked task complete with implementation notes
+- **Test results**: All 494 tests pass (2 skipped)
+- **TypeScript check**: Pre-existing errors in cypress/ directory only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The Final CTA section is at lines 408-443 in Pricing.tsx
+  - Next tasks 15.7c and 15.7d will add secondary CTA buttons for firms and councils
+---
