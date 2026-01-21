@@ -3846,3 +3846,38 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Override with larger values using Tailwind arbitrary shadow syntax
   - Next task is 16.3b: Make Browse button secondary style
 ---
+
+## Iteration N - Task 16.3b: Make Browse button secondary style
+- **What was implemented**: Reduced Browse button size to create clear visual hierarchy with Publish button
+- **Files changed**:
+  - `src/pages/Home.tsx` - Updated Browse button styling at lines 428-433
+  - `PRD.md` - Marked Task 16.3b complete
+- **Key implementation details**:
+  - Browse button already used UI.btnSecondary (correct base styling)
+  - Reduced padding: px-8 py-4 → px-6 py-3 (smaller, less prominent)
+  - Reduced text: text-base → text-sm (subordinate to Publish)
+  - Creates visual hierarchy: Publish (lg, dominant) vs Browse (sm, secondary)
+- **Test results**: All 495 tests pass
+- **Learnings for future iterations**:
+  - UI.btnSecondary already has correct colors (white bg, slate border, slate text)
+  - For CTA pairs, vary size (padding + font) rather than just colors
+  - Publish: px-10 py-5 text-lg vs Browse: px-6 py-3 text-sm
+  - Next task is 16.3c: Add price to CTA "Publish a Notice - £50"
+---
+
+## Iteration N - Task 16.3c: Add price to CTA "Publish a Notice - £50"
+- **What was implemented**: Updated hero CTA button to show price
+- **Files changed**:
+  - `src/pages/Home.tsx` - Changed button text at line 425
+  - `PRD.md` - Marked Task 16.3c complete
+- **Key implementation details**:
+  - Changed button text from "Publish a notice" to "Publish a Notice - £50"
+  - Price is now visible at the primary call-to-action
+  - Capitalised "Notice" for proper title case
+- **Test results**: All 495 tests pass
+- **TypeScript check**: Pre-existing errors only, Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Including price in CTA buttons improves conversion by setting expectations
+  - Hero CTAs should have the core value proposition visible
+  - Next task is 16.4a: Check /public/logos/, hide if missing
+---

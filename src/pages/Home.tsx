@@ -556,6 +556,7 @@ export default function Home() {
                     height={l.height}
                     loading="lazy"
                     className="h-7 w-auto object-contain"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 ))}
               </div>
@@ -751,6 +752,7 @@ export default function Home() {
                 height={l.height}
                 loading="lazy"
                 className="h-8 w-auto object-contain transition duration-300 hover:opacity-80 hover:grayscale-0"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             ))}
           </div>

@@ -400,7 +400,7 @@ npm run lint         # ESLint check
 - [x] **Task 16.3c**: Add price to CTA: "Publish a Notice - £50". **Success**: Price visible. (Completed 2026-01-21 - Updated hero CTA button text in src/pages/Home.tsx line 425)
 
 ### 16.4 Fix Placeholder Logos
-- [ ] **Task 16.4a**: Check /public/logos/, hide if missing. **Success**: No broken images.
+- [x] **Task 16.4a**: Check /public/logos/, hide if missing. **Success**: No broken images. (Completed 2026-01-21 - Added onError handlers to both councilLogos render locations in src/pages/Home.tsx lines 551-561 and 745-756 to hide images if they fail to load)
 - [ ] **Task 16.4b**: Update or hide councilLogos array. **Success**: No broken images.
 - [ ] **Task 16.4c**: Replace specific council testimonials with generic. **Success**: No fake endorsements.
 
