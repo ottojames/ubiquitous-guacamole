@@ -422,7 +422,7 @@ npm run lint         # ESLint check
 - [x] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
 - [x] **Task 16.8b**: Review testimonials on mobile. **Success**: Readable. (Completed 2026-01-21 - Text scales text-2xl→md:text-3xl, 44px touch targets on dots via p-5, chevron nav hidden on mobile, adequate padding p-8)
 - [x] **Task 16.8c**: Review pricing cards on mobile. **Success**: Usable. (Completed 2026-01-21 - Grid uses md:grid-cols-3, stacks to single column on mobile, p-8 card padding provides 263px content width at 375px, text-4xl prices readable, flex-shrink-0 icons, w-full CTAs)
-- [ ] **Task 16.8d**: Review footer on mobile. **Success**: Good.
+- [x] **Task 16.8d**: Review footer on mobile. **Success**: Good. (Completed 2026-01-21 - flex-wrap allows links to wrap naturally, gap-6 provides good spacing, px-6 padding = 327px content width at 375px, text-sm is readable)
 
 ### 16.9 E2E Tests for Homepage
 - [ ] **Task 16.9a**: Create `e2e/homepage.spec.ts` - test hero pricing. **Success**: Passes.
