@@ -319,7 +319,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.1a**: Delete `pricingPlans.professional` object. **Success**: Object removed, no TypeScript errors. (Completed 2026-01-21 - Removed lines 101-124, updated Law Firms grid from 3 cols to 2 cols, 494 tests pass)
 - [x] **Task 15.1b**: Delete `pricingPlans.business` object. **Success**: Object removed, no TypeScript errors. (Completed 2026-01-21 - Removed lines 101-124, updated Law Firms rendering to enterprise only with max-w-lg container, 494 tests pass)
 - [x] **Task 15.1c**: Delete `pricingPlans.enterprise` object. **Success**: Object removed, no TypeScript errors. (Completed 2026-01-21 - Removed lines 101-124, temporarily hid Law Firms section, 494 tests pass)
-- [ ] **Task 15.1d**: Delete `pricingPlans.councilSmall` object (Parish & Town). **Success**: Object removed.
+- [x] **Task 15.1d**: Delete `pricingPlans.councilSmall` object (Parish & Town). **Success**: Object removed. (Completed 2026-01-21 - Removed object and all councilSmall references from comparisonData and table rendering, updated grid to 2 cols, 494 tests pass)
 - [ ] **Task 15.1e**: Delete `pricingPlans.councilMedium` object (District Council). **Success**: Object removed.
 - [ ] **Task 15.1f**: Delete `pricingPlans.councilLarge` object (Unitary & County). **Success**: Object removed.
 - [ ] **Task 15.1g**: Delete entire `comparisonData` array. **Success**: Array removed.

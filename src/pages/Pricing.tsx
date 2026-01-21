@@ -30,26 +30,6 @@ const pricingPlans = {
     ctaHref: "/publish",
     popular: false,
   },
-  councilSmall: {
-    name: "Parish & Town",
-    description: "For small parish and town councils publishing occasional notices",
-    priceMonthly: 49,
-    priceAnnual: 490,
-    includedNotices: 10,
-    overageRate: 25,
-    features: [
-      "10 notices included per month",
-      "Overage at £25 per notice",
-      "Receiving departments get free portals",
-      "Role-based permissions",
-      "Email support (24h response)",
-      "FOI-ready export packs",
-      "Basic templates & guidance",
-    ],
-    cta: "Get started",
-    ctaHref: "#contact",
-    popular: false,
-  },
   councilMedium: {
     name: "District Council",
     description: "For district and borough councils with moderate publishing needs",
@@ -104,30 +84,30 @@ const comparisonData = [
   {
     category: "Publishing",
     features: [
-      { name: "Number of notices", individual: "Pay per notice", professional: "5/month", business: "15/month", councilSmall: "10/month", councilMedium: "50/month", councilLarge: "Unlimited", enterprise: "50/month" },
-      { name: "Instant publication", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "Bulk import", individual: false, professional: true, business: true, councilSmall: false, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "API access", individual: false, professional: false, business: true, councilSmall: false, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "White-label", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: false, enterprise: true },
+      { name: "Number of notices", individual: "Pay per notice", professional: "5/month", business: "15/month", councilMedium: "50/month", councilLarge: "Unlimited", enterprise: "50/month" },
+      { name: "Instant publication", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "Bulk import", individual: false, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "API access", individual: false, professional: false, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "White-label", individual: false, professional: false, business: false, councilMedium: false, councilLarge: false, enterprise: true },
     ],
   },
   {
     category: "Compliance & Legal",
     features: [
-      { name: "Cryptographic proof", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "Audit trail", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "PDF certificates", individual: true, professional: true, business: true, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "FOI-ready exports", individual: false, professional: false, business: false, councilSmall: true, councilMedium: true, councilLarge: true, enterprise: false },
-      { name: "Custom retention policies", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: true, enterprise: false },
+      { name: "Cryptographic proof", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "Audit trail", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "PDF certificates", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "FOI-ready exports", individual: false, professional: false, business: false, councilMedium: true, councilLarge: true, enterprise: false },
+      { name: "Custom retention policies", individual: false, professional: false, business: false, councilMedium: false, councilLarge: true, enterprise: false },
     ],
   },
   {
     category: "Support & Service",
     features: [
-      { name: "Email support", individual: "24h response", professional: "12h response", business: "4h response", councilSmall: "24h response", councilMedium: "4h response", councilLarge: "4h response", enterprise: "1h response" },
-      { name: "Phone support", individual: false, professional: false, business: true, councilSmall: false, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "Dedicated account manager", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: true, enterprise: true },
-      { name: "SLA guarantee", individual: false, professional: false, business: false, councilSmall: false, councilMedium: false, councilLarge: "99.9%", enterprise: "99.99%" },
+      { name: "Email support", individual: "24h response", professional: "12h response", business: "4h response", councilMedium: "4h response", councilLarge: "4h response", enterprise: "1h response" },
+      { name: "Phone support", individual: false, professional: false, business: true, councilMedium: true, councilLarge: true, enterprise: true },
+      { name: "Dedicated account manager", individual: false, professional: false, business: false, councilMedium: false, councilLarge: true, enterprise: true },
+      { name: "SLA guarantee", individual: false, professional: false, business: false, councilMedium: false, councilLarge: "99.9%", enterprise: "99.99%" },
     ],
   },
 ];
@@ -403,8 +383,8 @@ export default function Pricing() {
                 </p>
               </div>
 
-              <div className="grid gap-6 lg:grid-cols-3">
-                {['councilSmall', 'councilMedium', 'councilLarge'].map((key) => {
+              <div className="grid gap-6 lg:grid-cols-2">
+                {['councilMedium', 'councilLarge'].map((key) => {
                   const plan = pricingPlans[key as keyof typeof pricingPlans];
                   const price =
                     plan.priceAnnual && billingCycle === "annual"
@@ -529,9 +509,6 @@ export default function Pricing() {
                         Enterprise
                       </th>
                       <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
-                        Parish & Town
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
                         District
                       </th>
                       <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
@@ -543,7 +520,7 @@ export default function Pricing() {
                     {comparisonData.map((category, catIndex) => (
                       <>
                         <tr key={`cat-${catIndex}`} className="border-b border-slate-200 bg-slate-50/50">
-                          <td colSpan={8} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <td colSpan={7} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                             {category.category}
                           </td>
                         </tr>
@@ -566,7 +543,6 @@ export default function Pricing() {
                               <td className="px-3 py-4 text-center text-xs">{renderCell(feature.professional)}</td>
                               <td className="px-3 py-4 text-center text-xs">{renderCell(feature.business)}</td>
                               <td className="px-3 py-4 text-center text-xs">{renderCell(feature.enterprise)}</td>
-                              <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilSmall)}</td>
                               <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilMedium)}</td>
                               <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilLarge)}</td>
                             </tr>

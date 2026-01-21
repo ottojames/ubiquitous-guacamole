@@ -3137,3 +3137,37 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - comparisonData has its own properties for each tier - will be deleted entirely in Task 15.1g
   - Next task: 15.1c - Delete pricingPlans.enterprise (will empty Law Firms section entirely)
 ---
+
+
+## Iteration - Task 15.1c: Remove pricingPlans.enterprise
+- What was implemented: Deleted pricingPlans.enterprise object from Pricing.tsx
+- Files changed:
+  - src/pages/Pricing.tsx - Removed enterprise object (lines 101-124), temporarily hid Law Firms section
+  - PRD.md - Marked task complete
+- Learnings for future iterations:
+  - The Law Firms section was only rendering 'enterprise', so it needed to be hidden when enterprise was removed
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories do not affect main codebase
+  - 494 tests pass after changes
+  - Next tasks (15.1d-f) will remove councilSmall, councilMedium, councilLarge
+  - After removing old tiers, new ones will be created in 15.2a-c
+---
+
+## Iteration 66 - Task 15.1d: Delete pricingPlans.councilSmall object
+- **What was implemented**: Removed the councilSmall pricing plan (Parish & Town) from the Pricing page
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Removed councilSmall from pricingPlans, comparisonData, and table rendering
+  - `PRD.md` - Marked Task 15.1d complete
+- **Key changes**:
+  - Removed `pricingPlans.councilSmall` object (lines 33-52) with £49/month pricing
+  - Updated council rendering grid from `lg:grid-cols-3` to `lg:grid-cols-2`
+  - Removed `councilSmall` from the array in the map function (now only councilMedium, councilLarge)
+  - Removed all `councilSmall:` properties from comparisonData features (14 occurrences across 3 categories)
+  - Removed "Parish & Town" column header from comparison table
+  - Updated table colSpan from 8 to 7
+  - Removed `feature.councilSmall` cell from table rows
+- **Test results**: 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - When removing a pricing tier, need to update: pricingPlans object, comparisonData array, rendering grid, table headers, table cells
+  - Phase 15 pricing rewrite continues - next is Task 15.1e (remove councilMedium)
+---
