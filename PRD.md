@@ -494,7 +494,16 @@ npm run lint         # ESLint check
 ## Phase 18: Design Consistency
 
 ### 18.1 Colors
-- [ ] **Task 18.1a**: Document colors, ensure blue-600 primary. **Success**: Documented.
+- [x] **Task 18.1a**: Document colors, ensure blue-600 primary. **Success**: Documented. (Completed 2026-01-21)
+  - **Primary color definition**: `src/styles/ui.ts` uses `#2563EB` (Tailwind default blue-600) for `btnPrimary`, `input` focus rings, and stepper
+  - **Tailwind config**: `tailwind.config.js` overrides blue-600 to `#4574D9` (custom), but `primary: '#5687EB'` (blue-500) - unused
+  - **Usage by portal**:
+    - Admin: Blue-600 ✓ (fixed in Phase 17)
+    - Public: Blue-600 ✓ (uses UI.btnPrimary)
+    - Council: Mostly blue-600, some purple-600 in Team.tsx/NoticeEditor.tsx
+    - Firm: Purple-600 throughout (intentional branding differentiation)
+  - **Counts**: 469 blue-600 instances, 277 blue-500, 164 purple-600 (firm portal only)
+  - **Note**: Firm portal uses purple-600 intentionally for visual differentiation from council blue
 - [ ] **Task 18.1b**: Replace non-standard admin colors. **Success**: Standard.
 - [ ] **Task 18.1c**: Standardize semantic colors. **Success**: Consistent.
 
@@ -643,12 +652,14 @@ npm run lint         # ESLint check
 - **Councils**: Free portal + £19.99/notice
 
 ### Design Tokens
-- Primary: blue-600
-- Success: emerald-600
-- Error: rose-600
-- Warning: amber-600
-- Text: slate-900/slate-600
-- Background: slate-50/white
+- **Primary**: blue-600 (`#2563EB` in UI.ts, admin, public; `#4574D9` in tailwind.config.js override)
+- **Firm Portal Accent**: purple-600 (intentional differentiation from council blue)
+- **Success**: emerald-600
+- **Error**: rose-600
+- **Warning**: amber-600
+- **Text**: slate-900 (headings), slate-600 (body)
+- **Background**: slate-50 (admin), white (cards)
+- **Shared styles**: `src/styles/ui.ts` exports `btnPrimary`, `btnSecondary`, `input`, `card`, etc.
 
 ### Testing
 - All features need E2E tests
