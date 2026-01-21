@@ -420,10 +420,10 @@ export default function Home() {
               <a
                 href="/publish"
                 onClick={() => track("publish_started", { audience: "public" })}
-                className={`${UI.btnPrimary} inline-flex items-center gap-2 px-8 py-4 text-base`}
+                className={`${UI.btnPrimary} inline-flex items-center gap-3 px-10 py-5 text-lg shadow-[0_8px_24px_rgba(37,99,235,0.45)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.55)]`}
               >
                 Publish a notice
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-6 w-6" />
               </a>
               <a
                 href="#notices"

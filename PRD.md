@@ -395,7 +395,7 @@ npm run lint         # ESLint check
 - [x] **Task 16.2c**: Remove specific council count claims. **Success**: No false claims. (Completed 2026-01-21 - Removed "Trusted by X councils" from hero subtext line 437, changed testimonials badge from "Trusted by X UK councils" to "What our users say")
 
 ### 16.3 Make Publish CTA More Prominent
-- [ ] **Task 16.3a**: Make Publish button larger with shadow. **Success**: Dominant.
+- [x] **Task 16.3a**: Make Publish button larger with shadow. **Success**: Dominant. (Completed 2026-01-21 - Increased padding px-10 py-5, text-lg, gap-3, icon h-6 w-6, enhanced shadow with rgba(37,99,235,0.45) and hover shadow)
 - [ ] **Task 16.3b**: Make Browse button secondary style. **Success**: Clear hierarchy.
 - [ ] **Task 16.3c**: Add price to CTA: "Publish a Notice - £50". **Success**: Price visible.
 
