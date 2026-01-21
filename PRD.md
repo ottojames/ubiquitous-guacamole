@@ -592,7 +592,7 @@ npm run lint         # ESLint check
 
 ### 20.5 IDOX Export
 - [x] **Task 20.5a**: Research format, document. **Success**: Documented. (Completed 2026-01-21 - Created docs/idox-export-format.md with comprehensive documentation: 14-column CSV specification, field mapping table, IDOX integration notes, UK Licensing Act 2003 requirements, example CSV data, references to IDOX docs and LGA handbook)
-- [ ] **Task 20.5b**: Create export service. ~60 lines. **Success**: Generates.
+- [x] **Task 20.5b**: Create export service. ~60 lines. **Success**: Generates. (Completed 2026-01-21 - Created server/services/idoxExport.ts with: RepresentationForExport interface, getStanceLabel() helper, escapeForCsv() helper, generateIdoxCsv() function that formats 14-column IDOX-compatible CSV, getIdoxFilename() function for dated filenames)
 - [ ] **Task 20.5c**: Create endpoint. **Success**: Works.
 - [ ] **Task 20.5d**: Add button. **Success**: Downloads.
 
