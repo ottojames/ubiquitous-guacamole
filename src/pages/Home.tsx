@@ -434,7 +434,7 @@ export default function Home() {
             </div>
 
             <p className="mt-8 text-sm text-slate-500">
-              No sign-up needed · Trusted by {STATS.councils} councils · Save up to 85% vs newspapers
+              No sign-up needed · Full audit trail · Save up to 85% vs newspapers
             </p>
           </div>
         </div>
@@ -473,7 +473,7 @@ export default function Home() {
 
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-900">
                 <CheckCircle2 className="h-4 w-4" />
-                Trusted by {STATS.councils} UK councils
+                What our users say
               </div>
 
               {/* Testimonial content with slide animation */}

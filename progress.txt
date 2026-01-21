@@ -3779,3 +3779,50 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - React Query staleTime of 5 minutes means stats won't refetch too frequently
   - Phase 16 continues with Task 16.2a: Update h1 to "Publish legal notices digitally. £50 per notice."
 ---
+
+## Iteration N - Task 16.2a: Update hero h1 to "Publish legal notices digitally. £50 per notice."
+- **What was implemented**: Updated homepage hero h1 headline with clearer pricing message
+- **Files changed**:
+  - `src/pages/Home.tsx` - Line 345: Changed h1 from "Search, publish, and verify statutory notices" to "Publish legal notices digitally. £50 per notice."
+  - `PRD.md` - Marked task complete
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Hero section starts at line 328 in Home.tsx
+  - h1 is at line 344-346, wrapped in glassmorphism container
+  - Next task is 16.2b: Update subtitle to be concise and compelling
+---
+
+
+## Iteration N - Task 16.2b: Update homepage subtitle to be concise and compelling
+- **What was implemented**: Updated hero section subtitle with concise, compelling copy
+- **Files changed**:
+  - `src/pages/Home.tsx` - Line 347-349: Changed subtitle text
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Original subtitle (verbose): "Instantly create legally compliant public notices with a full audit trail. Give residents a voice. Keep licensing transparent and accountable."
+  - New subtitle (concise): "Replace expensive newspaper ads with instant digital notices. Full audit trail included."
+  - Emphasizes key value proposition: replacing expensive newspaper ads
+  - Keeps audit trail mention as important differentiator
+- **Test results**: All 495 tests pass
+- **TypeScript check**: Pre-existing errors in council/firm/auth pages only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Hero subtitle at lines 347-350 in Home.tsx
+  - Next task is 16.2c: Remove specific council count claims
+---
+
+## Iteration - Task 16.2c: Remove specific council count claims
+- **What was implemented**: Removed false "Trusted by X councils" claims from Home.tsx
+- **Files changed**:
+  - `src/pages/Home.tsx` - Removed council count claims from 2 locations
+  - `PRD.md` - Marked Task 16.2c complete
+- **Specific changes**:
+  - Line 437: Changed "No sign-up needed · Trusted by {STATS.councils} councils · Save up to 85% vs newspapers" to "No sign-up needed · Full audit trail · Save up to 85% vs newspapers"
+  - Line 476: Changed "Trusted by {STATS.councils} UK councils" to "What our users say" (testimonials section badge)
+- **Test results**: 495 tests pass (no regressions)
+- **Learnings for future iterations**:
+  - STATS.councils is dynamic from useStats() hook, but the issue was the *claim language* being misleading
+  - "Trusted by" implies active endorsement which can't be verified
+  - Replaced with factual statements (audit trail) or generic labels (what users say)
+  - Next task is 16.3a: Make Publish button larger with shadow
+---
