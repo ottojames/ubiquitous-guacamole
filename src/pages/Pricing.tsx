@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ArrowRight, HelpCircle, Zap, Shield, Clock } from "lucide-react";
+import { Check, ArrowRight, HelpCircle, Zap, Shield } from "lucide-react";
 import * as UI from "@/styles/ui";
 
 const NAV_LINKS = [
@@ -427,11 +427,10 @@ export default function Pricing() {
                   <ArrowRight className="h-5 w-5" />
                 </a>
                 <a
-                  href="#contact"
+                  href="/sign-up?plan=firm"
                   className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/20"
                 >
-                  <Clock className="h-5 w-5" />
-                  Request a demo
+                  Register as a Firm
                 </a>
               </div>
               <p className="mt-6 text-sm text-blue-200">
