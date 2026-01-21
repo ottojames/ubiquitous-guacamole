@@ -3025,3 +3025,30 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated
   - Next task is Task 14.4a: Create migration to add immutability trigger to audit_actions table
 ---
+
+## Iteration 70 - Task 14.4a & 14.4b: Add immutability trigger to audit_actions table
+- **What was implemented**: Created and applied migration adding immutability trigger to audit_actions table
+- **Files changed**:
+  - `supabase/migrations/20260121000005_audit_actions_immutability.sql` - NEW FILE
+  - `PRD.md` - Marked Tasks 14.4a and 14.4b complete
+- **Migration details**:
+  - Created `prevent_audit_actions_modification()` function that raises exception
+  - Created `audit_actions_immutable` trigger on UPDATE OR DELETE
+  - Follows same pattern as existing `audit_logs` table (from 20251021000006_audit_logs.sql)
+  - Migration is idempotent (uses DROP TRIGGER IF EXISTS before CREATE)
+- **Verification**:
+  - Confirmed trigger exists via `information_schema.triggers`
+  - Tested UPDATE: raises "Audit action records are immutable and cannot be modified or deleted"
+  - Tested DELETE: raises same exception
+  - All 494 tests pass (2 skipped)
+- **Background context**:
+  - Security finding: "audit_actions table needs immutability trigger like audit_logs"
+  - audit_logs table has same pattern (prevent_audit_modification function, audit_logs_immutable trigger)
+  - This ensures tamper-proof audit trail for compliance
+- **Learnings for future iterations**:
+  - audit_actions (from showcase_features_schema) lacked immutability unlike audit_logs
+  - Pattern for immutability: BEFORE UPDATE OR DELETE trigger that RAISE EXCEPTION
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ are unrelated to this work
+  - Supabase MCP tool requires --access-token flag; psql with DATABASE_URL works instead
+  - Next task is Task 14.5a: Create migration for auth.tenant_id() helper function
+---
