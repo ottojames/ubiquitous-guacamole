@@ -443,7 +443,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.1b**: Replace sidebar red with bg-slate-50. **Success**: Light. (Completed 2026-01-21 - Changed sidebar bg-black to bg-slate-50, border-red-900 to border-slate-200 in desktop sidebar and mobile header)
 - [x] **Task 17.1c**: Update sidebar text to slate-700. **Success**: Readable. (Completed 2026-01-21 - Changed title text-red-500 to text-slate-900, email text-gray-400 to text-slate-600, role badge bg-red-900/text-red-200 to bg-slate-200/text-slate-700, nav items text-gray-400 to text-slate-700 with hover:bg-slate-200, footer buttons text-gray-400 to text-slate-700, collapsed icon bg-red-600 to bg-blue-600, active nav bg-red-900 to bg-blue-600 with text-blue-100 description)
 - [x] **Task 17.1d**: Update active state to blue. **Success**: Uses blue. (Completed 2026-01-21 - Desktop sidebar already had blue active state bg-blue-600; updated mobile menu active state bg-red-900→bg-blue-600, mobile nav items text-gray-400→text-slate-700, top bar avatar bg-red-600→bg-blue-600, mobile header title text-red-500→text-slate-900, mobile header icons to slate colors, mobile menu background bg-gray-900→bg-slate-50)
-- [ ] **Task 17.1e**: Match header to public site. **Success**: Consistent.
+- [x] **Task 17.1e**: Match header to public site. **Success**: Consistent. (Completed 2026-01-21 - Updated admin top bar from dark bg-gray-900 to light bg-white/80 with backdrop-blur-lg, changed border to border-slate-200, updated text colors to slate-900/slate-500, changed notification badge from red to blue-600, session timer to amber-100/amber-800, page background to bg-slate-100)
 - [ ] **Task 17.1f**: Standardize card styles. **Success**: Consistent.
 
 ### 17.2 Accessibility Fixes

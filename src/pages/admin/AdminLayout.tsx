@@ -117,7 +117,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-slate-100">
       {/* Session Warning Banner */}
       {sessionWarning && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black px-4 py-2">
@@ -307,43 +307,43 @@ export default function AdminLayout() {
         </div>
       )}
 
-      {/* Top Bar */}
-      <div className={`hidden lg:block fixed top-0 right-0 h-16 bg-gray-900 border-b border-gray-800 transition-all duration-300 ${
+      {/* Top Bar - Matches public site header style */}
+      <div className={`hidden lg:block fixed top-0 right-0 h-16 bg-white/80 backdrop-blur-lg border-b border-slate-200 transition-all duration-300 ${
         sidebarOpen ? 'left-64' : 'left-20'
       }`}>
         <div className="h-full px-6 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-xl font-bold text-slate-900">
               {adminNavItems.find(item => isActivePath(item.path))?.label || 'Admin Panel'}
             </h1>
           </div>
           <div className="flex items-center gap-4">
             {/* Session Timer */}
             {sessionWarning ? (
-              <div className="flex items-center gap-2 px-3 py-1 bg-amber-900 rounded text-amber-200">
+              <div className="flex items-center gap-2 px-3 py-1 bg-amber-100 rounded text-amber-800">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm font-medium">{timeRemaining}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-2 text-slate-500">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm">Session Active</span>
               </div>
             )}
 
             {/* Notification Bell */}
-            <button className="relative text-gray-400 hover:text-white transition-colors">
+            <button className="relative text-slate-500 hover:text-slate-900 transition-colors">
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
             </button>
 
             {/* User Info */}
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-800">
+            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
               <div className="text-right">
-                <div className="text-sm font-medium text-white">
+                <div className="text-sm font-medium text-slate-900">
                   {adminUser.email?.split('@')[0] || 'Admin'}
                 </div>
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-slate-500">
                   {formatRole(adminRole || 'viewer')}
                 </div>
               </div>
