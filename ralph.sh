@@ -7,6 +7,22 @@ SLEEP=${2:-2}
 echo "Starting Ralph - Max $MAX iterations"
 echo ""
 
+# Function to count remaining tasks
+count_remaining() {
+    grep -c '^\- \[ \]' PRD.md 2>/dev/null || echo 0
+}
+
+# Function to count completed tasks
+count_completed() {
+    grep -c '^\- \[x\]' PRD.md 2>/dev/null || echo 0
+}
+
+# Show initial status
+INITIAL_REMAINING=$(count_remaining)
+INITIAL_COMPLETED=$(count_completed)
+echo "Starting status: $INITIAL_COMPLETED completed, $INITIAL_REMAINING remaining"
+echo ""
+
 for ((i=1; i<=$MAX; i++)); do
     echo "==========================================="
     echo "  Iteration $i of $MAX"
@@ -53,18 +69,25 @@ If you discover a reusable pattern that future work should know about:
 - Add patterns like: 'This codebase uses X for Y' or 'Always do Z when changing W'
 - Only add genuinely reusable knowledge, not task-specific details
 
-## End Condition
+## Important
 
-After completing your task, check PRD.md:
-- If ALL tasks are [x], output exactly: <promise>COMPLETE</promise>
-- If tasks remain [ ], just end your response (next iteration will continue)")
+Do NOT output <promise>COMPLETE</promise> - the script will verify completion independently.")
 
     echo "$result"
     echo ""
 
-    if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
+    # Check actual progress (don't trust Ralph's self-report)
+    REMAINING=$(count_remaining)
+    COMPLETED=$(count_completed)
+
+    echo "==========================================="
+    echo "  Progress: $COMPLETED completed, $REMAINING remaining"
+    echo "==========================================="
+
+    # Verify completion independently
+    if [[ $REMAINING -eq 0 ]]; then
         echo "==========================================="
-        echo "  All tasks complete after $i iterations!"
+        echo "  VERIFIED: All tasks complete after $i iterations!"
         echo "==========================================="
         exit 0
     fi
@@ -72,7 +95,12 @@ After completing your task, check PRD.md:
     sleep $SLEEP
 done
 
+FINAL_REMAINING=$(count_remaining)
+FINAL_COMPLETED=$(count_completed)
+
 echo "==========================================="
 echo "  Reached max iterations ($MAX)"
+echo "  Final: $FINAL_COMPLETED completed, $FINAL_REMAINING remaining"
+echo "  Progress this run: $((FINAL_COMPLETED - INITIAL_COMPLETED)) tasks completed"
 echo "==========================================="
 exit 1

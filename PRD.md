@@ -131,7 +131,7 @@ npm run lint         # ESLint check
 
 ### 8.3 Workflow Functions
 - [x] **Task 8.12a**: Create `transition_notice_stage()` function migration. Copy from Task 8.12. Validates stage, calculates deadline, records history. (Created 2026-01-21 - File: supabase/migrations/20260120350000_create_transition_notice_stage.sql)
-- [ ] **Task 8.12b**: Apply transition_notice_stage function to Supabase.
+- [x] **Task 8.12b**: Apply transition_notice_stage function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, validates stage belongs to same workflow, calculates deadline for fixed_days deadline_type, records transition history, updates notice_workflow_status with new stage and deadline)
 - [ ] **Task 8.13a**: Create `initialize_notice_workflow()` function migration. Copy from Task 8.13. Auto-creates default workflow if needed.
 - [ ] **Task 8.13b**: Apply initialize_notice_workflow function to Supabase.
 - [ ] **Task 8.14a**: Create migration to add `firm_id` and `client_id` columns to notices table. Use IF NOT EXISTS pattern.

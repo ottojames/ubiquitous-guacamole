@@ -1577,3 +1577,52 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - MCP Supabase tool lacks access token so migrations must be applied via psql
   - Next task is Task 8.11f: Apply Gambling workflow function to Supabase via psql
 ---
+
+## Iteration 44 - Task 8.11f: Apply Gambling workflow function to Supabase
+- **What was implemented**: Applied the Gambling workflow function migration to Supabase
+- **Command used**: `psql DATABASE_URL -f supabase/migrations/20260120340000_create_default_gambling_workflow.sql`
+- **Output**: `CREATE FUNCTION`, `GRANT`, `COMMENT` - all successful
+- **Verification**:
+  - Confirmed function exists in `pg_proc` with proname='create_default_gambling_workflow' and prosecdef=t (SECURITY DEFINER enabled)
+  - Confirmed EXECUTE privileges granted to authenticated role via information_schema.routine_privileges
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.11f complete
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **Function details**:
+  - Name: `create_default_gambling_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Tables affected: `workflow_configs` (1 row), `workflow_stages` (10 rows)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+  - Stages (10): Operating Licence, Application Submitted, Notify Authorities (7-day deadline), Advertisement, Consultation (28-day deadline), Representations, Determination, Decision, Appeal Period (21-day deadline), Complete
+- **Learnings for future iterations**:
+  - Continue using psql for migrations since MCP Supabase tool lacks access token
+  - Gambling workflow function follows same pattern as other workflow seed functions
+  - All Phase 8.2 Default Workflow Seeds are now complete (premises-licence, probate, planning, TRO, GVOL, gambling)
+  - Pre-existing TypeScript errors in council/, firm/, pages/ files and snapshot date mismatches are unrelated to this migration
+  - Next task is Task 8.12a: Create `transition_notice_stage()` function migration
+---
+
+## Iteration 45 - Task 8.12a: Create transition_notice_stage() function migration
+- **What was implemented**: Created SQL migration for the transition_notice_stage() function
+- **Files created**:
+  - `supabase/migrations/20260120350000_create_transition_notice_stage.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.12a complete
+- **Function details**:
+  - Name: `transition_notice_stage(p_notice_id UUID, p_to_stage_id UUID, p_notes TEXT, p_transition_type TEXT)`
+  - Returns: UUID (the workflow_stage_history.id)
+  - Validates stage belongs to same workflow as notice's current workflow
+  - Calculates new deadline if stage has_deadline and deadline_type='fixed_days'
+  - Handles deadline_working_days flag for working day calculations
+  - Records transition in workflow_stage_history (from_stage, to_stage, notes, type)
+  - Updates notice_workflow_status with new current_stage_id, entered_stage_at, deadline_date
+  - Uses auth.uid() for transitioned_by field
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **Learnings for future iterations**:
+  - This function is the core workflow transition logic - called from API endpoint
+  - Working day calculation uses 1.4 multiplier as rough estimate (7 calendar days / 5 working days)
+  - For more accurate working day calculation, would need a calendar table or more complex logic
+  - Pre-existing TypeScript errors in src/ files are unrelated to this migration
+  - Next task is Task 8.12b: Apply transition_notice_stage function to Supabase
+---
