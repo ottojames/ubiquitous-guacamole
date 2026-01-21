@@ -3095,3 +3095,25 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Phase 14 (Security Hardening) is now COMPLETE - all tasks done
   - Next phase: Phase 15 (Pricing Page Complete Rewrite)
 ---
+
+## Iteration 72 - Task 15.1a: Delete pricingPlans.professional object
+- **What was implemented**: Removed the professional tier from the pricing page
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Deleted pricingPlans.professional object (lines 101-124), updated Law Firms grid from lg:grid-cols-3 to lg:grid-cols-2
+  - `PRD.md` - Marked Task 15.1a complete
+- **Key changes**:
+  - Removed 24-line professional object with £150/month, 5 notices, £45 overage
+  - Updated grid layout for Law Firms section to 2 columns (business + enterprise only)
+  - comparisonData still has `professional` property in each feature - that's a separate task (15.1g)
+- **What was kept**:
+  - comparisonData with professional property (will be deleted in Task 15.1g)
+  - Comparison table header still shows "Professional" column (will be removed with comparisonData)
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: No errors in Pricing.tsx, pre-existing errors in cypress/e2e/scripts only
+- **Learnings for future iterations**:
+  - Phase 15 is about completely rewriting the pricing page with 3 tiers (Public £50, Firms £49/month, Councils FREE)
+  - Tasks 15.1a-15.1h remove old pricing data one object at a time
+  - Tasks 15.2-15.4 will create the new pricing structure
+  - comparisonData objects have their own `professional` property separate from pricingPlans
+  - Safe to delete pricingPlans.professional without affecting comparison table (for now)
+---
