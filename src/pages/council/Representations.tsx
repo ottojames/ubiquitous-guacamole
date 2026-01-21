@@ -16,7 +16,8 @@ import {
   UserPlus,
   CheckSquare,
   Square,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 
 interface Representation {
@@ -198,38 +199,59 @@ export default function CouncilRepresentations() {
     URL.revokeObjectURL(url);
   };
 
-  const exportForIdox = () => {
-    // Export only filtered representations for Idox with specific fields
-    const dataToExport = filteredRepresentations;
+  const [idoxExporting, setIdoxExporting] = useState(false);
 
-    const csvContent = [
-      // Idox-specific header fields
-      ['Representation ID', 'Notice Reference', 'Submitter Name', 'Submitter Email', 'Stance', 'Representation Text', 'Date Submitted', 'Reviewed Status', 'Reviewed By', 'Reviewed Date', 'Assigned To', 'Application Type', 'Premises Name', 'Premises Address'],
-      ...dataToExport.map(rep => [
-        rep.id,
-        rep.notice_id,
-        rep.representor_name || 'Anonymous',
-        rep.representor_email || '',
-        getStanceLabel(rep.type),
-        rep.representation_text.replace(/"/g, '""'), // Escape quotes for CSV
-        new Date(rep.submitted_at).toISOString(),
-        rep.reviewed_at ? 'Reviewed' : 'Not Reviewed',
-        rep.reviewed_by_name || '',
-        rep.reviewed_at ? new Date(rep.reviewed_at).toISOString() : '',
-        rep.assigned_to_name || '',
-        rep.notice?.application_type || rep.notice?.notice_type || '',
-        rep.notice?.applicant || rep.notice?.trading_name || '',
-        rep.notice?.premises ? JSON.stringify(rep.notice.premises) : ''
-      ])
-    ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  const exportForIdox = async () => {
+    if (!department) return;
+    setIdoxExporting(true);
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `idox-representations-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      // Build query parameters
+      const params = new URLSearchParams({
+        departmentId: department.id,
+      });
+
+      // If bulk selection is active, export only selected IDs
+      if (selectedIds.size > 0) {
+        params.set('ids', Array.from(selectedIds).join(','));
+      }
+
+      // Apply current filter status
+      if (filter === 'reviewed') {
+        params.set('status', 'reviewed');
+      } else if (filter === 'not_reviewed') {
+        params.set('status', 'unreviewed');
+      }
+
+      const response = await fetch(`/api/representations/export/idox?${params.toString()}`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to export');
+      }
+
+      // Get the filename from Content-Disposition header or use default
+      const disposition = response.headers.get('Content-Disposition');
+      let filename = `idox-representations-${new Date().toISOString().split('T')[0]}.csv`;
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match) filename = match[1];
+      }
+
+      // Download the CSV
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('IDOX export failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to export for IDOX');
+    } finally {
+      setIdoxExporting(false);
+    }
   };
 
   const filteredRepresentations = representations.filter(rep => {
@@ -359,10 +381,15 @@ export default function CouncilRepresentations() {
           </button>
           <button
             onClick={exportForIdox}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={idoxExporting}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FileText className="h-4 w-4" />
-            Export for Idox
+            {idoxExporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            {idoxExporting ? 'Exporting...' : 'Export for IDOX'}
           </button>
         </div>
       </div>

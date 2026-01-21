@@ -594,7 +594,7 @@ npm run lint         # ESLint check
 - [x] **Task 20.5a**: Research format, document. **Success**: Documented. (Completed 2026-01-21 - Created docs/idox-export-format.md with comprehensive documentation: 14-column CSV specification, field mapping table, IDOX integration notes, UK Licensing Act 2003 requirements, example CSV data, references to IDOX docs and LGA handbook)
 - [x] **Task 20.5b**: Create export service. ~60 lines. **Success**: Generates. (Completed 2026-01-21 - Created server/services/idoxExport.ts with: RepresentationForExport interface, getStanceLabel() helper, escapeForCsv() helper, generateIdoxCsv() function that formats 14-column IDOX-compatible CSV, getIdoxFilename() function for dated filenames)
 - [x] **Task 20.5c**: Create endpoint. **Success**: Works. (Completed 2026-01-21 - Created GET /api/representations/export/idox endpoint in server/routes/representations.ts that uses idoxExport service to generate IDOX-compatible CSV. Supports filtering by departmentId, specific IDs, and status. Returns properly formatted CSV with Content-Disposition header for download.)
-- [ ] **Task 20.5d**: Add button. **Success**: Downloads.
+- [x] **Task 20.5d**: Add button. **Success**: Downloads. (Completed 2026-01-21 - Updated exportForIdox() in Representations.tsx to call GET /api/representations/export/idox endpoint instead of client-side CSV generation. Added idoxExporting loading state with Loader2 spinner, disabled button during export, supports bulk selection export (selected IDs only), respects current filter (reviewed/unreviewed). 502 tests pass)
 
 ### 20.6 Audit Log
 - [ ] **Task 20.6a**: Ensure actions logged. **Success**: Logged.
