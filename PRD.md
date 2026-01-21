@@ -391,7 +391,7 @@ npm run lint         # ESLint check
 
 ### 16.2 Fix Hero Messaging
 - [x] **Task 16.2a**: Update h1 to "Publish legal notices digitally. £50 per notice." **Success**: Updated. (Completed 2026-01-21 - src/pages/Home.tsx line 345)
-- [ ] **Task 16.2b**: Update subtitle to be concise and compelling. **Success**: Updated.
+- [x] **Task 16.2b**: Update subtitle to be concise and compelling. **Success**: Updated. (Completed 2026-01-21 - Changed from verbose two-sentence subtitle to "Replace expensive newspaper ads with instant digital notices. Full audit trail included.")
 - [ ] **Task 16.2c**: Remove specific council count claims. **Success**: No false claims.
 
 ### 16.3 Make Publish CTA More Prominent

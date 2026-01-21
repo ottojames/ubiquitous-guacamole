@@ -345,8 +345,7 @@ export default function Home() {
               Publish legal notices digitally. £50 per notice.
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl lg:text-2xl">
-              Instantly create legally compliant public notices with a full audit trail.
-              Give residents a voice. Keep licensing transparent and accountable.
+              Replace expensive newspaper ads with instant digital notices. Full audit trail included.
             </p>
 
             <button
