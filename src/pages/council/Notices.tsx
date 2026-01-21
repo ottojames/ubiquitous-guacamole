@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useOutletContext, useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { getDepartmentConfig } from '@/config/departmentConfig';
+import { getNoticeTypesForDepartment, DepartmentType } from '@/next/publish/config/departmentNoticeTypes';
 import { isClosingSoon } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
@@ -54,6 +55,12 @@ export default function Notices() {
   const [hasObjectionsFilter, setHasObjectionsFilter] = useState(false);
   const [highActivityFilter, setHighActivityFilter] = useState(false);
   const [sortBy, setSortBy] = useState<'deadline-asc' | 'deadline-desc' | 'recent' | 'title'>('deadline-asc');
+  const [filterNoticeType, setFilterNoticeType] = useState<string>('all');
+
+  // Get available notice types for this department
+  const availableNoticeTypes = useMemo(() => {
+    return getNoticeTypesForDepartment(department.type as DepartmentType);
+  }, [department.type]);
 
   // Bulk operations state
   const [selectedNotices, setSelectedNotices] = useState<Set<string>>(new Set());
@@ -79,7 +86,7 @@ export default function Notices() {
 
   useEffect(() => {
     filterNotices();
-  }, [notices, filterStatus, searchQuery, hasObjectionsFilter, highActivityFilter, sortBy]);
+  }, [notices, filterStatus, searchQuery, hasObjectionsFilter, highActivityFilter, sortBy, filterNoticeType]);
 
   const loadNotices = async () => {
     try {
@@ -196,6 +203,17 @@ export default function Notices() {
     // Filter by high activity (5+ representations)
     if (highActivityFilter) {
       filtered = filtered.filter(n => (n.representations_count ?? 0) >= 5);
+    }
+
+    // Filter by notice type
+    if (filterNoticeType !== 'all') {
+      filtered = filtered.filter(n => {
+        // Normalize notice type for comparison
+        const noticeType = n.notice_type.toLowerCase().replace(/[:\s-]+/g, '-');
+        const filterType = filterNoticeType.toLowerCase();
+        // Match if the notice type contains the filter value or matches exactly
+        return noticeType.includes(filterType) || noticeType === filterType;
+      });
     }
 
     // Apply sorting
@@ -596,6 +614,23 @@ export default function Notices() {
             </select>
           </div>
 
+          {/* Notice Type Filter - Department-specific */}
+          <div className="min-w-[220px]">
+            <select
+              value={filterNoticeType}
+              onChange={(e) => setFilterNoticeType(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700 font-medium"
+              title={`Filter by notice type (${availableNoticeTypes.length} types available for ${department.type})`}
+            >
+              <option value="all">All Notice Types</option>
+              {availableNoticeTypes.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Status Filter */}
           <div className="flex gap-2 flex-wrap">
             {availableStatuses.map(status => (
@@ -646,11 +681,12 @@ export default function Notices() {
             High activity (5+)
             {highActivityFilter && ` (${filteredNotices.length})`}
           </button>
-          {(hasObjectionsFilter || highActivityFilter) && (
+          {(hasObjectionsFilter || highActivityFilter || filterNoticeType !== 'all') && (
             <button
               onClick={() => {
                 setHasObjectionsFilter(false);
                 setHighActivityFilter(false);
+                setFilterNoticeType('all');
               }}
               className="px-4 py-2 rounded-xl font-medium text-gray-600 hover:text-gray-900 underline"
               title="Clear all additional filters"
@@ -676,11 +712,11 @@ export default function Notices() {
             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <p className="text-gray-600 mb-4">
-            {searchQuery || filterStatus !== 'all'
+            {searchQuery || filterStatus !== 'all' || filterNoticeType !== 'all'
               ? 'No notices match your filters'
               : 'No notices yet'}
           </p>
-          {canCreateNotice && !searchQuery && filterStatus === 'all' && (
+          {canCreateNotice && !searchQuery && filterStatus === 'all' && filterNoticeType === 'all' && (
             <Link
               to={`${basePath}/notices/new`}
               className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"

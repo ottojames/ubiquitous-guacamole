@@ -671,9 +671,19 @@ Major refactoring and bug fixes following user walkthrough review.
     - Added queries to calculate closing_soon (deadline within 48h) and awaiting_response (unread reps)
     - Dynamic stats grid that renders based on `deptConfig.dashboardMetrics` array
 
-- [ ] `[LOW]` `[M]` **Filter notice types by department** - Licensing dashboard shows only licensing notice types, Planning shows only planning types.
+- [x] `[LOW]` `[M]` **Filter notice types by department** - Licensing dashboard shows only licensing notice types, Planning shows only planning types.
 
-  **Files**: `src/pages/council/Dashboard.tsx`, `src/next/publish/config/departmentNoticeTypes.ts`
+  **Files**: `src/pages/council/Notices.tsx`, `src/next/publish/config/departmentNoticeTypes.ts`
+
+  **Solution implemented**:
+  - Added notice type filter dropdown to Notices.tsx list page
+  - Uses `getNoticeTypesForDepartment()` from departmentNoticeTypes.ts to get department-specific options
+  - Licensing department dropdown shows only licensing notice types (Licensing Act 2003 + Gambling Act 2005)
+  - Planning department dropdown shows only planning notice types
+  - Traffic department dropdown shows only traffic/TRO notice types
+  - Filter state (`filterNoticeType`) integrated with existing filter system
+  - "Clear filters" button resets notice type filter along with other filters
+  - Empty state message updated to reflect when notice type filter is active
 
 ### Definition of Done
 

@@ -9045,3 +9045,139 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The Analytics component receives department context from `useOutletContext()` via CouncilPortalLayout
   - Phase 11 still has one more task: Add data source indicators
 ---
+
+
+## Iteration 109 - Phase 11: Add data source indicators to Analytics page
+- **What was implemented**: Added DataSourceBadge component to label data as Live, Projected, or Sample
+- **Files changed**:
+  - `src/pages/council/Analytics.tsx` - Added DataSourceBadge component and applied to all sections
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Created `DataSourceBadge` component with three variants:
+     - **Live** (emerald): Data fetched in real-time from API/database
+     - **Projected** (blue): Calculated estimates based on assumptions
+     - **Sample** (amber): Hardcoded/placeholder data
+  2. Each badge displays a colored dot + label (e.g., "● Live")
+  3. Applied badges to all metric sections:
+     - KPI cards (Total Notices, Published, Active Now, Representations, Avg Response): **Live**
+     - Cost Savings Calculator: **Projected** (uses fixed £280/£50 rates)
+     - Public Engagement Analysis: **Sample** (hardcoded 67%/35% percentages)
+     - Department Performance Comparison: **Live** (fetched from API)
+     - Statutory Compliance Dashboard: **Sample** (hardcoded 98.5% rate)
+     - Monthly Trends & Seasonal Patterns: **Live** (fetched from API)
+     - Complete Audit Log: **Live** (fetched from API)
+- **DoD verification**:
+  - ✓ Each metric card/chart has visible label indicating data source (Live/Projected/Sample)
+  - ✓ Badges use design tokens: emerald, blue, amber (consistent with established patterns)
+- **Tests**: All 508 tests pass (2 skipped), no regressions
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts/server directories only
+- **Learnings for future iterations**:
+  - The DataSourceBadge pattern could be reused in other analytics views
+  - Most KPI data is live (fetched from API), but some sections use sample/projected data
+  - Compliance section uses hardcoded 98.5% rate - would need API integration for real compliance tracking
+  - Phase 11 (Analytics Page Styling) is now COMPLETE
+  - Next phase: Phase 12 - Department-Specific Dashboards
+---
+
+## Iteration 110 - Phase 12: Research and document which departments legally require public notices
+- **What was implemented**: Comprehensive documentation of UK departments requiring statutory public notices
+- **Files changed**:
+  - `CLAUDE.md` - Added "Departments Requiring Public Notices" section with full statutory requirements
+  - `PRD.md` - Marked task complete with solution summary
+- **Key findings documented**:
+  1. **Licensing Department**:
+     - Licensing Act 2003: Blue A4 site notice 28 days + newspaper within 10 working days
+     - Gambling Act 2005: White A4 site notice 28 days + newspaper within 10 working days
+     - Responsible authorities: Police, Fire, Environmental Health, Child Protection, Planning, Trading Standards
+  2. **Planning Department**:
+     - TCPA 1990 / DMPO 2015: 21-day site notice minimum
+     - Newspaper required for major applications, listed buildings, conservation areas
+     - Statutory consultees: Natural England, Historic England, Highways England
+  3. **Highways Department**:
+     - RTRA 1984: 21-day objection period
+     - Newspaper Notice of Intention + site notices in affected roads
+     - Notice of Making when order is made
+  4. **Environmental Health Department**:
+     - EPA 1990 Part 2A: Public register for contaminated land (no newspaper)
+     - Food Safety Act 1990: Emergency Prohibition Notices
+  5. **Building Control Department**:
+     - Building Act 1984: Demolition notices to adjacent owners
+     - Building Safety Act 2022: Higher-risk building oversight
+- **Summary table created** showing notice duration and newspaper requirements per department
+- **Currently supported notice types identified**: Premises Licence, Variation, Review (Licensing Act 2003)
+- **Tests**: All 508 tests pass, no regressions
+- **Learnings for future iterations**:
+  - Licensing notices have the strictest requirements (28 days, newspaper mandatory)
+  - Planning varies by application type (major vs minor)
+  - Environmental Health uses public registers rather than newspaper notices
+  - This documentation provides foundation for Phase 12 task 2 (customize dashboard metrics per department)
+---
+
+## Iteration 111 - Phase 12: Customize dashboard metrics per department type
+- **What was implemented**: Dynamic dashboard metrics based on department type configuration
+- **Files changed**:
+  - `src/config/departmentConfig.ts` - Added DashboardMetricType, DashboardMetricConfig types, and dashboardMetrics arrays to all department configs
+  - `src/pages/council/Dashboard.tsx` - Refactored stats grid to render dynamically from config
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Added `DashboardMetricType` type union with 8 metric types: total, published, draft, expired, representations, closing_soon, pending_decision, awaiting_response
+  2. Added `DashboardMetricConfig` interface with: type, label, tooltip, icon, color, linkFilter
+  3. Added `dashboardMetrics` array to each department with customized metrics:
+     - **Licensing**: Open for Reps, Closing Soon, Awaiting Response (Licensing Act 2003 focused)
+     - **Planning**: In Consultation (21-day), Pending Decision (TCPA focused)
+     - **Traffic**: Open for Objections (RTRA focused)
+     - Similar customizations for GVOL, Environmental, Probate, Procurement
+  4. Dashboard.tsx changes:
+     - `getMetricIcon()` helper renders SVG icons from config
+     - `getMetricValue()` maps metric types to computed values
+     - Extended Stats interface with closing_soon, pending_decision, awaiting_response
+     - Added queries: closing_soon (reps_deadline within 48h), awaiting_response (no officer_response)
+     - Stats grid now renders dynamically from `deptConfig.dashboardMetrics.map()`
+- **Tests**: All 508 tests pass (2 skipped), no regressions
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts/server directories only, no new errors
+- **Learnings for future iterations**:
+  - Tailwind JIT can't detect dynamic class names like `lg:grid-cols-${n}` - use static mapping
+  - The `now` variable was already declared for closing_soon calc, don't redeclare for priorities
+  - Department-specific metrics allow tailored KPIs without code duplication
+  - Each department can have different label terminology (Representations vs Comments vs Objections)
+  - Phase 12 still has one more task: Filter notice types by department
+---
+
+
+## Iteration 112 - Phase 12: Filter notice types by department
+- **What was implemented**: Added department-specific notice type filter dropdown to Notices list page
+- **Files changed**:
+  - `src/pages/council/Notices.tsx` - Added notice type filter dropdown and filtering logic
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Added imports: `useMemo` from React, `getNoticeTypesForDepartment`, `DepartmentType` from departmentNoticeTypes
+  2. Added state: `filterNoticeType` (default: 'all')
+  3. Added `availableNoticeTypes` useMemo that calls `getNoticeTypesForDepartment(department.type as DepartmentType)`
+  4. Added `filterNoticeType` to useEffect dependencies for filterNotices
+  5. Added notice type filtering logic in filterNotices function:
+     - Normalizes notice type strings for comparison
+     - Matches if notice type contains or equals filter value
+  6. Added dropdown UI after Sort Dropdown:
+     - Shows "All Notice Types" option plus department-specific types
+     - Title shows count of available types for department
+  7. Updated "Clear filters" button to include notice type reset
+  8. Updated empty state conditions to include notice type filter
+- **Department-specific filtering**:
+  - Licensing: Shows only licensing notice types (Licensing Act 2003 + Gambling Act 2005)
+  - Planning: Shows only planning notice types
+  - Traffic: Shows only traffic/TRO notice types
+  - Environmental Health: Shows only environmental notice types
+  - Other: Shows all notice types
+- **Tests**: All 508 tests pass (2 skipped), no regressions
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts/server directories only, no new errors
+- **DoD verification**:
+  - ✓ Notice type dropdown on Licensing dashboard excludes Planning notice types
+  - ✓ Notice type dropdown on Planning dashboard excludes Licensing notice types
+  - ✓ Filter integrates with existing filter system (status, search, objections, high activity)
+- **Learnings for future iterations**:
+  - The departmentNoticeTypes.ts file provides `getNoticeTypesForDepartment()` function for department-specific filtering
+  - DepartmentType in departmentNoticeTypes.ts: 'licensing' | 'planning' | 'traffic' | 'environmental_health' | 'other'
+  - Department.type from context matches these types
+  - Phase 12 (Department-Specific Dashboards) is now COMPLETE
+  - All tasks in PRD.md are now complete except for Deferred: Audit Log Integration
+---
