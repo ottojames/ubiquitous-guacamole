@@ -285,4 +285,56 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/firm/templates/:id/use
+ * Increments the usage_count for a template.
+ * Any authenticated firm member can record template usage.
+ */
+router.post('/:id/use', async (req, res) => {
+  try {
+    const supabase = getServiceSupabaseClient();
+    const firmId = req.user?.organizationId;
+    const { id } = req.params;
+
+    if (!firmId) {
+      return res.status(400).json({ error: 'No firm context' });
+    }
+
+    // Fetch current usage_count
+    const { data: template, error: fetchError } = await supabase
+      .from('firm_notice_templates')
+      .select('usage_count')
+      .eq('id', id)
+      .eq('firm_id', firmId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('[firm-templates/:id/use] Error fetching template:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch template' });
+    }
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Increment usage_count
+    const newCount = (template.usage_count || 0) + 1;
+    const { error: updateError } = await supabase
+      .from('firm_notice_templates')
+      .update({ usage_count: newCount })
+      .eq('id', id)
+      .eq('firm_id', firmId);
+
+    if (updateError) {
+      console.error('[firm-templates/:id/use] Error incrementing usage:', updateError);
+      return res.status(500).json({ error: 'Failed to record template usage' });
+    }
+
+    return res.json({ success: true, usage_count: newCount });
+  } catch (error: any) {
+    console.error('[firm-templates/:id/use] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

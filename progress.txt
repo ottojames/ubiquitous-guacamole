@@ -2121,3 +2121,45 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - created_by is automatically set to the authenticated user's ID
   - 488 tests still pass, pre-existing TypeScript errors in cypress/e2e/scripts directories remain
 ---
+
+## Iteration 53 - Task 10.5c: Add PATCH and DELETE endpoints to firm-templates routes
+- **What was implemented**: Added PATCH and DELETE endpoints for firm template management
+- **Files changed**:
+  - `server/routes/firm-templates.ts` - Added ~155 lines for PATCH /:id and DELETE /:id endpoints
+  - `PRD.md` - Marked Task 10.5c complete
+- **Key features**:
+  - **PATCH /:id**: Updates template fields (name, description, notice_type, department_id, template_data, is_shared, is_active)
+  - **DELETE /:id**: Soft-deletes template by setting is_active=false
+  - **Permission model**: Template creator (created_by) OR firm admin (owner/admin role) can modify/delete
+  - Verifies template belongs to user's firm via firm_id check
+  - Returns 403 Forbidden if user is not owner and not admin
+  - Returns 404 Not Found if template doesn't exist or isn't in user's firm
+- **Test results**: All 488 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - server code compiles cleanly
+- **Learnings for future iterations**:
+  - Templates use is_active=false for soft-delete (unlike departments which use status='archived')
+  - Templates have owner-based permissions (created_by OR admin) unlike departments which are admin-only
+  - The pattern for owner/admin permission checks: fetch resource first, check created_by === user.id, if not then check organization_memberships for admin role
+  - Next task is Task 10.5d: Add POST /:id/use endpoint to firm-templates routes
+---
+
+## Iteration 54 - Task 10.5d: Add POST /:id/use endpoint to firm-templates routes
+- **What was implemented**: Added POST /:id/use endpoint to increment template usage count
+- **Files changed**:
+  - `server/routes/firm-templates.ts` - Added ~45 lines for POST /:id/use endpoint
+  - `PRD.md` - Marked Task 10.5d complete
+- **Key features**:
+  - **POST /:id/use**: Increments usage_count field for a template
+  - Validates firm context (firmId must exist)
+  - Fetches current usage_count, increments by 1, updates the record
+  - Returns 404 if template not found or not in user's firm
+  - Returns { success: true, usage_count: N } on success
+  - Any authenticated firm member can record usage (not just owner/admin)
+- **Test results**: All 488 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - server code compiles cleanly
+- **Learnings for future iterations**:
+  - Supabase doesn't have atomic increment operation in the JS client, so fetch-then-update pattern is used
+  - Usage tracking is permissive - any firm member can record usage, not restricted to owner/admin
+  - This endpoint doesn't need owner/admin permission checks since tracking usage is not a destructive operation
+  - Next task is Task 10.6: Register template routes in server/index.ts
+---

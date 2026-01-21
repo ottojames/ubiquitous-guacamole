@@ -176,7 +176,7 @@ npm run lint         # ESLint check
 - [x] **Task 10.5a**: Create `server/routes/firm-templates.ts` with router setup and GET `/` endpoint. Lists templates for firm. ~30 lines. (Created 2026-01-21 - File: server/routes/firm-templates.ts with router setup, requireAuth middleware, GET / endpoint querying firm_notice_templates by firm_id and is_active=true, supports notice_type query filter)
 - [x] **Task 10.5b**: Add GET `/:id` and POST `/` endpoints to firm-templates routes. Get single and create. ~40 lines. (Completed 2026-01-21 - GET /:id fetches single template by ID with firm_id validation, POST / creates template with name/description/notice_type/department_id/template_data/is_shared fields, returns 201 with created template)
 - [x] **Task 10.5c**: Add PATCH `/:id` and DELETE `/:id` endpoints to firm-templates routes. Update and delete. ~40 lines. (Completed 2026-01-21 - PATCH updates name/description/notice_type/department_id/template_data/is_shared/is_active fields, DELETE soft-deletes by setting is_active=false, both check template owner OR firm admin permission)
-- [ ] **Task 10.5d**: Add POST `/:id/use` endpoint to firm-templates routes. Increments usage_count. ~20 lines.
+- [x] **Task 10.5d**: Add POST `/:id/use` endpoint to firm-templates routes. Increments usage_count. ~20 lines. (Completed 2026-01-21 - Endpoint fetches current usage_count, increments it, and updates the template. Validates firm_id to ensure user can only track usage of their own firm's templates. Returns { success: true, usage_count: N })
 - [ ] **Task 10.6**: Register template routes in `server/index.ts` - Mount at `/api/firm/templates`.
 
 ---
