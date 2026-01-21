@@ -474,9 +474,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[MEDIUM]` `[S]` **Fix hero gradient error** - Text becomes unreadable at bottom edge. Add dark gradient overlay or solid background behind text.
+- [x] `[MEDIUM]` `[S]` **Fix hero gradient error** - Text becomes unreadable at bottom edge. Add dark gradient overlay or solid background behind text.
 
-  **File**: `src/pages/Pricing.tsx:132-182`
+  **File**: `src/pages/Pricing.tsx:98-103`
+
+  **Solution**: Added a dark gradient overlay (`bg-gradient-to-b from-transparent via-transparent to-slate-900/30`) as the first child of the hero section. This overlay is transparent at the top and gradually darkens toward the bottom (30% opacity slate-900), ensuring white text remains readable even where the background gradient transitions to light colors.
 
 - [ ] `[MEDIUM]` `[S]` **Improve section spacing** - Add padding above/below "Why CivicNotices is the better way" section.
 

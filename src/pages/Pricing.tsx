@@ -96,6 +96,8 @@ export default function Pricing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">
+        {/* Dark gradient overlay for text readability - stronger at bottom where gradient gets light */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-900/30" aria-hidden="true" />
         <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
