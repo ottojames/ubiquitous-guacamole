@@ -4166,3 +4166,26 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Footer uses simple, effective responsive patterns (flex-wrap, text-sm, centered text)
   - Next task is Task 16.9a: Create e2e/homepage.spec.ts - test hero pricing
 ---
+
+## Iteration 118 - Tasks 16.9a-16.9f: Create e2e/homepage.spec.ts
+- **What was implemented**: Complete E2E test suite for homepage (6 tests)
+- **Files changed**:
+  - `e2e/homepage.spec.ts` - New file with 6 comprehensive tests
+  - `PRD.md` - Marked Tasks 16.9a through 16.9f complete
+- **Tests implemented**:
+  1. **Hero pricing (16.9a)**: Verifies h1 contains "£50 per notice", subtitle mentions digital notices and audit trail
+  2. **Publish CTA (16.9b)**: Verifies "Publish a Notice - £50" button has href="/publish"
+  3. **No false council claims (16.9c)**: Checks page content doesn't contain "40+ UK councils" or similar false claims
+  4. **Stats API (16.9d)**: Waits for /api/stats response, verifies notices/comments/councils badges show numbers not dashes
+  5. **No broken images (16.9e)**: Iterates all img elements, checks naturalWidth > 0, reports any broken images
+  6. **Mobile layout (16.9f)**: Sets 375px viewport, verifies hero heading fits viewport, CTA buttons visible
+- **Test results**: All 495 unit tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in src/pages/council/, src/pages/firm/, src/pages/Login.tsx only (not in new E2E file)
+- **Learnings for future iterations**:
+  - Phase 16 (Homepage Improvements) is now COMPLETE: all tasks 16.1 through 16.9 done
+  - Next phase is Phase 17: Admin Panel Overhaul
+  - First task is 17.1a: Audit admin for dark red theme, list files
+  - E2E tests use Playwright's waitForResponse() to reliably wait for API calls
+  - naturalWidth check is effective for detecting broken images
+  - Mobile tests should use setViewportSize() and reload() to trigger responsive layout
+---
