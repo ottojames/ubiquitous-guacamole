@@ -30,6 +30,36 @@ export const heroH1 =
 export const heroSub =
   "text-white/85 drop-shadow-[0_1px_1px_rgba(0,0,0,0.22)] text-[16px] md:text-[18px] lg:text-[20px] leading-[28px] max-w-[60ch]";
 
+// ============================================================================
+// HEADING SCALE - Standardized heading sizes across the app
+// ============================================================================
+// Scale based on: 14, 16, 18, 20, 24, 28, 36, 48 (1.125 minor third ratio)
+// Use these exports for consistent heading sizes:
+//   - pageTitle: Landing/marketing page main headings (48px → 56px on desktop)
+//   - sectionTitle: Major section headings (28px → 36px on desktop)
+//   - h1-h6: Standard document hierarchy
+//   - cardTitle, modalTitle: Component-specific headings
+// ============================================================================
+
+// Page-level headings (marketing pages, landing pages)
+export const pageTitle = "text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900";
+export const pageTitleLight = "text-4xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]";
+export const pageSubtitle = "text-lg md:text-xl text-slate-600 max-w-2xl";
+export const pageSubtitleLight = "text-lg md:text-xl text-white/85 max-w-2xl";
+
+// Section headings (within pages)
+export const sectionTitle = "text-2xl md:text-3xl font-bold tracking-tight text-slate-900";
+export const sectionSubtitle = "text-base md:text-lg text-slate-600";
+
+// Component headings
+export const cardTitle = "text-lg font-semibold text-slate-900";
+export const modalTitle = "text-xl font-semibold text-slate-900";
+export const dialogTitle = "text-lg font-semibold text-slate-900";
+
+// Dashboard/stat headings
+export const statValue = "text-3xl md:text-4xl font-bold text-slate-900";
+export const statLabel = "text-sm font-medium text-slate-500";
+
 export const card = "bg-white border border-[rgba(25,38,80,0.06)] rounded-2xl shadow-[0_8px_24px_rgba(25,38,80,0.06)]";
 export const cardHover =
   "transition-all duration-200 ease-[cubic-bezier(.2,.8,.2,1)] will-change-transform will-change-[box-shadow] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(25,38,80,.10)] hover:ring-1 hover:ring-slate-200/60";
@@ -44,9 +74,14 @@ export const wizardSection =
 export const wizardPill =
   "inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50/80 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-900";
 
+// Document hierarchy headings (forms, content pages)
+// Use these for semantic HTML structure (h1-h6 elements)
 export const h1 = "text-[36px] leading-[44px] font-semibold tracking-tight text-[#192650]";
 export const h2 = "text-[28px] leading-[36px] font-semibold tracking-tight text-[#192650]";
 export const h3 = "text-[20px] leading-[28px] font-medium text-[#192650]";
+export const h4 = "text-[18px] leading-[26px] font-medium text-[#192650]";
+export const h5 = "text-[16px] leading-[24px] font-semibold text-[#192650]";
+export const h6 = "text-[14px] leading-[22px] font-semibold uppercase tracking-wide text-slate-500";
 
 export const body = "text-[16px] leading-[26px]";
 export const small = "text-[14px] leading-[22px]";

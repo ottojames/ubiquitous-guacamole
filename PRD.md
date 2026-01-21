@@ -509,7 +509,7 @@ npm run lint         # ESLint check
 
 ### 18.2 Typography
 - [x] **Task 18.2a**: Ensure consistent font stack. **Success**: Consistent. (Completed 2026-01-21 - Added Inter font loading to index.html from Google Fonts with preconnect for performance, set global font-family in index.css @layer base, added typography exports to src/styles/ui.ts: fontSans, fontMono, fontSerif classes, fontFamilySans, fontFamilyMono inline strings)
-- [ ] **Task 18.2b**: Standardize heading sizes. **Success**: Consistent.
+- [x] **Task 18.2b**: Standardize heading sizes. **Success**: Consistent. (Completed 2026-01-21 - Added comprehensive heading exports to src/styles/ui.ts: pageTitle/pageTitleLight for marketing pages, sectionTitle/sectionSubtitle for sections, cardTitle/modalTitle/dialogTitle for components, statValue/statLabel for dashboards, h4/h5/h6 to complete the h1-h6 hierarchy. All sizes follow 1.125 minor third ratio scale: 14, 16, 18, 20, 24, 28, 36, 48)
 - [ ] **Task 18.2c**: Standardize text colors. **Success**: Consistent.
 
 ### 18.3 Buttons
