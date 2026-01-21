@@ -5,6 +5,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Admin stats data returned from /api/admin/stats
@@ -38,8 +39,18 @@ export interface AdminStatsData {
  * Requires admin session for authentication
  */
 async function fetchAdminStats(): Promise<AdminStatsData> {
+  // Get the current session to get the access token
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error('Admin authentication required');
+  }
+
   const response = await fetch('/api/admin/stats', {
-    credentials: 'include', // Include session cookies for auth
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
