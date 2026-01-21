@@ -118,6 +118,14 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-100">
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
+
       {/* Session Warning Banner */}
       {sessionWarning && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black px-4 py-2">
@@ -359,6 +367,8 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <main
+        id="main-content"
+        tabIndex={-1}
         className={`transition-all duration-300 pt-16 lg:pt-16 ${
           sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
         }`}
