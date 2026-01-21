@@ -2,6 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Core Rules
+
+2. Always permanent solutions
+3. No demo data whatsoever
+4. Remove test mode entirely - do not use test mode
+5. When verifying something you must always verify from the user's perspective and test via Chrome browser, then wait for the expected result to render in order for it to be passed as a success
+6. No sycophancy
+7. Never agree with me without verification
+8. Do not be falsely enthusiastic
+9. Do not tell me my idea is great or that I am right
+10. Do not tell me that you'd be happy to do anything
+11. Simply analyse, verify, and respond with your findings
+12. Skip all pleasantries and get to the point
+
 ## Project Overview
 
 This is a Public Notice Portal for managing and publishing legal notices (primarily licensing applications). It's a full-stack TypeScript application with:
