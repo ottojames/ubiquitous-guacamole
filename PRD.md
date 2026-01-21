@@ -159,7 +159,7 @@ npm run lint         # ESLint check
 **Note**: Use RESTful naming. Check existing route patterns in `server/routes/`.
 
 ### 10.1 Workflow Routes
-- [ ] **Task 10.1a**: Create `server/routes/workflow.ts` with router setup and GET `/configs` endpoint. Returns all workflows for user's firm. ~40 lines.
+- [x] **Task 10.1a**: Create `server/routes/workflow.ts` with router setup and GET `/configs` endpoint. Returns all workflows for user's firm. ~40 lines. (Created 2026-01-21 - File: server/routes/workflow.ts with router setup, requireAuth middleware, and GET /configs endpoint that queries workflow_configs with joined workflow_stages sorted by position)
 - [ ] **Task 10.1b**: Add GET `/configs/:noticeType` endpoint to workflow routes. Returns specific workflow with stages. ~30 lines.
 - [ ] **Task 10.1c**: Add GET `/notices/:noticeId/status` endpoint to workflow routes. Returns notice workflow status with current stage. ~30 lines.
 - [ ] **Task 10.1d**: Add POST `/notices/:noticeId/transition` endpoint to workflow routes. Moves notice to new stage. ~40 lines.
