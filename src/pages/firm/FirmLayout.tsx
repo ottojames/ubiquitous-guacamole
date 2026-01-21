@@ -8,7 +8,6 @@ interface Organization {
   name: string;
   slug: string;
   type: string;
-  practice_areas?: string[];
 }
 
 export default function FirmLayout() {
@@ -38,7 +37,7 @@ export default function FirmLayout() {
       // Look up firm by slug
       const { data: firmData, error: firmError } = await supabase
         .from('organizations')
-        .select('id, name, slug, type, practice_areas')
+        .select('id, name, slug, type')
         .eq('slug', firmSlug)
         .eq('type', 'firm')
         .single();
