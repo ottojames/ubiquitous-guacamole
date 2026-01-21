@@ -45,6 +45,39 @@ interface AnalyticsData {
 
 type TabType = 'overview' | 'departments' | 'compliance' | 'trends' | 'audit';
 
+// Data source indicator component
+function DataSourceBadge({ type }: { type: 'live' | 'projected' | 'sample' }) {
+  const config = {
+    live: {
+      label: 'Live',
+      bg: 'bg-emerald-100',
+      text: 'text-emerald-700',
+      dot: 'bg-emerald-500',
+    },
+    projected: {
+      label: 'Projected',
+      bg: 'bg-blue-100',
+      text: 'text-blue-700',
+      dot: 'bg-blue-500',
+    },
+    sample: {
+      label: 'Sample',
+      bg: 'bg-amber-100',
+      text: 'text-amber-700',
+      dot: 'bg-amber-500',
+    },
+  };
+
+  const { label, bg, text, dot } = config[type];
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
+}
+
 export default function Analytics() {
   const { department, userRole } = useOutletContext<ContextType>();
   const { orgSlug, deptSlug } = useParams();
@@ -300,7 +333,10 @@ export default function Analytics() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-slate-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-600">Total Notices</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-600">Total Notices</p>
+                    <DataSourceBadge type="live" />
+                  </div>
                   <svg className="w-8 h-8 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
@@ -311,7 +347,10 @@ export default function Analytics() {
 
               <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-slate-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-600">Published</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-600">Published</p>
+                    <DataSourceBadge type="live" />
+                  </div>
                   <svg className="w-8 h-8 text-emerald-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -322,7 +361,10 @@ export default function Analytics() {
 
               <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-slate-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-600">Active Now</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-600">Active Now</p>
+                    <DataSourceBadge type="live" />
+                  </div>
                   <svg className="w-8 h-8 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
@@ -333,7 +375,10 @@ export default function Analytics() {
 
               <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-slate-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-600">Representations</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-600">Representations</p>
+                    <DataSourceBadge type="live" />
+                  </div>
                   <svg className="w-8 h-8 text-amber-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
@@ -344,7 +389,10 @@ export default function Analytics() {
 
               <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 border border-slate-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-600">Avg Response</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-600">Avg Response</p>
+                    <DataSourceBadge type="live" />
+                  </div>
                   <svg className="w-8 h-8 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -358,7 +406,10 @@ export default function Analytics() {
             <div className="bg-gradient-to-br from-emerald-50 to-slate-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 border border-emerald-200">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Cost Savings Calculator</h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-2xl font-bold text-slate-900">Cost Savings Calculator</h2>
+                    <DataSourceBadge type="projected" />
+                  </div>
                   <p className="text-sm text-slate-600">Platform savings vs. traditional newspaper publication</p>
                 </div>
                 <svg className="w-16 h-16 text-emerald-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -409,7 +460,10 @@ export default function Analytics() {
             <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 border border-slate-200">
               <div className="flex items-start justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Public Engagement Analysis</h2>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-2xl font-bold text-slate-900">Public Engagement Analysis</h2>
+                    <DataSourceBadge type="sample" />
+                  </div>
                   <p className="text-sm text-slate-600">Citizen participation: Digital platform vs. paper-based legacy system</p>
                 </div>
                 <svg className="w-16 h-16 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -462,7 +516,10 @@ export default function Analytics() {
         {activeTab === 'departments' && (
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">Department Performance Comparison</h2>
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-2xl font-bold text-slate-900">Department Performance Comparison</h2>
+                <DataSourceBadge type="live" />
+              </div>
               <p className="text-sm text-slate-600 mb-8">Side-by-side metrics across {department.organization.name} departments</p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -549,7 +606,10 @@ export default function Analytics() {
             <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 border border-blue-200">
               <div className="flex items-start justify-between mb-8">
                 <div>
-                  <h2 className="text-3xl font-bold text-slate-900 mb-3">Statutory Compliance Dashboard</h2>
+                  <div className="flex items-center gap-3 mb-3">
+                    <h2 className="text-3xl font-bold text-slate-900">Statutory Compliance Dashboard</h2>
+                    <DataSourceBadge type="sample" />
+                  </div>
                   <p className="text-sm text-slate-600">Deadline adherence and regulatory performance monitoring</p>
                 </div>
                 <svg className="w-20 h-20 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -653,7 +713,10 @@ export default function Analytics() {
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-slate-900 mb-3">Monthly Trends & Seasonal Patterns</h2>
+                <div className="flex items-center gap-3 mb-3">
+                  <h2 className="text-3xl font-bold text-slate-900">Monthly Trends & Seasonal Patterns</h2>
+                  <DataSourceBadge type="live" />
+                </div>
                 <p className="text-sm text-slate-600">
                   Notice volumes by type over the past year, revealing clear operational patterns
                 </p>
@@ -744,7 +807,10 @@ export default function Analytics() {
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-slate-900 mb-3">Complete Audit Log</h2>
+                <div className="flex items-center gap-3 mb-3">
+                  <h2 className="text-3xl font-bold text-slate-900">Complete Audit Log</h2>
+                  <DataSourceBadge type="live" />
+                </div>
                 <p className="text-sm text-slate-600">
                   Every action taken by officers, every status change, every deadline met or missed.
                   This level of transparency is essential for local government accountability.

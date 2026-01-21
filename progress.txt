@@ -9006,3 +9006,42 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task: Phase 11 - Reduce color saturation and fix org name on Analytics page
 ---
 
+
+## Iteration 108 - Phase 11: Reduce color saturation and fix org name in Analytics
+- **What was implemented**: Replaced hardcoded "Westminster City Council" with dynamic org name, and replaced all lurid colors with design system tokens
+- **Files changed**:
+  - `src/pages/council/Analytics.tsx` - Major color and text updates throughout
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Replaced hardcoded "Westminster City Council" references:
+     - CSV export header: now uses `department.organization.name.toUpperCase()`
+     - Download filename: now uses kebab-cased org name
+     - Department comparison header: now shows actual org name
+     - Removed Westminster-specific text from savings description
+  2. Color replacements (per design tokens in `src/styles/ui.ts`):
+     - `purple-*` → `blue-*` (primary color)
+     - `pink-*` → `slate-*` (neutral)
+     - `orange-*` → `amber-*` (warning)
+     - `green-*` → `emerald-*` (success)
+     - `red-*` → `rose-*` (error)
+     - `gray-*` → `slate-*` (consistent with design system)
+  3. Reduced border thickness from `border-2` to `border` for subtler appearance
+  4. Icon colors now consistently use design tokens: blue-600, emerald-600, amber-600, rose-600
+- **Tests**: All 508 tests pass (2 skipped), no regressions
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only (not related to this change)
+- **DoD verification**:
+  - ✓ Organization name displayed matches logged-in user's organization (uses department.organization.name)
+  - ✓ Color palette uses only design tokens from `src/styles/ui.ts` (blue, emerald, amber, rose, slate)
+  - ✓ No lurid purple/pink/orange colors remain (all replaced with design tokens)
+- **Learnings for future iterations**:
+  - Design tokens are defined in `src/styles/ui.ts`:
+    - Primary: blue-600 (#2563EB)
+    - Success: emerald-600
+    - Error: rose-600
+    - Warning: amber-600
+    - Background: slate-50
+    - Card: white + shadow-sm + ring-1 ring-slate-200
+  - Always use `slate-*` instead of `gray-*` for consistency with design system
+  - The Analytics component receives department context from `useOutletContext()` via CouncilPortalLayout
+  - Phase 11 still has one more task: Add data source indicators
+---

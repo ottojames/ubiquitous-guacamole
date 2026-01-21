@@ -602,9 +602,24 @@ Major refactoring and bug fixes following user walkthrough review.
   - Reduced border thickness from `border-2` to `border` for subtler appearance
   - All icon colors now use design tokens: blue-600, emerald-600, amber-600, rose-600
 
-- [ ] `[LOW]` `[S]` **Add data source indicators** - Label data as "Live", "Projected", or "Sample" so users know if they're seeing real metrics.
+- [x] `[LOW]` `[S]` **Add data source indicators** - Label data as "Live", "Projected", or "Sample" so users know if they're seeing real metrics.
 
   **File**: `src/pages/council/Analytics.tsx`
+
+  **Solution implemented**:
+  - Created `DataSourceBadge` component with three types: `live`, `projected`, `sample`
+  - Each badge has distinct styling with colored dot indicator:
+    - Live: emerald green (bg-emerald-100, text-emerald-700)
+    - Projected: blue (bg-blue-100, text-blue-700)
+    - Sample: amber (bg-amber-100, text-amber-700)
+  - Added badges to all metric sections:
+    - KPI cards (Total Notices, Published, Active Now, Representations, Avg Response): **Live**
+    - Cost Savings Calculator: **Projected** (uses fixed rates and calculations)
+    - Public Engagement Analysis: **Sample** (hardcoded percentages)
+    - Department Performance Comparison: **Live** (fetched from API)
+    - Statutory Compliance Dashboard: **Sample** (hardcoded 98.5% rate)
+    - Monthly Trends & Seasonal Patterns: **Live** (fetched from API)
+    - Complete Audit Log: **Live** (fetched from API)
 
 ### Definition of Done
 
