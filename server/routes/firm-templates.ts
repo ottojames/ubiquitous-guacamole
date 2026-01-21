@@ -130,4 +130,159 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * PATCH /api/firm/templates/:id
+ * Updates a template. Template owner or firm admin can update.
+ */
+router.patch('/:id', async (req, res) => {
+  try {
+    const supabase = getServiceSupabaseClient();
+    const user = req.user;
+    const firmId = user?.organizationId;
+    const { id } = req.params;
+
+    if (!firmId || !user) {
+      return res.status(400).json({ error: 'No firm context' });
+    }
+
+    // Fetch template and verify ownership
+    const { data: template, error: fetchError } = await supabase
+      .from('firm_notice_templates')
+      .select('*')
+      .eq('id', id)
+      .eq('firm_id', firmId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('[firm-templates/:id] Error fetching template:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch template' });
+    }
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Check if user is owner or admin
+    const isOwner = template.created_by === user.id;
+    let isAdmin = false;
+
+    if (!isOwner) {
+      const { data: membership } = await supabase
+        .from('organization_memberships')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('organization_id', firmId)
+        .single();
+
+      isAdmin = membership && ['owner', 'admin'].includes(membership.role);
+    }
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: 'Only template owner or firm admins can update templates' });
+    }
+
+    const { name, description, notice_type, department_id, template_data, is_shared, is_active } = req.body;
+
+    const updates: Record<string, any> = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (notice_type !== undefined) updates.notice_type = notice_type;
+    if (department_id !== undefined) updates.department_id = department_id;
+    if (template_data !== undefined) updates.template_data = template_data;
+    if (is_shared !== undefined) updates.is_shared = is_shared;
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const { data, error } = await supabase
+      .from('firm_notice_templates')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[firm-templates/:id] Error updating template:', error);
+      return res.status(500).json({ error: 'Failed to update template' });
+    }
+
+    return res.json({ template: data });
+  } catch (error: any) {
+    console.error('[firm-templates/:id] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/firm/templates/:id
+ * Soft-deletes a template by setting is_active to false.
+ * Template owner or firm admin can delete.
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const supabase = getServiceSupabaseClient();
+    const user = req.user;
+    const firmId = user?.organizationId;
+    const { id } = req.params;
+
+    if (!firmId || !user) {
+      return res.status(400).json({ error: 'No firm context' });
+    }
+
+    // Fetch template and verify ownership
+    const { data: template, error: fetchError } = await supabase
+      .from('firm_notice_templates')
+      .select('id, created_by')
+      .eq('id', id)
+      .eq('firm_id', firmId)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('[firm-templates/:id] Error fetching template:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch template' });
+    }
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Check if user is owner or admin
+    const isOwner = template.created_by === user.id;
+    let isAdmin = false;
+
+    if (!isOwner) {
+      const { data: membership } = await supabase
+        .from('organization_memberships')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('organization_id', firmId)
+        .single();
+
+      isAdmin = membership && ['owner', 'admin'].includes(membership.role);
+    }
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: 'Only template owner or firm admins can delete templates' });
+    }
+
+    // Soft delete by setting is_active to false
+    const { error } = await supabase
+      .from('firm_notice_templates')
+      .update({ is_active: false })
+      .eq('id', id);
+
+    if (error) {
+      console.error('[firm-templates/:id] Error deleting template:', error);
+      return res.status(500).json({ error: 'Failed to delete template' });
+    }
+
+    return res.status(204).send();
+  } catch (error: any) {
+    console.error('[firm-templates/:id] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
