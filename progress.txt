@@ -5379,3 +5379,23 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - 498 tests pass, typecheck has pre-existing errors only in cypress/e2e/scripts dirs
   - Phase 18 Design Consistency is now COMPLETE
 ---
+
+## Iteration - Task 19.1a: Install Stripe packages
+- **What was implemented**: Verified Stripe packages already installed, minor version updates applied
+- **Files changed**:
+  - `package.json` - stripe@20.1.2→20.2.0, @stripe/stripe-js@8.6.1→8.6.3
+  - `package-lock.json` - Updated lockfile
+  - `PRD.md` - Marked Task 19.1a complete
+- **Key findings**:
+  - Stripe packages were already in package.json from earlier work
+  - `stripe` (server-side) - Used for creating checkout sessions, handling webhooks
+  - `@stripe/stripe-js` (client-side) - Used for Stripe.js and Elements
+  - npm install ran clean, just applied minor version updates
+- **Test results**: All 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx)
+- **Learnings for future iterations**:
+  - Check package.json first to see if dependencies are already installed
+  - Stripe has both server (`stripe`) and client (`@stripe/stripe-js`) packages
+  - Phase 19 Payment & Billing is now in progress
+  - Next task is Task 19.1b: Add env vars to .env.example
+---
