@@ -638,7 +638,7 @@ npm run lint         # ESLint check
 
 ### 22.2 Webhooks
 - [x] **Task 22.2a**: Create webhooks table. **Success**: Exists. (Completed 2026-01-21 - Created supabase/migrations/20260122000004_create_webhooks_table.sql with two tables: webhooks (subscription config with organization_id, url, secret, events array, retry settings, delivery stats) and webhook_deliveries (delivery attempt logs with event_type, payload, response details). Includes RLS policies for organization admins/members. Supported events: notice.published, notice.expired, notice.updated, representation.submitted, workflow.stage_changed, payment.completed. 506 tests pass)
-- [ ] **Task 22.2b**: Apply migration. **Success**: Applied.
+- [x] **Task 22.2b**: Apply migration. **Success**: Applied. (Completed 2026-01-21 - Applied via psql to Supabase. Created `webhooks` table with 20 columns, 5 indexes including GIN on events array, 4 CHECK constraints, 2 FKs, 2 RLS policies, and update trigger. Created `webhook_deliveries` table with 13 columns, 4 indexes including partial index on pending deliveries, 1 CHECK constraint, 1 FK, 3 RLS policies. All 506 tests pass)
 - [ ] **Task 22.2c**: Create webhook service. ~60 lines. **Success**: Sends.
 - [ ] **Task 22.2d**: Integrate into endpoints. **Success**: Fires.
 

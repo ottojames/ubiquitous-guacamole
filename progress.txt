@@ -6355,3 +6355,30 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task is Task 22.2b: Apply migration (requires Supabase access token)
 ---
 
+
+## Iteration 264 - Task 22.2b: Apply webhooks table migration
+- **What was implemented**: Applied the webhooks table migration to Supabase
+- **Files changed**:
+  - `PRD.md` - Marked Task 22.2b complete
+- **Implementation details**:
+  - Applied `supabase/migrations/20260122000004_create_webhooks_table.sql` via psql
+  - Created `webhooks` table with:
+    - 20 columns: id, organization_id, name, url, secret, events[], enabled, status, retry_count, timeout_ms, stats (last_triggered/success/failure_at, last_error, delivery counters), timestamps, created_by
+    - 5 indexes: organization, enabled (partial), status, events (GIN)
+    - 4 CHECK constraints: valid_url, valid_retry_count, valid_timeout, status values
+    - 2 FKs: organization_id → organizations, created_by → auth.users
+    - 2 RLS policies: admins can manage, members can view
+    - Update trigger for updated_at
+  - Created `webhook_deliveries` table with:
+    - 13 columns: id, webhook_id, event_type, event_id, payload, attempt_number, status, response details, error_message, timestamps
+    - 4 indexes: webhook, status, created_at DESC, pending deliveries (partial)
+    - 1 CHECK constraint: status values
+    - 1 FK: webhook_id → webhooks with CASCADE delete
+    - 3 RLS policies: members can view, service can insert/update
+- **Test results**: All 506 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors in src/pages/ only - no new errors
+- **Learnings for future iterations**:
+  - Supabase MCP tool requires SUPABASE_ACCESS_TOKEN which isn't configured, so migrations are applied via psql using DATABASE_URL
+  - Tables are verified with `\d tablename` psql command
+  - Next task is Task 22.2c: Create webhook service (~60 lines)
+---
