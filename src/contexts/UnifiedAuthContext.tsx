@@ -117,33 +117,23 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('[UnifiedAuthContext v2] Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-        if (session) {
-          try {
-            await loadUserContext(session.user);
-            console.log('[UnifiedAuthContext] User context loaded, checking for redirect...');
-          } catch (err) {
-            console.error('[UnifiedAuthContext] Error loading user context:', err);
-          }
 
-          // Handle post-login redirect for SIGNED_IN events from Login.tsx
-          // This MUST run even if loadUserContext fails
-          if (event === 'SIGNED_IN') {
-            console.log('[UnifiedAuthContext] SIGNED_IN event - calling handleLoginRedirect');
-            try {
-              await handleLoginRedirect(session.user);
-            } catch (err) {
-              console.error('[UnifiedAuthContext] Error in handleLoginRedirect:', err);
-            }
-          }
+        // IMPORTANT: Don't await - let this run in background so signInWithPassword can return
+        if (session) {
+          // Fire and forget - don't block the auth state change
+          loadUserContext(session.user).catch(err => {
+            console.error('[UnifiedAuthContext] Error loading user context:', err);
+          });
         } else {
           clearContext();
         }
+
         setLoading(false);
-        setIsInitialized(true); // Task 2.3: Re-confirm initialized after auth changes
+        setIsInitialized(true);
       }
     );
 
