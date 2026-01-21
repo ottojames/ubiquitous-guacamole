@@ -649,9 +649,27 @@ Major refactoring and bug fixes following user walkthrough review.
 
   Documentation includes notice durations, newspaper requirements, responsible authorities, and references to primary legislation.
 
-- [ ] `[LOW]` `[L]` **Customize dashboard metrics per department type** - Licensing: consultation deadlines, representation counts. Planning: application stages, decision deadlines.
+- [x] `[LOW]` `[L]` **Customize dashboard metrics per department type** - Licensing: consultation deadlines, representation counts. Planning: application stages, decision deadlines.
 
   **Files**: `src/pages/council/Dashboard.tsx`, `src/config/departmentConfig.ts`
+
+  **Solution implemented**:
+  - Added `DashboardMetricType` type union and `DashboardMetricConfig` interface to `departmentConfig.ts`
+  - Each metric config has: type, label, tooltip, icon, color, and optional linkFilter
+  - Added `dashboardMetrics` array to each department configuration:
+    - **Licensing**: Total Notices, Open for Reps, Closing Soon, Representations, Awaiting Response
+    - **Planning**: Total Applications, In Consultation (21-day), Drafts, Pending Decision, Comments
+    - **Traffic**: Total Orders, Open for Objections, Drafts, Objections, Expired
+    - **GVOL**: Total Notices, Open for Reps, Closing Soon, Representations, Expired
+    - **Environmental**: Total Notices, Active, Responses, Closed
+    - **Probate**: Total Notices, Active, Representations, Expired
+    - **Procurement**: Total Tenders, Open, Drafts, Questions, Closed
+  - Updated `Dashboard.tsx` with:
+    - `getMetricIcon()` helper to render SVG icons based on config
+    - `getMetricValue()` helper to map metric types to stats values
+    - Extended Stats interface with `closing_soon`, `pending_decision`, `awaiting_response`
+    - Added queries to calculate closing_soon (deadline within 48h) and awaiting_response (unread reps)
+    - Dynamic stats grid that renders based on `deptConfig.dashboardMetrics` array
 
 - [ ] `[LOW]` `[M]` **Filter notice types by department** - Licensing dashboard shows only licensing notice types, Planning shows only planning types.
 

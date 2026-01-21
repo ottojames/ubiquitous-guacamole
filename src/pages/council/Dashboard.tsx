@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext, useNavigate, useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { getDepartmentConfig } from '@/config/departmentConfig';
+import { getDepartmentConfig, DashboardMetricConfig, DashboardMetricType } from '@/config/departmentConfig';
 import { isClosingSoon } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
@@ -29,6 +29,9 @@ interface Stats {
   draft: number;
   expired: number;
   representations_total: number;
+  closing_soon: number;
+  pending_decision: number;
+  awaiting_response: number;
 }
 
 interface RecentNotice {
@@ -70,7 +73,10 @@ export default function Dashboard() {
     published: 0,
     draft: 0,
     expired: 0,
-    representations_total: 0
+    representations_total: 0,
+    closing_soon: 0,
+    pending_decision: 0,
+    awaiting_response: 0
   });
   const [recentNotices, setRecentNotices] = useState<RecentNotice[]>([]);
   const [priorities, setPriorities] = useState<PriorityItem[]>([]);
@@ -112,17 +118,36 @@ export default function Dashboard() {
       // Drafts: Never published (status = draft)
       // Expired: Consultation window closed (status = expired)
       // Representations: Total representations across all notices
+      // Closing soon: Notices with deadline within 48 hours
+      // Pending decision: Notices awaiting determination (Planning)
+      // Awaiting response: Representations without officer response (Licensing)
       const totalCount = notices?.length || 0;
       const publishedCount = notices?.filter(n => n.status === 'published').length || 0;
       const draftCount = notices?.filter(n => n.status === 'draft').length || 0;
       const expiredCount = notices?.filter(n => n.status === 'expired').length || 0;
+      const pendingDecisionCount = notices?.filter(n => n.status === 'pending_decision').length || 0;
 
-      const statsData = {
+      // Fetch notices with reps_deadline for closing_soon calculation
+      const now = new Date();
+      const fortyEightHoursFromNow = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+      const { data: closingSoonData } = await supabase
+        .from('notices')
+        .select('id')
+        .eq('department_id', department.id)
+        .eq('status', 'published')
+        .gte('reps_deadline', now.toISOString())
+        .lte('reps_deadline', fortyEightHoursFromNow.toISOString());
+      const closingSoonCount = closingSoonData?.length || 0;
+
+      const statsData: Stats = {
         total: totalCount,
         published: publishedCount,
         draft: draftCount,
         expired: expiredCount,
-        representations_total: 0 // Will be calculated below
+        representations_total: 0, // Will be calculated below
+        closing_soon: closingSoonCount,
+        pending_decision: pendingDecisionCount,
+        awaiting_response: 0 // Will be calculated below
       };
 
       // Calculate total representations count for this department's notices only
@@ -132,6 +157,14 @@ export default function Dashboard() {
           .select('*, notices!inner(department_id)', { count: 'exact', head: true })
           .eq('notices.department_id', department.id);
         statsData.representations_total = repsCount || 0;
+
+        // Calculate awaiting response (representations without officer response)
+        const { count: awaitingCount } = await supabase
+          .from('representations')
+          .select('*, notices!inner(department_id)', { count: 'exact', head: true })
+          .eq('notices.department_id', department.id)
+          .is('officer_response', null);
+        statsData.awaiting_response = awaitingCount || 0;
       } catch (err) {
         console.error('Failed to count representations:', err);
       }
@@ -141,7 +174,7 @@ export default function Dashboard() {
 
       // Calculate priorities for Licensing Officer
       const priorityItems: PriorityItem[] = [];
-      const now = new Date();
+      // Reuse 'now' from closing_soon calculation above
       const fortyEightHours = 48 * 60 * 60 * 1000;
 
       // 1. Notices closing within 48 hours (HIGH PRIORITY)
@@ -229,6 +262,59 @@ export default function Dashboard() {
   // Check if user has permission to create notices using RBAC system
   const canCreateNotice = deptConfig.canPublish && hasPermission(PERMISSIONS.NOTICES_CREATE);
 
+  // Helper to get icon SVG for metric
+  const getMetricIcon = (icon: DashboardMetricConfig['icon'], color: DashboardMetricConfig['color']) => {
+    const colorClass = {
+      blue: 'text-blue-600',
+      green: 'text-green-600',
+      gray: 'text-gray-600',
+      purple: 'text-purple-600',
+      red: 'text-red-600',
+      amber: 'text-amber-600',
+      rose: 'text-rose-600'
+    }[color];
+
+    const paths: Record<DashboardMetricConfig['icon'], string> = {
+      document: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      check: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      edit: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+      users: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+      clock: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+      alert: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+      hourglass: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+      inbox: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4'
+    };
+
+    return (
+      <svg
+        className={`w-8 h-8 ${colorClass}`}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path d={paths[icon]} />
+      </svg>
+    );
+  };
+
+  // Helper to get metric value
+  const getMetricValue = (type: DashboardMetricType): number => {
+    const valueMap: Record<DashboardMetricType, number> = {
+      total: stats.total,
+      published: stats.published,
+      draft: stats.draft,
+      expired: stats.expired,
+      representations: stats.representations_total,
+      closing_soon: stats.closing_soon,
+      pending_decision: stats.pending_decision,
+      awaiting_response: stats.awaiting_response
+    };
+    return valueMap[type];
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -285,119 +371,27 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${deptConfig.showDraftsCard ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
-        <Link
-          to={`${basePath}/notices`}
-          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-          title="All notices for this department (any status)."
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Total Notices</h3>
-            <svg
-              className="w-8 h-8 text-blue-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-        </Link>
-
-        <Link
-          to={`${basePath}/notices?status=published`}
-          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-          title={`Currently live and open for ${deptConfig.repLabelPlural}.`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Published</h3>
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.published}</p>
-        </Link>
-
-        {deptConfig.showDraftsCard && (
+      {/* Stats Grid - Dynamic based on department type */}
+      {/* Using static grid classes since Tailwind JIT can't detect dynamic class names */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
+        deptConfig.dashboardMetrics.length === 4 ? 'lg:grid-cols-4' :
+        deptConfig.dashboardMetrics.length === 5 ? 'lg:grid-cols-5' :
+        'lg:grid-cols-5'
+      }`}>
+        {deptConfig.dashboardMetrics.map((metric) => (
           <Link
-            to={`${basePath}/notices?status=draft`}
+            key={metric.type}
+            to={`${basePath}/notices${metric.linkFilter || ''}`}
             className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-            title="Notices saved but not yet published."
+            title={metric.tooltip}
           >
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Drafts</h3>
-              <svg
-                className="w-8 h-8 text-gray-600"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
+              <h3 className="text-sm font-medium text-gray-600">{metric.label}</h3>
+              {getMetricIcon(metric.icon, metric.color)}
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.draft}</p>
+            <p className="text-3xl font-bold text-gray-900">{getMetricValue(metric.type)}</p>
           </Link>
-        )}
-
-        <Link
-          to={`${basePath}/notices`}
-          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-          title="Total representations received across all notices."
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Representations</h3>
-            <svg
-              className="w-8 h-8 text-purple-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.representations_total}</p>
-        </Link>
-
-        <Link
-          to={`${basePath}/notices?status=expired`}
-          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-          title="Consultation window has closed."
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Expired</h3>
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{stats.expired}</p>
-        </Link>
+        ))}
       </div>
 
       {/* Priorities Section */}
