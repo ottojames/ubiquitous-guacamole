@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +20,115 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 type PortalType = 'council' | 'professional' | null;
 
+// Direct redirect function - handles the redirect immediately after auth success
+async function performRedirect(userId: string, portalType: PortalType): Promise<void> {
+  console.log('[Login] performRedirect called for portal:', portalType, 'userId:', userId);
+
+  if (!portalType) {
+    console.error('[Login] No portal type provided');
+    return;
+  }
+
+  try {
+    if (portalType === 'council') {
+      // Get user's department membership
+      const { data: membership, error: membershipError } = await supabase
+        .from('department_memberships')
+        .select('department_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
+
+      console.log('[Login] Council membership query result:', membership, membershipError);
+
+      if (membershipError || !membership) {
+        await supabase.auth.signOut();
+        window.location.href = '/login?error=no_council_access';
+        return;
+      }
+
+      // Get department details
+      const { data: department, error: deptError } = await supabase
+        .from('departments')
+        .select('slug, organization_id')
+        .eq('id', membership.department_id)
+        .single();
+
+      console.log('[Login] Department query result:', department, deptError);
+
+      if (deptError || !department) {
+        await supabase.auth.signOut();
+        window.location.href = '/login?error=department_not_found';
+        return;
+      }
+
+      // Get organization details
+      const { data: organization, error: orgError } = await supabase
+        .from('organizations')
+        .select('slug, type')
+        .eq('id', department.organization_id)
+        .single();
+
+      console.log('[Login] Organization query result:', organization, orgError);
+
+      if (orgError || !organization || organization.type !== 'council') {
+        await supabase.auth.signOut();
+        window.location.href = '/login?error=not_council_account';
+        return;
+      }
+
+      const redirectUrl = `/c/${organization.slug}/${department.slug}/dashboard`;
+      console.log('[Login] Redirecting to council dashboard:', redirectUrl);
+      window.location.href = redirectUrl;
+
+    } else if (portalType === 'professional') {
+      // Get all user's organization memberships
+      const { data: memberships, error: membershipError } = await supabase
+        .from('organization_memberships')
+        .select('organization_id')
+        .eq('user_id', userId);
+
+      console.log('[Login] Professional memberships query result:', memberships, membershipError);
+
+      if (membershipError || !memberships || memberships.length === 0) {
+        await supabase.auth.signOut();
+        window.location.href = '/login?error=no_firm_access';
+        return;
+      }
+
+      // Find a firm organization
+      let firmOrg = null;
+      for (const membership of memberships) {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('slug, type')
+          .eq('id', membership.organization_id)
+          .single();
+
+        console.log('[Login] Checking org:', org);
+
+        if (org && org.type === 'firm') {
+          firmOrg = org;
+          break;
+        }
+      }
+
+      if (!firmOrg) {
+        await supabase.auth.signOut();
+        window.location.href = '/login?error=not_firm_account';
+        return;
+      }
+
+      const redirectUrl = `/f/${firmOrg.slug}/dashboard`;
+      console.log('[Login] Redirecting to firm dashboard:', redirectUrl);
+      window.location.href = redirectUrl;
+    }
+  } catch (error) {
+    console.error('[Login] Error during redirect:', error);
+    window.location.href = '/login?error=redirect_failed';
+  }
+}
+
 export default function Login() {
   const [portalType, setPortalType] = useState<PortalType>(null);
   const [email, setEmail] = useState("");
@@ -27,6 +136,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const redirectInProgress = useRef(false);
 
   // Check for error in URL query params (from redirect errors)
   useEffect(() => {
@@ -58,47 +168,52 @@ export default function Login() {
     }
 
     try {
-      // CRITICAL: Store portal type BEFORE auth - UnifiedAuthContext will use this for redirect
-      // This is the proper architectural pattern: Login.tsx triggers auth, UnifiedAuthContext handles redirect
-      console.log('[Login] Storing portal type in sessionStorage:', portalType);
-      sessionStorage.setItem('login_portal_type', portalType || '');
+      console.log('[Login v3] Starting login flow for portal:', portalType);
 
-      // Verify it was stored
-      const stored = sessionStorage.getItem('login_portal_type');
-      console.log('[Login] Verified sessionStorage contains:', stored);
-
-      // Handle remember me preference
-      if (rememberMe) {
-        sessionStorage.setItem('login_remember_me', 'true');
-      }
-
-      console.log('[Login] Calling signInWithPassword...');
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      // Sign in with Supabase
+      console.log('[Login v3] Calling signInWithPassword...');
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      console.log('[Login] signInWithPassword completed, error:', authError);
 
       if (authError) {
-        // Clear stored values on error
-        sessionStorage.removeItem('login_portal_type');
-        sessionStorage.removeItem('login_remember_me');
+        console.error('[Login v3] Auth error:', authError);
         throw authError;
       }
 
-      // Auth succeeded - UnifiedAuthContext's onAuthStateChange will:
-      // 1. Detect SIGNED_IN event
-      // 2. Load user context (organizations, departments)
-      // 3. Read login_portal_type from sessionStorage
-      // 4. Redirect to appropriate dashboard
-      // We keep loading=true to show spinner until redirect happens
+      if (!data.user) {
+        console.error('[Login v3] No user returned after login');
+        throw new Error('No user returned after login');
+      }
+
+      console.log('[Login v3] Login successful, user:', data.user.email, 'id:', data.user.id);
+
+      // Prevent double redirect
+      if (redirectInProgress.current) {
+        console.log('[Login v3] Redirect already in progress, skipping');
+        return;
+      }
+      redirectInProgress.current = true;
+
+      // Handle remember me - store session with longer expiry
+      if (rememberMe && data.session) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        document.cookie = `sb-auth-token=${data.session.access_token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+      }
+
+      // Perform the redirect directly - no reliance on UnifiedAuthContext
+      console.log('[Login v3] Performing redirect for portal:', portalType);
+      await performRedirect(data.user.id, portalType);
 
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("[Login v3] Login error:", err);
       setError("Invalid credentials. Please check your email and password.");
       setLoading(false);
+      redirectInProgress.current = false;
     }
-    // Note: We don't setLoading(false) on success - redirect will happen from UnifiedAuthContext
+    // Note: We don't setLoading(false) on success - redirect will happen
   };
 
   // Password validation function
