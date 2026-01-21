@@ -3350,3 +3350,22 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The "Law Firms" and "Council" sections are still hidden with HTML comments
   - Next task is 15.4b: Delete "For Law Firms" section
 ---
+
+## Iteration 85 - Task 15.4b: Delete 'For Law Firms' section with old tiers
+- **What was implemented**: Removed placeholder comments for Law Firms and Council sections from Pricing.tsx
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Removed lines 238-241 containing placeholder comments
+  - `PRD.md` - Marked task 15.4b complete
+- **Key changes**:
+  - Removed: `{/* Law Firms - Section temporarily hidden while pricing restructure in progress */}`
+  - Removed: `{/* Council - Section temporarily hidden while pricing restructure in progress */}`
+  - These were just comment placeholders - the actual old Law Firms section (professional/business/enterprise tiers) was already deleted in tasks 15.1a-c
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in other files only - src/pages/Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The pricing page restructure is progressing well - old sections are being removed
+  - Task 15.4c (Delete "For Councils" section) is essentially already done since the Council placeholder comment was removed with this task
+  - Next task is 15.4c: Delete "For Councils" section - but this is now redundant since the comment was already removed
+  - The pricingPlans object now only contains: public, firms, councils (the correct three tiers)
+  - The three-card grid still needs to be built in task 15.4f
+---
