@@ -239,7 +239,7 @@ npm run lint         # ESLint check
 - [x] **Task 13.4a**: Create `e2e/firm-portal/owner-workflow-management.spec.ts` - Test: create department. ~40 lines. (Implemented 2026-01-21 - Created owner-workflow-management.spec.ts with 4 tests: create department, list departments, update department, archive department. Uses firm-auth fixtures and API endpoints)
 - [x] **Task 13.4b**: Add test for workflow stage configuration to owner spec. ~35 lines. (Implemented 2026-01-21 - Added 'Owner: Workflow Stage Configuration' test describe block with 2 tests: list workflow configs with stages, get config by notice type. Tests verify stages are sorted by position)
 - [x] **Task 13.4c**: Add test for invite team member to owner spec. ~35 lines. (Implemented 2026-01-21 - Added 'Owner: Team Member Invitation' test describe block with 2 tests: invite new team member, verify non-admin cannot invite. Tests use firm team invite API endpoint)
-- [ ] **Task 13.5a**: Create `e2e/firm-portal/editor-kanban-workflow.spec.ts` - Test: view Kanban board. ~40 lines.
+- [x] **Task 13.5a**: Create `e2e/firm-portal/editor-kanban-workflow.spec.ts` - Test: view Kanban board. ~40 lines. (Implemented 2026-01-21 - Created 'Editor: Kanban Board View' test describe block with 4 tests: view notices page, see view mode toggle buttons, switch to Kanban view, access workflow configs via API)
 - [ ] **Task 13.5b**: Add test for drag notice between stages to editor spec. ~40 lines.
 - [ ] **Task 13.6**: Create `e2e/firm-portal/viewer-readonly.spec.ts` - Tests: can view, cannot edit/drag. ~50 lines.
 - [ ] **Task 13.7**: Create `e2e/firm-portal/multi-tenant-isolation.spec.ts` - Test: Firm A cannot see Firm B data. ~50 lines.
