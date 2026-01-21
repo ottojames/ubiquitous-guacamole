@@ -504,7 +504,7 @@ npm run lint         # ESLint check
     - Firm: Purple-600 throughout (intentional branding differentiation)
   - **Counts**: 469 blue-600 instances, 277 blue-500, 164 purple-600 (firm portal only)
   - **Note**: Firm portal uses purple-600 intentionally for visual differentiation from council blue
-- [ ] **Task 18.1b**: Replace non-standard admin colors. **Success**: Standard.
+- [x] **Task 18.1b**: Replace non-standard admin colors. **Success**: Standard. (Verified 2026-01-21 - Admin colors already standardized in Phase 17: blue-600 for primary actions (69 instances across 7 admin files), semantic colors retained: red for errors/delete, yellow/amber for warnings/pending, green for success. No purple/indigo/pink colors in admin.)
 - [ ] **Task 18.1c**: Standardize semantic colors. **Success**: Consistent.
 
 ### 18.2 Typography
