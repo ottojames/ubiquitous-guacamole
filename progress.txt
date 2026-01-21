@@ -3052,3 +3052,46 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Supabase MCP tool requires --access-token flag; psql with DATABASE_URL works instead
   - Next task is Task 14.5a: Create migration for auth.tenant_id() helper function
 ---
+
+## Iteration 71 - Task 14.5a & 14.5b: Create and apply tenant_id() helper function
+- **What was implemented**: Created and applied migration for multi-tenant helper functions
+- **Files created**:
+  - `supabase/migrations/20260121000006_create_tenant_id_helper.sql` - 145 lines
+- **Files changed**:
+  - `PRD.md` - Marked Tasks 14.5a and 14.5b complete
+- **Key implementation details**:
+  - Created 4 helper functions (all SECURITY DEFINER STABLE):
+    1. `public.tenant_id()` - Returns current user's primary organization_id
+    2. `public.is_tenant_member(org_id)` - Checks if user belongs to specified org
+    3. `public.tenant_role()` - Returns user's role in primary org (owner, org_admin, etc)
+    4. `public.is_tenant_admin()` - Returns true if user is owner or org_admin in primary org
+  - All functions use organization_memberships table as source of truth
+  - Same logic as custom_access_token_hook for consistency
+  - STABLE volatility for query planner optimization
+  - EXECUTE granted to authenticated role
+- **Why public schema instead of auth schema**:
+  - Supabase protects the auth schema with permission denied errors
+  - This is the same fix applied in iteration 67/68 for is_firm_member
+  - public schema functions work identically, just different namespace
+- **Migration applied**:
+  - All 4 functions created successfully via psql
+  - Verified prosecdef=t (SECURITY DEFINER) and provolatile=s (STABLE)
+  - Verified EXECUTE grants to authenticated role
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in council/, firm/, auth/ pages only - unrelated to SQL migration
+- **Relationship to existing functions**:
+  - `is_firm_member(firm_id)` - Checks specific firm membership (existing)
+  - `is_tenant_member(org_id)` - Same but clearer naming for multi-tenant context (NEW)
+  - `tenant_id()` - Gets primary org for filtering (NEW)
+  - `tenant_role()/is_tenant_admin()` - Role-based access helpers (NEW)
+- **Usage in RLS policies**:
+  - `USING (organization_id = public.tenant_id())` for simple tenant isolation
+  - `USING (public.is_tenant_admin())` for admin-only access
+  - `USING (public.is_tenant_member(owner_org_id))` for cross-org checks
+- **Learnings for future iterations**:
+  - Cannot create functions in Supabase auth schema - always use public schema
+  - STABLE volatility hint allows PostgreSQL to cache results within a transaction
+  - Helper functions simplify RLS policies and make them more readable
+  - Phase 14 (Security Hardening) is now COMPLETE - all tasks done
+  - Next phase: Phase 15 (Pricing Page Complete Rewrite)
+---

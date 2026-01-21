@@ -261,8 +261,8 @@ npm run lint         # ESLint check
 - [x] **Task 14.3b**: Apply security_invoker migration to Supabase. (Applied 2026-01-21 via psql - 6 of 7 views updated with security_invoker=true. firm_clients view skipped because it's actually a table not a view in current schema, which uses RLS directly. Views updated: organization_subscription_details, organization_account_balances, active_councils, notice_approval_times, deadline_adherence, engagement_rate. All 494 tests pass)
 - [x] **Task 14.4a**: Create migration to add immutability trigger to `audit_actions` table. (Created 2026-01-21 - File: supabase/migrations/20260121000005_audit_actions_immutability.sql. Creates prevent_audit_actions_modification() function and audit_actions_immutable trigger on UPDATE/DELETE)
 - [x] **Task 14.4b**: Apply immutability trigger migration to Supabase. (Applied 2026-01-21 via psql - Trigger verified working: UPDATE and DELETE operations now raise exception "Audit action records are immutable and cannot be modified or deleted")
-- [ ] **Task 14.5a**: Create migration for `auth.tenant_id()` helper function.
-- [ ] **Task 14.5b**: Apply tenant_id helper function migration to Supabase.
+- [x] **Task 14.5a**: Create migration for `auth.tenant_id()` helper function. (Created 2026-01-21 - File: supabase/migrations/20260121000006_create_tenant_id_helper.sql. NOTE: Uses `public.tenant_id()` since Supabase protects auth schema. Created 4 functions: tenant_id(), is_tenant_member(org_id), tenant_role(), is_tenant_admin())
+- [x] **Task 14.5b**: Apply tenant_id helper function migration to Supabase. (Applied 2026-01-21 via psql - All 4 functions created with SECURITY DEFINER STABLE, EXECUTE granted to authenticated role)
 
 ---
 
