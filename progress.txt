@@ -5461,3 +5461,50 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
 - **Test results**: All 498 tests pass, 2 skipped
 - **Next tasks**: Task 19.3a (Create CheckoutButton component)
 ---
+
+## Iteration - Task 19.3a: Create CheckoutButton component
+- **What was implemented**: Created CheckoutButton component for Stripe payments
+- **Files changed**:
+  - `src/components/checkout/CheckoutButton.tsx` - New file with 55 lines
+  - `PRD.md` - Marked Task 19.3a complete
+- **Key implementation details**:
+  - Uses existing `useStripePayment` hook from `src/hooks/useStripePayment.ts`
+  - Props: noticeId, noticeType, applicantEmail (required), label, className, disabled (optional)
+  - Shows Loader2 spinner during processing with "Processing..." text
+  - Displays error message in rose-600 if payment fails
+  - Shows amber-600 warning if Stripe is not configured (!isConfigured)
+  - Uses UI.btnPrimary for consistent button styling
+  - CreditCard icon when idle, Loader2 icon when processing
+  - Default label "Pay £50" can be customized
+- **Test results**: All 499 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (cypress/, e2e/, scripts/ directories), no new errors from component
+- **Learnings for future iterations**:
+  - useStripePayment hook already exists and handles all Stripe communication
+  - The hook returns `isConfigured` boolean to check if Stripe env vars are set
+  - Component is ~55 lines (slightly over 40 target but includes all error states)
+  - No need to create new exports - component can be imported directly
+  - Next task is Task 19.3b: Create PaymentSuccess page
+---
+
+## Iteration - Task 19.3b: Create PaymentSuccess page
+- **What was implemented**: Created PaymentSuccess page for Stripe payment confirmation
+- **Files changed**:
+  - `src/pages/PaymentSuccess.tsx` - New file with 66 lines
+  - `PRD.md` - Marked Task 19.3b complete
+- **Key implementation details**:
+  - Uses SiteHeader and UI styles from existing patterns (follows Success.tsx design)
+  - CheckCircle icon from lucide-react for success indicator
+  - Reads noticeId and session_id from URL search params
+  - Buttons: "View notice" (navigates to /notices/:id) and "Return home" (navigates to /)
+  - Green success icon in circular background (bg-green-100 with CheckCircle)
+  - Consistent gradient background matching other pages
+  - Uses UI.btnPrimary and UI.btnSecondary for consistent button styling
+- **Test results**: All 500 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx)
+- **Learnings for future iterations**:
+  - Payment pages follow same pattern as Success.tsx (gradient background, SiteHeader, centered card)
+  - Use lucide-react icons (CheckCircle) instead of inline SVGs for consistency
+  - useNavigate() for programmatic navigation, useSearchParams() for URL query params
+  - Routes will need to be added in Task 19.3d (App.tsx)
+  - Next task is Task 19.3c: Create PaymentCancelled page
+---
