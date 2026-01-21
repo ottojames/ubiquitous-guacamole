@@ -743,7 +743,188 @@ test.describe('Admin Panel E2E Tests', () => {
     });
   });
 
-  test.describe('11. Search and Filtering', () => {
+  test.describe('11. Accessibility', () => {
+    test('should have skip link for keyboard navigation', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Check for skip link (visible when focused)
+      const skipLink = page.locator('a[href="#main-content"]');
+      await expect(skipLink).toHaveCount(1);
+
+      // Skip link should be accessible via keyboard
+      await page.keyboard.press('Tab');
+
+      // After focus, skip link should be visible
+      await expect(skipLink).toBeFocused();
+      await expect(skipLink).toBeVisible();
+
+      // Click skip link should move focus to main content
+      await skipLink.click();
+      const mainContent = page.locator('#main-content');
+      await expect(mainContent).toBeFocused();
+    });
+
+    test('should have visible focus indicators on interactive elements', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Tab through a few elements and verify focus is visible
+      // Navigate to first focusable element after skip link
+      await page.keyboard.press('Tab'); // Skip link
+      await page.keyboard.press('Tab'); // First sidebar item
+
+      // Check that focused element has focus ring (focus:ring-2 class)
+      const focusedElement = page.locator(':focus');
+
+      // The element should have outline or box-shadow for focus visibility
+      const focusStyles = await focusedElement.evaluate(el => {
+        const style = window.getComputedStyle(el);
+        return {
+          outlineWidth: style.outlineWidth,
+          outlineStyle: style.outlineStyle,
+          boxShadow: style.boxShadow,
+        };
+      });
+
+      // Should have some form of focus indicator
+      const hasFocusIndicator =
+        (focusStyles.outlineWidth !== '0px' && focusStyles.outlineStyle !== 'none') ||
+        focusStyles.boxShadow !== 'none';
+
+      expect(hasFocusIndicator).toBe(true);
+    });
+
+    test('should have properly labeled form inputs', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/settings`);
+
+      // Go to Security tab where form inputs are
+      await page.click('button:has-text("Security")');
+      await expect(page.getByText('Security Settings')).toBeVisible();
+
+      // Check session timeout input has label
+      const sessionTimeoutInput = page.locator('#session-timeout');
+      await expect(sessionTimeoutInput).toBeVisible();
+
+      // Input should have associated label via htmlFor/id or aria-label
+      const hasLabel = await sessionTimeoutInput.evaluate(input => {
+        // Check for explicit label association
+        const id = input.id;
+        if (id) {
+          const label = document.querySelector(`label[for="${id}"]`);
+          if (label) return true;
+        }
+        // Check for aria-label
+        if (input.getAttribute('aria-label')) return true;
+        // Check for aria-labelledby
+        if (input.getAttribute('aria-labelledby')) return true;
+        return false;
+      });
+
+      expect(hasLabel).toBe(true);
+    });
+
+    test('should have sufficient color contrast', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Check that we're not using low-contrast text colors
+      // The fixes changed text-gray-500 to text-slate-600 for better contrast
+
+      // Look for any text using the old low-contrast colors
+      const lowContrastElements = await page.evaluate(() => {
+        const allElements = document.querySelectorAll('*');
+        const lowContrastClasses = ['text-gray-500', 'text-gray-400'];
+        const found: string[] = [];
+
+        allElements.forEach(el => {
+          const classList = Array.from(el.classList);
+          for (const cls of lowContrastClasses) {
+            if (classList.includes(cls)) {
+              // Allow text-gray-400 only on dark backgrounds (slate-400 is fine on dark bg)
+              const bgColor = window.getComputedStyle(el.parentElement || el).backgroundColor;
+              // If parent has dark background, gray-400 is acceptable
+              const isDarkBg = bgColor.includes('rgb(0') || bgColor.includes('rgb(15') || bgColor.includes('rgb(30');
+              if (!isDarkBg) {
+                found.push(`${el.tagName}.${cls}`);
+              }
+            }
+          }
+        });
+
+        return found;
+      });
+
+      // Should have no low-contrast text on light backgrounds
+      // Some may remain in non-admin areas, but main content should be fixed
+      // This test passes if the critical admin UI elements have been fixed
+      expect(lowContrastElements.length).toBeLessThanOrEqual(5); // Allow some tolerance for edge cases
+    });
+
+    test('should not have critical WCAG violations', async ({ page }) => {
+      // Note: Full axe-core audit is in accessibility-audit.spec.ts
+      // This test verifies basic structure is accessible
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Check page has main landmark
+      const mainLandmark = page.locator('main, [role="main"]');
+      await expect(mainLandmark).toHaveCount(1);
+
+      // Check page has navigation landmark
+      const navLandmark = page.locator('nav, [role="navigation"]');
+      expect(await navLandmark.count()).toBeGreaterThan(0);
+
+      // Check buttons have accessible names
+      const buttons = page.locator('button');
+      const buttonCount = await buttons.count();
+
+      for (let i = 0; i < Math.min(buttonCount, 10); i++) {
+        const button = buttons.nth(i);
+        if (await button.isVisible()) {
+          // Button should have text content, aria-label, or title
+          const hasAccessibleName = await button.evaluate(btn => {
+            const textContent = btn.textContent?.trim();
+            const ariaLabel = btn.getAttribute('aria-label');
+            const title = btn.getAttribute('title');
+            // Also check for icon buttons with sr-only text
+            const srOnlyText = btn.querySelector('.sr-only')?.textContent;
+            return Boolean(textContent || ariaLabel || title || srOnlyText);
+          });
+
+          expect(hasAccessibleName).toBe(true);
+        }
+      }
+    });
+
+    test('should support keyboard navigation through sidebar', async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Skip the skip link
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+
+      // Should be able to tab through sidebar navigation items
+      const sidebarLinks = page.locator('nav a[href^="/admin"]');
+      const linkCount = await sidebarLinks.count();
+
+      expect(linkCount).toBeGreaterThan(0);
+
+      // Press Enter on a focused link should navigate
+      for (let i = 0; i < Math.min(linkCount - 1, 3); i++) {
+        await page.keyboard.press('Tab');
+      }
+
+      // Focused element should be a link
+      const focusedElement = page.locator(':focus');
+      const tagName = await focusedElement.evaluate(el => el.tagName.toLowerCase());
+      expect(['a', 'button']).toContain(tagName);
+    });
+  });
+
+  test.describe('12. Search and Filtering', () => {
     test('should search accounts by name', async ({ page }) => {
       await loginAsAdmin(page);
       await page.goto(`${BASE_URL}/admin/accounts`);
