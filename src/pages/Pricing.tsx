@@ -365,6 +365,10 @@ export default function Pricing() {
                   q: "Why do councils get a discount?",
                   a: "Councils process thousands of notices each year and provide a vital public service. Our discounted £19.99 rate recognises their volume and helps redirect taxpayer money from expensive newspaper advertising to modern digital infrastructure.",
                 },
+                {
+                  q: "What's included in the £49/month subscription?",
+                  a: "The Professional Portal subscription includes unlimited team members, Kanban workflow management for tracking notice stages, client matter tracking with billing integration, deadline reminders with calendar sync, custom notice templates, and priority email support. Notices are charged separately at £50 each.",
+                },
               ].map((faq, index) => (
                 <div
                   key={index}
