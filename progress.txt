@@ -3171,3 +3171,24 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - When removing a pricing tier, need to update: pricingPlans object, comparisonData array, rendering grid, table headers, table cells
   - Phase 15 pricing rewrite continues - next is Task 15.1e (remove councilMedium)
 ---
+
+## Iteration 67 - Task 15.1e: Delete pricingPlans.councilMedium object
+- **What was implemented**: Removed the councilMedium pricing plan (District Council) from the Pricing page
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Removed councilMedium from pricingPlans, comparisonData, and table rendering
+  - `PRD.md` - Marked Task 15.1e complete
+- **Key changes**:
+  - Removed `pricingPlans.councilMedium` object (lines 33-55) with £199/month pricing and "Most popular" badge
+  - Updated council rendering from grid of 2 cards to single card with max-w-lg container (similar to law firms pattern)
+  - Changed from `.map(['councilMedium', 'councilLarge'])` to direct rendering of `pricingPlans.councilLarge` only
+  - Removed all `councilMedium:` properties from comparisonData features (14 occurrences across 3 categories)
+  - Removed "District" column header from comparison table
+  - Updated table colSpan from 7 to 6
+  - Removed `feature.councilMedium` cell from table rows
+- **Test results**: 494 tests pass, no regressions
+- **TypeScript check**: No Pricing.tsx errors - pre-existing errors in other files only
+- **Learnings for future iterations**:
+  - When removing the second-to-last pricing tier in a section, the grid pattern changes from map() to direct render
+  - Phase 15 pricing rewrite continues - next is Task 15.1f (remove councilLarge, then entire section will be empty)
+  - After 15.1f-h removes old tiers, new ones will be created in 15.2a-c
+---

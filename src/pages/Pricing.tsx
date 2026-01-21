@@ -30,29 +30,6 @@ const pricingPlans = {
     ctaHref: "/publish",
     popular: false,
   },
-  councilMedium: {
-    name: "District Council",
-    description: "For district and borough councils with moderate publishing needs",
-    priceMonthly: 199,
-    priceAnnual: 1990,
-    includedNotices: 50,
-    overageRate: 15,
-    features: [
-      "50 notices included per month",
-      "Overage at £15 per notice",
-      "Receiving departments get free portals",
-      "Bulk import & API access",
-      "Single sign-on (SSO)",
-      "Role-based permissions",
-      "Priority email & phone support",
-      "FOI-ready export packs",
-      "Custom templates",
-      "Training sessions",
-    ],
-    cta: "Request demo",
-    ctaHref: "#contact",
-    popular: true,
-  },
   councilLarge: {
     name: "Unitary & County",
     description: "For large unitary, county councils, and combined authorities",
@@ -84,30 +61,30 @@ const comparisonData = [
   {
     category: "Publishing",
     features: [
-      { name: "Number of notices", individual: "Pay per notice", professional: "5/month", business: "15/month", councilMedium: "50/month", councilLarge: "Unlimited", enterprise: "50/month" },
-      { name: "Instant publication", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "Bulk import", individual: false, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "API access", individual: false, professional: false, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "White-label", individual: false, professional: false, business: false, councilMedium: false, councilLarge: false, enterprise: true },
+      { name: "Number of notices", individual: "Pay per notice", professional: "5/month", business: "15/month", councilLarge: "Unlimited", enterprise: "50/month" },
+      { name: "Instant publication", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
+      { name: "Bulk import", individual: false, professional: true, business: true, councilLarge: true, enterprise: true },
+      { name: "API access", individual: false, professional: false, business: true, councilLarge: true, enterprise: true },
+      { name: "White-label", individual: false, professional: false, business: false, councilLarge: false, enterprise: true },
     ],
   },
   {
     category: "Compliance & Legal",
     features: [
-      { name: "Cryptographic proof", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "Audit trail", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "PDF certificates", individual: true, professional: true, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "FOI-ready exports", individual: false, professional: false, business: false, councilMedium: true, councilLarge: true, enterprise: false },
-      { name: "Custom retention policies", individual: false, professional: false, business: false, councilMedium: false, councilLarge: true, enterprise: false },
+      { name: "Cryptographic proof", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
+      { name: "Audit trail", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
+      { name: "PDF certificates", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
+      { name: "FOI-ready exports", individual: false, professional: false, business: false, councilLarge: true, enterprise: false },
+      { name: "Custom retention policies", individual: false, professional: false, business: false, councilLarge: true, enterprise: false },
     ],
   },
   {
     category: "Support & Service",
     features: [
-      { name: "Email support", individual: "24h response", professional: "12h response", business: "4h response", councilMedium: "4h response", councilLarge: "4h response", enterprise: "1h response" },
-      { name: "Phone support", individual: false, professional: false, business: true, councilMedium: true, councilLarge: true, enterprise: true },
-      { name: "Dedicated account manager", individual: false, professional: false, business: false, councilMedium: false, councilLarge: true, enterprise: true },
-      { name: "SLA guarantee", individual: false, professional: false, business: false, councilMedium: false, councilLarge: "99.9%", enterprise: "99.99%" },
+      { name: "Email support", individual: "24h response", professional: "12h response", business: "4h response", councilLarge: "4h response", enterprise: "1h response" },
+      { name: "Phone support", individual: false, professional: false, business: true, councilLarge: true, enterprise: true },
+      { name: "Dedicated account manager", individual: false, professional: false, business: false, councilLarge: true, enterprise: true },
+      { name: "SLA guarantee", individual: false, professional: false, business: false, councilLarge: "99.9%", enterprise: "99.99%" },
     ],
   },
 ];
@@ -383,9 +360,9 @@ export default function Pricing() {
                 </p>
               </div>
 
-              <div className="grid gap-6 lg:grid-cols-2">
-                {['councilMedium', 'councilLarge'].map((key) => {
-                  const plan = pricingPlans[key as keyof typeof pricingPlans];
+              <div className="mx-auto max-w-lg">
+                {(() => {
+                  const plan = pricingPlans.councilLarge;
                   const price =
                     plan.priceAnnual && billingCycle === "annual"
                       ? plan.priceAnnual
@@ -393,22 +370,8 @@ export default function Pricing() {
 
                   return (
                     <div
-                      key={key}
-                      className={`rounded-2xl border-2 bg-white/10 p-6 backdrop-blur-xl ${
-                        plan.popular
-                          ? "border-emerald-300 shadow-2xl"
-                          : "border-white/20"
-                      }`}
+                      className="rounded-2xl border-2 bg-white/10 p-6 backdrop-blur-xl border-white/20"
                     >
-                      {plan.popular && (
-                        <div className="mb-4">
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400 px-3 py-1 text-xs font-semibold text-emerald-900">
-                            <Zap className="h-3 w-3" />
-                            Most popular
-                          </span>
-                        </div>
-                      )}
-
                       <div>
                         <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                         <p className="mt-2 text-sm text-blue-100">{plan.description}</p>
@@ -430,11 +393,7 @@ export default function Pricing() {
 
                       <a
                         href={plan.ctaHref}
-                        className={`mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition ${
-                          plan.popular
-                            ? "bg-emerald-400 text-emerald-900 shadow-lg hover:bg-emerald-300"
-                            : "bg-white/20 text-white hover:bg-white/30"
-                        }`}
+                        className="mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition bg-white/20 text-white hover:bg-white/30"
                       >
                         {plan.cta}
                       </a>
@@ -449,7 +408,7 @@ export default function Pricing() {
                       </ul>
                     </div>
                   );
-                })}
+                })()}
               </div>
 
               <div className="mt-8 space-y-4">
@@ -509,9 +468,6 @@ export default function Pricing() {
                         Enterprise
                       </th>
                       <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
-                        District
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
                         Unitary & County
                       </th>
                     </tr>
@@ -520,7 +476,7 @@ export default function Pricing() {
                     {comparisonData.map((category, catIndex) => (
                       <>
                         <tr key={`cat-${catIndex}`} className="border-b border-slate-200 bg-slate-50/50">
-                          <td colSpan={7} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <td colSpan={6} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                             {category.category}
                           </td>
                         </tr>
@@ -543,7 +499,6 @@ export default function Pricing() {
                               <td className="px-3 py-4 text-center text-xs">{renderCell(feature.professional)}</td>
                               <td className="px-3 py-4 text-center text-xs">{renderCell(feature.business)}</td>
                               <td className="px-3 py-4 text-center text-xs">{renderCell(feature.enterprise)}</td>
-                              <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilMedium)}</td>
                               <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilLarge)}</td>
                             </tr>
                           );
