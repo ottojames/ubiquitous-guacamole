@@ -1841,6 +1841,7 @@ export default function NewPublishFlow() {
               ocrText={uploadMethod === "notice" ? ocrText : undefined}
               onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
               isPortalContext={isPortalContext}
+              legalDetails={uploadMethod === "notice" ? legalDetails as Record<string, unknown> : undefined}
               preview={
                 <div className="rounded-xl border border-slate-200 p-3 space-y-3">
                   {/* Template indicator for Step 3 - only show when using template mode */}

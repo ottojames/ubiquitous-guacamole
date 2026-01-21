@@ -6026,3 +6026,26 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Server services go in server/services/ directory
   - Next task is Task 21.1b: Create endpoint (for compliance check API)
 ---
+
+## Iteration 253 - Task 21.1b: Create compliance check endpoint
+- **What was implemented**: Created API endpoints for compliance checking
+- **Files changed**:
+  - `server/routes/compliance.ts` - New file (~50 lines)
+  - `server/index.ts` - Added import and route registration
+  - `PRD.md` - Marked Task 21.1b complete
+- **Implementation details**:
+  - POST `/api/compliance/check` - Validates Partial<NoticeDraft> format notices
+  - POST `/api/compliance/check-base` - Validates NoticeBase format notices (wizard flow)
+  - Both endpoints return ComplianceResult: { passed, score, issues, checkedAt }
+  - No authentication required (public endpoint for pre-submission validation)
+  - Error handling for empty requests and server errors
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Compliance endpoints don't require auth since they're for pre-validation before account creation
+  - Routes registered at `/api/compliance/*` to keep compliance-related functionality grouped
+  - complianceChecker service exports two functions for different notice formats:
+    - checkCompliance() for NoticeDraft (direct field access)
+    - checkNoticeBaseCompliance() for NoticeBase (nested structure with applicant/premises/consultation)
+  - Next task is Task 21.1c: Add to wizard (shows feedback in publish wizard)
+---

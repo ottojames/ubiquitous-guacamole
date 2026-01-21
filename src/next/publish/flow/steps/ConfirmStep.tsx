@@ -3,6 +3,7 @@ import * as UI from "@/styles/ui";
 import type { NoticeDefinition } from "@/next/publish/config/noticeTypes";
 import type { NoticeBase } from "@/types/notice";
 import type { UploadMethod } from "./UploadMethodStep";
+import ComplianceFeedback from "../components/ComplianceFeedback";
 
 export type ConfirmStepProps = {
   definition: NoticeDefinition;
@@ -17,6 +18,7 @@ export type ConfirmStepProps = {
   ocrText?: string;
   onOcrTextChange?: (text: string) => void;
   isPortalContext?: boolean;
+  legalDetails?: Record<string, unknown>;
 };
 
 export default function ConfirmStep({
@@ -32,6 +34,7 @@ export default function ConfirmStep({
   ocrText,
   onOcrTextChange,
   isPortalContext = false,
+  legalDetails,
 }: ConfirmStepProps) {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -180,6 +183,18 @@ export default function ConfirmStep({
               {metadata}
             </div>
           ) : null}
+
+          {/* Compliance Feedback - validates notice against UK statutory requirements */}
+          {(notice || legalDetails) && (
+            <ComplianceFeedback
+              noticeData={
+                notice
+                  ? notice
+                  : legalDetails || {}
+              }
+              useBaseEndpoint={!!notice}
+            />
+          )}
         </aside>
       </div>
 

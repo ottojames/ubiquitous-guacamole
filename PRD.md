@@ -616,7 +616,7 @@ npm run lint         # ESLint check
 ### 21.1 Compliance Checker
 - [x] **Task 21.1a**: Create complianceChecker service. ~80 lines. **Success**: Returns results. (Completed 2026-01-21 - Created server/services/complianceChecker.ts with checkCompliance() and checkNoticeBaseCompliance() functions. Validates required fields, deadline rules by notice type, format compliance, and common warnings. Returns ComplianceResult with passed boolean, score 0-100, and detailed issues array. 502 tests pass)
 - [x] **Task 21.1b**: Create endpoint. **Success**: Callable. (Completed 2026-01-21 - Created server/routes/compliance.ts with POST /api/compliance/check and POST /api/compliance/check-base endpoints. Registered in server/index.ts. Both endpoints accept notice data and return ComplianceResult. 502 tests pass)
-- [ ] **Task 21.1c**: Add to wizard. **Success**: Shows feedback.
+- [x] **Task 21.1c**: Add to wizard. **Success**: Shows feedback. (Completed 2026-01-21 - Created ComplianceFeedback component in src/next/publish/flow/components/ComplianceFeedback.tsx that fetches compliance results from /api/compliance/check or /api/compliance/check-base endpoints and displays score, errors, warnings, and info with styled feedback cards. Added ComplianceFeedback to ConfirmStep.tsx to show validation on Step 3 of the wizard. Component displays compliance score 0-100, issue counts by severity, and detailed issue list with suggestions. 503 tests pass)
 
 ### 21.2 Notice Drafting
 - [ ] **Task 21.2a**: Create noticeDrafter service. ~80 lines. **Success**: Generates.
