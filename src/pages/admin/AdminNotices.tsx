@@ -17,6 +17,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import { NoticeTableSkeleton } from '@/components/skeletons';
+import { AlertModal } from '@/components/ui/AlertModal';
 
 interface Notice {
   id: string;
@@ -44,6 +45,12 @@ export default function AdminNotices() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'warning' | 'info';
+  }>({ isOpen: false, title: '', message: '', variant: 'info' });
 
   // Fetch notices from database
   const fetchNotices = useCallback(async () => {
@@ -139,7 +146,12 @@ export default function AdminNotices() {
       fetchNotices(); // Refresh the list
     } catch (error) {
       console.error('Action failed:', error);
-      alert('Failed to perform action. Please try again.');
+      setAlertModal({
+        isOpen: true,
+        title: 'Action Failed',
+        message: 'Failed to perform action. Please try again.',
+        variant: 'error',
+      });
     }
   };
 
@@ -499,6 +511,15 @@ export default function AdminNotices() {
           </div>
         </div>
       )}
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        variant={alertModal.variant}
+      />
     </div>
   );
 }
