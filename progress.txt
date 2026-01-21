@@ -4628,3 +4628,54 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - State shape: { isOpen: boolean, itemId: string | null } where itemId tracks the target
   - Next task is 17.4a: Identify broken edit/save in Settings page
 ---
+
+## Iteration 135 - Task 17.4a: Identify broken Settings page issues
+- **What was implemented**: Audited admin Settings page and documented all issues preventing edit/save functionality
+- **Files changed**:
+  - `PRD.md` - Marked Task 17.4a complete with detailed documentation
+- **Issues identified in Settings page**:
+  1. **No form submission** - Missing `<form>` wrapper and submit handler
+  2. **No Save button** - No button to trigger save anywhere in the component
+  3. **No API call** - No logic to persist settings to server
+  4. **Uses uncontrolled inputs** - `defaultValue` instead of controlled inputs with `useState`
+  5. **Most tabs are placeholders** - General, Notifications, API, Integrations show placeholder text only
+  6. **Security tab has inputs that don't persist** - Session Timeout and Max Failed Login inputs exist but don't save
+- **Database table exists**: `platform_admin_settings` in `supabase/migrations/20260122000001_unified_auth_system.sql`
+  - Fields include: session_timeout_minutes, ip_allowlist, require_ip_allowlist, two_factor_enabled, failed_login_attempts
+- **Test results**: All 497 tests pass (2 skipped)
+- **TypeScript check**: Pre-existing errors in council/firm pages only (not in Settings.tsx)
+- **Learnings for future iterations**:
+  - Settings.tsx is a minimal implementation that needs significant work
+  - The database schema supports the security settings but UI doesn't connect to it
+  - Task 17.4b will need to: 1) Add useState for form fields, 2) Create API endpoint, 3) Wire up form submission
+  - Next task is 17.4b: Fix form submission to call API
+---
+
+## Iteration 136 - Tasks 17.4b-d: Fix Settings page form submission
+- **What was implemented**: Created admin settings API and updated Settings.tsx with working form submission
+- **Files changed**:
+  - `server/routes/admin/settings.ts` - NEW FILE (140 lines) - GET/PATCH endpoints for admin settings
+  - `server/index.ts` - Added import and route registration for adminSettingsRouter at /api/admin/settings
+  - `src/pages/admin/Settings.tsx` - Major rewrite (286 lines vs original 117)
+  - `PRD.md` - Marked Tasks 17.4b, 17.4c, 17.4d complete
+- **Key implementation details**:
+  - API endpoint uses `requireAdmin` middleware from adminAuth.ts for authentication
+  - GET endpoint returns settings from `platform_admin_settings` table or defaults if no row exists
+  - PATCH endpoint validates inputs (session_timeout_minutes 5-1440, booleans for toggles)
+  - Uses upsert pattern: check if row exists, then update or insert
+  - Frontend uses controlled inputs with useState instead of uncontrolled defaultValue
+  - Added hasChanges tracking to show Save button only when settings modified
+  - Implemented loading state with Loader2 spinner while fetching and saving
+  - Uses AlertModal for success/error feedback instead of browser alert()
+- **Database fields used**:
+  - session_timeout_minutes (INTEGER, default 120)
+  - two_factor_enabled (BOOLEAN)
+  - require_ip_allowlist (BOOLEAN)
+- **Test results**: All 497 tests pass (2 skipped)
+- **Learnings for future iterations**:
+  - The admin routes at /api/admin/* were commented out during migration phase - need to add new routes separately
+  - requireAdmin middleware validates JWT token and checks is_platform_admin in app_metadata
+  - Pattern for controlled inputs: fetch on mount → set state → track changes → save on button click
+  - Settings page still has placeholder tabs (General, Notifications, API, Integrations) - future work
+  - Next task is 17.4e: Fix password reset
+---
