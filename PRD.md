@@ -127,7 +127,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.11c**: Create GVOL workflow function migration. Copy GVOL function from Task 8.11 (second function only). (Created 2026-01-21 - File: supabase/migrations/20260120330000_create_default_gvol_workflow.sql)
 - [x] **Task 8.11d**: Apply GVOL workflow function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, creates workflow_config and 9 workflow_stages for GVOL notices including 40-day objection period and 5-year renewal deadline)
 - [x] **Task 8.11e**: Create Gambling workflow function migration. Copy Gambling function from Task 8.11 (third function only). (Created 2026-01-21 - File: supabase/migrations/20260120340000_create_default_gambling_workflow.sql)
-- [ ] **Task 8.11f**: Apply Gambling workflow function to Supabase.
+- [x] **Task 8.11f**: Apply Gambling workflow function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, creates workflow_config and 10 workflow_stages for Gambling notices including 7-day authority notification, 28-day consultation period, and 21-day appeal window)
 
 ### 8.3 Workflow Functions
 - [ ] **Task 8.12a**: Create `transition_notice_stage()` function migration. Copy from Task 8.12. Validates stage, calculates deadline, records history.
