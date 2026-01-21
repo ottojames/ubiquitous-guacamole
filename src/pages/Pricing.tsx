@@ -89,28 +89,26 @@ export default function Pricing() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   return (
-    <div className={`${UI.pageWrap} min-h-screen`}>
-      {/* Header sentinel for SiteHeader compact mode */}
-      <div id="header-sentinel" className="h-2" aria-hidden="true" />
+    <div className={`${UI.pageWrap} relative flex flex-col font-sans`}>
       <SiteHeader />
+      {/* Sentinel right after header for compact mode detection */}
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
 
-      {/* Resident escape hatch - subtle link for users just browsing notices */}
-      <div className="relative z-10 py-3 text-center">
-        <a
-          href="/notices"
-          className="inline-flex items-center gap-1.5 text-sm text-white/80 transition hover:text-white"
-        >
-          Just looking for notices? Search here
-          <ArrowRight className="h-4 w-4" />
-        </a>
-      </div>
+      <main>
+        {/* Hero - matches Home page structure exactly */}
+        <section className="relative overflow-hidden pb-48 pt-20 md:pb-56 md:pt-32 lg:pb-64">
+          <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">
-        {/* Dark gradient overlay for text readability - stronger at bottom where gradient gets light */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-900/30" aria-hidden="true" />
-        <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
+          {/* Vertical gradient fade - extended height to cover page gradient edge */}
+          <div
+            className="absolute inset-x-0 bottom-0 pointer-events-none"
+            style={{
+              height: '550px',
+              background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.4) 30%, rgba(248, 250, 252, 0.7) 50%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
+            }}
+            aria-hidden="true"
+          />
 
         <div className={`${UI.container} relative z-10`}>
           <div className="mx-auto max-w-3xl text-center">
@@ -124,43 +122,74 @@ export default function Pricing() {
             </p>
           </div>
 
-          {/* Savings Banner */}
-          <div className="mx-auto mt-10 max-w-4xl">
-            <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-8 shadow-lg text-center">
-              <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-blue-200/20 blur-3xl" />
-              <div className="relative">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-900">
-                  <Zap className="h-4 w-4" />
-                  Breaking news
-                </div>
-                <h2 className="mb-4 text-2xl font-bold text-slate-900 md:text-3xl">
-                  The government is modernising public notice requirements
-                </h2>
-                <p className="mx-auto max-w-2xl text-base text-slate-700">
-                  Chancellor Rachel Reeves announced plans to remove the requirement for businesses to advertise licensing applications in local newspapers — calling the current system <strong>"outdated"</strong>. CivicNotices provides a modern, digital-first alternative that's faster, cheaper, and more transparent.
-                </p>
-                <div className="mt-6 flex flex-wrap justify-center gap-6">
-                  <div>
-                    <div className="text-3xl font-bold text-blue-700">£46.29m</div>
-                    <div className="text-sm text-slate-600">spent by councils on newspaper notices (2022)</div>
+          {/* Savings Banner - Glassmorphic card matching Home page */}
+          <div className="mx-auto mt-12 max-w-4xl">
+            {/* Gradient border wrapper */}
+            <div className="group relative rounded-[32px] bg-gradient-to-br from-blue-500/20 via-white/30 to-blue-600/20 p-[1.5px] shadow-[0_20px_70px_-10px_rgba(37,99,235,0.35)] transition-all hover:shadow-[0_20px_80px_-5px_rgba(37,99,235,0.45)]">
+              {/* Animated glow effect */}
+              <div className="absolute -inset-[2px] rounded-[32px] bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0 opacity-0 blur-lg transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
+
+              {/* Inner card with glassmorphism */}
+              <div className="relative overflow-hidden rounded-[31px] bg-white/90 backdrop-blur-xl">
+                {/* Subtle inner gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-slate-50/30" aria-hidden="true" />
+
+                {/* Content */}
+                <div className="relative z-10 p-6 md:p-8 text-center">
+                  <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-1.5 text-sm font-semibold text-blue-900">
+                    <Zap className="h-4 w-4" />
+                    Breaking news
                   </div>
-                  <div>
-                    <div className="text-3xl font-bold text-blue-700">85%</div>
-                    <div className="text-sm text-slate-600">savings with CivicNotices</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold text-blue-700">Instant</div>
-                    <div className="text-sm text-slate-600">publication vs 5-10 days</div>
+                  <h2 className="mb-4 text-2xl font-bold text-slate-900 md:text-3xl">
+                    The government is modernising public notice requirements
+                  </h2>
+                  <p className="mx-auto max-w-2xl text-base text-slate-700">
+                    Chancellor Rachel Reeves announced plans to remove the requirement for businesses to advertise licensing applications in local newspapers — calling the current system <strong>"outdated"</strong>. CivicNotices provides a modern, digital-first alternative that's faster, cheaper, and more transparent.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-6">
+                    <div>
+                      <div className="text-3xl font-bold text-blue-700">£46.29m</div>
+                      <div className="text-sm text-slate-600">spent by councils on newspaper notices (2022)</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-bold text-blue-700">85%</div>
+                      <div className="text-sm text-slate-600">savings with CivicNotices</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-bold text-blue-700">Instant</div>
+                      <div className="text-sm text-slate-600">publication vs 5-10 days</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* CTA Buttons - extra margin to push below page gradient edge (860px) */}
+          <div className="mt-32 md:mt-40 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <a
+              href="/publish"
+              className={`${UI.btnPrimary} inline-flex items-center gap-3 px-10 py-5 text-lg shadow-[0_8px_24px_rgba(37,99,235,0.45)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.55)]`}
+            >
+              Publish your first notice
+              <ArrowRight className="h-6 w-6" />
+            </a>
+            <a
+              href="#pricing-plans"
+              className={`${UI.btnSecondary} px-6 py-3 text-sm`}
+            >
+              Compare plans
+            </a>
+          </div>
+
+          <p className="mt-8 text-sm text-slate-500 text-center">
+            No subscription required · Instant publication · Full audit trail
+          </p>
         </div>
       </section>
 
-      {/* Old Way vs New Way */}
-      <section className="py-20 md:py-28">
+      {/* Old Way vs New Way - transparent start to blend with page gradient */}
+      <section className="py-20 md:py-28 bg-gradient-to-b from-transparent via-white/80 to-white">
         <div className={UI.container}>
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -433,9 +462,10 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-12">
+      <footer className="border-t border-slate-200 py-12 bg-[#F8FAFC]">
         <div className={`${UI.container} text-center`}>
           <div className="mb-6 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
             <a href="/about" className="hover:text-slate-900">
