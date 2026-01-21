@@ -3369,3 +3369,82 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The pricingPlans object now only contains: public, firms, councils (the correct three tiers)
   - The three-card grid still needs to be built in task 15.4f
 ---
+
+## Iteration [N] - Task 15.4c: Delete 'For Councils' section with old tiers
+- What was implemented: Verified that old council tier objects (councilSmall, councilMedium, councilLarge) and the "For Councils" rendering section were already removed in previous iterations
+- Files changed: PRD.md (marked task complete)
+- Learnings for future iterations:
+  - The old council tiers (Parish & Town £49, District £199, Unitary/County £499) were removed in Tasks 15.1d-15.1f
+  - Current Pricing.tsx only contains new pricing structure: public (£50/notice), firms (£49/mo + £50/notice), councils (FREE + £19.99/notice)
+  - The pricingPlans objects exist but are not yet rendered - that's Task 15.4f (create three-card grid)
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and not blocking
+  - 494 tests pass
+---
+
+## Iteration [N] - Tasks 15.4d-15.4i: Add three-card pricing grid
+- What was implemented: Added the Pricing Cards section with three responsive pricing cards
+- Files changed:
+  - src/pages/Pricing.tsx - Added ~100 lines for the Pricing Cards section
+  - PRD.md - Marked Tasks 15.4d through 15.4i complete
+- Key implementation details:
+  - Tasks 15.4d (Comparison Table) and 15.4e (showComparison/billingCycle state) were already completed in prior iterations (15.1f/15.1g)
+  - Added new "Pricing Cards" section between "Old Way vs New Way" and "FAQ" sections
+  - Three-column grid (md:grid-cols-3) with max-w-5xl container
+  - **Public Card**: Shows £50/notice, blue UI.btnPrimary CTA, blue Check icons
+  - **Firms Card (Highlighted)**: ring-2 ring-blue-600 shadow-xl styling, "Most Popular" badge positioned at -top-4, shows £49/month + £50/notice
+  - **Councils Card**: emerald-600 FREE text, emerald-colored border button, emerald Check icons, shows £19.99/notice
+  - All cards use pricingPlans object data dynamically
+  - Cards use flex-col with flex-1 on feature list for equal heights
+- Learnings for future iterations:
+  - The pricing page structure is now: Hero → Savings Banner → Old Way vs New Way → Pricing Cards → FAQ → Final CTA → Footer
+  - The pricing cards use the correct pricing: £50 (public), £49/mo + £50 (firms), FREE + £19.99 (councils)
+  - Green/emerald accent distinguishes council tier from blue primary color
+  - 494 tests pass, TypeScript compiles cleanly for Pricing.tsx
+  - Next tasks: 15.5 (update Old Way vs New Way pricing text) and 15.6 (update FAQ)
+---
+
+## Iteration 100 - Tasks 15.5a, 15.5b, 15.7a: Remove false claims and verify pricing
+- **What was implemented**: Verified pricing text and removed false "40+ UK councils" claim from Final CTA section
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Line 411: Changed "Join 40+ UK councils already saving time and money with CivicNotices" to "Publish legally compliant notices in seconds — no newspapers, no waiting"
+  - `PRD.md` - Marked Tasks 15.5a, 15.5b, and 15.7a complete
+- **Key changes**:
+  - Task 15.5a: Already complete from Task 15.3c (line 228 already shows "From £50 per notice. Councils £19.99.")
+  - Task 15.5b: Already complete from Task 15.3c (no "40+ UK councils" claim existed in Old Way vs New Way section)
+  - Task 15.7a: Changed Final CTA subtitle to remove false claim about "40+ UK councils"
+  - Verified with grep that no "40+" claims remain in Pricing.tsx
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - src/pages/Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Tasks 15.5a and 15.5b were essentially already done by Task 15.3c
+  - The remaining false claim was in the Final CTA section (Task 15.7a), not in the Old Way vs New Way section
+  - Always verify with grep to ensure no false claims remain anywhere in the file
+  - Next task is 15.6a: Remove outdated "pay-as-you-go" FAQ
+---
+
+## Iteration 101 - Task 15.6a: Remove outdated 'pay-as-you-go' FAQ
+- **What was implemented**: Removed the FAQ question "How does pay-as-you-go work?" from Pricing.tsx
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Removed lines 352-355 (pay-as-you-go FAQ)
+  - `PRD.md` - Marked task complete
+- **Why removed**: The pay-as-you-go FAQ described the old pricing model. The new three-tier structure (Public £50/notice, Firms £49/month+£50/notice, Councils FREE+£19.99/notice) makes this FAQ obsolete and potentially confusing.
+- **Test results**: All 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - FAQ section is at lines 340-398 in Pricing.tsx
+  - Each FAQ is an object with `q` (question) and `a` (answer) properties
+  - Remaining tasks 15.6b-15.6f involve more FAQ updates
+  - Next task is Task 15.6b: Remove "switch plans" FAQ
+---
+
+## Iteration 90 - Task 15.6b: Remove "switch plans" FAQ
+- **What was implemented**: Removed the outdated "Can I switch plans later?" FAQ from Pricing.tsx
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Removed lines 352-355 (FAQ about switching plans)
+  - PRD.md - Marked task complete
+- **Learnings for future iterations**:
+  - The old FAQ referenced "Council and Enterprise customers" which no longer exist in the new three-tier pricing model
+  - The pricing page now has 4 FAQ items remaining: legal compliance, audit trail, charity discounts, publication speed
+  - 494 tests pass after this change
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are not blocking
+---

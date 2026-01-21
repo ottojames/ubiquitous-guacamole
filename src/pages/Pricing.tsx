@@ -350,10 +350,6 @@ export default function Pricing() {
                   a: "Yes. While the government is modernising regulations, CivicNotices provides cryptographic proof, timestamping, and audit trails that meet and exceed current legal requirements for statutory notices.",
                 },
                 {
-                  q: "Can I switch plans later?",
-                  a: "Absolutely. Council and Enterprise customers can upgrade, downgrade, or pause their subscription at any time. No long-term contracts required.",
-                },
-                {
                   q: "What's included in the audit trail?",
                   a: "Every notice gets a cryptographic hash, timestamp, view analytics, comment tracking, and a downloadable PDF certificate. Perfect for FOI requests and legal proceedings.",
                 },
