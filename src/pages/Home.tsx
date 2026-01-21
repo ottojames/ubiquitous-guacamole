@@ -422,7 +422,7 @@ export default function Home() {
                 onClick={() => track("publish_started", { audience: "public" })}
                 className={`${UI.btnPrimary} inline-flex items-center gap-3 px-10 py-5 text-lg shadow-[0_8px_24px_rgba(37,99,235,0.45)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.55)]`}
               >
-                Publish a notice
+                Publish a Notice - £50
                 <ArrowRight className="h-6 w-6" />
               </a>
               <a
