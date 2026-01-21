@@ -146,3 +146,57 @@ export interface DeadlineReminder {
   updated_at: string;
   sent_error: string | null;
 }
+
+// ============================================================================
+// FIRM NOTICE TEMPLATES
+// ============================================================================
+
+export interface FirmNoticeTemplate {
+  id: string;
+  firm_id: string;
+  department_id: string | null;
+  name: string;
+  description: string | null;
+  notice_type: string;
+  template_data: Record<string, unknown>;
+  is_active: boolean;
+  is_shared: boolean;
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  last_used_at: string | null;
+}
+
+// ============================================================================
+// COMPOSITE TYPES (for API responses with joins)
+// ============================================================================
+
+/**
+ * WorkflowConfig with its associated stages pre-loaded
+ * Used when fetching a workflow for display in Kanban board or configuration UI
+ */
+export interface WorkflowConfigWithStages extends WorkflowConfig {
+  stages: WorkflowStage[];
+}
+
+/**
+ * Notice with workflow status and current stage information
+ * Used in firm portal notice list/Kanban views
+ */
+export interface NoticeWithWorkflow {
+  id: string;
+  notice_type: string;
+  firm_id: string | null;
+  client_id: string | null;
+  // Notice fields (from existing notices table)
+  applicant_name: string;
+  premises_name: string | null;
+  premises_address: string;
+  postcode: string;
+  status: string;
+  created_at: string;
+  // Workflow status (joined from notice_workflow_status)
+  workflow_status: NoticeWorkflowStatus | null;
+  current_stage: WorkflowStage | null;
+}
