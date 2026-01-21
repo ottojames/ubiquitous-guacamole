@@ -625,7 +625,7 @@ npm run lint         # ESLint check
 
 ### 21.3 Representation Analysis
 - [x] **Task 21.3a**: Create analyzer service. ~100 lines. **Success**: Returns analysis. (Completed 2026-01-21 - Created server/services/representationAnalyzer.ts with 220 lines. Exports analyzeRepresentation() for single analysis and analyzeMultiple() for batch analysis. Detects stance (support/objection/comment) with confidence score. Identifies 8 common themes: Noise, Operating Hours, Parking/Traffic, Antisocial Behaviour, Litter/Waste, Area Saturation, Community Impact, Positive Contribution. Checks for UK Licensing Act 2003 four objectives: Prevention of Crime and Disorder, Public Safety, Prevention of Public Nuisance, Protection of Children from Harm. Generates text summary and provides word/sentence counts. 504 tests pass)
-- [ ] **Task 21.3b**: Create endpoint. **Success**: Callable.
+- [x] **Task 21.3b**: Create endpoint. **Success**: Callable. (Completed 2026-01-21 - Created server/routes/representation-analysis.ts with two endpoints: POST /api/representation-analysis/analyze (single representation) and POST /api/representation-analysis/analyze-multiple (batch analysis with aggregate insights). Registered in server/index.ts at /api/representation-analysis/*. Both endpoints include input validation and error handling. 504 tests pass)
 - [ ] **Task 21.3c**: Add to council inbox. **Success**: Shows summary.
 
 ---
