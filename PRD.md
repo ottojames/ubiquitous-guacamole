@@ -545,7 +545,7 @@ npm run lint         # ESLint check
 - [x] **Task 19.2d**: Register routes. **Success**: Accessible. (Verified 2026-01-21 - Routes mounted at /api/stripe in server/index.ts)
 
 ### 19.3 Frontend
-- [ ] **Task 19.3a**: Create CheckoutButton. ~40 lines. **Success**: Redirects.
+- [x] **Task 19.3a**: Create CheckoutButton. ~40 lines. **Success**: Redirects. (Completed 2026-01-21 - Created src/components/checkout/CheckoutButton.tsx with 55 lines, uses useStripePayment hook, shows loading state, error messages, and not-configured warning)
 - [ ] **Task 19.3b**: Create PaymentSuccess page. ~50 lines. **Success**: Renders.
 - [ ] **Task 19.3c**: Create PaymentCancelled page. ~30 lines. **Success**: Renders.
 - [ ] **Task 19.3d**: Add routes to App.tsx. **Success**: Work.
