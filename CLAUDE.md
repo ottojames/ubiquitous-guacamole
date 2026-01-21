@@ -238,3 +238,24 @@ kill -9 $(lsof -ti tcp:5174)
 - Browser: React DevTools + standard console
 - Vite HMR for instant feedback
 - API health check: `http://localhost:5174/api/health`
+
+## Navigation Decisions
+
+### "For councils" Nav Item (Decided 2026-01-21)
+
+**Decision**: Keep the current `/#for-councils` anchor link behavior.
+
+**Reasoning**:
+- The Home page has a comprehensive "For councils" section (id="for-councils") with:
+  - Enterprise features overview (Digital submission, Instant publication, Compliance exports)
+  - Council logos for social proof
+  - Feature grid (SSO, API, role-based permissions, audit logs, etc.)
+- The anchor scroll behavior works correctly
+- Creating a dedicated `/councils` landing page would be `[L]` complexity for marginal benefit
+- The Pricing page has council content but no dedicated anchor, and the Home page content is more comprehensive
+
+**Alternatives Rejected**:
+1. Remove entirely - Councils are a key audience, the content is valuable
+2. Link to `/pricing` council section - Pricing has less council-specific content than Home
+
+**Files affected**: `src/components/SiteHeader.tsx` (lines 45, 108), `src/pages/Home.tsx` (line 31, 788)

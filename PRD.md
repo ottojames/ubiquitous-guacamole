@@ -293,9 +293,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Added `{ href: '/email-alerts', label: 'Email alerts' }` to both desktop nav (line 44) and mobile nav (line 107) arrays in SiteHeader.tsx. Placed after "Find notices" for logical grouping of user-focused navigation items.
 
-- [ ] `[LOW]` `[S]` **Decide on "For councils" nav item** - Currently shows in navigation but unclear where it leads. Options: (1) Remove entirely, (2) Link to `/pricing` council section anchor, (3) Link to dedicated `/councils` landing page. Document decision in CLAUDE.md.
+- [x] `[LOW]` `[S]` **Decide on "For councils" nav item** - Currently shows in navigation but unclear where it leads. Options: (1) Remove entirely, (2) Link to `/pricing` council section anchor, (3) Link to dedicated `/councils` landing page. Document decision in CLAUDE.md.
 
   **File**: `src/components/SiteHeader.tsx`
+
+  **Decision**: Keep the current `/#for-councils` anchor link behavior. The Home page has a comprehensive "For councils" section with enterprise features, council logos, and detailed content. Creating a dedicated `/councils` page would be `[L]` complexity for marginal benefit. Decision documented in CLAUDE.md under "Navigation Decisions".
 
 ### Definition of Done
 
