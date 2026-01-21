@@ -312,7 +312,7 @@ export default function AuditLog() {
         {/* Search */}
         <div className="mt-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
             <input
               type="text"
               placeholder="Search by action, target, or reason..."
@@ -330,25 +330,25 @@ export default function AuditLog() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50  border-b border-gray-200 ">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Timestamp
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Admin
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Action
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Target
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Severity
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   IP Address
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -356,13 +356,13 @@ export default function AuditLog() {
             <tbody className="divide-y divide-gray-200 ">
               {loading && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500 ">
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-600">
                     Loading audit logs...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500 ">
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-600">
                     No audit logs found
                   </td>
                 </tr>
@@ -377,7 +377,7 @@ export default function AuditLog() {
                         <div className="font-medium">
                           {format(new Date(log.created_at), 'MMM d, yyyy')}
                         </div>
-                        <div className="text-xs text-gray-500 ">
+                        <div className="text-xs text-slate-600">
                           {format(new Date(log.created_at), 'HH:mm:ss')}
                         </div>
                       </div>
@@ -387,7 +387,7 @@ export default function AuditLog() {
                         <div className="font-medium text-gray-900 ">
                           {log.admin_email}
                         </div>
-                        <div className="text-xs text-gray-500 ">
+                        <div className="text-xs text-slate-600">
                           {log.admin_role}
                         </div>
                       </div>
@@ -397,7 +397,7 @@ export default function AuditLog() {
                         <div className="font-medium text-gray-900 ">
                           {log.action}
                         </div>
-                        <div className="text-xs text-gray-500 ">
+                        <div className="text-xs text-slate-600">
                           {log.action_category.replace(/_/g, ' ')}
                         </div>
                       </div>
@@ -408,12 +408,12 @@ export default function AuditLog() {
                           <div className="font-medium text-gray-900 ">
                             {log.target_identifier}
                           </div>
-                          <div className="text-xs text-gray-500 ">
+                          <div className="text-xs text-slate-600">
                             {log.target_type}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-slate-500">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
@@ -444,7 +444,7 @@ export default function AuditLog() {
 
         {/* Infinite scroll target */}
         {hasMore && (
-          <div ref={observerTarget} className="p-4 text-center text-gray-500 ">
+          <div ref={observerTarget} className="p-4 text-center text-slate-600">
             Loading more logs...
           </div>
         )}
@@ -476,7 +476,7 @@ export default function AuditLog() {
                 </h3>
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Timestamp
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 ">
@@ -484,7 +484,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Admin User
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 ">
@@ -492,7 +492,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Action
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 ">
@@ -500,7 +500,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Category
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 ">
@@ -508,7 +508,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Target
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900 ">
@@ -516,7 +516,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Severity
                     </dt>
                     <dd className="mt-1">
@@ -579,7 +579,7 @@ export default function AuditLog() {
                 </h3>
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       IP Address
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900  font-mono">
@@ -587,7 +587,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       Session ID
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900  font-mono text-xs">
@@ -595,7 +595,7 @@ export default function AuditLog() {
                     </dd>
                   </div>
                   <div className="col-span-2">
-                    <dt className="text-sm font-medium text-gray-500 ">
+                    <dt className="text-sm font-medium text-slate-600">
                       User Agent
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900  font-mono text-xs">

@@ -258,7 +258,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-slate-600">
           Last updated: {new Date().toLocaleTimeString()}
         </span>
       </div>
@@ -274,7 +274,7 @@ export default function AdminDashboard() {
                 {stats.activeCouncils} active
               </p>
             </div>
-            <Building2 className="w-8 h-8 text-gray-400" />
+            <Building2 className="w-8 h-8 text-slate-500" />
           </div>
         </div>
 
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                 +12% this month
               </p>
             </div>
-            <Users className="w-8 h-8 text-gray-400" />
+            <Users className="w-8 h-8 text-slate-500" />
           </div>
         </div>
 
@@ -301,7 +301,7 @@ export default function AdminDashboard() {
                 Across all organizations
               </p>
             </div>
-            <FileText className="w-8 h-8 text-gray-400" />
+            <FileText className="w-8 h-8 text-slate-500" />
           </div>
         </div>
 
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                 Registered accounts
               </p>
             </div>
-            <Users className="w-8 h-8 text-gray-400" />
+            <Users className="w-8 h-8 text-slate-500" />
           </div>
         </div>
 
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
                 Projected
               </p>
             </div>
-            <DollarSign className="w-8 h-8 text-gray-400" />
+            <DollarSign className="w-8 h-8 text-slate-500" />
           </div>
         </div>
       </div>
@@ -346,7 +346,7 @@ export default function AdminDashboard() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {recentActions.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
+              <div className="p-6 text-center text-slate-600">
                 No recent activity
               </div>
             ) : (
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                             </>
                           )}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-600 mt-1">
                           {formatTimeAgo(action.created_at)}
                         </p>
                       </div>

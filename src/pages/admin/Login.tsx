@@ -82,7 +82,7 @@ export default function AdminLogin() {
             </div>
           </div>
           <h2 className="text-3xl font-bold text-white">Admin Portal</h2>
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-slate-400">
             Sign in with your administrator credentials
           </p>
         </div>
@@ -174,7 +174,7 @@ export default function AdminLogin() {
 
           {/* Security Notice */}
           <div className="mt-6 p-3 bg-gray-700/50 rounded-lg">
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs text-slate-400 text-center">
               This is a secure area. All login attempts are monitored and logged for security purposes.
             </p>
           </div>
@@ -182,7 +182,7 @@ export default function AdminLogin() {
 
         {/* Footer */}
         <div className="text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-400">
             &copy; {new Date().getFullYear()} Civic Notices. All rights reserved.
           </p>
         </div>

@@ -175,7 +175,7 @@ export default function AdminNotices() {
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
+          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-slate-600">
             <Clock className="w-3 h-3" />
             Expired
           </span>
@@ -221,7 +221,7 @@ export default function AdminNotices() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Notice Management</h1>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-slate-600">
           {filteredNotices.length} notices
         </div>
       </div>
@@ -232,7 +232,7 @@ export default function AdminNotices() {
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search notices..."
@@ -257,7 +257,7 @@ export default function AdminNotices() {
               <option value="rejected">Rejected</option>
               <option value="expired">Expired</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
           </div>
 
           {/* Type Filter */}
@@ -274,7 +274,7 @@ export default function AdminNotices() {
               <option value="minor-variation">Minor Variation</option>
               <option value="club-premises-certificate">Club Premises</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -285,25 +285,25 @@ export default function AdminNotices() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Notice
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Applicant
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Organization
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -311,7 +311,7 @@ export default function AdminNotices() {
             <tbody className="divide-y divide-gray-200">
               {filteredNotices.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-600">
                     No notices found
                   </td>
                 </tr>
@@ -323,7 +323,7 @@ export default function AdminNotices() {
                         <div className="font-medium text-gray-900">
                           {notice.title || 'Untitled Notice'}
                         </div>
-                        <div className="text-gray-500 flex items-center gap-1 mt-1">
+                        <div className="text-slate-600 flex items-center gap-1 mt-1">
                           <MapPin className="w-3 h-3" />
                           {notice.premises_address}
                         </div>
@@ -343,7 +343,7 @@ export default function AdminNotices() {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {notice.organization?.name || 'Unknown'}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-slate-600">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(notice.created_at).toLocaleDateString()}
@@ -356,7 +356,7 @@ export default function AdminNotices() {
                             setSelectedNotice(notice);
                             setShowDetailModal(true);
                           }}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-slate-500 hover:text-gray-600"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -397,7 +397,7 @@ export default function AdminNotices() {
             <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full p-6">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                className="absolute top-4 right-4 text-slate-500 hover:text-gray-600"
               >
                 <XCircle className="h-6 w-6" />
               </button>
@@ -409,40 +409,40 @@ export default function AdminNotices() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-gray-500">Title</label>
+                    <label className="text-sm text-slate-600">Title</label>
                     <p className="text-gray-900">{selectedNotice.title || 'Untitled'}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500">Status</label>
+                    <label className="text-sm text-slate-600">Status</label>
                     <div className="mt-1">{getStatusBadge(selectedNotice.status)}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500">Applicant</label>
+                    <label className="text-sm text-slate-600">Applicant</label>
                     <p className="text-gray-900">{selectedNotice.applicant_name}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500">Notice Type</label>
+                    <label className="text-sm text-slate-600">Notice Type</label>
                     <p className="text-gray-900 capitalize">
                       {selectedNotice.notice_type?.replace(/-/g, ' ')}
                     </p>
                   </div>
                   <div className="col-span-2">
-                    <label className="text-sm text-gray-500">Premises Address</label>
+                    <label className="text-sm text-slate-600">Premises Address</label>
                     <p className="text-gray-900">{selectedNotice.premises_address}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500">Organization</label>
+                    <label className="text-sm text-slate-600">Organization</label>
                     <p className="text-gray-900">{selectedNotice.organization?.name || 'Unknown'}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500">Created Date</label>
+                    <label className="text-sm text-slate-600">Created Date</label>
                     <p className="text-gray-900">
                       {new Date(selectedNotice.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   {selectedNotice.published_at && (
                     <div>
-                      <label className="text-sm text-gray-500">Published Date</label>
+                      <label className="text-sm text-slate-600">Published Date</label>
                       <p className="text-gray-900">
                         {new Date(selectedNotice.published_at).toLocaleDateString()}
                       </p>
@@ -450,7 +450,7 @@ export default function AdminNotices() {
                   )}
                   {selectedNotice.expires_at && (
                     <div>
-                      <label className="text-sm text-gray-500">Expiry Date</label>
+                      <label className="text-sm text-slate-600">Expiry Date</label>
                       <p className="text-gray-900">
                         {new Date(selectedNotice.expires_at).toLocaleDateString()}
                       </p>
