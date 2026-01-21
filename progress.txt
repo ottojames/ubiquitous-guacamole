@@ -8647,3 +8647,32 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - NAV_LINKS was duplicated across multiple files - SiteHeader has its own copy internally
   - When unifying components, check for unused imports that can be removed (e.g., Link from react-router-dom)
 ---
+
+## Iteration 31 - Fix "Find notices" link navigation (Phase 5)
+- **What was implemented**: Changed "Find notices" link from anchor scroll (#notices) to route navigation (/notices)
+- **Files changed**:
+  - `src/components/SiteHeader.tsx` - Changed href in both desktop nav (line 43) and mobile nav (line 105) from `/#notices` to `/notices`
+  - `src/pages/Home.tsx` - Changed NAV_LINKS constant href from `#notices` to `/notices`
+  - `PRD.md` - Marked task complete
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e and scripts directories only (not related to this change)
+- **Learnings for future iterations**:
+  - SiteHeader.tsx has two nav arrays - one for desktop (line 42-56) and one for mobile sheet (line 103-118)
+  - Home.tsx has its own NAV_LINKS constant that's separate from SiteHeader - both need updating
+  - When changing navigation links, check all instances in both desktop and mobile views
+  - The `/#` prefix is used for hash links to anchor on homepage, `/` prefix for route navigation
+---
+
+## Iteration 32 - Add "Email alerts" to navigation consistently (Phase 5)
+- **What was implemented**: Added "Email alerts" link to SiteHeader navigation for both desktop and mobile views
+- **Files changed**:
+  - `src/components/SiteHeader.tsx` - Added `{ href: '/email-alerts', label: 'Email alerts' }` to both nav arrays (desktop line 44, mobile line 107)
+  - `PRD.md` - Marked task complete with solution details
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only (not related to this change)
+- **Learnings for future iterations**:
+  - SiteHeader.tsx has two separate nav arrays - one for desktop (line 42-56) and one for mobile sheet (line 104-118) - both need updating
+  - The route is `/email-alerts` (matching App.tsx route definition)
+  - Home.tsx already has "Email alerts" in its NAV_LINKS - good to keep nav items consistent across header implementations
+  - Placed "Email alerts" after "Find notices" to group user-focused nav items together (residents looking for notices)
+---

@@ -41,6 +41,7 @@ export default function SiteHeader() {
             <nav className="hidden md:flex items-center gap-6">
               {[
                 { href: '/notices', label: 'Find notices' },
+                { href: '/email-alerts', label: 'Email alerts' },
                 { href: '/#for-councils', label: 'For councils' },
                 { href: '/pricing', label: 'Pricing' },
                 { href: '/#docs', label: 'Docs' },
@@ -103,6 +104,7 @@ export default function SiteHeader() {
             <nav className="mt-6 flex flex-col gap-4">
               {[
                 { href: '/notices', label: 'Find notices' },
+                { href: '/email-alerts', label: 'Email alerts' },
                 { href: '/#for-councils', label: 'For councils' },
                 { href: '/pricing', label: 'Pricing' },
                 { href: '/#docs', label: 'Docs' },
