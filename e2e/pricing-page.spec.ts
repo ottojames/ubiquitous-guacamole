@@ -162,4 +162,17 @@ test.describe('Pricing Page', () => {
 
     console.log('Firms CTA correctly links to /sign-up?plan=firm');
   });
+
+  test('Councils CTA links to sign-up?plan=council', async ({ page }) => {
+    // Find the "Get Free Portal Access" CTA button in the Council Portal card
+    // This should link to /sign-up?plan=council
+    const councilsCta = page.locator('a').filter({ hasText: 'Get Free Portal Access' });
+    await expect(councilsCta).toBeVisible();
+
+    // Verify the href is correct
+    const href = await councilsCta.getAttribute('href');
+    expect(href).toBe('/sign-up?plan=council');
+
+    console.log('Councils CTA correctly links to /sign-up?plan=council');
+  });
 });

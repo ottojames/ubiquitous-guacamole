@@ -371,7 +371,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.8d**: Test no false "40+" claims. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying no "40+ UK councils" or "Trusted by 40+ councils" claims appear on pricing page)
 - [x] **Task 15.8e**: Test Public CTA links to /publish. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Publish Now - £50' button has href='/publish')
 - [x] **Task 15.8f**: Test Firms CTA links to sign-up?plan=firm. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Start Free Trial' button has href='/sign-up?plan=firm')
-- [ ] **Task 15.8g**: Test Councils CTA links to sign-up?plan=council. **Success**: Test passes.
+- [x] **Task 15.8g**: Test Councils CTA links to sign-up?plan=council. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Get Free Portal Access' button has href='/sign-up?plan=council')
 - [ ] **Task 15.8h**: Test FAQ questions present. **Success**: Test passes.
 
 ---
