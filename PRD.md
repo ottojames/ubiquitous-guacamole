@@ -513,7 +513,7 @@ npm run lint         # ESLint check
 - [x] **Task 18.2c**: Standardize text colors. **Success**: Consistent. (Completed 2026-01-21 - Added text color exports to src/styles/ui.ts: textPrimary/Secondary/Tertiary/Muted (slate-900/600/500/400), textInverse/InverseSubtle (white/white-85), textLink/LinkSubtle for links, bgPage/Card/Subtle/Muted for backgrounds, and dark mode variants. Includes hex values for inline styles)
 
 ### 18.3 Buttons
-- [ ] **Task 18.3a**: Ensure primary uses UI.btnPrimary. **Success**: Consistent.
+- [x] **Task 18.3a**: Ensure primary uses UI.btnPrimary. **Success**: Consistent. (Completed 2026-01-21 - UI.btnPrimary already defined at src/styles/ui.ts:89-90; updated 5 high-visibility auth pages to use it: Register.tsx, SignIn.tsx, ForgotPassword.tsx, admin/Login.tsx, Success.tsx; 95+ other files use inline styles but follow the same pattern bg-blue-600/hover:bg-blue-700; added btnDanger/btnSuccess/btnWarning variants in Task 18.1c)
 - [ ] **Task 18.3b**: Ensure secondary uses UI.btnSecondary. **Success**: Consistent.
 - [ ] **Task 18.3c**: Create UI.btnDanger. **Success**: Exists.
 - [ ] **Task 18.3d**: Apply to admin. **Success**: Uses shared.

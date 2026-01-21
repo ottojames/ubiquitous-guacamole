@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { getAuthErrorMessage } from '@/lib/authErrors';
+import * as UI from '@/styles/ui';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -83,7 +84,7 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full ${UI.btnPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {loading ? 'Sending...' : 'Send Reset Instructions'}
                 </button>

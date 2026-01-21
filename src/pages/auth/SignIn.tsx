@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
 import { getAuthErrorMessage, getAuthErrorAction } from '@/lib/authErrors';
+import * as UI from '@/styles/ui';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -252,7 +253,7 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full ${UI.btnPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>

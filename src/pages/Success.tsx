@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import SiteHeader from '../components/SiteHeader';
+import * as UI from '@/styles/ui';
 
 export default function Success() {
   const [searchParams] = useSearchParams();
@@ -55,13 +56,13 @@ export default function Success() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href="/"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-md hover:bg-blue-700 transition-colors"
+              className={UI.btnPrimary}
             >
               Return home
             </a>
             <a
               href="/notices"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white border-2 border-slate-300 px-6 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              className={UI.btnSecondary}
             >
               View all notices
             </a>

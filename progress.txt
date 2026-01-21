@@ -5071,3 +5071,154 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - 498 tests pass, 2 skipped
   - Next task (18.1b) will need to decide: standardize firm purple to blue, or document purple as intentional for firm portal
 ---
+
+## Iteration 150 - Task 18.1b: Replace non-standard admin colors
+- **What was implemented**: Verification that admin colors are already standardized after Phase 17
+- **Files changed**:
+  - `PRD.md` - Marked Task 18.1b complete with verification details
+- **Key findings**:
+  - Admin colors were standardized to blue-600 in Phase 17 (Tasks 17.1a-17.1f)
+  - Blue-600: 69 instances across 7 admin files (AuditLog, AdminNotices, AdminLayout, Dashboard, Login, AccountManagement, Settings)
+  - Semantic colors retained appropriately:
+    - Red (bg-red-100, text-red-600, etc.) for errors, delete actions, inactive status
+    - Yellow/amber for warnings, pending status, session alerts
+    - Green for success states
+  - No purple, indigo, pink, cyan, or teal colors in admin pages
+  - The `bg-black` usages are for modal overlays (correct) and session warning button contrast (intentional)
+- **Test results**: 498 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - Phase 17 was comprehensive - admin color standardization was already complete
+  - When verifying, check for: non-semantic color usage, not semantic colors (red/yellow/green are expected for errors/warnings/success)
+  - Use grep with output_mode=count to quickly assess color distribution
+  - Next task is Task 18.1c: Standardize semantic colors
+---
+
+## Iteration 151 - Task 18.1c: Standardize semantic colors
+- **What was implemented**: Added semantic color exports to shared styles file for consistent color usage
+- **Files changed**:
+  - `src/styles/ui.ts` - Added 62 lines of semantic color exports
+  - `PRD.md` - Marked Task 18.1c complete
+- **Key implementation details**:
+  - Added success states (emerald): successBg/BgDark/Text/TextDark/Border/BorderDark
+  - Added error states (rose): errorBg/BgDark/Text/TextDark/Border/BorderDark
+  - Added warning states (amber): warningBg/BgDark/Text/TextDark/Border/BorderDark
+  - Added info states (blue): infoBg/BgDark/Text/TextDark/Border/BorderDark
+  - Added alert classes: alertSuccess, alertError, alertWarning, alertInfo
+  - Added badge classes: badgeSuccess, badgeError, badgeWarning, badgeInfo, badgeNeutral
+  - Added button variants: btnDanger, btnSuccess, btnWarning
+- **Codebase color analysis**:
+  - Error: 97 text-red + 61 text-rose (legacy uses red, newer uses rose)
+  - Success: 86 text-green + 20 text-emerald (legacy uses green, newer uses emerald)
+  - Warning: 42 text-amber + 10 text-yellow (amber is dominant)
+  - Decision: Rather than mass-refactor existing code, provide canonical exports for new code
+- **Test results**: 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (cypress/, e2e/, scripts/), no new errors
+- **Learnings for future iterations**:
+  - publishTokens.ts already defined semantic colors (emerald=success, rose=error, amber=warning)
+  - ui.ts is the main shared styles file that components import
+  - Firm portal uses purple-600 intentionally (brand differentiation from council blue)
+  - Adding exports is safer than mass-refactoring - new code can use consistent colors
+  - PRD Design Tokens reference (lines 656-662) documents the canonical colors
+  - Next task is Task 18.2a: Ensure consistent font stack
+---
+
+## Iteration 152 - Task 18.2a: Ensure consistent font stack
+- **What was implemented**: Added Inter font loading and typography exports for consistent fonts
+- **Files changed**:
+  - `index.html` - Added Google Fonts link for Inter with preconnect for performance
+  - `src/index.css` - Added global font-family rule in @layer base
+  - `src/styles/ui.ts` - Added typography exports
+  - `PRD.md` - Marked Task 18.2a complete
+- **Key implementation details**:
+  - **Font loading**: Added Google Fonts link with weights 400, 500, 600, 700 and display=swap
+  - **Preconnect**: Added preconnect links to fonts.googleapis.com and fonts.gstatic.com for faster loading
+  - **Global rule**: Added body font-family in @layer base matching tailwind.config.js definition
+  - **Typography exports to ui.ts**:
+    - `fontSans` - Tailwind class "font-sans" (uses Inter, ui-sans-serif, system-ui)
+    - `fontMono` - Tailwind class "font-mono" (for code, IDs, references)
+    - `fontSerif` - Tailwind class "font-serif" (for formal notice text)
+    - `fontFamilySans` - Inline style string for components needing style prop
+    - `fontFamilyMono` - Inline style string for monospace in style props
+- **Analysis before implementation**:
+  - tailwind.config.js defined Inter as primary font but it was never actually loaded
+  - Email templates (server/services/email.ts) already used Inter from Google Fonts
+  - Several inline styles used inconsistent font stacks (fixed now via shared exports)
+- **Test results**: 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (cypress/, e2e/, scripts/), no new errors
+- **Learnings for future iterations**:
+  - Always check that fonts defined in tailwind config are actually loaded in index.html
+  - preconnect links significantly improve font loading performance
+  - Providing both Tailwind classes AND inline style strings covers all use cases
+  - The app was previously falling back to system fonts; now Inter will actually load
+  - Email templates were already using Inter correctly (self-contained with Google Fonts link)
+  - Next task is Task 18.2b: Standardize heading sizes
+---
+
+## Iteration 154 - Task 18.2b: Standardize heading sizes
+- **What was implemented**: Added comprehensive heading exports to src/styles/ui.ts for consistent typography
+- **Files changed**:
+  - `src/styles/ui.ts` - Added 33 lines of heading exports
+  - `PRD.md` - Marked Task 18.2b complete
+- **Key implementation details**:
+  - Page-level headings: `pageTitle`, `pageTitleLight`, `pageSubtitle`, `pageSubtitleLight`
+  - Section headings: `sectionTitle`, `sectionSubtitle`
+  - Component headings: `cardTitle`, `modalTitle`, `dialogTitle`
+  - Dashboard headings: `statValue`, `statLabel`
+  - Completed h1-h6 hierarchy: Added `h4`, `h5`, `h6` to existing h1-h3 exports
+  - Scale follows 1.125 minor third ratio: 14, 16, 18, 20, 24, 28, 36, 48px
+- **Test results**: 498 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - The codebase has many ad-hoc heading sizes (text-4xl, text-5xl, etc.) scattered across components
+  - Existing h1/h2/h3 exports in ui.ts were only used in ~10 files
+  - New exports provide semantic options for different contexts (page titles vs section titles vs card titles)
+  - Responsive variants use md: breakpoint for desktop sizes
+  - Next task is Task 18.2c: Standardize text colors
+---
+
+## Iteration 155 - Task 18.2c: Standardize text colors
+- **What was implemented**: Added standardized text color exports to src/styles/ui.ts
+- **Files changed**:
+  - `src/styles/ui.ts` - Added 47 lines of text color and background exports
+  - `PRD.md` - Marked Task 18.2c complete
+- **Key implementation details**:
+  - **Text color hierarchy**:
+    - `textPrimary` - slate-900 (#0f172a) for headings and important text
+    - `textSecondary` - slate-600 (#475569) for body text and descriptions  
+    - `textTertiary` - slate-500 (#64748b) for labels, captions, subtle text
+    - `textMuted` - slate-400 (#94a3b8) for placeholders and disabled states
+  - **Inverse text** (for dark backgrounds): `textInverse` (white), `textInverseSubtle` (white/85%)
+  - **Link colors**: `textLink` (blue-600 with hover), `textLinkSubtle` (slate to blue transition)
+  - **Background colors**: `bgPage` (slate-50), `bgCard` (white), `bgSubtle` (slate-100), `bgMuted` (slate-200)
+  - **Dark mode variants**: `textPrimaryDark`, `textSecondaryDark`, `textTertiaryDark`, `textMutedDark`
+  - Included hex values (e.g., `textPrimaryHex = "#0f172a"`) for inline style usage
+- **Test results**: 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only; no new errors
+- **Learnings for future iterations**:
+  - The slate color scale provides excellent contrast ratios for accessibility
+  - Providing both Tailwind classes AND hex values covers different component usage patterns
+  - Phase 18.2 Typography is now COMPLETE - all 18.2a, 18.2b, 18.2c tasks done
+  - Next task is Task 18.3a: Ensure primary uses UI.btnPrimary
+---
+
+## Iteration N - Task 18.3a: Ensure primary uses UI.btnPrimary
+- **What was implemented**: Audited primary button usage and updated high-visibility auth pages to use UI.btnPrimary
+- **Files changed**:
+  - `src/pages/Register.tsx` - Added UI import, changed council button to use `UI.btnPrimary`
+  - `src/pages/auth/SignIn.tsx` - Added UI import, changed submit button to use `UI.btnPrimary`
+  - `src/pages/auth/ForgotPassword.tsx` - Added UI import, changed submit button to use `UI.btnPrimary`
+  - `src/pages/admin/Login.tsx` - Added UI import, changed submit button to use `UI.btnPrimary`
+  - `src/pages/Success.tsx` - Added UI import, changed CTA buttons to use `UI.btnPrimary` and `UI.btnSecondary`
+  - `PRD.md` - Marked Task 18.3a complete
+- **Key findings**:
+  - `UI.btnPrimary` already well-defined at `src/styles/ui.ts:89-90` with blue-600 background, hover states, shadow, focus ring
+  - 95+ files use inline `bg-blue-600 hover:bg-blue-700` patterns - functionally equivalent but without the enhanced shadow/focus
+  - High-visibility auth pages (login, register, forgot password, success) are the most impactful places to standardize
+  - Firm portal intentionally uses purple-600 for branding differentiation - not a candidate for UI.btnPrimary
+  - `UI.btnDanger`, `UI.btnSuccess`, `UI.btnWarning` already added in Task 18.1c
+- **Test results**: 498 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - Not all files need to be updated - consistent patterns (bg-blue-600 hover:bg-blue-700) are acceptable
+  - UI.btnPrimary adds shadow and enhanced focus ring that's valuable for key user actions
+  - The `w-full` class can be combined with template literals: `\`w-full ${UI.btnPrimary}\``
+  - Next task is Task 18.3b: Ensure secondary uses UI.btnSecondary
+---

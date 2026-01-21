@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Building2, Briefcase } from 'lucide-react';
+import * as UI from '@/styles/ui';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ export default function Register() {
 
             <button
               onClick={() => navigate('/register/council')}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className={`w-full ${UI.btnPrimary}`}
             >
               Register as Council
             </button>
