@@ -421,20 +421,20 @@ export default function Pricing() {
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap">
                 <a
                   href="/publish"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
+                  className={`${UI.btnPrimaryInverse} gap-2 px-8 py-4`}
                 >
                   Publish a Notice - £50
                   <ArrowRight className="h-5 w-5" />
                 </a>
                 <a
                   href="/sign-up?plan=firm"
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  className={`${UI.btnSecondaryInverse} gap-2 px-8 py-4`}
                 >
                   Register as a Firm
                 </a>
                 <a
                   href="/sign-up?plan=council"
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-500/20 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-emerald-500/30"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-500/20 px-8 py-4 font-semibold text-white backdrop-blur transition-all duration-200 hover:bg-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2 focus:ring-offset-blue-600"
                 >
                   Get Free Portal Access
                 </a>

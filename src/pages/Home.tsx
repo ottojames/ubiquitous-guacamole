@@ -926,14 +926,14 @@ export default function Home() {
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <a
                   href="/publish"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
+                  className={`${UI.btnPrimaryInverse} gap-2 px-8 py-4`}
                 >
                   Publish your first notice
                   <ArrowRight className="h-5 w-5" />
                 </a>
                 <a
                   href="/pricing"
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                  className={`${UI.btnSecondaryInverse} gap-2 px-8 py-4`}
                 >
                   View pricing
                 </a>

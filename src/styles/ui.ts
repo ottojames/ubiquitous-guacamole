@@ -175,6 +175,12 @@ export const btnSuccess =
 export const btnWarning =
   "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-amber-600 text-white font-semibold shadow-[0_6px_16px_rgba(217,119,6,0.35)] transition-all duration-200 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:ring-offset-2 focus:ring-offset-white";
 
+// Inverted button styles (for use on dark/colored backgrounds)
+export const btnPrimaryInverse =
+  "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-blue-700 font-semibold shadow-lg transition-all duration-200 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600";
+export const btnSecondaryInverse =
+  "inline-flex items-center justify-center px-5 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white font-semibold backdrop-blur transition-all duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-blue-600";
+
 // ============================================================================
 // TEXT COLORS - Standardized text colors for consistent typography
 // ============================================================================

@@ -5222,3 +5222,18 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The `w-full` class can be combined with template literals: `\`w-full ${UI.btnPrimary}\``
   - Next task is Task 18.3b: Ensure secondary uses UI.btnSecondary
 ---
+
+## Iteration - Task 18.3b: Ensure secondary uses UI.btnSecondary
+- **What was implemented**: Standardized secondary button usage across the codebase
+- **Files changed**:
+  - `src/styles/ui.ts` - Added btnPrimaryInverse/btnSecondaryInverse for dark backgrounds
+  - `src/pages/Home.tsx` - Updated CTA section to use UI.btnPrimaryInverse/btnSecondaryInverse
+  - `src/pages/Pricing.tsx` - Updated CTA section to use UI.btnPrimaryInverse/btnSecondaryInverse
+  - `PRD.md` - Marked task complete
+- **Learnings for future iterations**:
+  - UI.btnSecondary is already used in 34 files for secondary buttons on light backgrounds
+  - Dark/colored backgrounds need different button styles (inverted variants)
+  - Added btnPrimaryInverse (white bg, blue text) and btnSecondaryInverse (transparent bg, white border)
+  - These inverse styles are for CTA sections on blue gradient backgrounds
+  - 498 tests pass after changes
+---

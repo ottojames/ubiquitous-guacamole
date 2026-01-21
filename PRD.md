@@ -514,7 +514,7 @@ npm run lint         # ESLint check
 
 ### 18.3 Buttons
 - [x] **Task 18.3a**: Ensure primary uses UI.btnPrimary. **Success**: Consistent. (Completed 2026-01-21 - UI.btnPrimary already defined at src/styles/ui.ts:89-90; updated 5 high-visibility auth pages to use it: Register.tsx, SignIn.tsx, ForgotPassword.tsx, admin/Login.tsx, Success.tsx; 95+ other files use inline styles but follow the same pattern bg-blue-600/hover:bg-blue-700; added btnDanger/btnSuccess/btnWarning variants in Task 18.1c)
-- [ ] **Task 18.3b**: Ensure secondary uses UI.btnSecondary. **Success**: Consistent.
+- [x] **Task 18.3b**: Ensure secondary uses UI.btnSecondary. **Success**: Consistent. (Completed 2026-01-21 - UI.btnSecondary already used in 34 files for light backgrounds; added btnPrimaryInverse/btnSecondaryInverse to ui.ts for dark/colored backgrounds; updated Home.tsx and Pricing.tsx CTA sections to use new inverse styles instead of inline styles)
 - [ ] **Task 18.3c**: Create UI.btnDanger. **Success**: Exists.
 - [ ] **Task 18.3d**: Apply to admin. **Success**: Uses shared.
 
