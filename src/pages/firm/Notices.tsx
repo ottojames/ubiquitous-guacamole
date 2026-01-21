@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useSearchParams, Link, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Calendar, Search, Filter, Eye, FileText, MapPin, LayoutGrid, List, CalendarDays } from 'lucide-react';
 import ConsultationCountdown from '@/components/notice/ConsultationCountdown';
+import { KanbanBoard } from '@/components/workflow/KanbanBoard';
+import { useWorkflowConfigs } from '@/hooks/useWorkflow';
+import type { NoticeWithWorkflow, WorkflowStage } from '@/types/workflow';
 
 interface Organization {
   id: string;
@@ -56,6 +59,49 @@ export default function FirmNotices() {
   const [filterClient, setFilterClient] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+  // Fetch workflow configs for Kanban view
+  const { data: workflowConfigs } = useWorkflowConfigs();
+
+  // Get all unique stages from workflow configs for Kanban columns
+  const kanbanStages = useMemo<WorkflowStage[]>(() => {
+    if (!workflowConfigs?.length) return [];
+    // Use stages from the first active workflow config (typically premises-licence)
+    const activeConfig = workflowConfigs.find(c => c.is_active && c.stages?.length);
+    return activeConfig?.stages || [];
+  }, [workflowConfigs]);
+
+  // Transform filtered notices to NoticeWithWorkflow format and group by stage
+  const noticesByStage = useMemo<Record<string, NoticeWithWorkflow[]>>(() => {
+    const grouped: Record<string, NoticeWithWorkflow[]> = {};
+    filteredNotices.forEach(notice => {
+      // Transform to NoticeWithWorkflow format
+      const workflowNotice: NoticeWithWorkflow = {
+        id: notice.id,
+        notice_type: notice.notice_type,
+        firm_id: organization.id,
+        client_id: notice.client_id || null,
+        applicant_name: notice.client?.name || 'Unknown',
+        premises_name: notice.premises_name || null,
+        premises_address: notice.premises_address || '',
+        postcode: '',
+        status: notice.status,
+        created_at: notice.created_at,
+        workflow_status: null,
+        current_stage: null,
+      };
+      // Group by status for now (until workflow_status is integrated)
+      // Map notice status to first matching stage or 'draft' stage
+      const stageId = kanbanStages.find(s =>
+        s.slug === notice.status ||
+        (notice.status === 'draft' && s.is_initial)
+      )?.id || kanbanStages[0]?.id || 'unknown';
+
+      if (!grouped[stageId]) grouped[stageId] = [];
+      grouped[stageId].push(workflowNotice);
+    });
+    return grouped;
+  }, [filteredNotices, kanbanStages, organization.id]);
 
   // Read client filter from URL on mount
   useEffect(() => {
@@ -322,26 +368,45 @@ export default function FirmNotices() {
         Showing {filteredNotices.length} of {notices.length} notices
       </div>
 
-      {/* Notices List */}
-      <div className="space-y-4">
-        {filteredNotices.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No notices found</h3>
-            <p className="text-gray-600 mb-6">
-              {searchQuery || filterClient !== 'all' || filterStatus !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Get started by publishing your first notice'}
-            </p>
-            <Link
-              to={`/f/${firmSlug}/publish/step-1`}
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Publish Notice
-            </Link>
-          </div>
-        ) : (
-          filteredNotices.map((notice) => (
+      {/* Kanban View */}
+      {viewMode === 'kanban' && kanbanStages.length > 0 && (
+        <KanbanBoard
+          stages={kanbanStages}
+          noticesByStage={noticesByStage}
+          className="min-h-[500px]"
+        />
+      )}
+
+      {/* Calendar View Placeholder */}
+      {viewMode === 'calendar' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+          <CalendarDays className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Calendar View Coming Soon</h3>
+          <p className="text-gray-600">Deadline tracking calendar is under development</p>
+        </div>
+      )}
+
+      {/* Notices List View */}
+      {viewMode === 'list' && (
+        <div className="space-y-4">
+          {filteredNotices.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No notices found</h3>
+              <p className="text-gray-600 mb-6">
+                {searchQuery || filterClient !== 'all' || filterStatus !== 'all'
+                  ? 'Try adjusting your filters'
+                  : 'Get started by publishing your first notice'}
+              </p>
+              <Link
+                to={`/f/${firmSlug}/publish/step-1`}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Publish Notice
+              </Link>
+            </div>
+          ) : (
+            filteredNotices.map((notice) => (
             <Link
               key={notice.id}
               to={`/notices/${notice.id}`}
@@ -404,8 +469,9 @@ export default function FirmNotices() {
               </div>
             </Link>
           ))
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

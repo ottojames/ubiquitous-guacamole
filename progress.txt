@@ -2414,3 +2414,34 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The view mode state is ready for conditional rendering in Task 11.4b
   - Next task is Task 11.4b: Integrate KanbanBoard into Notices.tsx
 ---
+
+## Iteration 98 - Task 11.4b: Integrate KanbanBoard into src/pages/firm/Notices.tsx
+- **What was implemented**: Integrated KanbanBoard component with conditional rendering based on view mode
+- **Files changed**:
+  - `src/pages/firm/Notices.tsx` - Added KanbanBoard integration (~50 lines)
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Added imports: KanbanBoard from @/components/workflow/KanbanBoard
+  - Added imports: useWorkflowConfigs from @/hooks/useWorkflow
+  - Added imports: NoticeWithWorkflow, WorkflowStage from @/types/workflow
+  - Added useMemo import for memoization
+  - Added `useWorkflowConfigs()` hook to fetch workflow configurations
+  - Added `kanbanStages` memo: extracts stages from first active workflow config
+  - Added `noticesByStage` memo: transforms notices to NoticeWithWorkflow format and groups by stage
+    - Maps notice.status to corresponding stage (draft → initial stage, published → matching slug, etc.)
+    - Provides applicant_name, premises_name, premises_address from existing notice data
+  - Added conditional rendering:
+    - `viewMode === 'kanban'`: renders KanbanBoard with stages and noticesByStage
+    - `viewMode === 'calendar'`: renders placeholder with "Coming Soon" message
+    - `viewMode === 'list'`: renders existing list view (wrapped in conditional)
+- **Test results**: All 493 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts directories only - Notices.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The integration temporarily maps notice.status to workflow stages since notice_workflow_status isn't loaded yet
+  - Full workflow integration would require a new API endpoint to fetch notices with their workflow status
+  - Calendar view is placeholder for future implementation (Task 11.5+)
+  - The KanbanBoard accepts noticesByStage Record which groups notices by their current_stage_id
+  - useMemo is essential for expensive transformations to avoid re-computation on every render
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated to this task
+  - Next task is Task 11.5a: Create src/pages/firm/Templates.tsx with template list view
+---
