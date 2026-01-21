@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +9,15 @@ const NAV_LINKS = [
   { href: "/pricing", label: "Pricing" },
 ] as const;
 
+// Error messages for redirect errors
+const ERROR_MESSAGES: Record<string, string> = {
+  no_council_access: "No council access found for this account. Please contact your administrator.",
+  department_not_found: "Department not found. Please contact support.",
+  not_council_account: "This account is not associated with a council.",
+  no_firm_access: "No firm access found for this account. Please contact your administrator.",
+  not_firm_account: "This account is not associated with a firm.",
+};
+
 type PortalType = 'council' | 'professional' | null;
 
 export default function Login() {
@@ -18,6 +27,17 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  // Check for error in URL query params (from redirect errors)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = params.get('error');
+    if (errorCode && ERROR_MESSAGES[errorCode]) {
+      setError(ERROR_MESSAGES[errorCode]);
+      // Clear the error from URL without reloading
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,123 +57,41 @@ export default function Login() {
       return;
     }
 
-    // All logins use real Supabase authentication
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      // CRITICAL: Store portal type BEFORE auth - UnifiedAuthContext will use this for redirect
+      // This is the proper architectural pattern: Login.tsx triggers auth, UnifiedAuthContext handles redirect
+      sessionStorage.setItem('login_portal_type', portalType || '');
+
+      // Handle remember me preference
+      if (rememberMe) {
+        sessionStorage.setItem('login_remember_me', 'true');
+      }
+
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) throw authError;
-
-      if (data.user) {
-        console.log("User authenticated:", data.user.email);
-
-        // Handle remember me - set session persistence
-        if (rememberMe && data.session) {
-          // Store session with 30-day expiry
-          const expiryDate = new Date();
-          expiryDate.setDate(expiryDate.getDate() + 30);
-          document.cookie = `sb-auth-token=${data.session.access_token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
-        }
-
-        // Query database for user's organization/department access
-        if (portalType === 'council') {
-          // Council portal: Check department membership
-          // First get the membership
-          const { data: membership, error: membershipError } = await supabase
-            .from('department_memberships')
-            .select('*, department_id')
-            .eq('user_id', data.user.id)
-            .limit(1)
-            .single();
-
-          if (membershipError || !membership) {
-            setError("No council access found for this account");
-            setLoading(false);
-            return;
-          }
-
-          // Then get the department details
-          const { data: department, error: deptError } = await supabase
-            .from('departments')
-            .select('id, slug, organization_id')
-            .eq('id', membership.department_id)
-            .single();
-
-          if (deptError || !department) {
-            setError("Department not found");
-            setLoading(false);
-            return;
-          }
-
-          // Finally get the organization details
-          const { data: organization, error: orgError } = await supabase
-            .from('organizations')
-            .select('id, slug, type')
-            .eq('id', department.organization_id)
-            .single();
-
-          if (orgError || !organization) {
-            setError("Organization not found");
-            setLoading(false);
-            return;
-          }
-
-          if (organization.type !== 'council') {
-            setError("This account is not associated with a council");
-            setLoading(false);
-            return;
-          }
-
-          const orgSlug = organization.slug;
-          const deptSlug = department.slug;
-          window.location.href = `/c/${orgSlug}/${deptSlug}/dashboard`;
-
-        } else if (portalType === 'professional') {
-          // Professional portal: Check organization membership
-          // First get the membership
-          const { data: membership, error: membershipError } = await supabase
-            .from('organization_memberships')
-            .select('*, organization_id')
-            .eq('user_id', data.user.id)
-            .limit(1)
-            .single();
-
-          if (membershipError || !membership) {
-            setError("No firm access found for this account");
-            setLoading(false);
-            return;
-          }
-
-          // Then get the organization details
-          const { data: organization, error: orgError } = await supabase
-            .from('organizations')
-            .select('id, slug, type')
-            .eq('id', membership.organization_id)
-            .single();
-
-          if (orgError || !organization) {
-            setError("Organization not found");
-            setLoading(false);
-            return;
-          }
-
-          if (organization.type !== 'firm') {
-            setError("This account is not associated with a firm");
-            setLoading(false);
-            return;
-          }
-
-          window.location.href = `/f/${organization.slug}/dashboard`;
-        }
+      if (authError) {
+        // Clear stored values on error
+        sessionStorage.removeItem('login_portal_type');
+        sessionStorage.removeItem('login_remember_me');
+        throw authError;
       }
+
+      // Auth succeeded - UnifiedAuthContext's onAuthStateChange will:
+      // 1. Detect SIGNED_IN event
+      // 2. Load user context (organizations, departments)
+      // 3. Read login_portal_type from sessionStorage
+      // 4. Redirect to appropriate dashboard
+      // We keep loading=true to show spinner until redirect happens
+
     } catch (err) {
       console.error("Login error:", err);
       setError("Invalid credentials. Please check your email and password.");
-    } finally {
       setLoading(false);
     }
+    // Note: We don't setLoading(false) on success - redirect will happen from UnifiedAuthContext
   };
 
   // Password validation function

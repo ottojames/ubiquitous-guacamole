@@ -6737,3 +6737,52 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Check for incomplete uncommitted changes that could break functionality
   - Login.tsx requires membership data fetch before redirecting to portal dashboards
 ---
+
+
+## Iteration 286 - Verification: All PRD Tasks Complete
+- **What was checked**: Scanned PRD.md for any incomplete tasks (`[ ]`)
+- **Result**: All tasks marked complete (`[x]`) - grep returned 0 matches
+- **Tests**: 506 passed, 2 skipped
+- **TypeScript**: Pre-existing errors only in src/pages/ (council, firm, auth, admin, SampleNotice, NoticeEditor, ApiDocs) and src/next/publish/flow/ (NewPublishFlow, PaymentStep, gvol.ts)
+  - These are known issues documented in previous iterations
+  - No new errors introduced
+- **Project state**: All 16 phases complete (Phase 7-22)
+  - Phase 7: Production Polish
+  - Phase 8: Firm Portal Database Schema
+  - Phase 9: Firm Portal TypeScript Types
+  - Phase 10: Firm Portal Backend API
+  - Phase 11: Firm Portal UI Components
+  - Phase 12: Notification System
+  - Phase 13: E2E Testing (Firm Portal)
+  - Phase 14: Security Hardening
+  - Phase 15: Pricing Page Complete Rewrite
+  - Phase 16: Homepage Improvements
+  - Phase 17: Admin Panel Overhaul
+  - Phase 18: Design Consistency
+  - Phase 19: Payment & Billing
+  - Phase 20: Council Portal Features
+  - Phase 21: AI Features
+  - Phase 22: Integrations (API Docs & Webhooks)
+- **No new tasks to implement** - project is feature complete per PRD requirements
+---
+
+## Iteration 287 - Architecture: Refactor Login Redirect to UnifiedAuthContext
+- **What was checked**: Scanned PRD.md for any incomplete tasks (`[ ]`)
+- **Result**: All tasks marked complete (`[x]`) - grep returned 0 matches
+- **Found uncommitted changes**: Login.tsx and UnifiedAuthContext.tsx had a complete refactor:
+  - Moved redirect logic from Login.tsx to UnifiedAuthContext.tsx (proper separation of concerns)
+  - Login.tsx now only handles authentication, stores portal type in sessionStorage
+  - UnifiedAuthContext.tsx handles post-login redirect via onAuthStateChange SIGNED_IN event
+  - Added error handling with redirect to /login?error=code for access validation failures
+  - Added ERROR_MESSAGES mapping for user-friendly error display
+- **Why this is correct**:
+  - Login.tsx should not need to know about routing/redirect logic
+  - UnifiedAuthContext is the single source of truth for auth state
+  - Using onAuthStateChange ensures redirect happens after context is fully loaded
+- **Tests**: 506 passed, 2 skipped
+- **Files changed**: src/pages/Login.tsx, src/contexts/UnifiedAuthContext.tsx
+- **Learnings for future iterations**:
+  - Auth state changes should trigger redirects from context, not from login components
+  - SessionStorage can safely pass ephemeral data between auth trigger and redirect handler
+  - Always clear session storage values immediately to prevent redirect loops
+---

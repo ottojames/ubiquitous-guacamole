@@ -117,12 +117,17 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log('[UnifiedAuthContext] Auth state changed:', _event, session?.user?.email);
+      async (event, session) => {
+        console.log('[UnifiedAuthContext] Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         if (session) {
           await loadUserContext(session.user);
+
+          // Handle post-login redirect for SIGNED_IN events from Login.tsx
+          if (event === 'SIGNED_IN') {
+            await handleLoginRedirect(session.user);
+          }
         } else {
           clearContext();
         }
@@ -202,6 +207,115 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
     // Clear department-level permissions
     setPermissions([]);
     setDepartmentId(null);
+  };
+
+  // Handle post-login redirect based on stored portal type
+  const handleLoginRedirect = async (user: User) => {
+    const portalType = sessionStorage.getItem('login_portal_type');
+
+    // Clear the stored portal type immediately to prevent redirect loops
+    sessionStorage.removeItem('login_portal_type');
+    sessionStorage.removeItem('login_remember_me');
+
+    if (!portalType) {
+      console.log('[UnifiedAuthContext] No portal type stored, skipping redirect');
+      return;
+    }
+
+    console.log('[UnifiedAuthContext] Handling login redirect for portal:', portalType);
+
+    try {
+      if (portalType === 'council') {
+        // Council portal: Get user's department membership
+        const { data: membership, error: membershipError } = await supabase
+          .from('department_memberships')
+          .select('department_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .single();
+
+        if (membershipError || !membership) {
+          console.error('[UnifiedAuthContext] No council access found:', membershipError);
+          // Sign out and let user know
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=no_council_access';
+          return;
+        }
+
+        // Get department details
+        const { data: department, error: deptError } = await supabase
+          .from('departments')
+          .select('slug, organization_id')
+          .eq('id', membership.department_id)
+          .single();
+
+        if (deptError || !department) {
+          console.error('[UnifiedAuthContext] Department not found:', deptError);
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=department_not_found';
+          return;
+        }
+
+        // Get organization details
+        const { data: organization, error: orgError } = await supabase
+          .from('organizations')
+          .select('slug, type')
+          .eq('id', department.organization_id)
+          .single();
+
+        if (orgError || !organization || organization.type !== 'council') {
+          console.error('[UnifiedAuthContext] Council organization not found:', orgError);
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=not_council_account';
+          return;
+        }
+
+        console.log('[UnifiedAuthContext] Redirecting to council dashboard:', organization.slug, department.slug);
+        window.location.href = `/c/${organization.slug}/${department.slug}/dashboard`;
+
+      } else if (portalType === 'professional') {
+        // Professional portal: Get user's firm membership
+        const { data: memberships, error: membershipError } = await supabase
+          .from('organization_memberships')
+          .select('organization_id')
+          .eq('user_id', user.id);
+
+        if (membershipError || !memberships || memberships.length === 0) {
+          console.error('[UnifiedAuthContext] No firm access found:', membershipError);
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=no_firm_access';
+          return;
+        }
+
+        // Find a firm organization (user might have both council and firm memberships)
+        let firmOrg = null;
+        for (const membership of memberships) {
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('slug, type')
+            .eq('id', membership.organization_id)
+            .single();
+
+          if (org && org.type === 'firm') {
+            firmOrg = org;
+            break;
+          }
+        }
+
+        if (!firmOrg) {
+          console.error('[UnifiedAuthContext] No firm organization found for user');
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=not_firm_account';
+          return;
+        }
+
+        console.log('[UnifiedAuthContext] Redirecting to firm dashboard:', firmOrg.slug);
+        window.location.href = `/f/${firmOrg.slug}/dashboard`;
+      }
+    } catch (error) {
+      console.error('[UnifiedAuthContext] Error during login redirect:', error);
+      // Don't sign out on unexpected errors - just log and let user retry
+    }
   };
 
   const signIn = async (email: string, password: string) => {
