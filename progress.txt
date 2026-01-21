@@ -4679,3 +4679,52 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Settings page still has placeholder tabs (General, Notifications, API, Integrations) - future work
   - Next task is 17.4e: Fix password reset
 ---
+
+## Iteration 137 - Task 17.4e: Fix password reset functionality
+- **What was implemented**: Replaced "Coming Soon" placeholder with working password reset in admin AccountManagement page
+- **Files changed**:
+  - `src/pages/admin/AccountManagement.tsx` - Implemented reset_password action case (~30 lines)
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Finds user by itemId from accounts array to get their email
+  - Calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: '/auth/reset-password' })`
+  - Shows success AlertModal: "Password Reset Email Sent" with user's email
+  - Shows error AlertModal on failure with specific error message
+  - Uses existing AlertModal component for consistent UX
+- **Test results**: All 497 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in council/firm/auth pages only - AccountManagement.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - `supabase.auth.resetPasswordForEmail()` is the standard Supabase Auth method for password reset
+  - The `redirectTo` option configures where users land after clicking the reset link
+  - The accounts array already contains User objects with email property for the users tab
+  - Supabase handles email delivery and token generation automatically
+  - Next task is Task 17.5: Verify session timeout (general tab). This is a QA/verification task.
+---
+
+## Iteration 138 - Task 17.5a: Find hardcoded stats in Admin Dashboard
+- **What was implemented**: Audited Admin Dashboard to identify all hardcoded statistics
+- **Files examined**:
+  - `src/pages/admin/Dashboard.tsx` - Full read and analysis
+  - `PRD.md` - Marked task complete with findings
+- **Hardcoded values found**:
+  1. **Line 287-289**: "+12% this month" - Growth percentage for law firms is hardcoded
+  2. **Line 107**: Monthly revenue formula `(activeCouncils * 500) + (totalFirms * 250)` - Uses wrong pricing model (should be councils: free portal + £19.99/notice, firms: £49/month + £50/notice)
+  3. **Line 399**: "45ms" - API response time is hardcoded
+  4. **Line 403**: "12%" - Database load percentage is hardcoded
+  5. **Line 407**: "99.98%" - Uptime percentage is hardcoded
+- **What's NOT hardcoded** (already uses real data):
+  - totalCouncils, activeCouncils - fetched from organizations table
+  - totalFirms - fetched from organizations table
+  - totalNotices - fetched from notices table
+  - totalUsers - fetched from organization_memberships table
+  - pendingVerifications - fetched from organizations table
+  - recentActions - fetched from admin_actions table
+- **Test results**: All 497 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only
+- **Learnings for future iterations**:
+  - Dashboard already has good data fetching for core metrics (councils, firms, notices, users)
+  - Task 17.5b needs to add API endpoint for: growth percentages, real revenue, system health metrics
+  - Revenue calculation is fundamentally wrong - uses incorrect pricing model
+  - System health section (API response, DB load, uptime) needs real monitoring integration
+  - Consider using Supabase health checks or implementing a /api/admin/stats/system endpoint
+---
