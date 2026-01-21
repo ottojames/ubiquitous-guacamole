@@ -4,5 +4,6 @@
  */
 
 export * from './notice';
+export * from './organization';
 export * from './permissions';
 export * from './workflow';

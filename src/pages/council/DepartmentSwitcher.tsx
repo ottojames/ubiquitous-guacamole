@@ -70,6 +70,12 @@ export default function DepartmentSwitcher() {
       }
 
       // Authenticated user: Load departments from their memberships
+      // At this point, user should exist (checked above)
+      if (!user) {
+        navigate('/auth/council-login');
+        return;
+      }
+
       // First, check department_memberships
       const { data: deptMemberships, error: deptError } = await supabase
         .from('department_memberships')

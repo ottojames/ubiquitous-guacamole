@@ -91,23 +91,29 @@ export default function Callback() {
 
         // Has org membership but no dept membership
         // Check if org is a firm (firms don't have departments)
-        const org = orgMemberships[0].organization;
-        if (org.type === 'firm') {
+        // Note: Supabase nested selects return arrays, so access [0]
+        const orgData = orgMemberships[0].organization;
+        const org = Array.isArray(orgData) ? orgData[0] : orgData;
+        if (org?.type === 'firm') {
           navigate(`/f/${org.slug}/dashboard`);
           return;
         }
 
         // Council with no departments - show org overview
-        navigate(`/c/${org.slug}/all-departments/dashboard`);
+        navigate(`/c/${org?.slug || 'unknown'}/all-departments/dashboard`);
         return;
       }
 
       // Has department memberships
       if (deptMemberships.length === 1) {
         // Single department - go directly to dashboard
-        const dept = deptMemberships[0].department;
-        const org = dept.organization;
-        navigate(`/c/${org.name.toLowerCase().replace(/\s+/g, '-')}/${dept.slug}/dashboard`);
+        // Note: Supabase nested selects return arrays, so access [0]
+        const deptData = deptMemberships[0].department;
+        const dept = Array.isArray(deptData) ? deptData[0] : deptData;
+        const orgData = dept?.organization;
+        const org = Array.isArray(orgData) ? orgData[0] : orgData;
+        const orgSlug = org?.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
+        navigate(`/c/${orgSlug}/${dept?.slug || 'default'}/dashboard`);
         return;
       }
 

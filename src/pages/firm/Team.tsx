@@ -61,7 +61,12 @@ export default function FirmTeam() {
         return;
       }
 
-      setMembers(teamData || []);
+      // Transform data - Supabase nested selects return arrays
+      const transformedData = (teamData || []).map(member => ({
+        ...member,
+        user: Array.isArray(member.user) ? member.user[0] : member.user
+      }));
+      setMembers(transformedData || []);
       setLoading(false);
     } catch (error) {
       console.error('Error loading team members:', error);

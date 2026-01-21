@@ -39,7 +39,14 @@ interface RecentNotice {
   published_at: string | null;
   proof_pdf_url?: string | null;
   repsDeadline?: string;
+  reps_deadline?: string;
   representations_count?: number;
+  // Alternative property names for different data sources
+  notice_type?: string;
+  noticeType?: string;
+  publicationDate?: string;
+  premises_name?: string;
+  premisesName?: string;
 }
 
 interface PriorityItem {
