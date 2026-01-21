@@ -404,9 +404,11 @@ Major refactoring and bug fixes following user walkthrough review.
   - Keyboard navigation (arrow keys) when carousel is focused
   - Updated `useNoticeSearch` limit from 5 to 12 for homepage
 
-- [ ] `[LOW]` `[S]` **Add footer tagline** - Add "Notice it. Understand it. Shape it." tagline to site footer across all pages.
+- [x] `[LOW]` `[S]` **Add footer tagline** - Add "Notice it. Understand it. Shape it." tagline to site footer across all pages.
 
-  **File**: `src/components/SiteFooter.tsx`
+  **File**: `src/components/Footer.tsx` (note: actual file is Footer.tsx not SiteFooter.tsx)
+
+  **Solution**: Added tagline section between main links and copyright in Footer.tsx. Tagline uses text-base font-medium text-slate-700 styling to stand out slightly from surrounding content while remaining subtle.
 
 ### Definition of Done
 

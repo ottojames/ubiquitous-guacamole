@@ -30,6 +30,13 @@ export default function Footer() {
             </a>
           </div>
 
+          {/* Tagline */}
+          <div className="text-center">
+            <p className="text-base font-medium text-slate-700">
+              Notice it. Understand it. Shape it.
+            </p>
+          </div>
+
           {/* Copyright */}
           <div className="text-center text-sm text-slate-500">
             <p>
