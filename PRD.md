@@ -472,7 +472,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.5a**: Find hardcoded stats, list them. **Success**: Listed. (Completed 2026-01-21 - Found 5 hardcoded values in src/pages/admin/Dashboard.tsx: 1) Line 287-289 "+12% this month" growth for law firms, 2) Line 107 monthly revenue formula uses wrong multipliers (councils*500 + firms*250) instead of actual pricing model, 3) Line 399 "45ms" API response time, 4) Line 403 "12%" database load, 5) Line 407 "99.98%" uptime)
 - [x] **Task 17.5b**: Create admin stats API endpoint. ~50 lines. **Success**: Returns data. (Completed 2026-01-21 - Created server/routes/admin/stats.ts with 140 lines. Returns growth percentages (firm growth this month vs last month), real revenue based on correct pricing (firms: £49/month + £50/notice, councils: £19.99/notice), system health via API response time measurement. Uses requireAdmin middleware for authentication)
 - [x] **Task 17.5c**: Register with admin auth. **Success**: Protected. (Completed 2026-01-21 - Added adminStatsRouter import and mounted at /api/admin/stats in server/index.ts. Route uses requireAdmin middleware which checks is_platform_admin in JWT app_metadata)
-- [ ] **Task 17.5d**: Create useAdminStats hook. **Success**: Works.
+- [x] **Task 17.5d**: Create useAdminStats hook. **Success**: Works. (Completed 2026-01-21 - Created src/hooks/useAdminStats.ts with AdminStatsData interface matching API response, React Query hook with 2-min stale time, error handling for auth failures)
 - [ ] **Task 17.5e**: Update Dashboard to use real stats. **Success**: Real numbers.
 - [ ] **Task 17.5f**: Add loading skeletons. **Success**: No blanks.
 

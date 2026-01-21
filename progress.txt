@@ -4728,3 +4728,76 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - System health section (API response, DB load, uptime) needs real monitoring integration
   - Consider using Supabase health checks or implementing a /api/admin/stats/system endpoint
 ---
+
+## Iteration 139 - Tasks 17.5b-c: Create admin stats API endpoint
+- **What was implemented**: Created admin stats API endpoint for dashboard real-time statistics
+- **Files changed**:
+  - `server/routes/admin/stats.ts` - NEW FILE (140 lines)
+  - `server/index.ts` - Added import and route registration for adminStatsRouter
+  - `PRD.md` - Marked Tasks 17.5b and 17.5c complete
+- **Key features of admin stats endpoint**:
+  - Uses `requireAdmin` middleware for authentication (checks is_platform_admin in JWT)
+  - Returns real counts: totalCouncils, activeCouncils, totalFirms, totalNotices, totalUsers, pendingVerifications
+  - Calculates **firm growth percentage**: compares firms created this month vs last month
+  - Calculates **monthly revenue** based on correct pricing model:
+    - Firms: £49/month subscription + £50/notice
+    - Councils: £19.99/notice when publishing
+    - Non-firm/council notices: £50/notice
+  - Measures **API response time** by timing a health check query
+  - Returns `systemHealth` status: 'healthy' (<1s), 'degraded' (1-5s), or 'down' (>5s)
+  - Notes: databaseLoad and uptime return null (require external monitoring to implement)
+- **API response structure**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "totalCouncils": 10,
+      "activeCouncils": 8,
+      "totalFirms": 5,
+      "totalNotices": 100,
+      "totalUsers": 25,
+      "pendingVerifications": 2,
+      "firmGrowthPercent": 15,
+      "firmsThisMonth": 3,
+      "firmsLastMonth": 2,
+      "monthlyRevenue": 745.00,
+      "firmSubscriptionRevenue": 245,
+      "noticeRevenue": 500.00,
+      "noticesThisMonth": 10,
+      "systemHealth": "healthy",
+      "apiResponseTime": 45,
+      "databaseLoad": null,
+      "uptime": null
+    }
+  }
+  ```
+- **Test results**: All 497 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in other files; no errors in new admin stats route
+- **Learnings for future iterations**:
+  - The pricing model is: Public/Firms pay £50/notice, Councils pay £19.99/notice, Firms also pay £49/month subscription
+  - System health metrics (database load, uptime) require external monitoring tools like Prometheus/Grafana
+  - For now, API response time provides a reasonable proxy for system health
+  - Next task is 17.5d: Create useAdminStats hook in frontend
+---
+
+## Iteration 140 - Task 17.5d: Create useAdminStats hook
+- **What was implemented**: Created React Query hook for fetching admin dashboard stats
+- **Files changed**:
+  - `src/hooks/useAdminStats.ts` - NEW FILE (78 lines)
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Created `AdminStatsData` interface matching the API response structure
+  - Interface includes: core counts (councils, firms, notices, users), growth metrics, revenue, system health
+  - Uses 2-minute stale time (shorter than public useStats hook since admin dashboard is more sensitive)
+  - Includes credential include for session auth
+  - Custom retry logic: don't retry auth errors (401/403), retry other errors up to 3 times
+  - Error messages for auth failures: 'Admin authentication required' and 'Admin access denied'
+- **Test results**: All 498 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only; new hook compiles cleanly
+- **Learnings for future iterations**:
+  - Follow same pattern as useStats.ts for consistency
+  - Admin endpoints need `credentials: 'include'` for session cookie auth
+  - Use shorter stale time for admin data that changes frequently
+  - Add meaningful error messages for auth failures instead of generic errors
+  - Next task is 17.5e: Update Dashboard to use real stats
+---
