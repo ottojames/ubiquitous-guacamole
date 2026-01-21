@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
+import { Building2, Bell, CreditCard, Settings as SettingsIcon, FileText, Users, HelpCircle, CheckCircle } from 'lucide-react';
 
 interface Department {
   id: string;
@@ -238,121 +239,158 @@ export default function Settings() {
     );
   }
 
+  // Card styling - consistent with design system (ring-1 ring-slate-200)
+  const cardClass = "bg-white rounded-2xl ring-1 ring-slate-200 shadow-sm";
+  const sectionHeaderClass = "flex items-center gap-3 pb-4 border-b border-slate-100 mb-6";
+  const sectionTitleClass = "text-xl font-semibold text-slate-900";
+  const sectionDescClass = "text-sm text-slate-600";
+  const labelClass = "block text-sm font-medium text-slate-700 mb-2";
+  const inputClass = "w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400 transition-colors";
+  const helpTextClass = "text-sm text-slate-500 mt-1";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Department Settings</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-slate-900">Department Settings</h1>
+        <p className="text-slate-600 mt-1">
           Configure preferences for {department.name}
         </p>
       </div>
 
       {/* Notifications */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="rounded-lg p-4 bg-rose-50 border border-rose-200 text-rose-700 flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-          <p className="text-sm text-green-800">{success}</p>
+        <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-3">
+          <CheckCircle className="h-5 w-5 flex-shrink-0" />
+          <p className="text-sm">{success}</p>
         </div>
       )}
 
-      {/* Basic Information */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Basic Information</h2>
-
-        <div className="space-y-4">
+      {/* Section 1: Authority Details */}
+      <section className={`${cardClass} p-6 md:p-8`}>
+        <div className={sectionHeaderClass}>
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50">
+            <Building2 className="w-5 h-5 text-blue-600" />
+          </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Department Name
-            </label>
-            <input
-              type="text"
-              value={department.name}
-              onChange={(e) => setDepartment({ ...department, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Licensing Department"
-            />
+            <h2 className={sectionTitleClass}>Authority Details</h2>
+            <p className={sectionDescClass}>Core information about your department and organization</p>
+          </div>
+        </div>
+
+        {/* Help text explaining auto-population */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+          <div className="flex items-start gap-3">
+            <HelpCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-blue-900">Auto-population enabled</p>
+              <p className="text-sm text-blue-700 mt-1">
+                These details will automatically populate in the publish wizard when creating notices,
+                saving time and ensuring consistency across all your publications.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Department Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={labelClass}>
+                Department Name
+              </label>
+              <input
+                type="text"
+                value={department.name}
+                onChange={(e) => setDepartment({ ...department, name: e.target.value })}
+                className={inputClass}
+                placeholder="e.g., Licensing Department"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>
+                Contact Email
+              </label>
+              <input
+                type="email"
+                value={department.email}
+                onChange={(e) => setDepartment({ ...department, email: e.target.value })}
+                className={inputClass}
+                placeholder="e.g., licensing@council.gov.uk"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Contact Email
-            </label>
-            <input
-              type="email"
-              value={department.email}
-              onChange={(e) => setDepartment({ ...department, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., licensing@council.gov.uk"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={labelClass}>
               Description
             </label>
             <textarea
               value={department.description || ''}
               onChange={(e) => setDepartment({ ...department, description: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`${inputClass} resize-y`}
               rows={3}
               placeholder="Brief description of the department's responsibilities"
             />
           </div>
-        </div>
-      </div>
 
-      {/* Council Settings for Auto-Population */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Authority Details for Auto-Population</h2>
-        <p className="text-sm text-gray-600 mb-6">
-          These details will automatically populate in the publish wizard when creating notices.
-        </p>
+          {/* Divider */}
+          <div className="border-t border-slate-200 pt-6">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4">
+              Authority Contact Information
+            </h3>
+          </div>
 
-        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Authority Address <span className="text-red-500">*</span>
+            <label className={labelClass}>
+              Authority Address <span className="text-rose-500">*</span>
             </label>
             <textarea
               value={councilSettings.authority_address}
               onChange={(e) => setCouncilSettings({ ...councilSettings, authority_address: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`${inputClass} resize-y`}
               rows={3}
               placeholder="e.g., 64 Victoria Street, London SW1E 6QP"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Authority Email <span className="text-red-500">*</span>
+              <label className={labelClass}>
+                Authority Email <span className="text-rose-500">*</span>
               </label>
               <input
                 type="email"
                 value={councilSettings.authority_email}
                 onChange={(e) => setCouncilSettings({ ...councilSettings, authority_email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={inputClass}
                 placeholder="e.g., licensing@westminster.gov.uk"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Authority Phone <span className="text-red-500">*</span>
+              <label className={labelClass}>
+                Authority Phone <span className="text-rose-500">*</span>
               </label>
               <input
                 type="tel"
                 value={councilSettings.authority_phone}
                 onChange={(e) => setCouncilSettings({ ...councilSettings, authority_phone: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={inputClass}
                 placeholder="e.g., 020 7641 2500"
                 required
               />
@@ -360,105 +398,170 @@ export default function Settings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Online Register URL <span className="text-red-500">*</span>
+            <label className={labelClass}>
+              Online Register URL <span className="text-rose-500">*</span>
             </label>
             <input
               type="url"
               value={councilSettings.online_register_url}
               onChange={(e) => setCouncilSettings({ ...councilSettings, online_register_url: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={inputClass}
               placeholder="e.g., https://www.westminster.gov.uk/licensing/register"
               required
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className={helpTextClass}>
               URL where public can view the licensing register
             </p>
           </div>
 
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Optional Contact Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border-t border-slate-200 pt-6">
+            <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-4">Optional Contact Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={labelClass}>
                   Licensing Manager Name
                 </label>
                 <input
                   type="text"
                   value={councilSettings.licensing_manager_name}
                   onChange={(e) => setCouncilSettings({ ...councilSettings, licensing_manager_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={inputClass}
                   placeholder="e.g., Sarah Thompson"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={labelClass}>
                   Licensing Manager Email
                 </label>
                 <input
                   type="email"
                   value={councilSettings.licensing_manager_email}
                   onChange={(e) => setCouncilSettings({ ...councilSettings, licensing_manager_email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={inputClass}
                   placeholder="e.g., sarah.thompson@westminster.gov.uk"
                 />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Notice Settings */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Notice Settings</h2>
+      {/* Section 2: Notification Preferences */}
+      <section className={`${cardClass} p-6 md:p-8`}>
+        <div className={sectionHeaderClass}>
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-50">
+            <Bell className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 className={sectionTitleClass}>Notification Preferences</h2>
+            <p className={sectionDescClass}>Configure how you want to receive updates and alerts</p>
+          </div>
+        </div>
 
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Default Representation Period (Days)
-            </label>
+          <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
             <input
-              type="number"
-              value={settings.default_representation_period_days}
+              type="checkbox"
+              checked={settings.require_approval_for_publication}
               onChange={(e) => setSettings({
                 ...settings,
-                default_representation_period_days: parseInt(e.target.value)
+                require_approval_for_publication: e.target.checked
               })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              min="7"
-              max="90"
+              className="w-5 h-5 mt-0.5 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-600/30"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Default number of days for public to submit representations (typically 28 days for licensing)
-            </p>
+            <div>
+              <span className="text-sm font-medium text-slate-900">
+                Require approval before publication
+              </span>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Editors must submit notices for admin approval before publishing. You'll receive a notification when notices are pending review.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Default Newspaper
-            </label>
+          <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
             <input
-              type="text"
-              value={settings.default_newspaper}
-              onChange={(e) => setSettings({ ...settings, default_newspaper: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Local Gazette"
+              type="checkbox"
+              checked={settings.auto_expire_notices}
+              onChange={(e) => setSettings({
+                ...settings,
+                auto_expire_notices: e.target.checked
+              })}
+              className="w-5 h-5 mt-0.5 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-600/30"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Default newspaper for notice publications
-            </p>
+            <div>
+              <span className="text-sm font-medium text-slate-900">
+                Automatically expire notices
+              </span>
+              <p className="text-sm text-slate-500 mt-0.5">
+                Notices will automatically be marked as expired when their expiry date is reached. No manual intervention needed.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: Notice Settings */}
+      <section className={`${cardClass} p-6 md:p-8`}>
+        <div className={sectionHeaderClass}>
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100">
+            <FileText className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h2 className={sectionTitleClass}>Notice Settings</h2>
+            <p className={sectionDescClass}>Configure defaults for notice publications</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={labelClass}>
+                Default Representation Period (Days)
+              </label>
+              <input
+                type="number"
+                value={settings.default_representation_period_days}
+                onChange={(e) => setSettings({
+                  ...settings,
+                  default_representation_period_days: parseInt(e.target.value)
+                })}
+                className={inputClass}
+                min="7"
+                max="90"
+              />
+              <p className={helpTextClass}>
+                Typically 28 days for licensing applications
+              </p>
+            </div>
+
+            <div>
+              <label className={labelClass}>
+                Default Newspaper
+              </label>
+              <input
+                type="text"
+                value={settings.default_newspaper}
+                onChange={(e) => setSettings({ ...settings, default_newspaper: e.target.value })}
+                className={inputClass}
+                placeholder="e.g., Local Gazette"
+              />
+              <p className={helpTextClass}>
+                For printed notice requirements
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+          <div className="border-t border-slate-200 pt-6">
+            <label className={`${labelClass} mb-4`}>
               Allowed Notice Types
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {noticeTypes.map(type => (
                 <label
                   key={type.value}
-                  className="flex items-center gap-2 p-3 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -469,76 +572,89 @@ export default function Settings() {
                         : settings.allowed_notice_types.filter((t: string) => t !== type.value);
                       setSettings({ ...settings, allowed_notice_types: types });
                     }}
-                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-600/30"
                   />
-                  <span className="text-sm font-medium text-gray-700">{type.label}</span>
+                  <span className="text-sm font-medium text-slate-700">{type.label}</span>
                 </label>
               ))}
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className={`${helpTextClass} mt-3`}>
               Select which notice types can be created by this department
             </p>
           </div>
+        </div>
+      </section>
 
-          <div className="pt-4 border-t border-gray-200">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.require_approval_for_publication}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  require_approval_for_publication: e.target.checked
-                })}
-                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <div>
-                <span className="text-sm font-medium text-gray-900">
-                  Require approval before publication
-                </span>
-                <p className="text-sm text-gray-500">
-                  Editors must submit notices for admin approval before publishing
-                </p>
-              </div>
-            </label>
+      {/* Section 4: Billing */}
+      <section className={`${cardClass} p-6 md:p-8`}>
+        <div className={sectionHeaderClass}>
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50">
+            <CreditCard className="w-5 h-5 text-emerald-600" />
           </div>
-
           <div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.auto_expire_notices}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  auto_expire_notices: e.target.checked
-                })}
-                className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-              />
-              <div>
-                <span className="text-sm font-medium text-gray-900">
-                  Automatically expire notices
-                </span>
-                <p className="text-sm text-gray-500">
-                  Notices will automatically be marked as expired when their expiry date is reached
-                </p>
-              </div>
-            </label>
+            <h2 className={sectionTitleClass}>Billing</h2>
+            <p className={sectionDescClass}>Your current plan and payment information</p>
           </div>
         </div>
-      </div>
 
-      {/* Organization Info (Read-only) */}
-      <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Organization Information</h2>
+        {/* Current Plan */}
+        <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold text-emerald-900">Council Portal</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white uppercase tracking-wide">
+                  FREE
+                </span>
+              </div>
+              <p className="text-sm text-emerald-700 mt-2 max-w-md">
+                Free to receive and manage notices published to your authority. Only pay <span className="font-semibold">£19.99/notice</span> when <em>you</em> publish a notice.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-emerald-200/60">
+            <div className="flex items-center gap-2 text-sm text-emerald-700">
+              <CheckCircle className="w-4 h-4" />
+              <span>Unlimited notice inbox</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-emerald-700 mt-1">
+              <CheckCircle className="w-4 h-4" />
+              <span>Representation management</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-emerald-700 mt-1">
+              <CheckCircle className="w-4 h-4" />
+              <span>Team collaboration</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm text-slate-500">
+          Questions about billing? Contact <a href="mailto:support@civicnotices.co.uk" className="text-blue-600 hover:underline">support@civicnotices.co.uk</a>
+        </p>
+      </section>
+
+      {/* Section 5: Organization Information */}
+      <section className={`${cardClass} p-6 md:p-8`}>
+        <div className={sectionHeaderClass}>
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100">
+            <Users className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h2 className={sectionTitleClass}>Organization Information</h2>
+            <p className={sectionDescClass}>Your organization details and branding</p>
+          </div>
+        </div>
 
         {/* Logo Upload */}
-        <div className="mb-6 pb-6 border-b border-gray-200">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+        <div className="mb-6 pb-6 border-b border-slate-200">
+          <label className={`${labelClass} mb-3`}>
             Organization Logo
           </label>
           <div className="flex items-start gap-6">
             <div className="flex-shrink-0">
               {logoPreview || department.organization.logo_url ? (
-                <div className="relative w-32 h-32 rounded-xl border-2 border-gray-200 overflow-hidden bg-white">
+                <div className="relative w-32 h-32 rounded-xl ring-1 ring-slate-200 overflow-hidden bg-white">
                   <img
                     src={logoPreview || department.organization.logo_url || ''}
                     alt="Organization logo"
@@ -546,13 +662,13 @@ export default function Settings() {
                   />
                 </div>
               ) : (
-                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                  <span className="text-gray-400 text-sm text-center px-2">No logo</span>
+                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50">
+                  <span className="text-slate-400 text-sm text-center px-2">No logo</span>
                 </div>
               )}
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-slate-600 mb-3">
                 Upload your organization's logo. This will be displayed on notices and documents. Recommended size: 400x400px.
               </p>
               <div className="flex gap-2">
@@ -569,59 +685,59 @@ export default function Settings() {
                   <button
                     type="button"
                     onClick={handleRemoveLogo}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
                   >
                     Remove
                   </button>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                 Accepted formats: PNG, JPG, SVG (max 2MB)
               </p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">
+            <label className="block text-sm font-medium text-slate-500 mb-1">
               Organization
             </label>
-            <p className="text-gray-900">{department.organization.name}</p>
+            <p className="text-slate-900 font-medium">{department.organization.name}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">
+            <label className="block text-sm font-medium text-slate-500 mb-1">
               Department Type
             </label>
-            <p className="text-gray-900 capitalize">{department.type.replace('_', ' ')}</p>
+            <p className="text-slate-900 font-medium capitalize">{department.type.replace('_', ' ')}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">
+            <label className="block text-sm font-medium text-slate-500 mb-1">
               Department Slug
             </label>
-            <p className="text-gray-900 font-mono">{department.slug}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Used in URLs: /c/{department.organization.name.toLowerCase().replace(/\s+/g, '-')}/{department.slug}
-            </p>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Organization-level settings can only be changed by organization administrators.
-              Contact your organization admin to update organization details.
-            </p>
+            <p className="text-slate-900 font-mono text-sm">{department.slug}</p>
           </div>
         </div>
-      </div>
+
+        <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+          <p className="text-sm text-slate-600">
+            <strong className="text-slate-700">Note:</strong> Organization-level settings can only be changed by organization administrators.
+            Contact your organization admin to update organization details.
+          </p>
+        </div>
+      </section>
 
       {/* Save Button */}
-      <div className="flex items-center justify-end bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+      <div className={`${cardClass} p-6 flex items-center justify-between`}>
+        <p className="text-sm text-slate-500">
+          Changes are saved to your department settings
+        </p>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-lg hover:shadow-xl"
+          className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 shadow-[0_6px_16px_rgba(37,99,235,0.35)] hover:shadow-[0_8px_20px_rgba(37,99,235,0.4)]"
         >
           {saving ? 'Saving...' : 'Save Settings'}
         </button>

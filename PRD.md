@@ -520,9 +520,23 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[MEDIUM]` `[M]` **Redesign settings with proper sections and cards** - Group into logical sections (Authority Details, Notification Preferences, Billing), add visual dividers, improve form styling, add help text explaining auto-population.
+- [x] `[MEDIUM]` `[M]` **Redesign settings with proper sections and cards** - Group into logical sections (Authority Details, Notification Preferences, Billing), add visual dividers, improve form styling, add help text explaining auto-population.
 
   **File**: `src/pages/council/Settings.tsx`
+
+  **Solution implemented**:
+  - Reorganized into 5 distinct sections with visible headings and icons:
+    1. **Authority Details** (Building2 icon) - Department info + authority contact info with auto-population help text
+    2. **Notification Preferences** (Bell icon) - Approval workflow and auto-expire settings
+    3. **Notice Settings** (FileText icon) - Representation period, newspaper, allowed notice types
+    4. **Billing** (CreditCard icon) - Council Portal plan with FREE badge and "only pay when YOU publish" messaging
+    5. **Organization Information** (Users icon) - Logo upload and read-only org details
+  - Each section uses consistent card styling: `bg-white rounded-2xl ring-1 ring-slate-200 shadow-sm`
+  - Section headers have colored icon backgrounds (blue/amber/slate/emerald) with title + subtitle
+  - Added prominent help text box in Authority Details explaining auto-population feature
+  - Billing section has emerald gradient background with checkmark feature list
+  - All inputs updated to use design system tokens (slate colors, consistent focus states)
+  - Form validation styling uses rose-500 for required field indicators
 
 - [ ] `[MEDIUM]` `[S]` **Clarify billing messaging** - Change "Free plan" to "Council Portal (FREE)". Add explanation: "Free to receive and manage notices. Only pay £19.99/notice when YOU publish." Remove or clarify "Change plan" button.
 
