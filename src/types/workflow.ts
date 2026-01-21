@@ -91,3 +91,58 @@ export function isNoticeOverdue(status: NoticeWorkflowStatus): boolean {
   if (!status.deadline_date) return false;
   return new Date(status.deadline_date) < new Date();
 }
+
+// ============================================================================
+// WORKFLOW STAGE HISTORY
+// ============================================================================
+
+export type TransitionType = 'manual' | 'automatic' | 'system';
+
+export interface WorkflowStageHistory {
+  id: string;
+  notice_id: string;
+  workflow_status_id: string;
+  from_stage_id: string | null;
+  to_stage_id: string;
+  transitioned_at: string;
+  transitioned_by: string | null;
+  transition_type: TransitionType;
+  notes: string | null;
+  firm_id: string;
+}
+
+// ============================================================================
+// DEADLINE REMINDERS
+// ============================================================================
+
+export type ReminderType =
+  | 'deadline_upcoming'
+  | 'deadline_today'
+  | 'deadline_overdue'
+  | 'representation_received'
+  | 'stage_reminder';
+
+export type ReminderStatus = 'pending' | 'sent' | 'cancelled' | 'failed';
+
+export type ReminderChannel = 'email' | 'sms' | 'push';
+
+export interface DeadlineReminder {
+  id: string;
+  notice_id: string;
+  workflow_status_id: string | null;
+  firm_id: string;
+  reminder_type: ReminderType;
+  scheduled_for: string;
+  sent_at: string | null;
+  status: ReminderStatus;
+  channel: ReminderChannel;
+  recipient_email: string | null;
+  recipient_phone: string | null;
+  recipient_user_id: string | null;
+  subject: string | null;
+  message: string | null;
+  related_deadline_date: string | null;
+  created_at: string;
+  updated_at: string;
+  sent_error: string | null;
+}
