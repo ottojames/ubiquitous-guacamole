@@ -6114,3 +6114,86 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - UK notice formats follow specific statutes (Licensing Act 2003, Gambling Act 2005, Trustee Act s.27, etc.)
   - Next task is Task 21.2b: Create endpoint (for notice drafting API)
 ---
+
+## Iteration 256 - Task 21.2b: Create notice drafting endpoint
+- **What was implemented**: Created API endpoints for notice drafting
+- **Files changed**:
+  - `server/routes/drafting.ts` - New file (~85 lines)
+  - `server/index.ts` - Added import and route registration
+  - `PRD.md` - Marked Task 21.2b complete
+- **Implementation details**:
+  - POST `/api/drafting/generate` - Generates draft from explicit DraftInput (noticeType, applicantName, premisesAddress required)
+  - POST `/api/drafting/from-notice-base` - Generates draft from NoticeBase format (wizard flow)
+  - POST `/api/drafting/from-draft` - Generates draft from Partial<NoticeDraft> (legacy flow)
+  - All endpoints return DraftResult: { success, draftText, noticeType, generatedAt, suggestions }
+  - No authentication required (public endpoint for pre-submission draft generation)
+  - Error handling for missing required fields and server errors
+- **Test results**: All 503 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Drafting endpoints follow same pattern as compliance endpoints
+  - Routes registered at `/api/drafting/*` to keep draft-related functionality grouped
+  - noticeDrafter service exports three functions:
+    - generateDraft() for explicit DraftInput
+    - generateDraftFromNoticeBase() for NoticeBase (wizard flow)
+    - generateDraftFromNoticeDraft() for NoticeDraft (legacy flow)
+  - Next task is Task 21.2c: Add to wizard (pre-fills notice text in publish wizard)
+---
+
+## Iteration 257 - Task 21.2c: Add notice drafting to wizard
+- **What was implemented**: Added "Generate Draft" button to the publish wizard that auto-generates notice text from template data
+- **Files changed**:
+  - `src/hooks/useDraftNotice.ts` - New file (~75 lines) with hook for calling drafting API
+  - `src/next/publish/flow/steps/ConfirmStep.tsx` - Added onGenerateDraft, draftGenerating, draftSuggestions props and UI
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Added handleGenerateDraft function and state management
+  - `PRD.md` - Marked Task 21.2c complete
+- **Implementation details**:
+  - Created useDraftNotice hook that calls `/api/drafting/from-notice-base` endpoint
+  - Added "Generate Draft" button to ConfirmStep sidebar (Step 3 of wizard)
+  - Button only shows in template mode when notice data is available
+  - Purple-themed UI with loading spinner during generation
+  - Generated draft replaces templateText in the preview
+  - Shows suggestions from draft result in amber-themed card
+  - Uses existing drafting API endpoints from Task 21.2b
+- **Test results**: All 504 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, server/, scripts/ only)
+- **Learnings for future iterations**:
+  - ConfirmStep receives preview as a prop from NewPublishFlow - state managed in parent
+  - templateText state controls what's shown in the preview for template mode
+  - Draft generation can replace the template-rendered text with AI-generated text
+  - Suggestions from drafter service highlight fields that need attention
+  - Next task is Task 21.3a: Create representation analyzer service
+---
+
+## Iteration 258 - Task 21.3a: Create representationAnalyzer service
+- **What was implemented**: Created representationAnalyzer service for analyzing representation text
+- **Files changed**:
+  - `server/services/representationAnalyzer.ts` - New file (220 lines)
+  - `PRD.md` - Marked Task 21.3a complete
+- **Implementation details**:
+  - Created TypeScript interfaces: RepresentationStance, LicensingObjective, Theme, AnalysisResult
+  - Implemented analyzeRepresentation() function for single representation analysis:
+    - Detects stance (support/objection/comment) with confidence score (0-1)
+    - Uses keyword matching for stance detection when not explicitly provided
+    - Identifies themes from 8 common categories: Noise, Operating Hours, Parking/Traffic, Antisocial Behaviour, Litter/Waste, Area Saturation, Community Impact, Positive Contribution
+    - Checks for UK Licensing Act 2003 four licensing objectives:
+      1. Prevention of Crime and Disorder
+      2. Public Safety
+      3. Prevention of Public Nuisance
+      4. Protection of Children from Harm
+    - Extracts relevant text snippets for each matched objective
+    - Generates text summary describing stance, themes, and objectives cited
+    - Provides word count and sentence count statistics
+  - Implemented analyzeMultiple() function for batch analysis:
+    - Returns individual analyses plus aggregate statistics
+    - Aggregates theme counts and objective citation counts
+    - Provides support/objection/comment breakdown
+- **Test results**: All 504 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - UK Licensing Act 2003 has four licensing objectives that representations often cite
+  - Common representation themes include noise, hours, parking, antisocial behaviour
+  - Stance detection uses keyword matching with confidence scoring
+  - Service follows same pattern as complianceChecker and noticeDrafter
+  - Next task is Task 21.3b: Create endpoint (for representation analysis API)
+---

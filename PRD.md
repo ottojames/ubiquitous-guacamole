@@ -624,7 +624,7 @@ npm run lint         # ESLint check
 - [x] **Task 21.2c**: Add to wizard. **Success**: Pre-fills. (Completed 2026-01-21 - Added "Generate Draft" button to ConfirmStep in publish wizard. Created src/hooks/useDraftNotice.ts hook for API calls. Updated ConfirmStep.tsx with onGenerateDraft, draftGenerating, draftSuggestions props. Added handleGenerateDraft function in NewPublishFlow.tsx that calls /api/drafting/from-notice-base, updates templateText with generated draft, and displays suggestions. Button shows in template mode on Step 3, purple-themed UI with loading state. 504 tests pass)
 
 ### 21.3 Representation Analysis
-- [ ] **Task 21.3a**: Create analyzer service. ~100 lines. **Success**: Returns analysis.
+- [x] **Task 21.3a**: Create analyzer service. ~100 lines. **Success**: Returns analysis. (Completed 2026-01-21 - Created server/services/representationAnalyzer.ts with 220 lines. Exports analyzeRepresentation() for single analysis and analyzeMultiple() for batch analysis. Detects stance (support/objection/comment) with confidence score. Identifies 8 common themes: Noise, Operating Hours, Parking/Traffic, Antisocial Behaviour, Litter/Waste, Area Saturation, Community Impact, Positive Contribution. Checks for UK Licensing Act 2003 four objectives: Prevention of Crime and Disorder, Public Safety, Prevention of Public Nuisance, Protection of Children from Harm. Generates text summary and provides word/sentence counts. 504 tests pass)
 - [ ] **Task 21.3b**: Create endpoint. **Success**: Callable.
 - [ ] **Task 21.3c**: Add to council inbox. **Success**: Shows summary.
 
