@@ -144,7 +144,7 @@ npm run lint         # ESLint check
 **Goal**: Create TypeScript types for all new database tables.
 
 ### 9.1 Type Definitions
-- [ ] **Task 9.1a**: Create `src/types/workflow.ts` with FirmDepartment and WorkflowConfig interfaces. ~30 lines.
+- [x] **Task 9.1a**: Create `src/types/workflow.ts` with FirmDepartment and WorkflowConfig interfaces. ~30 lines. (Created 2026-01-21 - File: src/types/workflow.ts with FirmDepartment (12 fields) and WorkflowConfig (11 fields) interfaces)
 - [ ] **Task 9.1b**: Add WorkflowStage and NoticeWorkflowStatus interfaces to `src/types/workflow.ts`. ~40 lines.
 - [ ] **Task 9.1c**: Add WorkflowStageHistory and DeadlineReminder interfaces to `src/types/workflow.ts`. ~35 lines.
 - [ ] **Task 9.1d**: Add FirmNoticeTemplate, NoticeWithWorkflow, WorkflowConfigWithStages interfaces to `src/types/workflow.ts`. ~25 lines.
