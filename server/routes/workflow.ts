@@ -100,4 +100,59 @@ router.get('/configs/:noticeType', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/workflow/notices/:noticeId/status
+ * Returns the workflow status for a specific notice with current stage details
+ */
+router.get('/notices/:noticeId/status', async (req, res) => {
+  try {
+    const supabase = getServiceSupabaseClient();
+    const firmId = req.user?.organizationId;
+    const { noticeId } = req.params;
+
+    if (!firmId) {
+      return res.status(400).json({ error: 'No firm context' });
+    }
+
+    if (!noticeId) {
+      return res.status(400).json({ error: 'Notice ID is required' });
+    }
+
+    const { data, error } = await supabase
+      .from('notice_workflow_status')
+      .select(`
+        *,
+        current_stage:workflow_stages(*),
+        workflow:workflow_configs(*)
+      `)
+      .eq('notice_id', noticeId)
+      .eq('firm_id', firmId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('[workflow/notices/:noticeId/status] Error:', error);
+      return res.status(500).json({ error: 'Failed to fetch notice workflow status' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'No workflow status found for this notice' });
+    }
+
+    // Calculate is_overdue in application layer (deadline_date < NOW())
+    const isOverdue = data.deadline_date
+      ? new Date(data.deadline_date) < new Date()
+      : false;
+
+    const status = {
+      ...data,
+      is_overdue: isOverdue
+    };
+
+    return res.json({ status });
+  } catch (error: any) {
+    console.error('[workflow/notices/:noticeId/status] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
