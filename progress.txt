@@ -8896,3 +8896,23 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The file line numbers in PRD may be outdated after previous edits (was listed as 184-236)
   - Next task: Add resident escape hatch (subtle link at top: "Just looking for notices? Search here →")
 ---
+
+## Iteration 104 - Phase 9: Add resident escape hatch to Pricing page
+- **What was implemented**: Added subtle link for residents to navigate to notices search page
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Added escape hatch link between SiteHeader and hero section
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  - Added "Just looking for notices? Search here →" link with ArrowRight icon
+  - Uses `text-white/80 hover:text-white` for subtle appearance on dark gradient
+  - Positioned between SiteHeader and hero for above-the-fold visibility
+  - Links to `/notices` page
+- **Tests**: All 508 tests pass, no regressions
+- **TypeScript**: No new errors (pre-existing errors in unrelated files only)
+- **DoD verification**:
+  - ✓ Page contains link to `/notices` visible without scrolling (above the fold on 1080p)
+- **Learnings for future iterations**:
+  - Escape hatch links work well between header and hero for subtle but visible placement
+  - `text-white/80` provides good contrast on dark backgrounds while remaining subtle
+  - Phase 9 (Pricing Page UI Fixes) still has one task remaining: Highlight council free portal better
+---

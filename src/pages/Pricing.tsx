@@ -94,6 +94,17 @@ export default function Pricing() {
       <div id="header-sentinel" className="h-2" aria-hidden="true" />
       <SiteHeader />
 
+      {/* Resident escape hatch - subtle link for users just browsing notices */}
+      <div className="relative z-10 py-3 text-center">
+        <a
+          href="/notices"
+          className="inline-flex items-center gap-1.5 text-sm text-white/80 transition hover:text-white"
+        >
+          Just looking for notices? Search here
+          <ArrowRight className="h-4 w-4" />
+        </a>
+      </div>
+
       {/* Hero */}
       <section className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">
         {/* Dark gradient overlay for text readability - stronger at bottom where gradient gets light */}

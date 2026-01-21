@@ -486,9 +486,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Increased vertical padding on the "Old Way vs New Way" section from `py-16 md:py-24` (64px/96px) to `py-20 md:py-28` (80px/112px). This provides at least 64px spacing as required by DoD, with comfortable separation from the hero section above.
 
-- [ ] `[LOW]` `[S]` **Add resident escape hatch** - Subtle link at top: "Just looking for notices? Search here →"
+- [x] `[LOW]` `[S]` **Add resident escape hatch** - Subtle link at top: "Just looking for notices? Search here →"
 
   **File**: `src/pages/Pricing.tsx`
+
+  **Solution**: Added a subtle link between SiteHeader and hero section with "Just looking for notices? Search here →" text. Uses white/80 opacity text on the dark gradient background with hover state, ArrowRight icon, and links to /notices. Visible without scrolling (above the fold).
 
 - [ ] `[LOW]` `[S]` **Highlight council free portal better** - Make FREE more prominent, clarify "only pay when YOU publish".
 
