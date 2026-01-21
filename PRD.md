@@ -148,7 +148,7 @@ npm run lint         # ESLint check
 - [x] **Task 9.1b**: Add WorkflowStage and NoticeWorkflowStatus interfaces to `src/types/workflow.ts`. ~40 lines. (Created 2026-01-21 - Added WorkflowStage (17 fields), NoticeWorkflowStatus (9 fields), DeadlineType type, and isNoticeOverdue helper function)
 - [x] **Task 9.1c**: Add WorkflowStageHistory and DeadlineReminder interfaces to `src/types/workflow.ts`. ~35 lines. (Created 2026-01-21 - Added WorkflowStageHistory (10 fields), DeadlineReminder (18 fields), TransitionType/ReminderType/ReminderStatus/ReminderChannel type aliases)
 - [x] **Task 9.1d**: Add FirmNoticeTemplate, NoticeWithWorkflow, WorkflowConfigWithStages interfaces to `src/types/workflow.ts`. ~25 lines. (Created 2026-01-21 - Added FirmNoticeTemplate (14 fields), WorkflowConfigWithStages (extends WorkflowConfig + stages), NoticeWithWorkflow for Kanban views)
-- [ ] **Task 9.2**: Export workflow types from `src/types/index.ts` - Add `export * from './workflow';`
+- [x] **Task 9.2**: Export workflow types from `src/types/index.ts` - Add `export * from './workflow';` (Created 2026-01-21 - Created src/types/index.ts barrel file exporting all types: notice, permissions, workflow)
 
 ---
 
