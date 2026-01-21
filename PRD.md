@@ -633,7 +633,7 @@ npm run lint         # ESLint check
 ## Phase 22: Integrations (Future)
 
 ### 22.1 API Docs
-- [ ] **Task 22.1a**: Create docs/api.md. **Success**: Complete.
+- [x] **Task 22.1a**: Create docs/api.md. **Success**: Complete. (Completed 2026-01-21 - Created comprehensive API documentation covering all endpoints: Notices, Representations, Workflow, Drafts, Certificates, Compliance, Drafting, Representation Analysis, Firm Management, Firm Departments, Firm Templates, Firm Subscriptions, Council Portal, Analytics, File Upload, Address Lookup, Councils, Statistics, and Payments. Includes authentication requirements, request/response examples, and error codes)
 - [ ] **Task 22.1b**: Add Swagger at /api/docs. **Success**: Accessible.
 
 ### 22.2 Webhooks
