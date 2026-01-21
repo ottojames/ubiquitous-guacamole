@@ -388,14 +388,42 @@ export default function AccountManagement() {
           return; // Don't refresh until confirmation
 
         case 'reset_password':
-          // For user password reset, we would need to implement this via Supabase Auth
-          // This would typically send a password reset email
-          setAlertModal({
-            isOpen: true,
-            variant: 'info',
-            title: 'Coming Soon',
-            message: 'Password reset functionality is coming soon.'
-          });
+          // Find the user to get their email
+          const userToReset = accounts.find(acc => acc.id === itemId) as User | undefined;
+          if (!userToReset?.email) {
+            setAlertModal({
+              isOpen: true,
+              variant: 'error',
+              title: 'Error',
+              message: 'Could not find user email for password reset.'
+            });
+            break;
+          }
+
+          // Send password reset email via Supabase Auth
+          const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+            userToReset.email,
+            {
+              redirectTo: `${window.location.origin}/auth/reset-password`
+            }
+          );
+
+          if (resetError) {
+            console.error('Password reset error:', resetError);
+            setAlertModal({
+              isOpen: true,
+              variant: 'error',
+              title: 'Password Reset Failed',
+              message: resetError.message || 'Failed to send password reset email. Please try again.'
+            });
+          } else {
+            setAlertModal({
+              isOpen: true,
+              variant: 'success',
+              title: 'Password Reset Email Sent',
+              message: `A password reset link has been sent to ${userToReset.email}. The link will expire in 1 hour.`
+            });
+          }
           break;
 
         case 'view':

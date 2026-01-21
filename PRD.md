@@ -466,7 +466,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.4b**: Fix form submission to call API. **Success**: Works. (Completed 2026-01-21 - Created server/routes/admin/settings.ts with GET/PATCH endpoints using requireAdmin middleware, registered at /api/admin/settings. Updated src/pages/admin/Settings.tsx with controlled inputs, useEffect for fetching settings, handleSave function calling PATCH API, hasChanges tracking for conditional Save button)
 - [x] **Task 17.4c**: Add loading state to Save. **Success**: Shows loading. (Completed 2026-01-21 - Added saving state with Loader2 spinner, disabled button during save, "Saving..." text while processing)
 - [x] **Task 17.4d**: Add success/error toast. **Success**: Feedback shown. (Completed 2026-01-21 - Added AlertModal with success variant for successful save, error variant for failures. Shows "Settings Saved" on success, error message on failure)
-- [ ] **Task 17.4e**: Fix password reset. **Success**: Works.
+- [x] **Task 17.4e**: Fix password reset. **Success**: Works. (Completed 2026-01-21 - Implemented supabase.auth.resetPasswordForEmail() in AccountManagement.tsx, sends reset link email to user with success/error AlertModal feedback)
 
 ### 17.5 Fix Dashboard Stats
 - [ ] **Task 17.5a**: Find hardcoded stats, list them. **Success**: Listed.
