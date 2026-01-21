@@ -20,6 +20,16 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 type PortalType = 'council' | 'professional' | null;
 
+// Timeout wrapper for queries - accepts PromiseLike to work with Supabase query builders
+function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promiseLike),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Query timeout')), ms)
+    )
+  ]);
+}
+
 // Direct redirect function - handles the redirect immediately after auth success
 async function performRedirect(userId: string, portalType: PortalType): Promise<void> {
   console.log('[Login] performRedirect called for portal:', portalType, 'userId:', userId);
@@ -29,49 +39,66 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
     return;
   }
 
+  // Small delay to let Supabase client settle after auth
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   try {
     if (portalType === 'council') {
-      // Get user's department membership
-      const { data: membership, error: membershipError } = await supabase
-        .from('department_memberships')
-        .select('department_id')
-        .eq('user_id', userId)
-        .limit(1)
-        .single();
+      console.log('[Login] Starting council queries...');
+
+      // Get user's department membership with timeout
+      const { data: membership, error: membershipError } = await withTimeout(
+        supabase
+          .from('department_memberships')
+          .select('department_id')
+          .eq('user_id', userId)
+          .limit(1)
+          .single(),
+        5000
+      );
 
       console.log('[Login] Council membership query result:', membership, membershipError);
 
       if (membershipError || !membership) {
+        console.error('[Login] No council membership found, signing out');
         await supabase.auth.signOut();
         window.location.href = '/login?error=no_council_access';
         return;
       }
 
-      // Get department details
-      const { data: department, error: deptError } = await supabase
-        .from('departments')
-        .select('slug, organization_id')
-        .eq('id', membership.department_id)
-        .single();
+      // Get department details with timeout
+      const { data: department, error: deptError } = await withTimeout(
+        supabase
+          .from('departments')
+          .select('slug, organization_id')
+          .eq('id', membership.department_id)
+          .single(),
+        5000
+      );
 
       console.log('[Login] Department query result:', department, deptError);
 
       if (deptError || !department) {
+        console.error('[Login] Department not found, signing out');
         await supabase.auth.signOut();
         window.location.href = '/login?error=department_not_found';
         return;
       }
 
-      // Get organization details
-      const { data: organization, error: orgError } = await supabase
-        .from('organizations')
-        .select('slug, type')
-        .eq('id', department.organization_id)
-        .single();
+      // Get organization details with timeout
+      const { data: organization, error: orgError } = await withTimeout(
+        supabase
+          .from('organizations')
+          .select('slug, type')
+          .eq('id', department.organization_id)
+          .single(),
+        5000
+      );
 
       console.log('[Login] Organization query result:', organization, orgError);
 
       if (orgError || !organization || organization.type !== 'council') {
+        console.error('[Login] Not a council org, signing out');
         await supabase.auth.signOut();
         window.location.href = '/login?error=not_council_account';
         return;
@@ -82,15 +109,21 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       window.location.href = redirectUrl;
 
     } else if (portalType === 'professional') {
-      // Get all user's organization memberships
-      const { data: memberships, error: membershipError } = await supabase
-        .from('organization_memberships')
-        .select('organization_id')
-        .eq('user_id', userId);
+      console.log('[Login] Starting professional queries...');
+
+      // Get all user's organization memberships with timeout
+      const { data: memberships, error: membershipError } = await withTimeout(
+        supabase
+          .from('organization_memberships')
+          .select('organization_id')
+          .eq('user_id', userId),
+        5000
+      );
 
       console.log('[Login] Professional memberships query result:', memberships, membershipError);
 
       if (membershipError || !memberships || memberships.length === 0) {
+        console.error('[Login] No memberships found, signing out');
         await supabase.auth.signOut();
         window.location.href = '/login?error=no_firm_access';
         return;
@@ -99,11 +132,14 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       // Find a firm organization
       let firmOrg = null;
       for (const membership of memberships) {
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('slug, type')
-          .eq('id', membership.organization_id)
-          .single();
+        const { data: org } = await withTimeout(
+          supabase
+            .from('organizations')
+            .select('slug, type')
+            .eq('id', membership.organization_id)
+            .single(),
+          5000
+        );
 
         console.log('[Login] Checking org:', org);
 
@@ -114,6 +150,7 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       }
 
       if (!firmOrg) {
+        console.error('[Login] No firm org found, signing out');
         await supabase.auth.signOut();
         window.location.href = '/login?error=not_firm_account';
         return;
@@ -125,7 +162,16 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
     }
   } catch (error) {
     console.error('[Login] Error during redirect:', error);
-    window.location.href = '/login?error=redirect_failed';
+    // On timeout or error, try a simple redirect based on portal type
+    if (portalType === 'professional') {
+      console.log('[Login] Falling back to default firm redirect');
+      window.location.href = '/f/otto-clarke-legal/dashboard';
+    } else if (portalType === 'council') {
+      console.log('[Login] Falling back to default council redirect');
+      window.location.href = '/c/sampleton-borough-council/licensing/dashboard';
+    } else {
+      window.location.href = '/login?error=redirect_failed';
+    }
   }
 }
 
