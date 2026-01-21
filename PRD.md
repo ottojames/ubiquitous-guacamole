@@ -167,7 +167,7 @@ npm run lint         # ESLint check
 - [x] **Task 10.2**: Register workflow routes in `server/index.ts` - Import and mount at `/api/workflow`. (Completed 2026-01-21 - Added import for workflowRouter and mounted at /api/workflow, 488 tests pass)
 
 ### 10.2 Department Routes
-- [ ] **Task 10.3a**: Create `server/routes/firm-departments.ts` with router setup and GET `/` endpoint. Lists departments for firm. ~30 lines.
+- [x] **Task 10.3a**: Create `server/routes/firm-departments.ts` with router setup and GET `/` endpoint. Lists departments for firm. ~30 lines. (Created 2026-01-21 - File: server/routes/firm-departments.ts with router setup, requireAuth middleware, and GET / endpoint that queries firm_departments by firm_id and status='active')
 - [ ] **Task 10.3b**: Add POST `/` endpoint to firm-departments routes. Creates department. Requires admin role. ~35 lines.
 - [ ] **Task 10.3c**: Add PATCH `/:id` and DELETE `/:id` endpoints to firm-departments routes. Updates/deletes department. ~40 lines.
 - [ ] **Task 10.4**: Register department routes in `server/index.ts` - Mount at `/api/firm/departments`.

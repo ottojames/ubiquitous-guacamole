@@ -1799,3 +1799,189 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The composite types (WorkflowConfigWithStages, NoticeWithWorkflow) will be used by API endpoints and React components
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ are unrelated to this work
 ---
+
+## Iteration 55 - Task 9.2: Export workflow types from src/types/index.ts
+- **What was implemented**: Created barrel export file for all TypeScript types
+- **Files changed**:
+  - `src/types/index.ts` - NEW FILE (9 lines)
+  - `PRD.md` - Marked Task 9.2 complete
+- **Key changes**:
+  - Created centralized export file that re-exports all types from:
+    - `./notice` - NoticeType, NoticeDraft, NoticeBase, Address, Applicant, etc.
+    - `./permissions` - PERMISSIONS, ROLES, Permission, Role, helper functions
+    - `./workflow` - All new workflow types (FirmDepartment, WorkflowConfig, WorkflowStage, etc.)
+- **Test results**: 488 tests pass (no regressions)
+- **TypeScript check**: Compiles cleanly - pre-existing errors are in cypress/e2e/scripts/ only
+- **Learnings for future iterations**:
+  - Phase 9 (Firm Portal TypeScript Types) is now COMPLETE
+  - Next phase is Phase 10: Firm Portal Backend API (Task 10.1a: Create server/routes/workflow.ts)
+  - The barrel export allows `import { FirmDepartment, WorkflowConfig } from '@/types'` instead of `from '@/types/workflow'`
+  - Pre-existing TypeScript errors in test/script files don't block src/ compilation
+---
+
+## Iteration 56 - Task 10.1a: Create server/routes/workflow.ts with GET /configs endpoint
+- **What was implemented**: Created workflow routes file with router setup and GET /configs endpoint
+- **Files created**:
+  - `server/routes/workflow.ts` (~50 lines)
+- **Files changed**:
+  - `PRD.md` - Marked Task 10.1a complete
+- **Endpoint details**:
+  - `GET /api/workflow/configs` - Returns all active workflows for user's firm
+  - Requires authentication via `requireAuth` middleware
+  - Queries `workflow_configs` table with `firm_id` filter and `is_active=true`
+  - Includes joined `workflow_stages` via Supabase select, sorted by position
+  - Returns `{ configs: [...] }` with stages sorted within each config
+- **Router setup**:
+  - Imports Router from Express, getServiceSupabaseClient, requireAuth
+  - Uses `router.use(requireAuth)` to protect all workflow routes
+  - Follows existing patterns from firm.ts route file
+- **Test results**: 488 tests pass, no regressions
+- **TypeScript check**: workflow.ts compiles cleanly - no errors in server/routes/workflow.ts
+- **Learnings for future iterations**:
+  - Pattern for workflow routes is established: requireAuth middleware, getServiceSupabaseClient, firmId from req.user?.organizationId
+  - Supabase nested select with `stages:workflow_stages(*)` fetches related stages efficiently
+  - Pre-existing TypeScript errors in server/routes/council.ts, server/jobs/, etc. are unrelated to this work
+  - Next task is Task 10.1b: Add GET /configs/:noticeType endpoint to workflow routes
+---
+
+## Iteration [Continued] - Task 10.1b: Add GET /configs/:noticeType endpoint
+- **What was implemented**: GET endpoint to fetch a specific workflow configuration by notice type
+- **Files changed**:
+  - `server/routes/workflow.ts` - Added /configs/:noticeType endpoint (~45 lines)
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Uses same pattern as /configs endpoint (firmId from req.user, service supabase client)
+  - Uses `.single()` instead of returning array since each firm has one workflow per notice type
+  - Returns 404 if no workflow found (vs empty array)
+  - Handles PGRST116 error code (no rows returned) separately from real errors
+  - Sorts stages by position before returning
+- **Test results**: 488 tests pass, no regressions
+- **TypeScript check**: workflow.ts compiles cleanly
+- **Learnings for future iterations**:
+  - PGRST116 is Supabase's error code for "no rows returned" when using .single()
+  - The pattern for single-item fetch: use .single(), check for PGRST116, return 404 if not found
+  - Notice type comes from URL param (:noticeType), firmId from auth context
+  - Next task is Task 10.1c: Add GET /notices/:noticeId/status endpoint
+---
+
+## Iteration 57 - Task 10.1c: Add GET /notices/:noticeId/status endpoint
+- **What was implemented**: GET `/api/workflow/notices/:noticeId/status` endpoint
+- **Files changed**:
+  - `server/routes/workflow.ts` - Added ~55 lines for the new endpoint
+  - `PRD.md` - Marked task 10.1c complete
+- **Key implementation details**:
+  - Queries `notice_workflow_status` table with nested selects for `current_stage:workflow_stages(*)` and `workflow:workflow_configs(*)`
+  - Requires firm_id match for authorization (firm can only see their own notices)
+  - Returns 400 if no firm context (user not authenticated with firm)
+  - Returns 404 if no workflow status found for the notice
+  - Calculates `is_overdue` in application layer: `deadline_date < NOW()`
+  - Note: Can't use PostgreSQL GENERATED column for is_overdue because NOW() is not immutable
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **TypeScript check**: workflow.ts compiles cleanly, pre-existing errors in cypress/e2e/scripts only
+- **Learnings for future iterations**:
+  - is_overdue calculation: `new Date(deadline_date) < new Date()` in JS
+  - Supabase foreign key joins use colon syntax: `current_stage:workflow_stages(*)`
+  - The firm_id is denormalized on notice_workflow_status for efficient RLS
+  - Next task is Task 10.1d: Add POST /notices/:noticeId/transition endpoint
+---
+
+## Iteration 58 - Task 10.1d: Add POST /notices/:noticeId/transition endpoint
+- **What was implemented**: POST endpoint to transition a notice to a new workflow stage
+- **Files changed**:
+  - `server/routes/workflow.ts` - Added ~60 lines for the new endpoint
+  - `PRD.md` - Marked task 10.1d complete
+- **Key implementation details**:
+  - Accepts request body with `toStageId` (required) and `notes` (optional)
+  - Validates firm context and required parameters (noticeId, toStageId)
+  - Verifies notice belongs to the users firm before allowing transition
+  - Calls `transition_notice_stage` RPC function with parameters: p_notice_id, p_to_stage_id, p_notes, p_transition_type="manual"
+  - Returns `{ historyId: uuid, success: true }` on success
+  - Returns 404 if no workflow status found, 403 if firm doesnt own the notice
+- **Security**: Authorization check ensures firm can only transition their own notices
+- **Test results**: 488 tests pass, 2 skipped (no regressions)
+- **TypeScript check**: workflow.ts compiles cleanly (no errors in server/ files)
+- **Learnings for future iterations**:
+  - The transition_notice_stage RPC handles all the complex logic: validates stage belongs to same workflow, calculates deadline, records history
+  - Pattern for RPC calls: `supabase.rpc("function_name", { param1: value1 })`
+  - Pre-authorization check before RPC call prevents info leaks about notices from other firms
+  - Next task is Task 10.1e: Add POST /notices/:noticeId/initialize endpoint
+---
+
+## Iteration 59 - Task 10.1e: Add POST /notices/:noticeId/initialize endpoint
+- **What was implemented**: POST endpoint to initialize workflow for a notice
+- **Files changed**:
+  - `server/routes/workflow.ts` - Added ~70 lines for the new endpoint
+  - `PRD.md` - Marked task 10.1e complete
+- **Key implementation details**:
+  - Accepts request body with `noticeType` (required)
+  - Validates firm context and required parameters (noticeId, noticeType)
+  - Verifies notice belongs to user's firm before initializing (security)
+  - Checks if workflow already initialized (returns 409 Conflict if so)
+  - Calls `initialize_notice_workflow` RPC with params: p_notice_id, p_firm_id, p_notice_type
+  - Returns `{ statusId: uuid, success: true }` on success (201 Created)
+- **Endpoint details**:
+  - Route: `POST /api/workflow/notices/:noticeId/initialize`
+  - Body: `{ noticeType: string }`
+  - Returns 201 with statusId on success
+  - Returns 400 if missing firm context, noticeId, or noticeType
+  - Returns 403 if notice doesn't belong to firm
+  - Returns 404 if notice not found
+  - Returns 409 if workflow already initialized
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **TypeScript check**: workflow.ts compiles cleanly (no errors)
+- **Learnings for future iterations**:
+  - The initialize_notice_workflow RPC auto-creates default workflow if firm doesn't have one for that notice type
+  - Important to check for existing workflow status before calling initialize (prevents duplicate)
+  - Use 409 Conflict for "already exists" scenarios vs 400 for validation errors
+  - Pre-existing TypeScript errors in cypress/e2e/scripts/ are unrelated to server code
+  - All 5 Task 10.1 workflow routes are now complete (a-e)
+  - Next task is Task 10.2: Register workflow routes in server/index.ts
+---
+
+## Iteration 60 - Task 10.2: Register workflow routes in server/index.ts
+- **What was implemented**: Registered workflow routes in Express server
+- **Files changed**:
+  - `server/index.ts` - Added import for workflowRouter and mounted at /api/workflow
+  - `PRD.md` - Marked task 10.2 complete
+- **Key implementation details**:
+  - Added import: `import workflowRouter from './routes/workflow';`
+  - Added route: `app.use('/api/workflow', workflowRouter);`
+  - Placed in alphabetical order near other route registrations
+- **Endpoints now accessible**:
+  - GET /api/workflow/configs - List all workflows for firm
+  - GET /api/workflow/configs/:noticeType - Get specific workflow
+  - GET /api/workflow/notices/:noticeId/status - Get notice workflow status
+  - POST /api/workflow/notices/:noticeId/transition - Move notice to new stage
+  - POST /api/workflow/notices/:noticeId/initialize - Initialize workflow for notice
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Route registration is straightforward - import and mount
+  - All workflow routes require authentication (router.use(requireAuth) in workflow.ts)
+  - Phase 10 Workflow Routes section 10.1 is now COMPLETE
+  - Next is section 10.2 Department Routes (Task 10.3a: Create firm-departments routes)
+---
+
+## Iteration 61 - Task 10.3a: Create server/routes/firm-departments.ts with GET / endpoint
+- **What was implemented**: Created firm-departments route file with GET / endpoint for listing departments
+- **Files created**:
+  - `server/routes/firm-departments.ts` - ~40 lines, router setup with requireAuth and GET / endpoint
+- **Files changed**:
+  - `PRD.md` - Marked task 10.3a complete
+- **Key implementation details**:
+  - Follows same pattern as workflow.ts routes
+  - Uses requireAuth middleware for all routes
+  - GET / queries firm_departments table by firm_id
+  - Filters by status='active' to exclude archived departments
+  - Orders results by name alphabetically
+  - Returns `{ departments: [...] }` with empty array fallback
+  - Handles no firm context (400), database errors (500)
+- **Endpoint accessible at** (after registration in 10.4):
+  - GET /api/firm/departments - List all active departments for user's firm
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **TypeScript check**: firm-departments.ts compiles cleanly
+- **Learnings for future iterations**:
+  - The firm_departments table uses status field ('active', 'inactive', 'archived')
+  - Table has firm_id FK to organizations, slug unique per firm
+  - RLS policies already set up: firm members can view, admins can insert/update
+  - Next task is Task 10.3b: Add POST / endpoint (create department, requires admin role)
+---
