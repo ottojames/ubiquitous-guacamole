@@ -549,7 +549,7 @@ npm run lint         # ESLint check
 - [x] **Task 19.3b**: Create PaymentSuccess page. ~50 lines. **Success**: Renders. (Completed 2026-01-21 - Created src/pages/PaymentSuccess.tsx with 66 lines, uses SiteHeader, UI styles, CheckCircle icon, displays noticeId from URL params, navigation to notice detail and home)
 - [x] **Task 19.3c**: Create PaymentCancelled page. ~30 lines. **Success**: Renders. (Completed 2026-01-21 - Created src/pages/PaymentCancelled.tsx with 57 lines, uses SiteHeader, UI styles, XCircle icon, displays cancellation message with "Try again" and "Return home" buttons)
 - [x] **Task 19.3d**: Add routes to App.tsx. **Success**: Work. (Completed 2026-01-21 - Added imports for PaymentSuccess and PaymentCancelled pages, added routes /payment/success and /payment/cancelled in App.tsx)
-- [ ] **Task 19.3e**: Integrate into publish wizard. **Success**: Can pay.
+- [x] **Task 19.3e**: Integrate into publish wizard. **Success**: Can pay. (Verified 2026-01-21 - PaymentStep.tsx already integrated at step 4 of wizard, uses useStripePayment hook, calls createCheckoutSession with noticeId/noticeType/applicantEmail, handles subscription allowance/overage for firms, redirects to Stripe checkout for payment)
 
 ### 19.4 Receipts
 - [ ] **Task 19.4a**: Create receipt PDF generator. ~80 lines. **Success**: Generates.
