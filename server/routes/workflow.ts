@@ -155,4 +155,68 @@ router.get('/notices/:noticeId/status', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/workflow/notices/:noticeId/transition
+ * Moves a notice to a new workflow stage
+ */
+router.post('/notices/:noticeId/transition', async (req, res) => {
+  try {
+    const supabase = getServiceSupabaseClient();
+    const firmId = req.user?.organizationId;
+    const userId = req.user?.id;
+    const { noticeId } = req.params;
+    const { toStageId, notes } = req.body;
+
+    if (!firmId) {
+      return res.status(400).json({ error: 'No firm context' });
+    }
+
+    if (!noticeId) {
+      return res.status(400).json({ error: 'Notice ID is required' });
+    }
+
+    if (!toStageId) {
+      return res.status(400).json({ error: 'Target stage ID is required' });
+    }
+
+    // Verify notice belongs to this firm before transitioning
+    const { data: status, error: statusError } = await supabase
+      .from('notice_workflow_status')
+      .select('id, firm_id')
+      .eq('notice_id', noticeId)
+      .single();
+
+    if (statusError && statusError.code !== 'PGRST116') {
+      console.error('[workflow/notices/:noticeId/transition] Status check error:', statusError);
+      return res.status(500).json({ error: 'Failed to verify notice access' });
+    }
+
+    if (!status) {
+      return res.status(404).json({ error: 'No workflow status found for this notice' });
+    }
+
+    if (status.firm_id !== firmId) {
+      return res.status(403).json({ error: 'Access denied to this notice' });
+    }
+
+    // Call the transition function
+    const { data, error } = await supabase.rpc('transition_notice_stage', {
+      p_notice_id: noticeId,
+      p_to_stage_id: toStageId,
+      p_notes: notes || null,
+      p_transition_type: 'manual'
+    });
+
+    if (error) {
+      console.error('[workflow/notices/:noticeId/transition] Transition error:', error);
+      return res.status(400).json({ error: error.message || 'Failed to transition notice' });
+    }
+
+    return res.json({ historyId: data, success: true });
+  } catch (error: any) {
+    console.error('[workflow/notices/:noticeId/transition] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
