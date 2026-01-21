@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Bell, Mail, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import * as UI from '@/styles/ui';
 import SiteHeader from '@/components/SiteHeader';
+import Footer from '@/components/Footer';
 
 interface Subscription {
   id: string;
@@ -210,303 +212,343 @@ export default function EmailAlerts() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className={UI.pageWrap}>
       {/* Header sentinel for SiteHeader compact mode */}
       <div id="header-sentinel" className="h-2" aria-hidden="true" />
       <SiteHeader />
 
+      {/* Hero Section with Gradient */}
+      <section className="relative overflow-hidden pb-12 pt-20 md:pb-16 md:pt-28">
+        {/* Background gradient orbs */}
+        <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
+
+        <div className={`${UI.container} relative z-10`}>
+          <div className="mx-auto max-w-2xl text-center">
+            {/* Icon */}
+            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-600/25">
+              <Bell className="h-8 w-8 text-white" />
+            </div>
+
+            <h1 className={UI.pageTitleLight}>
+              Email Alerts
+            </h1>
+            <p className={`mt-4 ${UI.pageSubtitleLight}`}>
+              Get notified when new public notices are published in your area. Stay informed about licensing, planning, and other important local decisions.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-12 max-w-4xl">
-        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-          {/* Subscribe Step */}
-          {step === 'subscribe' && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8 text-blue-600"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Email Alerts
-                </h1>
-                <p className="text-gray-600">
-                  Get notified when new public notices are published in your area
-                </p>
+      <main className={`${UI.container} relative z-10 -mt-4 pb-16`}>
+        {/* Success message banner */}
+        {success && (
+          <div className="mx-auto mb-8 max-w-2xl">
+            <div className={UI.alertSuccess}>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                <p className="text-sm">{success}</p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Subscribe Step */}
+        {step === 'subscribe' && (
+          <div className="mx-auto max-w-2xl">
+            {/* Form Card */}
+            <div className="rounded-lg bg-white shadow-sm ring-1 ring-slate-200 p-6 md:p-8">
+              <h2 className={`${UI.sectionTitle} mb-6`}>Subscribe to Alerts</h2>
 
               {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-sm text-red-800">{error}</p>
+                <div className={`${UI.alertError} mb-6`}>
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600" />
+                    <p className="text-sm">{error}</p>
+                  </div>
                 </div>
               )}
 
               <div className="space-y-6">
+                {/* Email Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
+                  <label htmlFor="email" className={`${UI.label} mb-2 block`}>
+                    Email Address <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={UI.inputFull}
-                    placeholder="your.email@example.com"
-                    required
-                  />
+                  <div className="relative">
+                    <Mail className={UI.inputIconLeft} />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={`${UI.inputFull} pl-10`}
+                      placeholder="your.email@example.com"
+                      required
+                    />
+                  </div>
                 </div>
 
+                {/* Postcode Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Postcode *
+                  <label htmlFor="postcode" className={`${UI.label} mb-2 block`}>
+                    Your Postcode <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={postcode}
-                    onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-                    className={UI.inputFull}
-                    placeholder="SW1A 1AA"
-                    required
-                  />
-                  <p className="text-sm text-gray-600 mt-1">
+                  <div className="relative">
+                    <MapPin className={UI.inputIconLeft} />
+                    <input
+                      id="postcode"
+                      type="text"
+                      value={postcode}
+                      onChange={(e) => setPostcode(e.target.value.toUpperCase())}
+                      className={`${UI.inputFull} pl-10`}
+                      placeholder="SW1A 1AA"
+                      required
+                    />
+                  </div>
+                  <p className={`${UI.textTertiary} mt-1.5 text-sm`}>
                     We'll notify you about notices near this location
                   </p>
                 </div>
 
+                {/* Radius Slider */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Search Radius: {radiusKm} km
+                  <label htmlFor="radius" className={`${UI.label} mb-2 block`}>
+                    Search Radius: <span className="font-bold text-blue-600">{radiusKm} km</span>
                   </label>
                   <input
+                    id="radius"
                     type="range"
                     min="1"
                     max="20"
                     value={radiusKm}
                     onChange={(e) => setRadiusKm(parseInt(e.target.value))}
-                    className="w-full"
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
                   />
-                  <div className="flex justify-between text-xs text-gray-600 mt-1">
+                  <div className="mt-1.5 flex justify-between text-xs text-slate-500">
                     <span>1 km</span>
                     <span>20 km</span>
                   </div>
                 </div>
 
+                {/* Notice Types */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`${UI.label} mb-2 block`}>
                     Notice Types
                   </label>
                   <div className="space-y-2">
                     {noticeTypes.map(type => (
                       <label
                         key={type.value}
-                        className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
                       >
                         <input
                           type="checkbox"
                           checked={selectedNoticeTypes.includes(type.value)}
                           onChange={() => handleToggleNoticeType(type.value)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                          className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
                         />
-                        <span className="text-gray-900">{type.label}</span>
+                        <span className={UI.textPrimary}>{type.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> You'll receive a verification email before alerts are activated.
-                    You can unsubscribe at any time.
+                {/* Info Box */}
+                <div className={UI.alertInfo}>
+                  <p className="text-sm">
+                    <strong>Note:</strong> You'll receive a verification email before alerts are activated. You can unsubscribe at any time.
                   </p>
                 </div>
 
+                {/* Submit Button */}
                 <button
                   onClick={handleSubscribe}
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl disabled:opacity-50"
+                  className={`${UI.btnPrimary} w-full py-4`}
                 >
-                  {loading ? 'Setting up alerts...' : 'Subscribe to Email Alerts'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Setting up alerts...
+                    </span>
+                  ) : (
+                    'Subscribe to Email Alerts'
+                  )}
                 </button>
               </div>
             </div>
-          )}
 
-          {/* Manage Step */}
-          {step === 'manage' && subscription && (
-            <div>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg
-                    className="w-8 h-8 text-green-600"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+            {/* How It Works Section */}
+            <div className="mt-8 rounded-lg bg-white shadow-sm ring-1 ring-slate-200 p-6 md:p-8">
+              <h2 className={`${UI.sectionTitle} mb-6`}>How Email Alerts Work</h2>
+              <div className="space-y-4">
+                {[
+                  'Receive email notifications when new notices are published within your chosen radius',
+                  'Filter by specific notice types to only get alerts that matter to you',
+                  'Update your preferences or unsubscribe at any time',
+                  'Your email address is never shared and is only used for sending alerts',
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
+                    <p className={UI.textSecondary}>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Manage Step */}
+        {step === 'manage' && subscription && (
+          <div className="mx-auto max-w-2xl">
+            {/* Status Card */}
+            <div className="rounded-lg bg-white shadow-sm ring-1 ring-slate-200 p-6 md:p-8">
+              <div className="mb-6 text-center">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                  <CheckCircle className="h-8 w-8 text-emerald-600" />
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Email Alerts Active
-                </h1>
-                <p className="text-gray-600">
+                <h2 className={UI.sectionTitle}>Email Alerts Active</h2>
+                <p className={`mt-2 ${UI.textSecondary}`}>
                   You're subscribed to alerts for <strong>{subscription.email}</strong>
                 </p>
               </div>
 
-              {success && (
-                <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-sm text-green-800">{success}</p>
+              {error && (
+                <div className={`${UI.alertError} mb-6`}>
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600" />
+                    <p className="text-sm">{error}</p>
+                  </div>
                 </div>
               )}
 
-              {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-sm text-red-800">{error}</p>
+              {/* Current Settings */}
+              <div className="mb-6 rounded-lg bg-slate-50 p-4">
+                <h3 className={`${UI.label} mb-3`}>Current Settings</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className={UI.textTertiary}>Status:</span>
+                    <span className={`font-semibold ${
+                      subscription.status === 'active' ? 'text-emerald-600' :
+                      subscription.status === 'pending' ? 'text-amber-600' :
+                      UI.textTertiary
+                    }`}>
+                      {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={UI.textTertiary}>Email:</span>
+                    <span className="font-semibold">{subscription.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={UI.textTertiary}>Subscribed:</span>
+                    <span className="font-semibold">
+                      {new Date(subscription.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-              )}
+              </div>
 
               <div className="space-y-6">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Current Settings</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className={`font-semibold ${
-                        subscription.status === 'active' ? 'text-green-600' :
-                        subscription.status === 'pending' ? 'text-yellow-600' :
-                        'text-gray-600'
-                      }`}>
-                        {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Email:</span>
-                      <span className="font-semibold">{subscription.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subscribed:</span>
-                      <span className="font-semibold">
-                        {new Date(subscription.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
+                {/* Postcode Input */}
+                <div>
+                  <label htmlFor="manage-postcode" className={`${UI.label} mb-2 block`}>
+                    Your Postcode
+                  </label>
+                  <div className="relative">
+                    <MapPin className={UI.inputIconLeft} />
+                    <input
+                      id="manage-postcode"
+                      type="text"
+                      value={postcode}
+                      onChange={(e) => setPostcode(e.target.value.toUpperCase())}
+                      className={`${UI.inputFull} pl-10`}
+                    />
                   </div>
                 </div>
 
+                {/* Radius Slider */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Postcode
+                  <label htmlFor="manage-radius" className={`${UI.label} mb-2 block`}>
+                    Search Radius: <span className="font-bold text-blue-600">{radiusKm} km</span>
                   </label>
                   <input
-                    type="text"
-                    value={postcode}
-                    onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-                    className={UI.inputFull}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Search Radius: {radiusKm} km
-                  </label>
-                  <input
+                    id="manage-radius"
                     type="range"
                     min="1"
                     max="20"
                     value={radiusKm}
                     onChange={(e) => setRadiusKm(parseInt(e.target.value))}
-                    className="w-full"
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
                   />
-                  <div className="flex justify-between text-xs text-gray-600 mt-1">
+                  <div className="mt-1.5 flex justify-between text-xs text-slate-500">
                     <span>1 km</span>
                     <span>20 km</span>
                   </div>
                 </div>
 
+                {/* Notice Types */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className={`${UI.label} mb-2 block`}>
                     Notice Types
                   </label>
                   <div className="space-y-2">
                     {noticeTypes.map(type => (
                       <label
                         key={type.value}
-                        className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+                        className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 transition-colors hover:bg-slate-50"
                       >
                         <input
                           type="checkbox"
                           checked={selectedNoticeTypes.includes(type.value)}
                           onChange={() => handleToggleNoticeType(type.value)}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                          className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
                         />
-                        <span className="text-gray-900">{type.label}</span>
+                        <span className={UI.textPrimary}>{type.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
+                {/* Action Buttons */}
                 <div className="flex gap-3">
                   <button
                     onClick={handleUpdateSettings}
                     disabled={loading}
-                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl disabled:opacity-50"
+                    className={`${UI.btnPrimary} flex-1 py-3`}
                   >
-                    {loading ? 'Updating...' : 'Update Settings'}
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Updating...
+                      </span>
+                    ) : (
+                      'Update Settings'
+                    )}
                   </button>
                   <button
                     onClick={handleUnsubscribe}
                     disabled={loading}
-                    className="px-6 py-3 border border-red-300 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className={UI.btnDanger + ' px-6 py-3'}
                   >
                     Unsubscribe
                   </button>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-8 bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">How Email Alerts Work</h2>
-          <div className="space-y-3 text-gray-600">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-              <p>Receive email notifications when new notices are published within your chosen radius</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-              <p>Filter by specific notice types to only get alerts that matter to you</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-              <p>Update your preferences or unsubscribe at any time</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-              <p>Your email address is never shared and is only used for sending alerts</p>
-            </div>
           </div>
-        </div>
+        )}
       </main>
+
+      <Footer />
     </div>
   );
 }

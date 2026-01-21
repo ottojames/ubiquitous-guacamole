@@ -317,9 +317,19 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[MEDIUM]` `[L]` **Complete page redesign matching site design system** - Add hero section with gradient, redesign form using UI.card and consistent inputs, add footer.
+- [x] `[MEDIUM]` `[L]` **Complete page redesign matching site design system** - Add hero section with gradient, redesign form using UI.card and consistent inputs, add footer.
 
   **File**: `src/pages/EmailAlerts.tsx` (substantial rewrite)
+
+  **Solution implemented**:
+  - Added hero section with gradient orbs, Bell icon with gradient background, and pageTitleLight/pageSubtitleLight typography
+  - Used UI.pageWrap for consistent gradient band background
+  - Form cards now use `rounded-lg bg-white shadow-sm ring-1 ring-slate-200` as specified
+  - All inputs use UI design system tokens (UI.inputFull, UI.inputIconLeft, UI.label, etc.)
+  - Added Mail and MapPin icons to email/postcode inputs
+  - Used UI.alertSuccess/alertError/alertInfo for consistent messaging
+  - Added Footer component at page bottom
+  - Manage subscription view also uses card styling and consistent design
 
 - [ ] `[MEDIUM]` `[M]` **Wire up and test email subscription flow end-to-end** - Ensure Resend API key configured, verification emails sent, subscriptions created in database.
 

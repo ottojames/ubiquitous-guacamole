@@ -8676,3 +8676,24 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Home.tsx already has "Email alerts" in its NAV_LINKS - good to keep nav items consistent across header implementations
   - Placed "Email alerts" after "Find notices" to group user-focused nav items together (residents looking for notices)
 ---
+
+## Iteration 33 - Decide on "For councils" nav item (Phase 5)
+- **What was implemented**: Documented decision to keep the current `/#for-councils` anchor link behavior
+- **Files changed**:
+  - `CLAUDE.md` - Added "Navigation Decisions" section documenting the decision and reasoning
+  - `PRD.md` - Marked task complete with decision summary
+- **Decision**: Keep current behavior - Home page has comprehensive "For councils" section with:
+  - Enterprise features overview (Digital submission, Instant publication, Compliance exports)
+  - Council logos for social proof  
+  - Feature grid (SSO, API, role-based permissions, audit logs, etc.)
+- **Alternatives rejected**:
+  1. Remove entirely - Councils are a key audience, content is valuable
+  2. Link to `/pricing` council section - Pricing has less council-specific content
+  3. Dedicated `/councils` page - Would be `[L]` complexity for marginal benefit
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in PaymentStep, gvol.ts, NoticeEditor, TemplateTextEditor, etc. (not related to this change)
+- **Learnings for future iterations**:
+  - When a task asks to "decide" on something, document the decision in CLAUDE.md for future reference
+  - Anchor links with `/#section-id` work correctly when the section exists on the home page
+  - Sometimes the pragmatic decision is to keep current behavior if it works and alternatives have higher cost/complexity
+---
