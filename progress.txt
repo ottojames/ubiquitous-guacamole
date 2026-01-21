@@ -5550,3 +5550,49 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Import style uses relative paths for local ./pages imports
   - Next task is Task 19.3e: Integrate into publish wizard
 ---
+
+## Iteration - Task 19.3e: Verify payment integration in publish wizard
+- **What was verified**: PaymentStep.tsx is already fully integrated at step 4 of the publish wizard
+- **Files reviewed**:
+  - `src/next/publish/flow/steps/PaymentStep.tsx` - 365 lines, full payment flow
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Imports and renders PaymentStep at step 4
+  - `src/hooks/useStripePayment.ts` - Hook for Stripe checkout
+- **Integration details**:
+  - PaymentStep uses useStripePayment hook
+  - Calls createCheckoutSession with noticeId, noticeType, applicantEmail
+  - Handles three scenarios: subscription allowance (free), overage charge, standard payment
+  - For firms: checks allowance via `can_publish_notice` RPC, shows remaining notices
+  - For one-off: shows £50 payment card, redirects to Stripe checkout
+  - Renders at step 4 in NewPublishFlow.tsx (line 1911-1921)
+  - Success/cancel pages already exist at /payment/success and /payment/cancelled
+- **Test results**: All 501 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx) - not from payment code
+- **Learnings for future iterations**:
+  - CheckoutButton component was created as standalone, but PaymentStep implements same functionality inline with more features
+  - PaymentStep already handles subscription allowance for firms - no duplicate payment for subscribed users
+  - The useStripePayment hook returns isConfigured to gracefully handle unconfigured Stripe environments
+  - Next task is Task 19.4a: Create receipt PDF generator
+---
+
+## Iteration 237 - Tasks 19.4a-c: Receipt PDF and Download Button
+- **What was implemented**: Verified receipt PDF generator exists, added download buttons to payment/confirmation pages
+- **Files changed**:
+  - `src/pages/PaymentSuccess.tsx` - Added "Download receipt" button with /api/certificates/receipt/:noticeId link
+  - `src/pages/PublishConfirmationPage.tsx` - Added "Download Receipt" button in download buttons section
+  - `PRD.md` - Marked Tasks 19.4a, 19.4b, 19.4c complete
+- **Discovery**:
+  - Task 19.4a (receipt PDF generator) was already complete: `server/utils/certificateGenerator.ts` has `generatePaymentReceipt()` function (~90 lines)
+  - Task 19.4b (download endpoint) was already complete: `GET /api/certificates/receipt/:noticeId` in `server/routes/certificates.ts`
+  - Only Task 19.4c needed implementation: adding download buttons to frontend pages
+- **Implementation details**:
+  - PaymentSuccess.tsx: Added <a> tag with download attribute alongside "View notice" button, uses UI.btnSecondary
+  - PublishConfirmationPage.tsx: Added receipt download in new "Download buttons" section, uses emerald styling for receipt, alongside existing blue notice PDF button
+  - Download links use `/api/certificates/receipt/${noticeId}` with `download="receipt-${noticeId}.pdf"` attribute
+- **Test results**: All 501 tests pass, 2 skipped (no regressions)
+- **Learnings for future iterations**:
+  - Always check existing code before implementing - receipt generator was already fully built
+  - Use <a> tag with download attribute for direct file downloads (not onClick handlers)
+  - Certificate routes are at /api/certificates/* - includes publication certificates, receipts, and verification
+  - PublishConfirmationPage has handleDownloadBlueNotice() that manually creates blob URL - receipt uses simpler direct link approach
+  - Next task is Task 19.5a: Test checkout redirect
+---
