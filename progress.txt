@@ -1504,3 +1504,46 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in src/ files (council/*.tsx, firm/*.tsx) and snapshot date mismatches are unrelated to this migration
   - Next task is Task 8.11c: Create GVOL workflow function migration
 ---
+
+## Iteration 41 - Task 8.11c: Create GVOL workflow function migration
+- **What was implemented**: Created SQL migration for the GVOL (Goods Vehicle Operator Licence) workflow seed function
+- **Files changed**:
+  - `supabase/migrations/20260120330000_create_default_gvol_workflow.sql` - NEW FILE
+  - `PRD.md` - Marked Task 8.11c complete
+- **Function details**:
+  - Name: `create_default_gvol_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Creates workflow_config for 'gvol' notice type with name 'Goods Vehicle Operator Licence'
+  - Creates 9 workflow_stages: Preparation, Application Submitted, Newspaper Advertisement, Traffic Commissioner Review, Objection Period (40-day deadline), Decision, Interim Licence, Licence Issued, Renewal Due (1825-day/5-year deadline)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **Learnings for future iterations**:
+  - GVOL workflow has 9 stages with two deadline stages: Objection Period (40 days) and Renewal Due (1825 days / 5 years)
+  - Pattern is consistent with other workflow functions: CREATE OR REPLACE FUNCTION, SECURITY DEFINER, GRANT EXECUTE
+  - Migration file naming convention: 20260120XXXX00 where XXXX is incremented for each new migration
+  - Next task is Task 8.11d: Apply GVOL workflow function to Supabase
+---
+
+## Iteration 42 - Task 8.11d: Apply GVOL workflow function to Supabase
+- **What was implemented**: Applied the GVOL workflow function migration to Supabase
+- **Command used**: `psql DATABASE_URL -f supabase/migrations/20260120330000_create_default_gvol_workflow.sql`
+- **Output**: `CREATE FUNCTION`, `GRANT`, `COMMENT` - all successful
+- **Verification**:
+  - Confirmed function exists in `pg_proc` with proname='create_default_gvol_workflow' and proargnames='{p_firm_id}'
+  - Confirmed prosecdef=t (SECURITY DEFINER enabled)
+  - Confirmed EXECUTE privileges granted to authenticated role via proacl
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.11d complete
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **Function details**:
+  - Name: `create_default_gvol_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Tables affected: `workflow_configs` (1 row), `workflow_stages` (9 rows)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+  - Stages: Preparation, Application Submitted, Newspaper Advertisement, Traffic Commissioner Review, Objection Period (40-day deadline), Decision, Interim Licence, Licence Issued, Renewal Due (1825-day/5-year deadline)
+- **Learnings for future iterations**:
+  - Continue using psql for migrations since MCP Supabase tool lacks access token
+  - GVOL workflow function follows same pattern as other workflow seed functions
+  - Pre-existing TypeScript errors in src/ files and snapshot date mismatches are unrelated to this migration
+  - Next task is Task 8.11e: Create Gambling workflow function migration
+---

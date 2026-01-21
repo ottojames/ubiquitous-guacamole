@@ -125,7 +125,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.11a**: Create TRO workflow function migration. Copy TRO function from Task 8.11 (first function only). (Created 2026-01-20 - File: supabase/migrations/20260120320000_create_default_tro_workflow.sql)
 - [x] **Task 8.11b**: Apply TRO workflow function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, creates workflow_config and 10 workflow_stages for TRO notices with 21-day objection period deadline)
 - [x] **Task 8.11c**: Create GVOL workflow function migration. Copy GVOL function from Task 8.11 (second function only). (Created 2026-01-21 - File: supabase/migrations/20260120330000_create_default_gvol_workflow.sql)
-- [ ] **Task 8.11d**: Apply GVOL workflow function to Supabase.
+- [x] **Task 8.11d**: Apply GVOL workflow function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, creates workflow_config and 9 workflow_stages for GVOL notices including 40-day objection period and 5-year renewal deadline)
 - [ ] **Task 8.11e**: Create Gambling workflow function migration. Copy Gambling function from Task 8.11 (third function only).
 - [ ] **Task 8.11f**: Apply Gambling workflow function to Supabase.
 
