@@ -2902,3 +2902,126 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - MCP Supabase tool requires access token - use psql with DATABASE_URL directly
   - 494 tests pass (no regressions)
 ---
+
+## Iteration 67 - Task 14.2a: Add Authorization Checks to SECURITY DEFINER Functions
+- **What was implemented**: Created migration to add authorization checks to all SECURITY DEFINER functions
+- **Files created**:
+  - `supabase/migrations/20260121000002_add_security_definer_auth_checks.sql` - 520+ lines
+- **Files changed**:
+  - `PRD.md` - Marked Task 14.2a complete
+- **Key implementation details**:
+  - Created `auth.is_firm_member(p_firm_id)` helper function to check organization membership
+  - Updated 8 SECURITY DEFINER functions with authorization checks:
+    1. `transition_notice_stage` - verifies user is member of notice's firm before allowing transition
+    2. `initialize_notice_workflow` - verifies user is member of specified firm before initializing
+    3. `create_default_premises_licence_workflow` - checks firm membership
+    4. `create_default_probate_workflow` - checks firm membership
+    5. `create_default_planning_workflow` - checks firm membership
+    6. `create_default_tro_workflow` - checks firm membership
+    7. `create_default_gvol_workflow` - checks firm membership
+    8. `create_default_gambling_workflow` - checks firm membership
+  - All functions now raise 'Access denied' exception if caller is not a firm member
+- **Security rationale**:
+  - SECURITY DEFINER functions bypass RLS (run as definer, not invoker)
+  - Without explicit auth checks, any authenticated user could call these with any firm_id
+  - The helper function `auth.is_firm_member()` provides consistent membership verification
+- **Test results**: All 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only - unrelated to SQL migration
+- **Learnings for future iterations**:
+  - SECURITY DEFINER functions need explicit auth checks since they bypass RLS
+  - Use helper functions for consistent auth patterns across multiple functions
+  - The `auth.uid()` function returns current user ID in Supabase functions
+  - Organization membership is stored in `organization_memberships` table with user_id and organization_id
+  - Next task is Task 14.2b: Apply authorization checks migration to Supabase
+---
+
+## Iteration [Next] - Task 14.2b: Apply authorization checks migration to Supabase
+- **What was implemented**: Applied SECURITY DEFINER authorization checks migration via psql
+- **Files changed**:
+  - `supabase/migrations/20260121000003_fix_is_firm_member_schema.sql` - NEW FILE (fix migration)
+  - `PRD.md` - Marked task complete
+- **Key discoveries**:
+  - Initial migration 20260121000002 tried to create `auth.is_firm_member()` helper function
+  - **FAILED**: Supabase protects the auth schema - "permission denied for schema auth"
+  - The 8 SECURITY DEFINER functions were created but referenced non-existent `auth.is_firm_member`
+- **Fix applied**:
+  - Created migration 20260121000003 with `public.is_firm_member()` instead of `auth.is_firm_member()`
+  - Recreated all 8 SECURITY DEFINER functions to use `public.is_firm_member()`
+  - Granted EXECUTE on public.is_firm_member to authenticated role
+- **Functions updated** (all now check firm membership):
+  1. `public.is_firm_member(p_firm_id)` - NEW helper function (SECURITY DEFINER STABLE)
+  2. `transition_notice_stage` - verifies user is member of the notice's firm
+  3. `initialize_notice_workflow` - verifies user is member of specified firm
+  4. `create_default_premises_licence_workflow` - verifies firm membership
+  5. `create_default_probate_workflow` - verifies firm membership
+  6. `create_default_planning_workflow` - verifies firm membership
+  7. `create_default_tro_workflow` - verifies firm membership
+  8. `create_default_gvol_workflow` - verifies firm membership
+  9. `create_default_gambling_workflow` - verifies firm membership
+- **Test results**: All 494 tests pass
+- **TypeScript check**: Pre-existing errors only, unrelated to this migration
+- **Learnings for future iterations**:
+  - **CRITICAL**: Cannot create functions in Supabase `auth` schema - use `public` schema instead
+  - MCP Supabase tools require SUPABASE_ACCESS_TOKEN - not set in this project, use psql instead
+  - DATABASE_URL in .env needs explicit export: `export DATABASE_URL=$(grep "^DATABASE_URL=" .env | cut -d'=' -f2-)`
+  - Verify functions exist with: `SELECT proname, prosecdef FROM pg_proc WHERE proname IN (...);`
+  - prosecdef = t means function is SECURITY DEFINER
+  - Verify function body with: `SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname = '...';`
+---
+
+## Iteration 68 - Task 14.3a: Add security_invoker = true to views
+- **What was implemented**: Created migration to add security_invoker option to all database views
+- **Files created**:
+  - `supabase/migrations/20260121000004_add_security_invoker_to_views.sql` - 180 lines
+- **Files changed**:
+  - `PRD.md` - Marked Task 14.3a complete
+- **Views updated with security_invoker = true**:
+  1. `firm_clients` - from 20260114000010_client_management.sql
+  2. `organization_subscription_details` - from 20251028000001_subscription_tiers.sql
+  3. `organization_account_balances` - from 20251022000002_billing_system.sql
+  4. `active_councils` - from 20260122000001_unified_auth_system.sql
+  5. `notice_approval_times` - from 20251122000001_showcase_features_schema.sql
+  6. `deadline_adherence` - from 20251122000001_showcase_features_schema.sql
+  7. `engagement_rate` - from 20251122000001_showcase_features_schema.sql
+- **Technical details**:
+  - security_invoker is a PostgreSQL 15+ feature (Supabase uses PG 15+)
+  - Syntax: `CREATE OR REPLACE VIEW viewname WITH (security_invoker = true) AS ...`
+  - This makes views respect RLS policies of the invoking user rather than the definer
+  - By default, views run with definer privileges and can bypass RLS
+  - Re-granted SELECT permissions after view recreation to preserve access
+- **Test results**: All 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only
+- **Learnings for future iterations**:
+  - Search for views using: `Grep CREATE.*VIEW` with case insensitive flag
+  - Views are recreated with CREATE OR REPLACE, which preserves grants in some DBs but best to re-grant explicitly
+  - The security_invoker option goes in the WITH clause: `WITH (security_invoker = true)`
+  - This addresses security finding: "Views bypass RLS - use security_invoker = true"
+  - Next task is Task 14.3b: Apply security_invoker migration to Supabase
+---
+
+## Iteration 69 - Task 14.3b: Apply security_invoker migration to Supabase
+- **What was implemented**: Applied security_invoker migration to all applicable views in Supabase
+- **Method used**: psql with DATABASE_URL (Supabase MCP tool lacks access token)
+- **Files changed**:
+  - `PRD.md` - Marked Task 14.3b complete
+- **Migration results**:
+  - 6 views successfully updated with security_invoker=true:
+    1. organization_subscription_details
+    2. organization_account_balances
+    3. active_councils
+    4. notice_approval_times
+    5. deadline_adherence
+    6. engagement_rate
+  - 1 view skipped (firm_clients): Migration file assumed it was a view over client_relationships, but actual schema has firm_clients as a TABLE not a view. Tables use RLS directly, no security_invoker needed.
+- **Verification**:
+  - Confirmed via `pg_class.reloptions` that all 6 views have `{security_invoker=true}`
+  - Migration recorded in `supabase_migrations.schema_migrations` table (version 20260121000004)
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Always verify whether an object is a table or view before writing migration (use `pg_class.relkind = 'v'` for views, 'r' for tables)
+  - psql pattern: `source .env && psql "$DATABASE_URL" -f migration.sql`
+  - When migration partially fails (some statements succeed), remaining statements still execute
+  - The security_invoker option is stored in pg_class.reloptions as `{security_invoker=true}`
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated
+  - Next task is Task 14.4a: Create migration to add immutability trigger to audit_actions table
+---
