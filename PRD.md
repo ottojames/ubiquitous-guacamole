@@ -347,8 +347,8 @@ npm run lint         # ESLint check
 - [x] **Task 15.4i**: Style Councils card: FREE portal, £19.99/notice, green accent. **Success**: Card styled. (Completed 2026-01-21 - emerald-600 FREE text, emerald border CTA button, green check icons)
 
 ### 15.5 Update Old Way vs New Way Section
-- [ ] **Task 15.5a**: Update to "From £50 per notice". **Success**: Correct price.
-- [ ] **Task 15.5b**: Remove "40+ UK councils" claim. **Success**: False claim removed.
+- [x] **Task 15.5a**: Update to "From £50 per notice". **Success**: Correct price. (Completed 2026-01-21 - Already done in Task 15.3c, line 228 shows "From £50 per notice. Councils £19.99.")
+- [x] **Task 15.5b**: Remove "40+ UK councils" claim. **Success**: False claim removed. (Completed 2026-01-21 - Already removed from Old Way vs New Way section in Task 15.3c; also removed from Final CTA section line 411)
 
 ### 15.6 Update FAQ Section
 - [ ] **Task 15.6a**: Remove outdated "pay-as-you-go" FAQ. **Success**: Removed.
@@ -359,7 +359,7 @@ npm run lint         # ESLint check
 - [ ] **Task 15.6f**: Add FAQ "What's in free council portal?" **Success**: Added.
 
 ### 15.7 Update Final CTA Section
-- [ ] **Task 15.7a**: Remove "40+ UK councils", use generic text. **Success**: Removed.
+- [x] **Task 15.7a**: Remove "40+ UK councils", use generic text. **Success**: Removed. (Completed 2026-01-21 - Changed to "Publish legally compliant notices in seconds — no newspapers, no waiting")
 - [ ] **Task 15.7b**: Update primary CTA to "Publish a Notice - £50". **Success**: Updated.
 - [ ] **Task 15.7c**: Add secondary CTA "Register as a Firm". **Success**: Added.
 - [ ] **Task 15.7d**: Add council link "Get free portal access". **Success**: Added.
