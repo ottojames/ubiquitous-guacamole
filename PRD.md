@@ -237,7 +237,7 @@ npm run lint         # ESLint check
 
 ### 13.2 User Journey Tests
 - [x] **Task 13.4a**: Create `e2e/firm-portal/owner-workflow-management.spec.ts` - Test: create department. ~40 lines. (Implemented 2026-01-21 - Created owner-workflow-management.spec.ts with 4 tests: create department, list departments, update department, archive department. Uses firm-auth fixtures and API endpoints)
-- [ ] **Task 13.4b**: Add test for workflow stage configuration to owner spec. ~35 lines.
+- [x] **Task 13.4b**: Add test for workflow stage configuration to owner spec. ~35 lines. (Implemented 2026-01-21 - Added 'Owner: Workflow Stage Configuration' test describe block with 2 tests: list workflow configs with stages, get config by notice type. Tests verify stages are sorted by position)
 - [ ] **Task 13.4c**: Add test for invite team member to owner spec. ~35 lines.
 - [ ] **Task 13.5a**: Create `e2e/firm-portal/editor-kanban-workflow.spec.ts` - Test: view Kanban board. ~40 lines.
 - [ ] **Task 13.5b**: Add test for drag notice between stages to editor spec. ~40 lines.

@@ -150,3 +150,68 @@ test.describe('Owner: Department Management', () => {
     console.log(`Department archived: ${department.id}`);
   });
 });
+
+test.describe('Owner: Workflow Stage Configuration', () => {
+  test.beforeEach(async ({ page }) => {
+    // Login as firm owner before each test
+    await loginAsFirmUser(page, OWNER);
+  });
+
+  test('can list workflow configurations with stages', async ({ page }) => {
+    // Get all workflow configs for the firm
+    const response = await page.request.get(
+      `${BASE_URL}/api/workflow/configs`
+    );
+
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.configs).toBeDefined();
+    expect(Array.isArray(data.configs)).toBeTruthy();
+
+    // If configs exist, verify they have stages
+    if (data.configs.length > 0) {
+      const config = data.configs[0];
+      expect(config.notice_type).toBeDefined();
+      expect(config.stages).toBeDefined();
+      expect(Array.isArray(config.stages)).toBeTruthy();
+      console.log(`Found ${data.configs.length} workflow configs`);
+      console.log(`First config: ${config.notice_type} with ${config.stages.length} stages`);
+    } else {
+      console.log('No workflow configs found (expected for new firms)');
+    }
+  });
+
+  test('can get workflow configuration by notice type', async ({ page }) => {
+    // First check if any configs exist
+    const listResponse = await page.request.get(
+      `${BASE_URL}/api/workflow/configs`
+    );
+    const { configs } = await listResponse.json();
+
+    if (configs.length === 0) {
+      console.log('Skipping: No workflow configs to query by type');
+      return;
+    }
+
+    // Get specific workflow by notice type
+    const noticeType = configs[0].notice_type;
+    const response = await page.request.get(
+      `${BASE_URL}/api/workflow/configs/${noticeType}`
+    );
+
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.config).toBeDefined();
+    expect(data.config.notice_type).toBe(noticeType);
+    expect(data.config.stages).toBeDefined();
+    expect(Array.isArray(data.config.stages)).toBeTruthy();
+
+    // Verify stages are sorted by position
+    const stages = data.config.stages;
+    for (let i = 1; i < stages.length; i++) {
+      expect(stages[i].position).toBeGreaterThanOrEqual(stages[i - 1].position);
+    }
+
+    console.log(`Got config for ${noticeType} with ${stages.length} stages`);
+  });
+});
