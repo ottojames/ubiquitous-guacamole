@@ -166,7 +166,8 @@ test.describe('Pricing Page', () => {
   test('Councils CTA links to sign-up?plan=council', async ({ page }) => {
     // Find the "Get Free Portal Access" CTA button in the Council Portal card
     // This should link to /sign-up?plan=council
-    const councilsCta = page.locator('a').filter({ hasText: 'Get Free Portal Access' });
+    // Use .first() because there are 2 buttons with this text (pricing card + final CTA)
+    const councilsCta = page.locator('a').filter({ hasText: 'Get Free Portal Access' }).first();
     await expect(councilsCta).toBeVisible();
 
     // Verify the href is correct
@@ -174,5 +175,27 @@ test.describe('Pricing Page', () => {
     expect(href).toBe('/sign-up?plan=council');
 
     console.log('Councils CTA correctly links to /sign-up?plan=council');
+  });
+
+  test('FAQ questions are present', async ({ page }) => {
+    // Scroll to FAQ section
+    const faqSection = page.locator('section').filter({ hasText: 'Frequently asked questions' });
+    await expect(faqSection).toBeVisible();
+
+    // Verify all expected FAQ questions are present
+    const expectedFaqQuestions = [
+      "What's included in the audit trail?",
+      "Why do councils get a discount?",
+      "What's included in the £49/month subscription?",
+      "Can I publish without a subscription?",
+      "What's in the free council portal?",
+    ];
+
+    for (const question of expectedFaqQuestions) {
+      const faqQuestion = page.locator('button').filter({ hasText: question });
+      await expect(faqQuestion).toBeVisible();
+    }
+
+    console.log('All FAQ questions are present on the pricing page');
   });
 });

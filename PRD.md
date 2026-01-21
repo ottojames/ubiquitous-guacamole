@@ -372,7 +372,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.8e**: Test Public CTA links to /publish. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Publish Now - £50' button has href='/publish')
 - [x] **Task 15.8f**: Test Firms CTA links to sign-up?plan=firm. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Start Free Trial' button has href='/sign-up?plan=firm')
 - [x] **Task 15.8g**: Test Councils CTA links to sign-up?plan=council. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Get Free Portal Access' button has href='/sign-up?plan=council')
-- [ ] **Task 15.8h**: Test FAQ questions present. **Success**: Test passes.
+- [x] **Task 15.8h**: Test FAQ questions present. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying all 5 FAQ questions are visible: audit trail, council discount, subscription content, publishing without subscription, free council portal)
 
 ---
 
