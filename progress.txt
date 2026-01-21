@@ -3228,3 +3228,48 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next is Phase 15.2: Create New Pricing Structure (tasks 15.2a, 15.2b, 15.2c)
   - The correct pricing model per PRD: Public £50/notice, Firms £49/month + £50/notice, Councils FREE + £19.99/notice
 ---
+
+## Iteration 70 - Task 15.2a: Create pricingPlans.public object
+- **What was implemented**: Created the pricingPlans.public object in Pricing.tsx for the one-off publishing tier
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Added pricingPlans.public object
+  - `PRD.md` - Marked task 15.2a complete
+- **pricingPlans.public structure**:
+  - name: "One-Off Publishing"
+  - description: Targets public users who don't need an account
+  - price: 50 (£50 per notice)
+  - 7 features highlighting no account needed, instant publication, audit trail, etc.
+  - cta: "Publish Now - £50"
+  - ctaHref: "/publish"
+  - popular: false
+- **Learnings for future iterations**:
+  - The pricingPlans.individual object still exists and is used by the current "For Individuals" section
+  - The new pricingPlans.public object will be used when Task 15.4f creates the three-card grid
+  - TypeScript errors in cypress/, e2e/, scripts/ are pre-existing and don't affect core src/ code
+  - 494 tests pass - same count as before, no regressions
+  - Next task is 15.2b: Create pricingPlans.firms object
+---
+
+## Iteration 71 - Task 15.2b: Create pricingPlans.firms object
+- **What was implemented**: Created the pricingPlans.firms object for the Professional Portal tier
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Added pricingPlans.firms object
+  - `PRD.md` - Marked task 15.2b complete
+- **pricingPlans.firms structure**:
+  - name: "Professional Portal"
+  - description: For law firms managing multiple notices, includes team collaboration, workflow, billing
+  - priceMonthly: 49 (£49/month subscription)
+  - pricePerNotice: 50 (£50 per notice)
+  - 8 features: subscription pricing, unlimited team members, Kanban workflow, client tracking, deadline reminders, custom templates, priority support, 14-day free trial
+  - cta: "Start Free Trial"
+  - ctaHref: "/sign-up?plan=firm"
+  - popular: true (highlighted as the recommended option)
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The firms tier has both monthly subscription (£49) and per-notice cost (£50)
+  - Added pricePerNotice field to support displaying combined pricing
+  - Features highlight the firm portal functionality built in Phases 8-14
+  - popular: true will make this card highlighted in the three-card grid (Task 15.4)
+  - Next task is 15.2c: Create pricingPlans.councils object (FREE portal + £19.99/notice)
+---

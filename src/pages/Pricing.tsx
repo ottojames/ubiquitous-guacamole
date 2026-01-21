@@ -45,6 +45,25 @@ const pricingPlans = {
     ctaHref: "/publish",
     popular: false,
   },
+  firms: {
+    name: "Professional Portal",
+    description: "For law firms and professional practices managing multiple notices. Includes team collaboration, workflow management, and client billing tools.",
+    priceMonthly: 49,
+    pricePerNotice: 50,
+    features: [
+      "£49/month subscription + £50 per notice",
+      "Unlimited team members",
+      "Kanban workflow management",
+      "Client matter tracking & billing integration",
+      "Deadline reminders & calendar sync",
+      "Custom notice templates",
+      "Priority email support",
+      "14-day free trial",
+    ],
+    cta: "Start Free Trial",
+    ctaHref: "/sign-up?plan=firm",
+    popular: true,
+  },
 };
 
 const oldWayData = [
