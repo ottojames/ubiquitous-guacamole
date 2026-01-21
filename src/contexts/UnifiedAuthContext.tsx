@@ -122,11 +122,22 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session) {
-          await loadUserContext(session.user);
+          try {
+            await loadUserContext(session.user);
+            console.log('[UnifiedAuthContext] User context loaded, checking for redirect...');
+          } catch (err) {
+            console.error('[UnifiedAuthContext] Error loading user context:', err);
+          }
 
           // Handle post-login redirect for SIGNED_IN events from Login.tsx
+          // This MUST run even if loadUserContext fails
           if (event === 'SIGNED_IN') {
-            await handleLoginRedirect(session.user);
+            console.log('[UnifiedAuthContext] SIGNED_IN event - calling handleLoginRedirect');
+            try {
+              await handleLoginRedirect(session.user);
+            } catch (err) {
+              console.error('[UnifiedAuthContext] Error in handleLoginRedirect:', err);
+            }
           }
         } else {
           clearContext();
@@ -142,28 +153,35 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
   const loadUserContext = async (user: User) => {
     try {
       const metadata = user.app_metadata || {};
-      console.log('Loading context for user:', user.email, metadata);
+      console.log('[UnifiedAuthContext] Loading context for user:', user.email, metadata);
 
       // Load organization from metadata or database
       if (metadata.organization_id) {
-        const { data: org } = await supabase
+        console.log('[UnifiedAuthContext] Fetching org from metadata.organization_id:', metadata.organization_id);
+        const { data: org, error: orgErr } = await supabase
           .from('organizations')
           .select('*')
           .eq('id', metadata.organization_id)
           .single();
 
-        if (org) {
+        if (orgErr) {
+          console.error('[UnifiedAuthContext] Error fetching org:', orgErr);
+        } else if (org) {
           setOrganization(org);
-          console.log('Loaded organization:', org.name);
+          console.log('[UnifiedAuthContext] Loaded organization:', org.name);
 
           // Load departments for councils
           if (org.type === 'council') {
-            const { data: depts } = await supabase
+            console.log('[UnifiedAuthContext] Fetching departments for council:', org.id);
+            const { data: depts, error: deptErr } = await supabase
               .from('departments')
               .select('*')
               .eq('organization_id', org.id)
               .eq('status', 'active');
 
+            if (deptErr) {
+              console.error('[UnifiedAuthContext] Error fetching departments:', deptErr);
+            }
             setDepartments(depts || []);
 
             // Set current department
@@ -175,27 +193,40 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
             }
           }
         }
+      } else {
+        console.log('[UnifiedAuthContext] No organization_id in metadata, skipping org load from metadata');
       }
 
       // Load all user organizations
-      const { data: userOrgs } = await supabase
+      console.log('[UnifiedAuthContext] Fetching all user organizations for user_id:', user.id);
+      const { data: userOrgs, error: userOrgsErr } = await supabase
         .from('organization_memberships')
         .select('*, organization:organizations(*)')
         .eq('user_id', user.id);
+
+      if (userOrgsErr) {
+        console.error('[UnifiedAuthContext] Error fetching user orgs:', userOrgsErr);
+      }
+
+      console.log('[UnifiedAuthContext] User orgs result:', userOrgs?.length || 0, 'memberships');
 
       if (userOrgs) {
         const orgs = userOrgs
           .map(om => om.organization)
           .filter(Boolean) as Organization[];
         setOrganizations(orgs);
+        console.log('[UnifiedAuthContext] Set organizations:', orgs.length);
 
         // If no org set yet, use first one
         if (!organization && orgs.length > 0) {
           setOrganization(orgs[0]);
+          console.log('[UnifiedAuthContext] Set default organization:', orgs[0]?.name);
         }
       }
+
+      console.log('[UnifiedAuthContext] loadUserContext completed successfully');
     } catch (error) {
-      console.error('Error loading user context:', error);
+      console.error('[UnifiedAuthContext] Error loading user context:', error);
     }
   };
 
@@ -211,7 +242,10 @@ export function UnifiedAuthProvider({ children }: { children: ReactNode }) {
 
   // Handle post-login redirect based on stored portal type
   const handleLoginRedirect = async (user: User) => {
+    console.log('[UnifiedAuthContext] handleLoginRedirect called for user:', user.email);
+
     const portalType = sessionStorage.getItem('login_portal_type');
+    console.log('[UnifiedAuthContext] Portal type from sessionStorage:', portalType);
 
     // Clear the stored portal type immediately to prevent redirect loops
     sessionStorage.removeItem('login_portal_type');

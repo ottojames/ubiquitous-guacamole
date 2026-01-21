@@ -60,17 +60,24 @@ export default function Login() {
     try {
       // CRITICAL: Store portal type BEFORE auth - UnifiedAuthContext will use this for redirect
       // This is the proper architectural pattern: Login.tsx triggers auth, UnifiedAuthContext handles redirect
+      console.log('[Login] Storing portal type in sessionStorage:', portalType);
       sessionStorage.setItem('login_portal_type', portalType || '');
+
+      // Verify it was stored
+      const stored = sessionStorage.getItem('login_portal_type');
+      console.log('[Login] Verified sessionStorage contains:', stored);
 
       // Handle remember me preference
       if (rememberMe) {
         sessionStorage.setItem('login_remember_me', 'true');
       }
 
+      console.log('[Login] Calling signInWithPassword...');
       const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.log('[Login] signInWithPassword completed, error:', authError);
 
       if (authError) {
         // Clear stored values on error
