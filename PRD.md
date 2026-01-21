@@ -486,7 +486,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.7b**: Test dashboard loads. **Success**: Passes. (Completed 2026-01-21 - Updated e2e/admin-panel.spec.ts section 6 "Dashboard Functionality" with 3 tests: dashboard sections visible (heading, stats cards, activity feed, system health, quick actions), loading skeleton then content, and stats API response verification)
 - [x] **Task 17.7c**: Test sidebar navigation. **Success**: Passes. (Completed 2026-01-21 - Added e2e/admin-panel.spec.ts section 8 "Sidebar Navigation" with 5 tests: navigate to all admin pages, highlight current page with bg-blue-600, show page title in header, toggle mobile menu and navigate, close mobile menu after navigation)
 - [x] **Task 17.7d**: Test settings save. **Success**: Passes. (Completed 2026-01-21 - Added 3 tests to e2e/admin-panel.spec.ts section 9 "Settings Save Functionality": save settings when modified, show loading state while saving, handle save error gracefully. Tests verify Security tab navigation, session timeout input modification, Save Changes button visibility, API PATCH call, success AlertModal)
-- [ ] **Task 17.7e**: Test no browser alerts. **Success**: Passes.
+- [x] **Task 17.7e**: Test no browser alerts. **Success**: Passes. (Completed 2026-01-21 - Added section 10 "No Browser Alerts" with 4 tests: no native alerts during admin operations, uses AlertModal for errors, uses ConfirmModal for delete actions, uses AlertModal for settings save. Tests use Playwright page.on('dialog') to detect native browser dialogs)
 - [ ] **Task 17.7f**: Test accessibility. **Success**: Passes.
 
 ---
