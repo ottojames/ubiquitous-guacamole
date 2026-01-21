@@ -40,11 +40,13 @@ const testimonials = [
   { text: "No more last-minute print bookings — everything is digital, accessible, and timestamped.", name: "Gemma S, Planning Officer", council: "Manchester City Council" },
 ];
 
-const councilLogos = [
-  { src: "/logos/leeds.png", alt: "Leeds City Council", width: 120, height: 28 },
-  { src: "/logos/westminster.png", alt: "City of Westminster", width: 160, height: 28 },
-  { src: "/logos/manchester.png", alt: "Manchester City Council", width: 180, height: 28 },
-];
+// Council logos hidden until we have verified partnerships
+// const councilLogos = [
+//   { src: "/logos/leeds.png", alt: "Leeds City Council", width: 120, height: 28 },
+//   { src: "/logos/westminster.png", alt: "City of Westminster", width: 160, height: 28 },
+//   { src: "/logos/manchester.png", alt: "Manchester City Council", width: 180, height: 28 },
+// ];
+const councilLogos: { src: string; alt: string; width: number; height: number }[] = [];
 
 // Stats are now fetched dynamically via useStats() hook
 
