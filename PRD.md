@@ -130,7 +130,7 @@ npm run lint         # ESLint check
 - [x] **Task 8.11f**: Apply Gambling workflow function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, creates workflow_config and 10 workflow_stages for Gambling notices including 7-day authority notification, 28-day consultation period, and 21-day appeal window)
 
 ### 8.3 Workflow Functions
-- [ ] **Task 8.12a**: Create `transition_notice_stage()` function migration. Copy from Task 8.12. Validates stage, calculates deadline, records history.
+- [x] **Task 8.12a**: Create `transition_notice_stage()` function migration. Copy from Task 8.12. Validates stage, calculates deadline, records history. (Created 2026-01-21 - File: supabase/migrations/20260120350000_create_transition_notice_stage.sql)
 - [ ] **Task 8.12b**: Apply transition_notice_stage function to Supabase.
 - [ ] **Task 8.13a**: Create `initialize_notice_workflow()` function migration. Copy from Task 8.13. Auto-creates default workflow if needed.
 - [ ] **Task 8.13b**: Apply initialize_notice_workflow function to Supabase.
