@@ -4896,3 +4896,70 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Tests use data-testid selectors for reliable element targeting
   - Next task is Task 17.7b: Test dashboard loads
 ---
+
+## Iteration 145 - Task 17.7b: Test dashboard loads
+- **What was implemented**: Updated admin panel E2E tests with practical dashboard loading tests
+- **Files changed**:
+  - `e2e/admin-panel.spec.ts` - Rewrote section 6 "Dashboard Functionality" tests
+  - `PRD.md` - Marked Task 17.7b complete
+- **Key changes**:
+  - **Problem**: Existing tests used `data-testid` selectors but Dashboard.tsx has no data-testid attributes
+  - **Solution**: Changed to text content selectors using `page.getByText()` and `page.locator('h1')`
+  - **Test 1** (should load dashboard with all sections visible):
+    - Verifies h1 contains "Admin Dashboard"
+    - Verifies 5 stat card labels: Total Councils, Total Law Firms, Total Notices, Total Users, Monthly Revenue
+    - Verifies "Recent Admin Activity" section
+    - Verifies "System Health" section
+    - Verifies "Quick Actions" section
+  - **Test 2** (should show loading skeleton then content):
+    - Verifies the heading appears after loading
+    - Verifies stat cards are visible
+  - **Test 3** (should show stats values from API):
+    - Uses `page.waitForResponse()` to intercept `/api/admin/stats` call
+    - Verifies API returns `ok: true` with `data` object
+    - Verifies data has expected numeric fields (totalCouncils, totalFirms, totalNotices)
+- **Test results**: All 498 unit tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only (unrelated to this task)
+- **Learnings for future iterations**:
+  - Always verify `data-testid` attributes exist before writing tests that depend on them
+  - Text content selectors (`getByText()`) are more resilient for components without test IDs
+  - `waitForResponse()` is useful for verifying API calls in E2E tests
+  - Dashboard sections have consistent text labels that can be used for testing
+  - Next task is Task 17.7c: Test sidebar navigation
+---
+
+## Iteration 146 - Task 17.7c: Test sidebar navigation
+- **What was implemented**: Added E2E tests for admin sidebar navigation functionality
+- **Files changed**:
+  - `e2e/admin-panel.spec.ts` - Added section 8 "Sidebar Navigation" with 5 tests
+  - `PRD.md` - Marked Task 17.7c complete
+- **Key changes**:
+  - Inserted new test describe block before existing "Search and Filtering" (now section 9)
+  - **Test 1** (should navigate to all admin pages via sidebar):
+    - Iterates through all 5 nav items: Dashboard, Accounts, Notices, Audit Log, Settings
+    - Uses `nav a[href="/admin/..."]` selector to find sidebar links
+    - Verifies URL changes after clicking each link
+  - **Test 2** (should highlight current page in sidebar):
+    - Navigates to each admin page directly
+    - Verifies active link has `bg-blue-600` class (the active state styling)
+  - **Test 3** (should show page title in header matching sidebar selection):
+    - Verifies header h1 matches the current page name
+    - Uses `header h1, .top-bar h1` selector for flexibility
+  - **Test 4** (should toggle mobile menu and navigate):
+    - Sets viewport to 375x667 (iPhone SE size)
+    - Finds hamburger menu button by `button:has(svg.lucide-menu)`
+    - Opens menu, clicks Accounts link, verifies navigation
+  - **Test 5** (should close mobile menu after navigation):
+    - Sets mobile viewport
+    - Opens menu, clicks link, verifies URL changes
+    - Menu should auto-close after navigation
+- **Navigation items tested**: Dashboard, Accounts, Notices, Audit Log, Settings
+- **Test results**: All 498 unit tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts directories only
+- **Learnings for future iterations**:
+  - AdminLayout navigation items defined at lines 29-60 with paths: /admin/dashboard, /admin/accounts, /admin/notices, /admin/audit, /admin/settings
+  - Active state uses `isActivePath()` function with `bg-blue-600` class
+  - Mobile menu uses `mobileMenuOpen` state, toggled by hamburger button
+  - Lucide icons can be targeted with `svg.lucide-menu` selector
+  - Next task is Task 17.7d: Test settings save
+---

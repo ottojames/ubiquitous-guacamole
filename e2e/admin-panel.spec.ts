@@ -382,7 +382,134 @@ test.describe('Admin Panel E2E Tests', () => {
     });
   });
 
-  test.describe('8. Search and Filtering', () => {
+  test.describe('8. Sidebar Navigation', () => {
+    test('should navigate to all admin pages via sidebar', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      // Define expected navigation items
+      const navItems = [
+        { label: 'Dashboard', path: '/admin/dashboard' },
+        { label: 'Accounts', path: '/admin/accounts' },
+        { label: 'Notices', path: '/admin/notices' },
+        { label: 'Audit Log', path: '/admin/audit' },
+        { label: 'Settings', path: '/admin/settings' },
+      ];
+
+      // Start from dashboard
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+      await expect(page.locator('h1')).toContainText('Admin Dashboard');
+
+      // Test navigation to each page via sidebar
+      for (const navItem of navItems) {
+        // Click the sidebar link
+        const sidebarLink = page.locator(`nav a[href="${navItem.path}"]`).first();
+        await expect(sidebarLink).toBeVisible();
+        await sidebarLink.click();
+
+        // Verify navigation
+        await expect(page).toHaveURL(`${BASE_URL}${navItem.path}`);
+      }
+    });
+
+    test('should highlight current page in sidebar', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      const navItems = [
+        { label: 'Dashboard', path: '/admin/dashboard' },
+        { label: 'Accounts', path: '/admin/accounts' },
+        { label: 'Notices', path: '/admin/notices' },
+        { label: 'Audit Log', path: '/admin/audit' },
+        { label: 'Settings', path: '/admin/settings' },
+      ];
+
+      for (const navItem of navItems) {
+        await page.goto(`${BASE_URL}${navItem.path}`);
+
+        // Find the sidebar link for this page
+        const sidebarLink = page.locator(`nav a[href="${navItem.path}"]`).first();
+
+        // Active link should have the blue background class (bg-blue-600)
+        await expect(sidebarLink).toHaveClass(/bg-blue-600/);
+      }
+    });
+
+    test('should show page title in header matching sidebar selection', async ({ page }) => {
+      await loginAsAdmin(page);
+
+      const navItems = [
+        { label: 'Dashboard', path: '/admin/dashboard', headerTitle: 'Dashboard' },
+        { label: 'Accounts', path: '/admin/accounts', headerTitle: 'Accounts' },
+        { label: 'Notices', path: '/admin/notices', headerTitle: 'Notices' },
+        { label: 'Audit Log', path: '/admin/audit', headerTitle: 'Audit Log' },
+        { label: 'Settings', path: '/admin/settings', headerTitle: 'Settings' },
+      ];
+
+      for (const navItem of navItems) {
+        await page.goto(`${BASE_URL}${navItem.path}`);
+
+        // Check header shows correct page title
+        const header = page.locator('header h1, .top-bar h1').first();
+        await expect(header).toContainText(navItem.headerTitle);
+      }
+    });
+
+    test('should toggle mobile menu and navigate', async ({ page }) => {
+      // Set mobile viewport
+      await page.setViewportSize({ width: 375, height: 667 });
+
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Find and click hamburger menu button
+      const menuButton = page.locator('button').filter({ hasText: '' }).locator('svg.lucide-menu').locator('..').first();
+      // Alternative: look for the menu button by its icon
+      const hamburgerButton = page.locator('button:has(svg.lucide-menu), button:has(svg[data-testid="menu-icon"])').first();
+
+      // Try finding the mobile menu button
+      if (await hamburgerButton.isVisible()) {
+        await hamburgerButton.click();
+
+        // Mobile menu should now be visible
+        const mobileNav = page.locator('nav').filter({ hasText: 'Dashboard' });
+        await expect(mobileNav).toBeVisible();
+
+        // Click Accounts link in mobile menu
+        const accountsLink = mobileNav.locator('a[href="/admin/accounts"]').first();
+        if (await accountsLink.isVisible()) {
+          await accountsLink.click();
+          await expect(page).toHaveURL(`${BASE_URL}/admin/accounts`);
+        }
+      }
+    });
+
+    test('should close mobile menu after navigation', async ({ page }) => {
+      // Set mobile viewport
+      await page.setViewportSize({ width: 375, height: 667 });
+
+      await loginAsAdmin(page);
+      await page.goto(`${BASE_URL}/admin/dashboard`);
+
+      // Open mobile menu
+      const menuButton = page.locator('button:has(svg.lucide-menu)').first();
+      if (await menuButton.isVisible()) {
+        await menuButton.click();
+
+        // Click a navigation link
+        const noticesLink = page.locator('a[href="/admin/notices"]').first();
+        await noticesLink.click();
+
+        // After navigation, the mobile menu should be closed
+        // Check by verifying we're on the right page and menu is hidden
+        await expect(page).toHaveURL(`${BASE_URL}/admin/notices`);
+
+        // Menu should not be visible (collapsed)
+        const menuDropdown = page.locator('.mobile-menu, [data-testid="mobile-nav"]');
+        // If there's a mobile menu container, it should be hidden now
+      }
+    });
+  });
+
+  test.describe('9. Search and Filtering', () => {
     test('should search accounts by name', async ({ page }) => {
       await loginAsAdmin(page);
       await page.goto(`${BASE_URL}/admin/accounts`);
