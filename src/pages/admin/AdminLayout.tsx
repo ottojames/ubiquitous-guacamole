@@ -238,16 +238,16 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white"
+              className="text-slate-700"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <h2 className="text-lg font-bold text-red-500">Admin Panel</h2>
+            <h2 className="text-lg font-bold text-slate-900">Admin Panel</h2>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative text-gray-400 hover:text-white">
+            <button className="relative text-slate-600 hover:text-slate-900">
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></span>
             </button>
             {sessionWarning && (
               <div className="flex items-center gap-1 text-amber-500">
@@ -262,10 +262,10 @@ export default function AdminLayout() {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-30 bg-black bg-opacity-50 pt-16">
-          <div className="bg-gray-900 h-full overflow-y-auto">
-            <div className="p-4 border-b border-gray-800">
-              <p className="text-sm text-gray-400">{adminUser.email}</p>
-              <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded bg-red-900 text-red-200">
+          <div className="bg-slate-50 h-full overflow-y-auto">
+            <div className="p-4 border-b border-slate-200">
+              <p className="text-sm text-slate-600">{adminUser.email}</p>
+              <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded bg-slate-200 text-slate-700">
                 {formatRole(adminRole || 'viewer')}
               </span>
             </div>
@@ -281,23 +281,23 @@ export default function AdminLayout() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded ${
                       isActive
-                        ? 'bg-red-900 text-white'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                     <div>
                       <div className="font-medium">{item.label}</div>
-                      <div className="text-xs text-gray-500">{item.description}</div>
+                      <div className="text-xs text-slate-500">{item.description}</div>
                     </div>
                   </Link>
                 );
               })}
             </nav>
-            <div className="p-4 border-t border-gray-800">
+            <div className="p-4 border-t border-slate-200">
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 w-full px-4 py-2 text-gray-400 hover:bg-gray-800 hover:text-white rounded"
+                className="flex items-center gap-2 w-full px-4 py-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -347,7 +347,7 @@ export default function AdminLayout() {
                   {formatRole(adminRole || 'viewer')}
                 </div>
               </div>
-              <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
                 <span className="text-white font-bold text-sm">
                   {adminUser.email?.charAt(0).toUpperCase() || 'A'}
                 </span>
