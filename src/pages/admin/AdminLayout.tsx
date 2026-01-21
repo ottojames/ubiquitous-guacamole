@@ -148,19 +148,19 @@ export default function AdminLayout() {
         <div className="p-4 border-b border-slate-200">
           {sidebarOpen ? (
             <div>
-              <h2 className="text-xl font-bold text-red-500">
+              <h2 className="text-xl font-bold text-slate-900">
                 Admin Panel
               </h2>
               <div className="mt-3">
-                <p className="text-sm text-gray-400">{adminUser.email}</p>
-                <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded bg-red-900 text-red-200">
+                <p className="text-sm text-slate-600">{adminUser.email}</p>
+                <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded bg-slate-200 text-slate-700">
                   {formatRole(adminRole || 'viewer')}
                 </span>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-center">
-              <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -179,8 +179,8 @@ export default function AdminLayout() {
                 to={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded transition-all group ${
                   isActive
-                    ? 'bg-red-900 text-white'
-                    : 'text-gray-400 hover:bg-gray-900 hover:text-white'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
@@ -189,7 +189,7 @@ export default function AdminLayout() {
                   <div className="flex-1">
                     <div className="font-medium">{item.label}</div>
                     {isActive && (
-                      <div className="text-xs text-red-300 mt-0.5">
+                      <div className="text-xs text-blue-100 mt-0.5">
                         {item.description}
                       </div>
                     )}
@@ -206,7 +206,7 @@ export default function AdminLayout() {
             <div className="space-y-2">
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 w-full px-4 py-2 text-gray-400 hover:bg-gray-900 hover:text-white rounded transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -215,7 +215,7 @@ export default function AdminLayout() {
           ) : (
             <button
               onClick={handleSignOut}
-              className="flex items-center justify-center w-full p-2 text-gray-400 hover:bg-gray-900 hover:text-white rounded transition-colors"
+              className="flex items-center justify-center w-full p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-5 h-5" />
@@ -224,7 +224,7 @@ export default function AdminLayout() {
 
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mt-2 w-full flex items-center justify-center p-2 text-gray-400 hover:bg-gray-900 hover:text-white rounded transition-colors"
+            className="mt-2 w-full flex items-center justify-center p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors"
             title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             <Menu className={`w-5 h-5 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`} />
