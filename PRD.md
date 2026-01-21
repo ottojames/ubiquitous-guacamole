@@ -425,12 +425,12 @@ npm run lint         # ESLint check
 - [x] **Task 16.8d**: Review footer on mobile. **Success**: Good. (Completed 2026-01-21 - flex-wrap allows links to wrap naturally, gap-6 provides good spacing, px-6 padding = 327px content width at 375px, text-sm is readable)
 
 ### 16.9 E2E Tests for Homepage
-- [ ] **Task 16.9a**: Create `e2e/homepage.spec.ts` - test hero pricing. **Success**: Passes.
-- [ ] **Task 16.9b**: Test publish CTA links to /publish. **Success**: Passes.
-- [ ] **Task 16.9c**: Test no false council counts. **Success**: Passes.
-- [ ] **Task 16.9d**: Test stats load from API. **Success**: Passes.
-- [ ] **Task 16.9e**: Test no broken images. **Success**: Passes.
-- [ ] **Task 16.9f**: Test mobile layout. **Success**: Passes.
+- [x] **Task 16.9a**: Create `e2e/homepage.spec.ts` - test hero pricing. **Success**: Passes. (Completed 2026-01-21 - Created e2e/homepage.spec.ts with 6 tests covering hero pricing, CTAs, stats, images, and mobile layout)
+- [x] **Task 16.9b**: Test publish CTA links to /publish. **Success**: Passes. (Completed 2026-01-21 - Test verifies "Publish a Notice - £50" button has href="/publish")
+- [x] **Task 16.9c**: Test no false council counts. **Success**: Passes. (Completed 2026-01-21 - Test verifies no "40+ UK councils" claims, testimonials badge shows "What our users say")
+- [x] **Task 16.9d**: Test stats load from API. **Success**: Passes. (Completed 2026-01-21 - Test waits for /api/stats response, verifies notices/comments/councils badges display numbers not dashes)
+- [x] **Task 16.9e**: Test no broken images. **Success**: Passes. (Completed 2026-01-21 - Test checks naturalWidth of all images, fails if any are broken)
+- [x] **Task 16.9f**: Test mobile layout. **Success**: Passes. (Completed 2026-01-21 - Test sets 375px viewport, verifies hero fits within viewport, CTA buttons visible)
 
 ---
 

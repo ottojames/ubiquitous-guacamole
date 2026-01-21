@@ -4144,3 +4144,25 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - No code changes needed - existing implementation is mobile-ready
   - Next task is Task 16.8d: Review footer on mobile
 ---
+
+## Iteration 117 - Task 16.8d: Review footer on 375px mobile viewport
+- **What was implemented**: Visual code review of footer component mobile responsiveness
+- **Files changed**:
+  - `PRD.md` - Marked Task 16.8d complete
+- **Key findings (code analysis at 375px viewport)**:
+  - Container: `UI.container` = `max-w-[1200px] mx-auto px-6 md:px-8`
+    - At 375px: 24px (px-6) padding on each side = 327px content width ✓
+  - Links section: `flex flex-wrap items-center justify-center gap-6 text-sm`
+    - `flex-wrap` allows links to wrap to multiple lines on mobile ✓
+    - `justify-center` centers the wrapped links ✓
+    - `gap-6` (24px) provides good spacing between links ✓
+    - `text-sm` (14px) is readable on mobile ✓
+  - Copyright: `text-center text-sm text-slate-500` - centered and readable ✓
+  - Footer padding: `py-12` (48px) provides adequate spacing ✓
+- **No code changes needed**: Footer already has proper responsive design
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Task 16.8 (Mobile Spacing Review) is now COMPLETE: 16.8a, 16.8b, 16.8c, 16.8d all done
+  - Footer uses simple, effective responsive patterns (flex-wrap, text-sm, centered text)
+  - Next task is Task 16.9a: Create e2e/homepage.spec.ts - test hero pricing
+---
