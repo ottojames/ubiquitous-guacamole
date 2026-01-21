@@ -4035,3 +4035,46 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - When price changes, also update dependent calculations like savings (280 - 50 = 230)
   - Test files that verify old prices are NOT visible should NOT be updated (they test the absence of wrong prices)
 ---
+
+## Iteration 113 - Task 16.7a: Add trust signals section with 4 cards after hero
+- **What was implemented**: Added a trust signals section with 4 feature cards between the hero and testimonials sections on the homepage
+- **Files changed**:
+  - `src/pages/Home.tsx` - Added 44-line trust signals section (lines 445-488) with 4 cards
+  - `PRD.md` - Marked Task 16.7a complete
+- **Key implementation details**:
+  - Section positioned between hero (ending line 443) and testimonials section
+  - 4 cards in a responsive grid: sm:grid-cols-2 lg:grid-cols-4
+  - Each card has: title, description, icon (reusing existing lucide icons: Upload, CheckCircle2, Archive, FileText), and gradient background
+  - Cards: Instant Publication (blue), Cryptographic Proof (emerald), Full Audit Trail (slate), Legally Compliant (amber)
+  - Cards have hover effects (shadow-lg, ring-slate-300) and professional styling
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts directories only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Trust signals section uses existing imported icons, no new imports needed
+  - Card gradient pattern: `bg-gradient-to-br from-{color}-50 to-{color}-100/50`
+  - Next task is 16.7b: Style with icons and gradients (likely already done since cards have icons and gradients)
+---
+
+## Iteration - Task 16.7b: Style trust signals section with icons and gradients
+- **What was implemented**: Enhanced the trust signals section on homepage with professional styling
+- **Files changed**:
+  - `src/pages/Home.tsx` - Updated trust signals section styling
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Added section header with "Why Choose Us" eyebrow and "Built for legal compliance" heading
+  - Changed from muted gradients (slate-50) to vibrant themed icons:
+    - Instant Publication: blue gradient icon
+    - Cryptographic Proof: emerald gradient icon
+    - Full Audit Trail: violet gradient icon  
+    - Legally Compliant: amber gradient icon
+  - Icons now have white color on gradient background with shadow
+  - Cards have themed ring colors matching their icon theme
+  - Added hover animation: `hover:scale-[1.02]` with smooth transition
+  - Added subtle blur effect in corner of each card
+  - Section background has gradient from white through slate-50
+- **Learnings for future iterations**:
+  - TypeScript errors in cypress/, e2e/, scripts/, server/ are pre-existing and don't block src/ changes
+  - 495 tests pass consistently after this change
+  - Using `scale-[1.02]` creates subtle hover effect without being overwhelming
+  - Vibrant gradient icons (from-blue-500 to-blue-600) look more professional than muted backgrounds
+---

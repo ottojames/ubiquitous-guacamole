@@ -443,41 +443,54 @@ export default function Home() {
       </section>
 
       {/* -------- TRUST SIGNALS -------- */}
-      <section className="py-16 md:py-20">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-white via-slate-50/50 to-white">
         <div className={UI.container}>
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600 mb-2">Why Choose Us</p>
+            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">Built for legal compliance</h2>
+          </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 title: "Instant Publication",
                 desc: "Go live in seconds, not weeks. No newspaper deadlines or print delays.",
                 Icon: Upload,
-                gradient: "from-blue-50 to-blue-100/50"
+                gradient: "from-blue-500 to-blue-600",
+                bgGradient: "from-blue-50 to-blue-100/80",
+                ring: "ring-blue-200"
               },
               {
                 title: "Cryptographic Proof",
                 desc: "SHA-256 timestamped certificates provide tamper-proof evidence for court.",
                 Icon: CheckCircle2,
-                gradient: "from-emerald-50 to-emerald-100/50"
+                gradient: "from-emerald-500 to-emerald-600",
+                bgGradient: "from-emerald-50 to-emerald-100/80",
+                ring: "ring-emerald-200"
               },
               {
                 title: "Full Audit Trail",
                 desc: "Every view, comment, and action logged with immutable records.",
                 Icon: Archive,
-                gradient: "from-slate-50 to-slate-100/50"
+                gradient: "from-violet-500 to-violet-600",
+                bgGradient: "from-violet-50 to-violet-100/80",
+                ring: "ring-violet-200"
               },
               {
                 title: "Legally Compliant",
                 desc: "Meets all statutory requirements for public notice publication.",
                 Icon: FileText,
-                gradient: "from-amber-50 to-amber-100/50"
+                gradient: "from-amber-500 to-amber-600",
+                bgGradient: "from-amber-50 to-amber-100/80",
+                ring: "ring-amber-200"
               },
-            ].map(({ title, desc, Icon, gradient }) => (
+            ].map(({ title, desc, Icon, gradient, bgGradient, ring }) => (
               <div
                 key={title}
-                className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-6 ring-1 ring-slate-200/60 transition-all hover:shadow-lg hover:ring-slate-300`}
+                className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${bgGradient} p-6 ring-1 ${ring} transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
               >
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
-                  <Icon className="h-6 w-6 text-slate-700" aria-hidden="true" />
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br opacity-20 blur-2xl" style={{background: `linear-gradient(135deg, var(--tw-gradient-stops))`}} />
+                <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-slate-900/10`}>
+                  <Icon className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-slate-900">{title}</h3>
                 <p className="text-sm leading-relaxed text-slate-600">{desc}</p>

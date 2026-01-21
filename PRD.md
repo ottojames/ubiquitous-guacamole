@@ -416,7 +416,7 @@ npm run lint         # ESLint check
 
 ### 16.7 Add Trust Signals Section
 - [x] **Task 16.7a**: Create section with 4 trust cards after hero. ~60 lines. **Success**: Renders. (Completed 2026-01-21 - Added 4 cards: Instant Publication, Cryptographic Proof, Full Audit Trail, Legally Compliant; located between hero and testimonials sections)
-- [ ] **Task 16.7b**: Style with icons and gradients. **Success**: Professional.
+- [x] **Task 16.7b**: Style with icons and gradients. **Success**: Professional. (Completed 2026-01-21 - Added section header "Why Choose Us / Built for legal compliance", vibrant gradient icons (blue/emerald/violet/amber), card hover animations with scale, themed ring colors, background gradients)
 
 ### 16.8 Mobile Spacing Review
 - [ ] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
