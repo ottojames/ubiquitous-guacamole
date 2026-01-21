@@ -236,7 +236,7 @@ npm run lint         # ESLint check
 - [x] **Task 13.3**: Create `e2e/global-setup.ts` - Authenticate all test users, save storage states. ~60 lines. (Implemented 2026-01-21 - Setup file creates .playwright directory, authenticates admin/firm-owner/firm-admin/firm-editor/firm-viewer users, saves storage states to JSON files. Handles non-existent test users gracefully with placeholder auth files)
 
 ### 13.2 User Journey Tests
-- [ ] **Task 13.4a**: Create `e2e/firm-portal/owner-workflow-management.spec.ts` - Test: create department. ~40 lines.
+- [x] **Task 13.4a**: Create `e2e/firm-portal/owner-workflow-management.spec.ts` - Test: create department. ~40 lines. (Implemented 2026-01-21 - Created owner-workflow-management.spec.ts with 4 tests: create department, list departments, update department, archive department. Uses firm-auth fixtures and API endpoints)
 - [ ] **Task 13.4b**: Add test for workflow stage configuration to owner spec. ~35 lines.
 - [ ] **Task 13.4c**: Add test for invite team member to owner spec. ~35 lines.
 - [ ] **Task 13.5a**: Create `e2e/firm-portal/editor-kanban-workflow.spec.ts` - Test: view Kanban board. ~40 lines.
