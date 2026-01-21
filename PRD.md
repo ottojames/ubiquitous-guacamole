@@ -483,7 +483,7 @@ npm run lint         # ESLint check
 
 ### 17.7 E2E Tests
 - [x] **Task 17.7a**: Create `e2e/admin-panel.spec.ts` with login. **Success**: Auth works. (Verified 2026-01-21 - File exists with loginAsAdmin helper, Admin Login Flow describe block with 4 tests for login page elements, invalid credentials, failed attempts tracking, and successful login)
-- [ ] **Task 17.7b**: Test dashboard loads. **Success**: Passes.
+- [x] **Task 17.7b**: Test dashboard loads. **Success**: Passes. (Completed 2026-01-21 - Updated e2e/admin-panel.spec.ts section 6 "Dashboard Functionality" with 3 tests: dashboard sections visible (heading, stats cards, activity feed, system health, quick actions), loading skeleton then content, and stats API response verification)
 - [ ] **Task 17.7c**: Test sidebar navigation. **Success**: Passes.
 - [ ] **Task 17.7d**: Test settings save. **Success**: Passes.
 - [ ] **Task 17.7e**: Test no browser alerts. **Success**: Passes.
