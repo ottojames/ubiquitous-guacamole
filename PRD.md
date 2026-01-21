@@ -64,7 +64,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[CRITICAL]` `[M]` **Remove demo mode bypass in Dashboard** - Delete the `isDemoMode` condition that fetches all notices via public API. This is the root cause of cross-department data leakage.
+- [x] `[CRITICAL]` `[M]` **Remove demo mode bypass in Dashboard** - Delete the `isDemoMode` condition that fetches all notices via public API. This is the root cause of cross-department data leakage.
 
   **File**: `src/pages/council/Dashboard.tsx:84-89`, `src/pages/council/Dashboard.tsx:94-178`
 

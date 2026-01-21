@@ -81,124 +81,30 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Check if we're in demo mode (supporting both mock and real Westminster department)
-      const isDemoSampleBorough = department.id === 'demo-sample-borough-id';
-      const isDemoWestminster = department.id === 'demo-westminster-id';
-      // Also support real Westminster Licensing department for showcase demo
-      const isRealWestminsterLicensing = department.id === '53c08600-5c5a-46a4-8805-16c129022952';
-      const isDemoMode = isDemoSampleBorough || isDemoWestminster || isRealWestminsterLicensing;
-
       let notices: any[] = [];
       let recent: any[] = [];
 
-      if (isDemoMode) {
-        // For Westminster demo, use server API to bypass RLS restrictions
-        console.log(`[Dashboard] Demo mode: fetching notices via API for department ${department.id}`);
+      // Always query by department_id - enforcing department isolation
+      const { data: noticesData, error: noticesError } = await supabase
+        .from('notices')
+        .select('id, status')
+        .eq('department_id', department.id);
 
-        try {
-          // Fetch notices via API endpoint which uses service role key
-          const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
-          if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-          }
+      if (noticesError) throw noticesError;
 
-          const responseData = await response.json();
-          const allNotices = responseData.items || [];
-          console.log(`[Dashboard] Fetched ${allNotices.length} total notices from API`);
+      notices = noticesData || [];
 
-          // Licensing notice types (matching database values)
-          const LICENSING_NOTICE_TYPES = [
-            'licensing-premises-new',
-            'licensing-premises-variation',
-            'licensing-premises-review',
-            'licensing-club-premises',
-            'licensing-club-premises-variation',
-            'licensing-personal-licence',
-            'licensing-temporary-event',
-            'premises-licence',
-            'premises-licence-variation',
-            'premises-licence-review',
-            'club-premises-certificate',
-            'club-premises-certificate-variation',
-            'personal-licence',
-            'temporary-event-notice',
-          ];
+      // Load recent notices
+      const { data: recentData, error: recentError } = await supabase
+        .from('notices')
+        .select('id, title, status, created_at, published_at, proof_pdf_url')
+        .eq('department_id', department.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-          // Map API response to notice format and deduplicate by ID
-          const noticesMap = new Map();
-          allNotices.forEach((n: any) => {
-            // Only include licensing notices for licensing department
-            if (department.type === 'licensing' && !LICENSING_NOTICE_TYPES.includes(n.noticeType)) {
-              return;
-            }
+      if (recentError) throw recentError;
 
-            if (!noticesMap.has(n.id)) {
-              noticesMap.set(n.id, {
-                id: n.id,
-                status: n.status || 'published',
-                premises: { name: n.premisesName },
-                notice_type: n.noticeType,
-                created_at: n.publicationDate || new Date().toISOString(),
-                published_at: n.publicationDate || null,
-                representation_deadline: n.repsDeadline,
-                proof_pdf_url: null
-              });
-            }
-          });
-          notices = Array.from(noticesMap.values());
-
-          // Get recent notices with full details (deduplicated)
-          const recentMap = new Map();
-          allNotices.forEach((n: any) => {
-            // Only include licensing notices for licensing department
-            if (department.type === 'licensing' && !LICENSING_NOTICE_TYPES.includes(n.noticeType)) {
-              return;
-            }
-
-            if (!recentMap.has(n.id)) {
-              const title = n.premisesName || n.noticeType || `Notice ${n.id.substring(0, 8)}`;
-              recentMap.set(n.id, {
-                id: n.id,
-                title: title,
-                status: n.status || 'published',
-                created_at: n.publicationDate || new Date().toISOString(),
-                published_at: n.publicationDate || null,
-                proof_pdf_url: null,
-                repsDeadline: n.repsDeadline,
-                premisesName: n.premisesName
-              });
-            }
-          });
-          recent = Array.from(recentMap.values()).slice(0, 5);
-
-          console.log(`[Dashboard] Stats: ${notices.length} total notices, ${recent.length} recent notices`);
-        } catch (err) {
-          console.error('[Dashboard] Error fetching from API:', err);
-          throw err;
-        }
-      } else {
-        // Normal mode - query by department_id
-        const { data: noticesData, error: noticesError } = await supabase
-          .from('notices')
-          .select('id, status')
-          .eq('department_id', department.id);
-
-        if (noticesError) throw noticesError;
-
-        notices = noticesData || [];
-
-        // Load recent notices
-        const { data: recentData, error: recentError } = await supabase
-          .from('notices')
-          .select('id, title, status, created_at, published_at, proof_pdf_url')
-          .eq('department_id', department.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (recentError) throw recentError;
-
-        recent = recentData || [];
-      }
+      recent = recentData || [];
 
       // Calculate stats
       // Total: All notices (any status)
@@ -211,17 +117,11 @@ export default function Dashboard() {
       const draftCount = notices?.filter(n => n.status === 'draft').length || 0;
       const expiredCount = notices?.filter(n => n.status === 'expired').length || 0;
 
-      // Make stats less exact-looking for demo
-      const displayTotal = isDemoMode ? 47 : totalCount;
-      const displayPublished = isDemoMode ? 42 : publishedCount;
-      const displayDraft = isDemoMode ? 3 : draftCount;
-      const displayExpired = isDemoMode ? 2 : expiredCount;
-
       const statsData = {
-        total: displayTotal,
-        published: displayPublished,
-        draft: displayDraft,
-        expired: displayExpired,
+        total: totalCount,
+        published: publishedCount,
+        draft: draftCount,
+        expired: expiredCount,
         representations_total: 0 // Will be calculated below
       };
 
