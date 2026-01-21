@@ -188,7 +188,7 @@ npm run lint         # ESLint check
 **Note**: Use dnd-kit for drag-and-drop. Use React Query for data fetching.
 
 ### 11.1 Install Dependencies
-- [ ] **Task 11.0**: Install required packages: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @tanstack/react-query`
+- [x] **Task 11.0**: Install required packages: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @tanstack/react-query` (Installed 2026-01-21 - @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2, @tanstack/react-query@5.90.19)
 
 ### 11.2 Hooks
 - [ ] **Task 11.1a**: Create `src/hooks/useWorkflow.ts` with `useWorkflowConfigs()` hook using React Query. ~25 lines.
