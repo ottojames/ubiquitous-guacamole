@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { NoticeTableSkeleton } from '@/components/skeletons';
 import { AlertModal } from '@/components/ui/AlertModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import * as UI from '@/styles/ui';
 
 interface Notice {
   id: string;
@@ -509,7 +510,7 @@ export default function AdminNotices() {
                         handleNoticeAction('approve', selectedNotice.id);
                         setShowDetailModal(false);
                       }}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      className={UI.btnSuccess}
                     >
                       Approve
                     </button>
@@ -518,7 +519,7 @@ export default function AdminNotices() {
                         handleNoticeAction('reject', selectedNotice.id);
                         setShowDetailModal(false);
                       }}
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      className={UI.btnDanger}
                     >
                       Reject
                     </button>

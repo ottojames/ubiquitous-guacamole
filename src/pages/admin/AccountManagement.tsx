@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import AlertModal from '@/components/ui/AlertModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import * as UI from '@/styles/ui';
 
 type TabType = 'councils' | 'firms' | 'users';
 
@@ -661,7 +662,7 @@ export default function AccountManagement() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleBulkAction('suspend')}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className={`${UI.btnDanger} flex items-center gap-2`}
               >
                 <Ban className="h-4 w-4" />
                 Suspend ({selectedItems.size})
