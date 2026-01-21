@@ -140,12 +140,12 @@ export default function AdminLayout() {
 
       {/* Desktop Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-black border-r border-red-900 transition-all duration-300 z-40 hidden lg:block ${
+        className={`fixed top-0 left-0 h-screen bg-slate-50 border-r border-slate-200 transition-all duration-300 z-40 hidden lg:block ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
         {/* Header */}
-        <div className="p-4 border-b border-red-900">
+        <div className="p-4 border-b border-slate-200">
           {sidebarOpen ? (
             <div>
               <h2 className="text-xl font-bold text-red-500">
@@ -201,7 +201,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-red-900">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
           {sidebarOpen ? (
             <div className="space-y-2">
               <button
@@ -233,7 +233,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-black border-b border-red-900 z-40">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-50 border-b border-slate-200 z-40">
         <div className="flex items-center justify-between h-full px-4">
           <div className="flex items-center gap-3">
             <button

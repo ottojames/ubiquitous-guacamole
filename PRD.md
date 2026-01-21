@@ -440,7 +440,7 @@ npm run lint         # ESLint check
 
 ### 17.1 Theme Update
 - [x] **Task 17.1a**: Audit admin for dark red theme, list files. **Success**: Identified. (Completed 2026-01-21 - 6 files use dark red theme: AdminLayout.tsx (primary - bg-black, border-red-900, bg-red-900, text-red-500), AccountManagement.tsx (bg-red-900 tabs/badges, focus:ring-red-500), AuditLog.tsx (focus:ring-red-500 inputs, bg-red-600 button), Settings.tsx (focus:border-red-500 inputs, bg-gray-900 backgrounds), Login.tsx (bg-red-900/20 error box), AdminNotices.tsx (focus:ring-red-500 inputs, bg-red-600 button). Total 60+ red-themed classes across sidebar, navigation, buttons, inputs, badges, borders)
-- [ ] **Task 17.1b**: Replace sidebar red with bg-slate-50. **Success**: Light.
+- [x] **Task 17.1b**: Replace sidebar red with bg-slate-50. **Success**: Light. (Completed 2026-01-21 - Changed sidebar bg-black to bg-slate-50, border-red-900 to border-slate-200 in desktop sidebar and mobile header)
 - [ ] **Task 17.1c**: Update sidebar text to slate-700. **Success**: Readable.
 - [ ] **Task 17.1d**: Update active state to blue. **Success**: Uses blue.
 - [ ] **Task 17.1e**: Match header to public site. **Success**: Consistent.

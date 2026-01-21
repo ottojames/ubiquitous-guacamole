@@ -4189,3 +4189,46 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - naturalWidth check is effective for detecting broken images
   - Mobile tests should use setViewportSize() and reload() to trigger responsive layout
 ---
+
+## Iteration 119 - Task 17.1a: Audit admin panel for dark red theme
+- **What was implemented**: Comprehensive audit identifying all admin files using dark red theme
+- **Files changed**:
+  - `PRD.md` - Marked Task 17.1a complete with detailed audit findings
+- **Audit findings** (6 files identified):
+  1. **AdminLayout.tsx** (primary): bg-black sidebar, border-red-900 borders, bg-red-900 active nav, text-red-500 title, bg-red-600 icon backgrounds
+  2. **AccountManagement.tsx**: bg-red-900 tab active states and badges, focus:ring-red-500 on inputs
+  3. **AuditLog.tsx**: focus:ring-red-500 on all form inputs, bg-red-600 export button
+  4. **Settings.tsx**: focus:border-red-500 and focus:ring-red-500 on inputs, bg-gray-900 dark backgrounds
+  5. **Login.tsx**: bg-red-900/20 error box with border-red-800
+  6. **AdminNotices.tsx**: focus:ring-red-500 on search/select inputs, bg-red-600 confirm button
+- **Total impact**: 60+ red-themed Tailwind classes across sidebar, navigation, buttons, inputs, badges, and borders
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only - not blocking
+- **Learnings for future iterations**:
+  - Phase 17 Admin Panel Overhaul starts with this audit
+  - Primary file to update is AdminLayout.tsx (contains sidebar, navigation, header)
+  - Task 17.1b will replace sidebar bg-black/border-red-900 with bg-slate-50
+  - Task 17.1c will update sidebar text from gray-400/red-500 to slate-700
+  - Task 17.1d will change bg-red-900 active state to blue-600
+  - The dark red theme is consistent throughout - coordinated update needed
+---
+
+## Iteration 120 - Task 17.1b: Replace sidebar red with bg-slate-50
+- **What was implemented**: Changed admin sidebar from dark theme to light slate-50 background
+- **Files changed**:
+  - `src/pages/admin/AdminLayout.tsx` - 3 edits: sidebar background, borders
+  - `PRD.md` - Marked Task 17.1b complete
+- **Key changes**:
+  1. Desktop sidebar (line 143): `bg-black` → `bg-slate-50`, `border-red-900` → `border-slate-200`
+  2. Header border (line 148): `border-red-900` → `border-slate-200`
+  3. Footer border (line 204): `border-red-900` → `border-slate-200`
+  4. Mobile header (line 236): `bg-black border-red-900` → `bg-slate-50 border-slate-200`
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: No errors in AdminLayout.tsx (pre-existing errors in cypress/e2e/scripts only)
+- **Learnings for future iterations**:
+  - Task 17.1b is specifically about replacing sidebar backgrounds, not text colors
+  - The sidebar now has light bg-slate-50 background with slate-200 borders
+  - Next task 17.1c will update sidebar text from gray-400/red-500 to slate-700
+  - Sidebar text will need updating to be readable on light background (current gray-400 may be too light)
+  - The red-themed elements (text-red-500, bg-red-900, bg-red-600) still need updating in subsequent tasks
+---
