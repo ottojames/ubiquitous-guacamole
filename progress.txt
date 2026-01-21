@@ -3826,3 +3826,23 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Replaced with factual statements (audit trail) or generic labels (what users say)
   - Next task is 16.3a: Make Publish button larger with shadow
 ---
+
+## Iteration N - Task 16.3a: Make Publish button larger with shadow
+- **What was implemented**: Made hero Publish button more prominent and dominant
+- **Files changed**:
+  - `src/pages/Home.tsx` - Updated Publish button styling at lines 420-427
+  - `PRD.md` - Marked Task 16.3a complete
+- **Key implementation details**:
+  - Increased padding: px-8 py-4 → px-10 py-5 (larger clickable area)
+  - Increased text: text-base → text-lg (more readable)
+  - Increased gap: gap-2 → gap-3 (better spacing)
+  - Increased arrow icon: h-5 w-5 → h-6 w-6 (proportional to text)
+  - Enhanced shadow: rgba(37,99,235,0.45) from 0.35 (more prominent)
+  - Added hover shadow: rgba(37,99,235,0.55) (stronger interaction feedback)
+- **Test results**: All 495 tests pass
+- **TypeScript check**: Pre-existing errors in council/firm pages only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - UI.btnPrimary base shadow is `shadow-[0_6px_16px_rgba(37,99,235,0.35)]`
+  - Override with larger values using Tailwind arbitrary shadow syntax
+  - Next task is 16.3b: Make Browse button secondary style
+---

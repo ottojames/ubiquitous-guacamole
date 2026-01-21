@@ -427,7 +427,7 @@ export default function Home() {
               </a>
               <a
                 href="#notices"
-                className={`${UI.btnSecondary} px-8 py-4 text-base`}
+                className={`${UI.btnSecondary} px-6 py-3 text-sm`}
               >
                 Browse notices
               </a>

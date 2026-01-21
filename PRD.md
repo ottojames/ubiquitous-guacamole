@@ -396,7 +396,7 @@ npm run lint         # ESLint check
 
 ### 16.3 Make Publish CTA More Prominent
 - [x] **Task 16.3a**: Make Publish button larger with shadow. **Success**: Dominant. (Completed 2026-01-21 - Increased padding px-10 py-5, text-lg, gap-3, icon h-6 w-6, enhanced shadow with rgba(37,99,235,0.45) and hover shadow)
-- [ ] **Task 16.3b**: Make Browse button secondary style. **Success**: Clear hierarchy.
+- [x] **Task 16.3b**: Make Browse button secondary style. **Success**: Clear hierarchy. (Completed 2026-01-21 - Already uses UI.btnSecondary, reduced size to px-6 py-3 text-sm to create clear visual hierarchy with enhanced Publish button)
 - [ ] **Task 16.3c**: Add price to CTA: "Publish a Notice - £50". **Success**: Price visible.
 
 ### 16.4 Fix Placeholder Logos
