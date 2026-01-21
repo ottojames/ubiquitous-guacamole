@@ -552,9 +552,9 @@ npm run lint         # ESLint check
 - [x] **Task 19.3e**: Integrate into publish wizard. **Success**: Can pay. (Verified 2026-01-21 - PaymentStep.tsx already integrated at step 4 of wizard, uses useStripePayment hook, calls createCheckoutSession with noticeId/noticeType/applicantEmail, handles subscription allowance/overage for firms, redirects to Stripe checkout for payment)
 
 ### 19.4 Receipts
-- [ ] **Task 19.4a**: Create receipt PDF generator. ~80 lines. **Success**: Generates.
-- [ ] **Task 19.4b**: Create download endpoint. **Success**: Works.
-- [ ] **Task 19.4c**: Add download button. **Success**: Users get receipt.
+- [x] **Task 19.4a**: Create receipt PDF generator. ~80 lines. **Success**: Generates. (Already implemented - server/utils/certificateGenerator.ts generatePaymentReceipt function, ~90 lines)
+- [x] **Task 19.4b**: Create download endpoint. **Success**: Works. (Already implemented - GET /api/certificates/receipt/:noticeId in server/routes/certificates.ts)
+- [x] **Task 19.4c**: Add download button. **Success**: Users get receipt. (Completed 2026-01-21 - Added download buttons to PaymentSuccess.tsx and PublishConfirmationPage.tsx)
 
 ### 19.5 E2E Tests
 - [ ] **Task 19.5a**: Test checkout redirect. **Success**: Passes.

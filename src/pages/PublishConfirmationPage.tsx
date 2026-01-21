@@ -271,19 +271,29 @@ export default function PublishConfirmationPage() {
               </button>
             </div>
 
-            {/* Blue Notice PDF Download - only for licensing notices */}
-            {isLicensingNotice && (
-              <button
-                onClick={handleDownloadBlueNotice}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-4 font-semibold text-white shadow-lg transition hover:from-blue-600 hover:to-cyan-700"
+            {/* Download buttons */}
+            <div className="flex gap-4">
+              {/* Receipt Download */}
+              <a
+                href={`/api/certificates/receipt/${notice.id}`}
+                download={`receipt-${notice.id}.pdf`}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 px-6 py-4 font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:border-emerald-400"
               >
                 <Download className="h-5 w-5" />
-                Download Blue Notice PDF
-                <span className="ml-2 rounded-full bg-white/20 px-3 py-1 text-xs">
-                  For display at premises
-                </span>
-              </button>
-            )}
+                Download Receipt
+              </a>
+
+              {/* Blue Notice PDF Download - only for licensing notices */}
+              {isLicensingNotice && (
+                <button
+                  onClick={handleDownloadBlueNotice}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-4 font-semibold text-white shadow-lg transition hover:from-blue-600 hover:to-cyan-700"
+                >
+                  <Download className="h-5 w-5" />
+                  Blue Notice PDF
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Notice ID */}

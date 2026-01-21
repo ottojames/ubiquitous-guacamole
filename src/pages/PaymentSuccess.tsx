@@ -45,13 +45,23 @@ export default function PaymentSuccess() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {noticeId && (
-              <button
-                onClick={() => navigate(`/notices/${noticeId}`)}
-                className={UI.btnPrimary}
-              >
-                <ArrowRight className="h-5 w-5 mr-2" />
-                View notice
-              </button>
+              <>
+                <button
+                  onClick={() => navigate(`/notices/${noticeId}`)}
+                  className={UI.btnPrimary}
+                >
+                  <ArrowRight className="h-5 w-5 mr-2" />
+                  View notice
+                </button>
+                <a
+                  href={`/api/certificates/receipt/${noticeId}`}
+                  download={`receipt-${noticeId}.pdf`}
+                  className={UI.btnSecondary}
+                >
+                  <Download className="h-5 w-5 mr-2" />
+                  Download receipt
+                </a>
+              </>
             )}
             <button
               onClick={() => navigate('/')}
