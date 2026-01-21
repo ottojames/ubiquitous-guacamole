@@ -5,10 +5,11 @@ import {
   Users,
   FileText,
   TrendingUp,
+  TrendingDown,
+  Minus,
   Activity,
   AlertCircle,
   CheckCircle,
-  Clock,
   DollarSign,
   Shield,
   Server
@@ -16,17 +17,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import { CardSkeleton, ActivityFeedSkeleton } from '@/components/skeletons';
-
-interface DashboardStats {
-  totalCouncils: number;
-  activeCouncils: number;
-  totalFirms: number;
-  totalNotices: number;
-  totalUsers: number;
-  pendingVerifications: number;
-  monthlyRevenue: number;
-  systemHealth: 'healthy' | 'degraded' | 'down';
-}
+import { useAdminStats } from '@/hooks/useAdminStats';
 
 interface RecentAction {
   id: string;
@@ -41,86 +32,22 @@ interface RecentAction {
 export default function AdminDashboard() {
   const { user: adminUser } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCouncils: 0,
-    activeCouncils: 0,
-    totalFirms: 0,
-    totalNotices: 0,
-    totalUsers: 0,
-    pendingVerifications: 0,
-    monthlyRevenue: 0,
-    systemHealth: 'healthy'
-  });
+
+  // Use the admin stats hook for real-time data
+  const { data: stats, isLoading: statsLoading, error: statsError } = useAdminStats();
+
+  // Recent actions still fetched separately
   const [recentActions, setRecentActions] = useState<RecentAction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionsLoading, setActionsLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30 seconds
+    fetchRecentActions();
+    const interval = setInterval(fetchRecentActions, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchRecentActions = async () => {
     try {
-      // Fetch all statistics in parallel for better performance
-      const [councilsRes, activeCouncilsRes, firmsRes, noticesRes, usersRes, pendingRes] = await Promise.all([
-        // Total councils
-        supabase
-          .from('organizations')
-          .select('*', { count: 'exact', head: true })
-          .eq('type', 'council'),
-        // Active councils only
-        supabase
-          .from('organizations')
-          .select('*', { count: 'exact', head: true })
-          .eq('type', 'council')
-          .eq('status', 'active'),
-        // Total firms
-        supabase
-          .from('organizations')
-          .select('*', { count: 'exact', head: true })
-          .eq('type', 'firm'),
-        // Total notices
-        supabase
-          .from('notices')
-          .select('*', { count: 'exact', head: true }),
-        // Total users (from organization_memberships since auth.users isn't directly accessible)
-        supabase
-          .from('organization_memberships')
-          .select('user_id', { count: 'exact', head: true }),
-        // Pending verifications
-        supabase
-          .from('organizations')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending_verification')
-      ]);
-
-      const totalCouncils = councilsRes.count || 0;
-      const activeCouncils = activeCouncilsRes.count || 0;
-      const totalFirms = firmsRes.count || 0;
-      const totalNotices = noticesRes.count || 0;
-      const totalUsers = usersRes.count || 0;
-      const pendingVerifications = pendingRes.count || 0;
-
-      // Calculate monthly revenue (estimated based on active accounts)
-      const monthlyRevenue = (activeCouncils * 500) + (totalFirms * 250);
-
-      // System health based on recent errors (simplified for now)
-      const systemHealth = 'healthy';
-
-      setStats({
-        totalCouncils,
-        activeCouncils,
-        totalFirms,
-        totalNotices,
-        totalUsers,
-        pendingVerifications,
-        monthlyRevenue,
-        systemHealth
-      });
-
-      // Fetch recent admin actions
       const { data: actionsData } = await supabase
         .from('admin_actions')
         .select('*')
@@ -130,34 +57,67 @@ export default function AdminDashboard() {
       if (actionsData) {
         setRecentActions(actionsData);
       }
-
-      setLoading(false);
+      setActionsLoading(false);
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError('Failed to load dashboard data');
-      setLoading(false);
+      console.error('Error fetching recent actions:', err);
+      setActionsLoading(false);
     }
   };
 
+  // Combined loading state
+  const loading = statsLoading || actionsLoading;
+  const error = statsError?.message || null;
+
   const getHealthIcon = () => {
-    switch (stats.systemHealth) {
+    switch (stats?.systemHealth) {
       case 'healthy':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'degraded':
         return <AlertCircle className="w-5 h-5 text-yellow-500" />;
       case 'down':
         return <AlertCircle className="w-5 h-5 text-red-500" />;
+      default:
+        return <AlertCircle className="w-5 h-5 text-gray-400" />;
     }
   };
 
   const getHealthText = () => {
-    switch (stats.systemHealth) {
+    switch (stats?.systemHealth) {
       case 'healthy':
         return 'All systems operational';
       case 'degraded':
         return 'Experiencing degraded performance';
       case 'down':
         return 'System outage detected';
+      default:
+        return 'Checking system status...';
+    }
+  };
+
+  // Render the growth indicator for firms
+  const renderFirmGrowth = () => {
+    const percent = stats?.firmGrowthPercent ?? 0;
+    if (percent > 0) {
+      return (
+        <p className="text-sm text-green-600 mt-2">
+          <TrendingUp className="w-4 h-4 inline mr-1" />
+          +{percent}% this month
+        </p>
+      );
+    } else if (percent < 0) {
+      return (
+        <p className="text-sm text-red-600 mt-2">
+          <TrendingDown className="w-4 h-4 inline mr-1" />
+          {percent}% this month
+        </p>
+      );
+    } else {
+      return (
+        <p className="text-sm text-gray-600 mt-2">
+          <Minus className="w-4 h-4 inline mr-1" />
+          No change this month
+        </p>
+      );
     }
   };
 
@@ -269,9 +229,9 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">Total Councils</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalCouncils}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.totalCouncils ?? 0}</p>
               <p className="text-sm text-green-600 mt-2">
-                {stats.activeCouncils} active
+                {stats?.activeCouncils ?? 0} active
               </p>
             </div>
             <Building2 className="w-8 h-8 text-slate-500" />
@@ -282,11 +242,8 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">Total Law Firms</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalFirms}</p>
-              <p className="text-sm text-blue-600 mt-2">
-                <TrendingUp className="w-4 h-4 inline mr-1" />
-                +12% this month
-              </p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.totalFirms ?? 0}</p>
+              {renderFirmGrowth()}
             </div>
             <Users className="w-8 h-8 text-slate-500" />
           </div>
@@ -296,9 +253,9 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">Total Notices</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalNotices}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.totalNotices ?? 0}</p>
               <p className="text-sm text-gray-600 mt-2">
-                Across all organizations
+                {stats?.noticesThisMonth ?? 0} this month
               </p>
             </div>
             <FileText className="w-8 h-8 text-slate-500" />
@@ -309,7 +266,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-sm text-gray-600">Total Users</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalUsers}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.totalUsers ?? 0}</p>
               <p className="text-sm text-gray-600 mt-2">
                 Registered accounts
               </p>
@@ -323,11 +280,10 @@ export default function AdminDashboard() {
             <div>
               <p className="text-sm text-gray-600">Monthly Revenue</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {formatCurrency(stats.monthlyRevenue)}
+                {formatCurrency(stats?.monthlyRevenue ?? 0)}
               </p>
-              <p className="text-sm text-green-600 mt-2">
-                <TrendingUp className="w-4 h-4 inline mr-1" />
-                Projected
+              <p className="text-sm text-gray-600 mt-2" title={`Subscriptions: ${formatCurrency(stats?.firmSubscriptionRevenue ?? 0)} + Notices: ${formatCurrency(stats?.noticeRevenue ?? 0)}`}>
+                Calculated from actual pricing
               </p>
             </div>
             <DollarSign className="w-8 h-8 text-slate-500" />
@@ -396,15 +352,25 @@ export default function AdminDashboard() {
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">API Response Time</span>
-                <span className="text-gray-900 font-medium">45ms</span>
+                <span className={`font-medium ${
+                  (stats?.apiResponseTime ?? 0) < 200 ? 'text-green-600' :
+                  (stats?.apiResponseTime ?? 0) < 500 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {stats?.apiResponseTime ?? '—'}ms
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Database Load</span>
-                <span className="text-gray-900 font-medium">12%</span>
+                <span className="text-gray-600 font-medium">
+                  {stats?.databaseLoad !== null ? `${stats.databaseLoad}%` : 'N/A'}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Uptime</span>
-                <span className="text-gray-900 font-medium">99.98%</span>
+                <span className="text-gray-600 font-medium">
+                  {stats?.uptime !== null ? `${stats.uptime}%` : 'N/A'}
+                </span>
               </div>
             </div>
           </div>
@@ -440,7 +406,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Alerts/Warnings */}
-          {stats.pendingVerifications > 0 && (
+          {(stats?.pendingVerifications ?? 0) > 0 && (
             <button
               onClick={() => navigate('/admin/accounts?status=pending_verification')}
               className="w-full text-left bg-yellow-50 border border-yellow-200 rounded-lg p-4 cursor-pointer hover:bg-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
@@ -451,7 +417,7 @@ export default function AdminDashboard() {
                     Attention Required
                   </h3>
                   <p className="text-sm text-yellow-700 mt-1">
-                    {stats.pendingVerifications} accounts pending verification
+                    {stats?.pendingVerifications} accounts pending verification
                   </p>
                 </div>
               </div>

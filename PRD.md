@@ -473,7 +473,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.5b**: Create admin stats API endpoint. ~50 lines. **Success**: Returns data. (Completed 2026-01-21 - Created server/routes/admin/stats.ts with 140 lines. Returns growth percentages (firm growth this month vs last month), real revenue based on correct pricing (firms: £49/month + £50/notice, councils: £19.99/notice), system health via API response time measurement. Uses requireAdmin middleware for authentication)
 - [x] **Task 17.5c**: Register with admin auth. **Success**: Protected. (Completed 2026-01-21 - Added adminStatsRouter import and mounted at /api/admin/stats in server/index.ts. Route uses requireAdmin middleware which checks is_platform_admin in JWT app_metadata)
 - [x] **Task 17.5d**: Create useAdminStats hook. **Success**: Works. (Completed 2026-01-21 - Created src/hooks/useAdminStats.ts with AdminStatsData interface matching API response, React Query hook with 2-min stale time, error handling for auth failures)
-- [ ] **Task 17.5e**: Update Dashboard to use real stats. **Success**: Real numbers.
+- [x] **Task 17.5e**: Update Dashboard to use real stats. **Success**: Real numbers. (Completed 2026-01-21 - Dashboard now uses useAdminStats hook instead of direct Supabase queries. Hardcoded values replaced: firm growth shows real percentage from API, monthly revenue uses correct pricing model (£49/mo firm + £50/notice + £19.99 council notice), API response time measured in real-time, database load/uptime show N/A until monitoring is set up)
 - [ ] **Task 17.5f**: Add loading skeletons. **Success**: No blanks.
 
 ### 17.6 Fix Sidebar Navigation
