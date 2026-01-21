@@ -259,3 +259,116 @@ kill -9 $(lsof -ti tcp:5174)
 2. Link to `/pricing` council section - Pricing has less council-specific content than Home
 
 **Files affected**: `src/components/SiteHeader.tsx` (lines 45, 108), `src/pages/Home.tsx` (line 31, 788)
+
+## Departments Requiring Public Notices (Researched 2026-01-21)
+
+This section documents which UK local authority departments have statutory requirements to publish public notices.
+
+### Licensing Department
+
+**Legislation**: Licensing Act 2003, Gambling Act 2005
+
+**Licensing Act 2003 (Premises Licences)**:
+- **Site Notice**: Blue A4 notice, 16pt+ black font, displayed for 28 consecutive days at premises
+- **Newspaper Notice**: Published in local newspaper within 10 working days of application
+- **Content**: Applicant details, premises address, licensable activities, objection deadline
+- **Responsible Authorities**: Police, Fire, Environmental Health, Child Protection, Planning, Trading Standards
+
+**Gambling Act 2005 (Gambling Premises Licences)**:
+- **Site Notice**: White A4 notice, displayed for 28 consecutive days at premises
+- **Newspaper Notice**: Published in local newspaper within 10 working days
+- **Additional**: If premises frontage > 50 metres, notices every 50 metres
+- **Consultation Period**: 28 days for representations
+
+### Planning Department
+
+**Legislation**: Town and Country Planning Act 1990, Town and Country Planning (Development Management Procedure) (England) Order 2015
+
+**Planning Applications**:
+- **Site Notice**: Displayed for minimum 21 days on or near the land
+- **Newspaper Notice**: Required for major applications, listed buildings, conservation areas
+- **Online Publication**: Planning portal and local authority website
+- **Consultation**: Statutory consultees (Natural England, Historic England, Highways England, etc.)
+
+**Development Types Requiring Notice**:
+- Major developments (10+ dwellings, 1000m²+ commercial)
+- Listed building consent
+- Conservation area works
+- Environmental Impact Assessment developments
+- Departure from development plan
+
+### Highways Department
+
+**Legislation**: Road Traffic Regulation Act 1984, Local Authorities' Traffic Orders (Procedure) (England and Wales) Regulations 1996
+
+**Traffic Regulation Orders (TROs)**:
+- **Newspaper Notice**: Notice of Intention published in local press
+- **Site Notices**: Displayed in affected roads
+- **Objection Period**: 21 days
+- **Notice of Making**: Published when order is made
+- **Consultees**: Police, county/district/borough/town/parish councils
+
+**Experimental TROs**:
+- **No prior consultation required**, but Notice of Making must be published
+- Ongoing consultation for first 6 months
+
+### Environmental Health Department
+
+**Legislation**: Environmental Protection Act 1990 Part 2A, Food Safety Act 1990
+
+**Contaminated Land**:
+- **Public Register**: Local authorities must maintain public register of remediation notices
+- **Special Sites**: Entry created if land designated as Special Site
+- **Liability Notices**: Served on "Appropriate Persons" (Class A: polluters, Class B: landowners)
+
+**Food Safety**:
+- **Emergency Prohibition Notices**: Can close premises with immediate effect (court confirmation required)
+- **Registration**: Not a notice requirement, but businesses must register 28 days before trading
+- **Improvement Notices**: Served on businesses for hygiene contraventions
+
+**Statutory Nuisances**:
+- **Abatement Notices**: Served under Environmental Protection Act 1990
+- **Works in Default**: Local authority can carry out work and recover costs
+
+### Building Control Department
+
+**Legislation**: Building Act 1984, Building Regulations 2010, Building Safety Act 2022
+
+**Public Body's Notice**: Section 54 of Building Act 1984
+- **Demolition Notices**: Notice to adjacent property owners (Sections 80-83)
+- **Plan Validity**: Section 32 notice if plans not commenced within 3 years
+- **Compliance/Stop Notices**: Section 35B/35C enforcement
+
+**Higher-Risk Buildings** (Building Safety Act 2022):
+- Buildings 18m+ or 7+ storeys
+- Building Safety Regulator oversight
+- Public body's notices must be cancelled for higher-risk work
+
+### Summary Table
+
+| Department | Primary Legislation | Notice Duration | Newspaper Required |
+|------------|--------------------|-----------------|--------------------|
+| Licensing (Alcohol) | Licensing Act 2003 | 28 days | Yes |
+| Licensing (Gambling) | Gambling Act 2005 | 28 days | Yes |
+| Planning | TCPA 1990 / DMPO 2015 | 21 days | Sometimes |
+| Highways | RTRA 1984 | 21 days | Yes |
+| Environmental Health | EPA 1990 | N/A | No (public register) |
+| Building Control | Building Act 1984 | Varies | No |
+
+### Currently Supported in Civic Notices Platform
+
+Based on the codebase (`src/next/publish/config/noticeTypes.ts`):
+- ✅ Premises Licence (Licensing Act 2003)
+- ✅ Variation applications
+- ✅ Review applications
+- ⚠️ Planning notices (not yet implemented)
+- ⚠️ Traffic Regulation Orders (not yet implemented)
+- ⚠️ Gambling Act notices (not yet implemented)
+
+### References
+
+- [Licensing Act 2003 Section 182 Guidance](https://www.gov.uk/government/publications/explanatory-memorandum-revised-guidance-issued-under-s-182-of-licensing-act-2003)
+- [DMPO 2015](https://www.legislation.gov.uk/uksi/2015/595)
+- [Road Traffic Regulation Act 1984](https://commonslibrary.parliament.uk/research-briefings/sn06013/)
+- [Contaminated Land Statutory Guidance](https://www.gov.uk/government/publications/contaminated-land-statutory-guidance)
+- [Building Act 1984](https://www.gov.uk/government/publications/the-building-act-1984-and-building-regulations-2010-circular-07-2010)

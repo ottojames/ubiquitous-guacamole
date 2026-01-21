@@ -638,7 +638,16 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[LOW]` `[L]` **Research and document which departments legally require public notices** - Verify: Licensing (Licensing Act 2003), Planning (Town and Country Planning Act). Research: Environmental Health, Building Control, Highways.
+- [x] `[LOW]` `[L]` **Research and document which departments legally require public notices** - Verify: Licensing (Licensing Act 2003), Planning (Town and Country Planning Act). Research: Environmental Health, Building Control, Highways.
+
+  **Solution**: Added comprehensive "Departments Requiring Public Notices" section to CLAUDE.md documenting:
+  - **Licensing**: Licensing Act 2003 (28-day site + newspaper notice), Gambling Act 2005 (28-day site + newspaper notice)
+  - **Planning**: TCPA 1990 / DMPO 2015 (21-day site notice, newspaper for major applications)
+  - **Highways**: RTRA 1984 (21-day objection period, newspaper Notice of Intention)
+  - **Environmental Health**: EPA 1990 Part 2A (public register for contaminated land, no newspaper requirement)
+  - **Building Control**: Building Act 1984 (varies, no newspaper requirement)
+
+  Documentation includes notice durations, newspaper requirements, responsible authorities, and references to primary legislation.
 
 - [ ] `[LOW]` `[L]` **Customize dashboard metrics per department type** - Licensing: consultation deadlines, representation counts. Planning: application stages, decision deadlines.
 
