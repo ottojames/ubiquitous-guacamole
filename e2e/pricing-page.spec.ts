@@ -33,4 +33,30 @@ test.describe('Pricing Page', () => {
 
     console.log('All three pricing cards are visible');
   });
+
+  test('displays correct prices (£50, £49, FREE, £19.99)', async ({ page }) => {
+    // Public card: £50/notice
+    const publicPrice = page.locator('text=£50').first();
+    await expect(publicPrice).toBeVisible();
+    const publicPerNotice = page.locator('text=/notice').first();
+    await expect(publicPerNotice).toBeVisible();
+
+    // Firms card: £49/month + £50 per notice
+    const firmsMonthlyPrice = page.locator('text=£49').first();
+    await expect(firmsMonthlyPrice).toBeVisible();
+    const firmsMonthly = page.locator('text=/month').first();
+    await expect(firmsMonthly).toBeVisible();
+    // Check for the "+ £50 per notice" text in the firms card pricing section
+    const firmsPlusNotice = page.locator('.mt-1.text-sm.text-slate-500').filter({ hasText: '+ £50 per notice' });
+    await expect(firmsPlusNotice).toBeVisible();
+
+    // Councils card: FREE + £19.99 per notice
+    const freeText = page.locator('span').filter({ hasText: 'FREE' }).first();
+    await expect(freeText).toBeVisible();
+    // Check for the £19.99 price text in the councils card pricing section
+    const councilNoticePrice = page.locator('.mt-1.text-sm.text-slate-500').filter({ hasText: '£19.99 per notice' });
+    await expect(councilNoticePrice).toBeVisible();
+
+    console.log('All prices are correct: £50/notice, £49/month + £50/notice, FREE + £19.99/notice');
+  });
 });

@@ -3513,3 +3513,71 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The Final CTA section is at lines 408-443 in Pricing.tsx
   - Next tasks 15.7c and 15.7d will add secondary CTA buttons for firms and councils
 ---
+
+## Iteration 96 - Task 15.7c: Add secondary CTA "Register as a Firm"
+- **What was implemented**: Changed the secondary CTA in Final CTA section from "Request a demo" to "Register as a Firm"
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Lines 429-434: Changed href from "#contact" to "/sign-up?plan=firm", removed Clock icon, changed text to "Register as a Firm"
+  - src/pages/Pricing.tsx - Line 2: Removed unused Clock import from lucide-react
+  - PRD.md - Marked task complete with implementation notes
+- **Test results**: All 494 tests pass (2 skipped)
+- **TypeScript check**: Pre-existing errors in cypress/ directory only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The Final CTA section now has: 1) Primary white button "Publish a Notice - £50" → /publish, 2) Ghost button "Register as a Firm" → /sign-up?plan=firm
+  - Next task 15.7d will add council link "Get free portal access"
+---
+
+## Iteration 97 - Task 15.7d: Add council link "Get free portal access"
+- **What was implemented**: Added third CTA button for councils in the Final CTA section
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Lines 421 and 435-440: Added sm:flex-wrap to container, added new council CTA button with emerald styling
+  - PRD.md - Marked task complete with implementation notes
+- **Changes made**:
+  - Added `sm:flex-wrap` to the button container to handle 3 buttons on smaller screens
+  - Added new button linking to `/sign-up?plan=council`
+  - Styled with emerald green colors (`border-emerald-400/50`, `bg-emerald-500/20`) to match council branding
+- **Test results**: All 494 tests pass (2 skipped)
+- **TypeScript check**: Pre-existing errors in cypress/ directory only - Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The Final CTA section now has 3 buttons: 1) Primary "Publish a Notice - £50" → /publish, 2) Ghost "Register as a Firm" → /sign-up?plan=firm, 3) Emerald "Get Free Portal Access" → /sign-up?plan=council
+  - Task 15.7 (Final CTA Section) is now COMPLETE
+  - Next section is Task 15.8: E2E Tests for Pricing Page
+---
+
+## Iteration 98 - Task 15.8a: Create e2e/pricing-page.spec.ts - test three cards visible
+- **What was implemented**: Created Playwright E2E test file for pricing page
+- **Files created**:
+  - `e2e/pricing-page.spec.ts` - Test file with describe block and initial test
+- **Files changed**:
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Uses standard Playwright test/expect imports
+  - BASE_URL pattern consistent with other e2e tests
+  - beforeEach navigates to /pricing and waits for networkidle
+  - Test locates pricing cards by h3 heading text: "One-Off Publishing", "Professional Portal", "Council Portal"
+  - All three cards verified visible using toBeVisible() assertions
+- **Test results**: 
+  - Playwright test passes (1 passed in 6.4s)
+  - Vitest tests still pass (494 passed, 2 skipped)
+- **Learnings for future iterations**:
+  - Playwright browsers needed to be installed (`npx playwright install chromium`)
+  - The 'default' project in playwright.config.ts runs tests without auth (for public pages)
+  - Using h3 heading text is reliable for identifying pricing cards
+  - The pricing page structure: Hero → Savings Banner → Old Way vs New Way → Pricing Cards → FAQ → Final CTA → Footer
+  - Next task is 15.8b: Test correct prices (£50, £49, FREE, £19.99)
+---
+
+## Iteration 99 - Task 15.8b: Test correct prices (£50, £49, FREE, £19.99)
+- **What was implemented**: Added E2E test to verify all pricing values are correctly displayed
+- **Files changed**:
+  - `e2e/pricing-page.spec.ts` - Added test for correct prices
+  - `PRD.md` - Marked task complete
+- **Test verifies**:
+  - Public card: £50/notice
+  - Firms card: £49/month + £50 per notice
+  - Councils card: FREE + £19.99 per notice when publishing
+- **Learnings for future iterations**:
+  - Playwright strict mode requires specific selectors when multiple elements match
+  - Using `.mt-1.text-sm.text-slate-500` class selector helps target the pricing subtext specifically
+  - The pricing page has duplicate text in features lists, so targeting by class is safer than text matching
+---
