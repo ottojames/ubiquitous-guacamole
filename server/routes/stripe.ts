@@ -2,26 +2,22 @@ import { Router } from 'express';
 import Stripe from 'stripe';
 import { getServiceSupabaseClient } from '../lib/supabase';
 import { sendNoticeConfirmation } from '../services/email';
+import { getStripeClient, isStripeConfigured } from '../services/stripe';
 
 const router = Router();
-
-// Initialize Stripe - we'll need to add these keys to .env
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
-    })
-  : null;
 
 /**
  * Create Stripe checkout session for notice payment
  */
 router.post('/create-checkout-session', async (req, res) => {
   try {
-    if (!stripe) {
+    if (!isStripeConfigured()) {
       return res.status(500).json({
         error: 'Payment processing not configured. Please contact support.'
       });
     }
+
+    const stripe = getStripeClient();
 
     const {
       noticeId,
@@ -78,9 +74,11 @@ router.post('/create-checkout-session', async (req, res) => {
  * Stripe webhook handler for payment confirmations
  */
 router.post('/webhook', async (req, res) => {
-  if (!stripe) {
+  if (!isStripeConfigured()) {
     return res.status(500).json({ error: 'Stripe not configured' });
   }
+
+  const stripe = getStripeClient();
 
   const sig = req.headers['stripe-signature'] as string;
 

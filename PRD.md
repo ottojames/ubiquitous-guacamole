@@ -536,7 +536,7 @@ npm run lint         # ESLint check
 ### 19.1 Stripe Setup
 - [x] **Task 19.1a**: Install Stripe packages. **Success**: Installed. (Verified 2026-01-21 - stripe@20.2.0 and @stripe/stripe-js@8.6.3 already in package.json, 498 tests pass)
 - [x] **Task 19.1b**: Add env vars to .env.example. **Success**: Documented. (Completed 2026-01-21 - Added VITE_STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, VITE_APP_URL with helpful comments and dashboard URLs)
-- [ ] **Task 19.1c**: Create stripe.ts service. ~20 lines. **Success**: Initializes.
+- [x] **Task 19.1c**: Create stripe.ts service. ~20 lines. **Success**: Initializes. (Completed 2026-01-21 - Created server/services/stripe.ts with getStripeClient() and isStripeConfigured() functions, updated server/routes/stripe.ts to use the service)
 
 ### 19.2 Endpoints
 - [ ] **Task 19.2a**: Create checkout session endpoint. ~50 lines. **Success**: Creates session.
