@@ -367,7 +367,7 @@ npm run lint         # ESLint check
 ### 15.8 E2E Tests for Pricing Page
 - [x] **Task 15.8a**: Create `e2e/pricing-page.spec.ts` - test three cards visible. **Success**: Test passes. (Completed 2026-01-21 - Created e2e/pricing-page.spec.ts with test.describe block and test for three pricing card titles: One-Off Publishing, Professional Portal, Council Portal)
 - [x] **Task 15.8b**: Test correct prices (£50, £49, FREE, £19.99). **Success**: Test passes. (Completed 2026-01-21 - Added test verifying £50/notice for Public, £49/month + £50/notice for Firms, FREE + £19.99/notice for Councils)
-- [ ] **Task 15.8c**: Test old tiers not visible. **Success**: Test passes.
+- [x] **Task 15.8c**: Test old tiers not visible. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying old tier names (Business, Enterprise, Parish & Town, District Council, Unitary & County) and old prices (£150/month, £400/month, £1200/month, £199/month, £499/month, £49.99) are not visible)
 - [ ] **Task 15.8d**: Test no false "40+" claims. **Success**: Test passes.
 - [ ] **Task 15.8e**: Test Public CTA links to /publish. **Success**: Test passes.
 - [ ] **Task 15.8f**: Test Firms CTA links to sign-up?plan=firm. **Success**: Test passes.
