@@ -3,6 +3,7 @@ import { useParams, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import InternalComments from '@/components/council/InternalComments';
 import AssignRepresentationModal from '@/components/council/AssignRepresentationModal';
+import RepresentationAnalysisSummary from '@/components/council/RepresentationAnalysisSummary';
 import {
   MessageCircle,
   ThumbsUp,
@@ -698,6 +699,13 @@ export default function CouncilRepresentations() {
                     {selectedRep.representation_text}
                   </p>
                 </div>
+
+                {/* AI Analysis Summary */}
+                <RepresentationAnalysisSummary
+                  representationId={selectedRep.id}
+                  representationText={selectedRep.representation_text}
+                  statedStance={selectedRep.type || undefined}
+                />
 
                 {selectedRep.reviewed_at && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
