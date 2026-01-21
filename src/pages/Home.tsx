@@ -344,10 +344,10 @@ export default function Home() {
         <div className={`${UI.container} relative z-10`}>
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-6xl lg:text-7xl">
-              Publish legal notices digitally. £50 per notice.
+              Stay informed about licensing and planning decisions in your area
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl lg:text-2xl">
-              Replace expensive newspaper ads with instant digital notices. Full audit trail included.
+              Search statutory notices near you. Know what's happening in your community.
             </p>
 
             <button

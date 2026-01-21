@@ -8745,3 +8745,22 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - When email fails, keeping subscription in dev mode helps testing; deleting in prod prevents orphaned records
   - The EmailAlerts page was already wired to call the API endpoints correctly
 ---
+
+## Iteration 36 - Rewrite hero headline and subtitle (Phase 7)
+- **What was implemented**: Changed hero section from sales-focused to community-focused messaging
+- **Files changed**:
+  - `src/pages/Home.tsx` - Changed hero h1 and p elements
+  - `PRD.md` - Marked task complete
+- **Before**:
+  - Headline: "Publish legal notices digitally. £50 per notice."
+  - Subtitle: "Replace expensive newspaper ads with instant digital notices. Full audit trail included."
+- **After**:
+  - Headline: "Stay informed about licensing and planning decisions in your area"
+  - Subtitle: "Search statutory notices near you. Know what's happening in your community."
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in PaymentStep, gvol.ts, NoticeEditor, TemplateTextEditor, etc. (not related to this change)
+- **Learnings for future iterations**:
+  - Hero section is at lines 346-351 in Home.tsx
+  - The messaging change removes "£50" and "per notice" from the hero (DoD requirement)
+  - Contains resident-focused language: "informed", "your area", "your community" (DoD requirement)
+---

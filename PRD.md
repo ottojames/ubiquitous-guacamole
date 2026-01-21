@@ -367,9 +367,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[MEDIUM]` `[S]` **Rewrite hero headline and subtitle** - Change from sales-focused to community-focused. Current: "Publish legal notices digitally. £50 per notice." Target: "Stay informed about licensing and planning decisions in your area"
+- [x] `[MEDIUM]` `[S]` **Rewrite hero headline and subtitle** - Change from sales-focused to community-focused. Current: "Publish legal notices digitally. £50 per notice." Target: "Stay informed about licensing and planning decisions in your area"
 
   **File**: `src/pages/Home.tsx:346-351`
+
+  **Solution**: Changed headline from "Publish legal notices digitally. £50 per notice." to "Stay informed about licensing and planning decisions in your area". Changed subtitle from "Replace expensive newspaper ads with instant digital notices. Full audit trail included." to "Search statutory notices near you. Know what's happening in your community."
 
 - [ ] `[MEDIUM]` `[S]` **Reposition CTAs** - Primary CTA: "Search notices near you" (→ /notices). Move "Publish a Notice - £50" lower on page.
 
