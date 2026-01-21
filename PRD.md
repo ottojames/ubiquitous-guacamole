@@ -205,7 +205,7 @@ npm run lint         # ESLint check
 
 ### 11.4 Template Management
 - [x] **Task 11.5a**: Create `src/pages/firm/Templates.tsx` with template list view. Shows templates, filter by type. ~60 lines. (Completed 2026-01-21 - Component with loading state, filter by notice type dropdown using NOTICE_CATEGORY_TREE, template list with name/description/type/usage_count/is_shared/date, empty state, admin-only create button)
-- [ ] **Task 11.5b**: Add create/edit template modal to `src/pages/firm/Templates.tsx`. Form with name, type, data fields. ~70 lines.
+- [x] **Task 11.5b**: Add create/edit template modal to `src/pages/firm/Templates.tsx`. Form with name, type, data fields. ~70 lines. (Completed 2026-01-21 - Modal with form for name, description, notice_type, template_data JSON, is_shared toggle; openCreateModal/openEditModal handlers; handleSave for POST/PATCH API calls; error validation and loading state)
 - [ ] **Task 11.5c**: Add delete confirmation and usage count display to Templates page. ~30 lines.
 - [ ] **Task 11.6**: Add Templates route to `src/App.tsx` - Route `/f/:firmSlug/templates` to Templates page.
 - [ ] **Task 11.7**: Add Templates link to `src/pages/firm/FirmLayout.tsx` sidebar - Navigation item with FileText icon.
