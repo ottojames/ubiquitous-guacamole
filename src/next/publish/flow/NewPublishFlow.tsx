@@ -865,6 +865,54 @@ export default function NewPublishFlow() {
   const [templateText, setTemplateText] = useState("");
   const [templateInfo, setTemplateInfo] = useState<TemplateRenderResult | null>(null);
 
+  // Draft generation state
+  const [draftGenerating, setDraftGenerating] = useState(false);
+  const [draftSuggestions, setDraftSuggestions] = useState<string[]>([]);
+
+  // Handle draft generation from template data
+  const handleGenerateDraft = React.useCallback(async () => {
+    if (!templateNotice) return;
+
+    setDraftGenerating(true);
+    setDraftSuggestions([]);
+
+    try {
+      const response = await fetch('/api/drafting/from-notice-base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(templateNotice),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate draft');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.draftText) {
+        // Update the template text with the generated draft
+        setTemplateText(result.draftText);
+
+        // Store suggestions if any
+        if (result.suggestions && result.suggestions.length > 0) {
+          setDraftSuggestions(result.suggestions);
+        }
+
+        toast('Draft text generated successfully');
+      } else {
+        toast('Could not generate draft text');
+      }
+    } catch (error) {
+      console.error('[NewPublishFlow] Draft generation error:', error);
+      toast('Failed to generate draft text');
+    } finally {
+      setDraftGenerating(false);
+    }
+  }, [templateNotice]);
+
   // Render notice text with custom template support
   useEffect(() => {
     if (!templateNotice) {
@@ -1842,6 +1890,9 @@ export default function NewPublishFlow() {
               onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
               isPortalContext={isPortalContext}
               legalDetails={uploadMethod === "notice" ? legalDetails as Record<string, unknown> : undefined}
+              onGenerateDraft={uploadMethod === "template" ? handleGenerateDraft : undefined}
+              draftGenerating={draftGenerating}
+              draftSuggestions={draftSuggestions}
               preview={
                 <div className="rounded-xl border border-slate-200 p-3 space-y-3">
                   {/* Template indicator for Step 3 - only show when using template mode */}
