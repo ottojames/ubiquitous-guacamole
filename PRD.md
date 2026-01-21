@@ -383,7 +383,7 @@ npm run lint         # ESLint check
 **File**: `src/pages/Home.tsx`
 
 ### 16.1 Replace Hardcoded Stats with Real API
-- [ ] **Task 16.1a**: Create `server/routes/stats.ts` GET `/api/stats` returning real counts. ~40 lines. **Success**: Returns real data.
+- [x] **Task 16.1a**: Create `server/routes/stats.ts` GET `/api/stats` returning real counts. ~40 lines. **Success**: Returns real data. (Completed 2026-01-21 - Created stats.ts with 48 lines, queries notices/representations/councils counts in parallel)
 - [ ] **Task 16.1b**: Register route in server/index.ts. **Success**: Accessible.
 - [ ] **Task 16.1c**: Create `src/hooks/useStats.ts`. ~30 lines. **Success**: Hook works.
 - [ ] **Task 16.1d**: Replace hardcoded STATS with useStats() hook. **Success**: Real counts shown.
