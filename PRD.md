@@ -373,9 +373,15 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Changed headline from "Publish legal notices digitally. £50 per notice." to "Stay informed about licensing and planning decisions in your area". Changed subtitle from "Replace expensive newspaper ads with instant digital notices. Full audit trail included." to "Search statutory notices near you. Know what's happening in your community."
 
-- [ ] `[MEDIUM]` `[S]` **Reposition CTAs** - Primary CTA: "Search notices near you" (→ /notices). Move "Publish a Notice - £50" lower on page.
+- [x] `[MEDIUM]` `[S]` **Reposition CTAs** - Primary CTA: "Search notices near you" (→ /notices). Move "Publish a Notice - £50" lower on page.
 
   **File**: `src/pages/Home.tsx:421-436`
+
+  **Solution**: Swapped the hero CTAs:
+  - Primary CTA: Changed from "Publish a Notice - £50" (→ /publish) to "Search notices near you" (→ /notices)
+  - Secondary CTA: Changed from "Browse notices" (→ #notices) to "Publish a notice" (→ #publish, scrolls to publish section)
+  - Updated supporting text from "No sign-up needed · Full audit trail · Save up to 85% vs newspapers" to "Free to search · No sign-up needed · Updated daily" (community-focused)
+  - The publish section (line 690-785) already has full "Start publishing now" CTA with £50 pricing, so publish is now properly deferred to lower on page
 
 - [ ] `[LOW]` `[M]` **Add notices carousel** - Replace static grid with carousel showing recent notices, allowing users to browse without leaving homepage.
 

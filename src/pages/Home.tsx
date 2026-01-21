@@ -420,23 +420,22 @@ export default function Home() {
             {/* CTA Buttons */}
             <div className="mt-16 md:mt-20 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
-                href="/publish"
-                onClick={() => track("publish_started", { audience: "public" })}
+                href="/notices"
                 className={`${UI.btnPrimary} inline-flex items-center gap-3 px-10 py-5 text-lg shadow-[0_8px_24px_rgba(37,99,235,0.45)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.55)]`}
               >
-                Publish a Notice - £50
+                Search notices near you
                 <ArrowRight className="h-6 w-6" />
               </a>
               <a
-                href="#notices"
+                href="#publish"
                 className={`${UI.btnSecondary} px-6 py-3 text-sm`}
               >
-                Browse notices
+                Publish a notice
               </a>
             </div>
 
             <p className="mt-8 text-sm text-slate-500">
-              No sign-up needed · Full audit trail · Save up to 85% vs newspapers
+              Free to search · No sign-up needed · Updated daily
             </p>
           </div>
         </div>
