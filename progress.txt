@@ -4493,3 +4493,138 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next tasks will create AlertModal and ConfirmModal components to replace these
   - Task 17.3b: Create ConfirmModal component
 ---
+
+## Iteration 130 - Task 17.3b: Create ConfirmModal component
+- **What was implemented**: Created a reusable ConfirmModal component for replacing browser confirm() dialogs
+- **Files changed**:
+  - `src/components/ui/ConfirmModal.tsx` - NEW FILE (130 lines)
+  - `PRD.md` - Marked Task 17.3b complete
+- **Key features**:
+  - `variant` prop: 'danger' (red), 'warning' (amber), 'info' (blue)
+  - `loading` prop: disables buttons, shows "Processing..." text
+  - Keyboard support: Escape key closes modal (when not loading)
+  - Focus management: Cancel button auto-focused when modal opens
+  - Backdrop click: closes modal (when not loading)
+  - ARIA accessibility: role="dialog", aria-modal, aria-labelledby, aria-describedby
+  - Body scroll prevention: document.body.style.overflow='hidden' when open
+  - Props: isOpen, onClose, onConfirm, title, message, confirmText, cancelText, variant, loading
+- **Styling pattern**:
+  - Uses `fixed inset-0 bg-black/50` for overlay (matches existing modals in Templates.tsx)
+  - Uses `bg-white rounded-2xl shadow-xl` for modal container
+  - Uses Tailwind animate-in classes for smooth open animation
+  - Focus rings: `focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`
+- **Test results**: All 496 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts only (not in src/)
+- **Learnings for future iterations**:
+  - Codebase uses inline modals with `fixed inset-0 bg-black/50` pattern (see Templates.tsx)
+  - Focus management is important for accessibility - focus first non-destructive action
+  - Cancel should be default focus, not the destructive Confirm button
+  - Use refs to manage focus: `useRef<HTMLButtonElement>()` + `ref.current.focus()`
+  - Next task is 17.3c: Create AlertModal component
+---
+
+## Iteration N - Task 17.3c: Create AlertModal component
+- **What was implemented**: Created AlertModal component for replacing browser alert() calls
+- **Files changed**:
+  - `src/components/ui/AlertModal.tsx` - NEW FILE (122 lines)
+  - `PRD.md` - Marked task complete
+- **Key features of AlertModal**:
+  - Four variants: success (green CheckCircle), error (red AlertTriangle), warning (amber AlertTriangle), info (blue Info)
+  - Single dismiss button (unlike ConfirmModal which has Cancel + Confirm)
+  - Keyboard handling: Escape closes modal
+  - Focus management: OK button auto-focused when modal opens
+  - Backdrop click to close
+  - Accessible: role="alertdialog", aria-modal, aria-labelledby, aria-describedby
+  - Body scroll lock when open
+  - Same styling as ConfirmModal for consistency
+- **Test results**: All 497 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - AlertModal is simpler than ConfirmModal - just onClose, no onConfirm
+  - Use role="alertdialog" instead of role="dialog" for alert modals (ARIA spec)
+  - Different variants need different icons (CheckCircle for success, AlertTriangle for error/warning, Info for info)
+  - Next task is 17.3d: Replace first alert() - will use AlertModal in AdminNotices.tsx
+---
+
+## Iteration 132 - Task 17.3d: Replace first alert() with AlertModal
+- **What was implemented**: Replaced the first alert() call in AdminNotices.tsx with AlertModal component
+- **Files changed**:
+  - `src/pages/admin/AdminNotices.tsx` - Imported AlertModal, added state, replaced alert(), rendered modal
+  - `PRD.md` - Marked Task 17.3d complete
+- **Key changes to AdminNotices.tsx**:
+  - Added import: `import { AlertModal } from '@/components/ui/AlertModal';`
+  - Added state: `alertModal` with isOpen, title, message, variant fields
+  - Replaced `alert('Failed to perform action. Please try again.')` with `setAlertModal({ isOpen: true, title: 'Action Failed', message: '...', variant: 'error' })`
+  - Added AlertModal render at end of component JSX
+- **Pattern for replacing alert() calls**:
+  1. Add AlertModal import
+  2. Add state: `const [alertModal, setAlertModal] = useState<{isOpen: boolean; title: string; message: string; variant: '...'}>(...)`
+  3. Replace `alert('...')` with `setAlertModal({ isOpen: true, ... })`
+  4. Add AlertModal render: `<AlertModal isOpen={alertModal.isOpen} onClose={() => setAlertModal({...alertModal, isOpen: false})} ... />`
+- **Test results**: All 497 tests pass (2 skipped), no regressions
+- **Pre-existing TypeScript errors**: Only in cypress/e2e/scripts directories (not in src/)
+- **Learnings for future iterations**:
+  - The handleNoticeAction catch block was the first of 5 alert() calls identified in Task 17.3a
+  - Remaining alert() calls are in AccountManagement.tsx (4 calls): password reset, action failed, bulk suspend success, bulk activate success
+  - Task 17.3e will replace all 4 remaining alert() calls in AccountManagement.tsx
+  - Task 17.3f will replace the 2 confirm() calls (AdminNotices.tsx delete, AccountManagement.tsx delete account)
+---
+
+## Iteration 133 - Task 17.3e: Replace all remaining alert() calls
+- **What was implemented**: Replaced all 4 remaining alert() calls in AccountManagement.tsx with AlertModal
+- **Files changed**:
+  - `src/pages/admin/AccountManagement.tsx` - Imported AlertModal, added state, replaced 4 alert() calls, rendered modal
+  - `PRD.md` - Marked Task 17.3e complete
+- **Alert calls replaced**:
+  1. Line 384: `alert('Password reset functionality coming soon')` → AlertModal with info variant
+  2. Line 400: `alert('Failed to perform action. Please try again.')` → AlertModal with error variant
+  3. Line 417: `alert(`${selectedItems.size} accounts suspended successfully`)` → AlertModal with success variant
+  4. Line 427: `alert(`${selectedItems.size} accounts activated successfully`)` → AlertModal with success variant
+- **Key implementation details**:
+  - Added alertModal state with isOpen, variant, title, message fields
+  - Used consistent pattern: setAlertModal({ isOpen: true, variant: '...', title: '...', message: '...' })
+  - Added proper pluralization: `account${selectedItems.size === 1 ? '' : 's'}`
+  - Rendered AlertModal at end of component JSX with spread props
+- **Test results**: All 497 tests pass (2 skipped), no regressions
+- **Remaining browser dialogs**: Only 2 confirm() calls remain (Task 17.3f)
+  - AdminNotices.tsx:130 (delete notice)
+  - AccountManagement.tsx:370 (delete account)
+- **Learnings for future iterations**:
+  - AlertModal component works well for success/error/warning/info messages
+  - Consistent state shape: { isOpen, variant, title, message }
+  - Different variants for different message types: success (green), error (red), info (blue)
+  - Next task is 17.3f: Replace all confirm() calls with ConfirmModal
+---
+
+## Iteration 134 - Task 17.3f: Replace all confirm() calls with ConfirmModal
+- **What was implemented**: Replaced all 2 confirm() calls with ConfirmModal component
+- **Files changed**:
+  - `src/pages/admin/AdminNotices.tsx` - Imported ConfirmModal, added state, replaced confirm(), added handler, rendered modal
+  - `src/pages/admin/AccountManagement.tsx` - Imported ConfirmModal, added state, replaced confirm(), added handler, rendered modal
+  - `PRD.md` - Marked Task 17.3f complete
+- **Confirm calls replaced**:
+  1. AdminNotices.tsx:137 `confirm('Are you sure you want to delete this notice?')` → ConfirmModal with danger variant
+  2. AccountManagement.tsx:379 `confirm('Are you sure you want to delete this account?...')` → ConfirmModal with danger variant
+- **Pattern for replacing confirm() calls**:
+  1. Add ConfirmModal import
+  2. Add state: `const [confirmModal, setConfirmModal] = useState<{isOpen: boolean; itemId: string | null}>({ isOpen: false, itemId: null })`
+  3. Replace `if (confirm('...')) { doAction() }` with `setConfirmModal({ isOpen: true, itemId }); return;`
+  4. Create async handler: `const handleConfirmDelete = async () => { ... supabase call ... setConfirmModal(closed) ... fetchData() }`
+  5. Add ConfirmModal render with onClose, onConfirm={handleConfirmDelete}, title, message, confirmText, variant="danger"
+- **Key implementation details**:
+  - Both use danger variant (red styling) for destructive delete actions
+  - Both have async handleConfirmDelete functions with try/catch error handling
+  - Error handling shows AlertModal with error variant on failure
+  - State includes itemId to track which item is being deleted
+  - Return early after opening modal to prevent refresh until confirmation
+- **Test results**: All 497 tests pass, no regressions
+- **Verification**: `grep -n "confirm(" src/pages/admin/*.tsx` returns no results
+- **All browser dialogs now replaced**: Task 17.3 (Replace Browser Alerts) is complete
+  - alert() calls: 5 replaced with AlertModal (Task 17.3d + 17.3e)
+  - confirm() calls: 2 replaced with ConfirmModal (Task 17.3f)
+- **Learnings for future iterations**:
+  - ConfirmModal has onConfirm callback for async operations
+  - Pattern: open modal → return early → handle in callback → close modal → refresh data
+  - Always include error handling that falls back to AlertModal
+  - State shape: { isOpen: boolean, itemId: string | null } where itemId tracks the target
+  - Next task is 17.4a: Identify broken edit/save in Settings page
+---
