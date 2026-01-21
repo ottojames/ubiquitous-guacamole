@@ -4849,3 +4849,24 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The skeleton components are reusable across all dashboards
   - Next task is 17.6a: Fix current page highlighting in admin sidebar
 ---
+
+## Iteration 143 - Tasks 17.6a-c: Fix admin sidebar navigation
+- **What was implemented**: Fixed broken links in admin Dashboard Quick Actions, verified navigation highlighting and mobile collapse work correctly
+- **Files changed**:
+  - `src/pages/admin/Dashboard.tsx` - Fixed 2 broken navigation links
+  - `PRD.md` - Marked Tasks 17.6a, 17.6b, 17.6c complete
+- **Key findings**:
+  - Task 17.6a (page highlighting): Already working correctly via `isActivePath()` function at line 104-106. Uses `location.pathname === path || location.pathname.startsWith(path + '/')` pattern. Both desktop (lines 181-191) and mobile (lines 282-294) navigation use same function with `bg-blue-600 text-white` for active state.
+  - Task 17.6b (broken links): Found 2 broken links in Dashboard.tsx Quick Actions:
+    1. `/admin/audit-log` → should be `/admin/audit` (matched AdminLayout nav item path)
+    2. `/admin/reports` → didn't exist, changed to `/admin/notices` with "View All Notices" text
+  - Task 17.6c (mobile collapse): Already working correctly. `mobileMenuOpen` state toggles on hamburger/X button click (line 248), nav links close menu via `onClick={() => setMobileMenuOpen(false)}` (line 289).
+- **Test results**: All 498 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts directories only - Dashboard.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Always grep codebase for navigation paths to find mismatched route names
+  - AdminLayout nav items define the canonical paths: /admin/dashboard, /admin/accounts, /admin/notices, /admin/audit, /admin/settings
+  - Quick action buttons in dashboards should use same paths as sidebar navigation
+  - Mobile menu pattern: toggle state + X button + close-on-link-click provides good UX
+  - Next task is Task 17.7a: Create e2e/admin-panel.spec.ts with login
+---
