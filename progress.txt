@@ -6197,3 +6197,161 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Service follows same pattern as complianceChecker and noticeDrafter
   - Next task is Task 21.3b: Create endpoint (for representation analysis API)
 ---
+
+## Iteration 259 - Task 21.3b: Create representation analysis endpoint
+- **What was implemented**: Created API endpoints for representation analysis
+- **Files changed**:
+  - `server/routes/representation-analysis.ts` - New file (~75 lines)
+  - `server/index.ts` - Added import and route registration
+  - `PRD.md` - Marked Task 21.3b complete
+- **Implementation details**:
+  - POST `/api/representation-analysis/analyze` - Analyzes single representation text
+    - Accepts: { text: string, stance?: RepresentationStance, representationId?: string }
+    - Returns: AnalysisResult with stance, themes, licensingObjectives, summary, wordCount, sentenceCount, analyzedAt
+  - POST `/api/representation-analysis/analyze-multiple` - Batch analysis with aggregates
+    - Accepts: { representations: Array<{ id: string, text: string, type?: RepresentationStance }> }
+    - Returns: { analyses: AnalysisResult[], aggregate: { total, supportCount, objectionCount, commentCount, topThemes, objectivesCited } }
+  - No authentication required (public endpoint for council officers)
+  - Input validation for text and representations array
+  - Error handling for empty/invalid inputs
+- **Test results**: All 504 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/, src/pages/ only)
+- **Learnings for future iterations**:
+  - Representation analysis endpoints follow same pattern as compliance and drafting endpoints
+  - Routes registered at `/api/representation-analysis/*` to keep functionality grouped
+  - representationAnalyzer service exports two functions:
+    - analyzeRepresentation() for single analysis
+    - analyzeMultiple() for batch analysis with aggregates
+  - Next task is Task 21.3c: Add to council inbox (shows representation summary in council inbox)
+---
+
+## Iteration 260 - Task 21.3c: Add representation analysis to council inbox
+- **What was implemented**: Added AI representation analysis summary to council inbox detail modal
+- **Files changed**:
+  - `src/hooks/useRepresentationAnalysis.ts` - New file (~85 lines)
+  - `src/components/council/RepresentationAnalysisSummary.tsx` - New file (~170 lines)
+  - `src/pages/council/Representations.tsx` - Added import and component integration
+  - `PRD.md` - Marked Task 21.3c complete
+- **Implementation details**:
+  - Created useRepresentationAnalysis hook:
+    - Provides analyzeRepresentation() function to call `/api/representation-analysis/analyze` endpoint
+    - Manages loading, error, and analysis result states
+    - clearAnalysis() helper to reset state
+  - Created RepresentationAnalysisSummary component:
+    - Auto-analyzes representation text when component mounts
+    - Shows loading state with purple spinner
+    - Collapsed view shows summary text with confidence percentage
+    - Expanded view shows:
+      - Full summary
+      - Key themes with confidence percentages (badges)
+      - Licensing objectives referenced with relevant text snippets
+      - Stats (word count, sentence count, analysis timestamp)
+    - Purple-themed UI matching AI features design pattern
+    - Error state shows "Analysis unavailable" message
+  - Integrated into Representations.tsx detail modal after "Representation Text" section
+- **Test results**: All 506 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - AI features in this codebase use purple-themed UI (purple-50 bg, purple-600 accents)
+  - Representations.tsx detail modal is in the selectedRep conditional block
+  - The component pattern: hook handles API call, component handles UI and state
+  - useRepresentationAnalysis hook can be reused for batch analysis if needed later
+  - Phase 21 AI Features (21.1 Compliance, 21.2 Drafting, 21.3 Analysis) are now complete
+  - Next incomplete task is Phase 22: Task 22.1a - Create docs/api.md
+---
+
+## Iteration 261 - Task 22.1a: Create docs/api.md
+- **What was implemented**: Created comprehensive API documentation file
+- **Files created**:
+  - `docs/api.md` - Complete API reference (~1070 lines)
+- **Files changed**:
+  - `PRD.md` - Marked Task 22.1a complete
+- **Documentation covers**:
+  - **Notices**: Search, get by ID, submit, draft endpoints
+  - **Representations**: List, submit, mark-read, counts
+  - **Workflow Management**: Configs, status, transitions, initialization
+  - **Drafts**: CRUD operations and publish
+  - **Certificates**: Publication certificates, receipts, verification
+  - **AI Features**: Compliance checking, notice drafting, representation analysis
+  - **Firm Management**: Team, settings, departments, templates, subscriptions
+  - **Council Portal**: Pending submissions, approvals, rejections, analytics
+  - **File Upload**: Document upload with OCR
+  - **Address Lookup**: UK address search and resolution
+  - **Councils**: List all UK councils
+  - **Statistics**: Public platform stats
+  - **Payments**: Stripe checkout and webhooks
+  - **Error Responses**: Standard error format and codes
+  - **Rate Limiting**: Public vs authenticated limits
+- **Test results**: All 506 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only - no new errors
+- **Learnings for future iterations**:
+  - Documented API routes are registered in server/index.ts at /api/* paths
+  - Most endpoints follow consistent patterns: ok/error response format
+  - AI features are at /api/compliance, /api/drafting, /api/representation-analysis
+  - Firm-specific endpoints are at /api/firm/* and /api/firm-subscriptions/*
+  - Phase 22 API Docs task 22.1a complete, next is Task 22.1b: Add Swagger at /api/docs
+---
+
+## Iteration 262 - Task 22.1b: Add Swagger at /api/docs
+- **What was implemented**: Added Swagger UI at /api/docs with full OpenAPI 3.0 specification
+- **Files created**:
+  - `server/lib/swagger.ts` - Swagger configuration and OpenAPI spec (~700 lines)
+- **Files changed**:
+  - `server/index.ts` - Added setupSwagger() import and call
+  - `package.json` - Added swagger-jsdoc, swagger-ui-express, and their @types
+  - `PRD.md` - Marked Task 22.1b complete
+- **Implementation details**:
+  - Installed swagger-jsdoc, swagger-ui-express and TypeScript types
+  - Created OpenAPI 3.0 spec with:
+    - Schemas for Notice, Representation, ComplianceResult, DraftResult, AnalysisResult, Error
+    - Tags for Notices, Representations, Workflow, Drafts, Certificates, AI, Firm, Council, Upload, Address, Payments, Health
+    - Full endpoint documentation for major API routes
+    - Bearer token authentication via securitySchemes
+  - Swagger UI accessible at /api/docs with custom title "CivicNotices API Documentation"
+  - OpenAPI JSON spec accessible at /api/openapi.json
+- **Test results**: All 506 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - swagger-ui-express intercepts all routes under its mount point, so JSON spec route moved to /api/openapi.json
+  - swagger-jsdoc can scan route files for JSDoc comments, but manual path definitions work better for consistency
+  - Package swagger-ui-react was already installed (for frontend use) but swagger-ui-express is needed for Express backend
+  - Next task is Task 22.2a: Create webhooks table
+---
+
+## Iteration 263 - Task 22.2a: Create webhooks table
+- **What was implemented**: Created webhooks table migration for outgoing webhook subscriptions
+- **Files created**:
+  - `supabase/migrations/20260122000004_create_webhooks_table.sql` (~130 lines)
+- **Files changed**:
+  - `PRD.md` - Marked Task 22.2a complete
+- **Implementation details**:
+  - Created `webhooks` table with:
+    - organization_id foreign key (councils and firms can have webhooks)
+    - name, url, secret for webhook configuration
+    - events TEXT[] array for subscribing to specific event types
+    - enabled/status for webhook state management
+    - retry_count, timeout_ms for delivery settings
+    - Stats: last_triggered_at, last_success_at, last_failure_at, delivery counters
+  - Created `webhook_deliveries` table for delivery logs:
+    - webhook_id reference
+    - event_type, event_id, payload for event details
+    - attempt_number, status for delivery tracking
+    - response_status, response_body, response_time_ms for debugging
+    - error_message for failure tracking
+  - Supported event types:
+    - notice.published, notice.expired, notice.updated
+    - representation.submitted
+    - workflow.stage_changed
+    - payment.completed
+  - RLS policies: org admins can manage, org members can view
+  - Indexes on organization_id, events (GIN), status, pending deliveries
+- **Test results**: All 506 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (not from this change)
+- **Learnings for future iterations**:
+  - Webhook tables follow same pattern as other org-owned tables (deadline_reminders)
+  - GIN index on TEXT[] column enables efficient event type filtering
+  - Delivery logs table enables debugging and retry management
+  - Service will need HMAC-SHA256 signing using webhook.secret
+  - Next task is Task 22.2b: Apply migration (requires Supabase access token)
+---
+

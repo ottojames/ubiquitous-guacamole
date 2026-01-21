@@ -637,7 +637,7 @@ npm run lint         # ESLint check
 - [x] **Task 22.1b**: Add Swagger at /api/docs. **Success**: Accessible. (Completed 2026-01-21 - Installed swagger-jsdoc and swagger-ui-express packages. Created server/lib/swagger.ts with OpenAPI 3.0 spec covering all major endpoints: Notices (search, get, submit), Representations (list, submit), AI (compliance check, drafting, analysis), Upload, Address lookup, Councils, Stats, Payments. Includes schemas for Notice, Representation, ComplianceResult, DraftResult, AnalysisResult. Added setupSwagger() to server/index.ts. Swagger UI accessible at /api/docs, OpenAPI JSON at /api/openapi.json. 506 tests pass)
 
 ### 22.2 Webhooks
-- [ ] **Task 22.2a**: Create webhooks table. **Success**: Exists.
+- [x] **Task 22.2a**: Create webhooks table. **Success**: Exists. (Completed 2026-01-21 - Created supabase/migrations/20260122000004_create_webhooks_table.sql with two tables: webhooks (subscription config with organization_id, url, secret, events array, retry settings, delivery stats) and webhook_deliveries (delivery attempt logs with event_type, payload, response details). Includes RLS policies for organization admins/members. Supported events: notice.published, notice.expired, notice.updated, representation.submitted, workflow.stage_changed, payment.completed. 506 tests pass)
 - [ ] **Task 22.2b**: Apply migration. **Success**: Applied.
 - [ ] **Task 22.2c**: Create webhook service. ~60 lines. **Success**: Sends.
 - [ ] **Task 22.2d**: Integrate into endpoints. **Success**: Fires.
