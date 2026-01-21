@@ -285,15 +285,24 @@ export default function Pricing() {
             </div>
 
             {/* Councils Card */}
-            <div className={`${UI.card} relative flex flex-col p-8`}>
+            <div className={`${UI.card} relative flex flex-col p-8 ring-2 ring-emerald-500`}>
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="rounded-full bg-emerald-600 px-4 py-1 text-sm font-semibold text-white">
+                  £0 Portal Access
+                </span>
+              </div>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-slate-900">{pricingPlans.councils.name}</h3>
                 <p className="mt-2 text-sm text-slate-600">{pricingPlans.councils.description}</p>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-emerald-600">FREE</span>
-                <span className="ml-2 text-slate-600">portal access</span>
-                <div className="mt-1 text-sm text-slate-500">£{pricingPlans.councils.pricePerNotice} per notice when publishing</div>
+                <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 mb-2">
+                  <span className="text-4xl font-extrabold text-emerald-600">FREE</span>
+                  <span className="text-slate-700 font-medium">portal access</span>
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  Only pay <strong className="text-slate-900">£{pricingPlans.councils.pricePerNotice}</strong> when <em className="font-medium text-emerald-700">you</em> publish a notice
+                </div>
               </div>
               <ul className="mb-8 flex-1 space-y-3">
                 {pricingPlans.councils.features.map((feature, idx) => (

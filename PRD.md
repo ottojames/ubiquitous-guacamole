@@ -492,9 +492,16 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Added a subtle link between SiteHeader and hero section with "Just looking for notices? Search here →" text. Uses white/80 opacity text on the dark gradient background with hover state, ArrowRight icon, and links to /notices. Visible without scrolling (above the fold).
 
-- [ ] `[LOW]` `[S]` **Highlight council free portal better** - Make FREE more prominent, clarify "only pay when YOU publish".
+- [x] `[LOW]` `[S]` **Highlight council free portal better** - Make FREE more prominent, clarify "only pay when YOU publish".
 
-  **File**: `src/pages/Pricing.tsx:309-334`
+  **File**: `src/pages/Pricing.tsx:287-319`
+
+  **Solution implemented**:
+  - Added emerald ring-2 border to council card to make it stand out
+  - Added "£0 Portal Access" badge at top of card (matching "Most Popular" badge on firms card)
+  - Wrapped FREE in a highlighted bg-emerald-50 pill for visual prominence
+  - Changed pricing explanation to: "Only pay £19.99 when *you* publish a notice" - emphasizes "you" with italic + emerald color
+  - FREE text remains text-4xl (36px), exceeding 24px DoD requirement
 
 ### Definition of Done
 
