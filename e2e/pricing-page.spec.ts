@@ -133,4 +133,20 @@ test.describe('Pricing Page', () => {
 
     console.log('No false council count claims found on pricing page');
   });
+
+  test('Public CTA links to /publish', async ({ page }) => {
+    // Find the One-Off Publishing card
+    const publicCard = page.locator('div').filter({ hasText: /One-Off Publishing/ }).first();
+
+    // Find the CTA button within or near the public card section
+    // The button text is "Publish Now - £50" and should link to /publish
+    const publishCta = page.locator('a').filter({ hasText: 'Publish Now - £50' });
+    await expect(publishCta).toBeVisible();
+
+    // Verify the href is correct
+    const href = await publishCta.getAttribute('href');
+    expect(href).toBe('/publish');
+
+    console.log('Public CTA correctly links to /publish');
+  });
 });
