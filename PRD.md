@@ -525,9 +525,9 @@ npm run lint         # ESLint check
 - [x] **Task 18.4d**: Apply to public forms. **Success**: Consistent. (Completed 2026-01-21 - Applied UI.inputFull, UI.selectSmall, UI.textareaFull to SignIn, ForgotPassword, CouncilLogin, AcceptInvitation, Notices, EmailAlerts, SubmitRepresentation pages)
 
 ### 18.5 Loading States
-- [ ] **Task 18.5a**: Ensure Skeleton components exist. **Success**: Exist.
-- [ ] **Task 18.5b**: Use skeletons for content loading. **Success**: Used.
-- [ ] **Task 18.5c**: Use spinners for actions only. **Success**: Appropriate.
+- [x] **Task 18.5a**: Ensure Skeleton components exist. **Success**: Exist. (Verified 2026-01-21 - src/components/skeletons/ contains CardSkeleton, StatCardSkeleton, SubscriptionCardSkeleton, TableRowSkeleton, NoticeTableSkeleton, UserListSkeleton, ListItemSkeleton, RecentNoticesSkeleton, ActivityFeedSkeleton, RepresentationsSkeleton, DeadlinesSkeleton - all exported from index.ts)
+- [x] **Task 18.5b**: Use skeletons for content loading. **Success**: Used. (Verified 2026-01-21 - Skeletons imported and used in src/pages/admin/Dashboard.tsx, src/pages/council/Dashboard.tsx, src/pages/firm/Dashboard.tsx for loading states instead of blank screens)
+- [x] **Task 18.5c**: Use spinners for actions only. **Success**: Appropriate. (Verified 2026-01-21 - Loader2 from lucide-react used for actions like form submission (isSubmitting), save operations (isSaving) in 20+ components; skeletons used for content loading)
 
 ---
 
