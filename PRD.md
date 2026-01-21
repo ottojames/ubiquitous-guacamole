@@ -456,7 +456,7 @@ npm run lint         # ESLint check
 ### 17.3 Replace Browser Alerts
 - [x] **Task 17.3a**: Find all alert() calls, list them. **Success**: Listed. (Completed 2026-01-21 - Found 5 alert() calls: AdminNotices.tsx:142 (action failed), AccountManagement.tsx:384 (password reset), AccountManagement.tsx:400 (action failed), AccountManagement.tsx:417 (bulk suspend success), AccountManagement.tsx:427 (bulk activate success). Found 2 confirm() calls: AdminNotices.tsx:130 (delete notice), AccountManagement.tsx:370 (delete account). Total: 7 browser dialogs to replace)
 - [x] **Task 17.3b**: Create ConfirmModal component. ~80 lines. **Success**: Works. (Completed 2026-01-21 - Created src/components/ui/ConfirmModal.tsx with 130 lines. Features: danger/warning/info variants, loading state, keyboard handling (Escape to close), focus management (Cancel button auto-focused), backdrop click to close, accessible ARIA labels, styled with Tailwind to match codebase patterns)
-- [ ] **Task 17.3c**: Create AlertModal component. ~50 lines. **Success**: Works.
+- [x] **Task 17.3c**: Create AlertModal component. ~50 lines. **Success**: Works. (Completed 2026-01-21 - Created src/components/ui/AlertModal.tsx with 122 lines. Features: success/error/warning/info variants with different icons (CheckCircle, AlertTriangle, Info), keyboard handling (Escape to close), focus management (OK button auto-focused), backdrop click to close, accessible ARIA labels with role="alertdialog")
 - [ ] **Task 17.3d**: Replace first alert(). **Success**: Replaced.
 - [ ] **Task 17.3e**: Replace all remaining alert(). **Success**: None remain.
 - [ ] **Task 17.3f**: Replace all confirm(). **Success**: None remain.
