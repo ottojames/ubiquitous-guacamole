@@ -5048,3 +5048,26 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Phase 17 (Admin Panel Overhaul) is now COMPLETE - all 17.1-17.7 tasks done
   - Next phase is Phase 18: Design Consistency (colors, typography, buttons, forms, loading states)
 ---
+
+## Iteration - Task 18.1a: Document colors, ensure blue-600 primary
+- **What was implemented**: Comprehensive color documentation added to PRD.md
+- **Files changed**:
+  - `PRD.md` - Marked Task 18.1a complete, added detailed color usage documentation to both task and Reference section
+- **Key findings**:
+  - **Primary color definition**: `src/styles/ui.ts` uses `#2563EB` (Tailwind default blue-600) for `btnPrimary`, input focus rings, and stepper elements
+  - **Tailwind config mismatch**: `tailwind.config.js` overrides blue-600 to `#4574D9` (custom shade), but defines unused `primary: '#5687EB'` (blue-500)
+  - **Usage counts**: 469 blue-600 instances, 277 blue-500, 164 purple-600
+  - **Portal color breakdown**:
+    - Admin: Blue-600 consistently (fixed in Phase 17)
+    - Public: Blue-600 via UI.btnPrimary
+    - Council: Mostly blue-600, some purple-600 in Team.tsx/NoticeEditor.tsx
+    - Firm: Purple-600 throughout (intentional branding differentiation)
+- **Learnings for future iterations**:
+  - The firm portal uses purple-600 intentionally to visually differentiate from council (blue) - this appears to be a design decision, not a bug
+  - `src/styles/ui.ts` is the shared styles file - exports `btnPrimary`, `btnSecondary`, `input`, `card`, etc.
+  - The tailwind.config.js `primary` color (#5687EB) is never actually used in the codebase
+  - Admin portal colors were already fixed to blue in Phase 17 (Tasks 17.1a-17.1f)
+  - TypeScript errors in council/*.tsx and firm/Team.tsx are pre-existing (not from this task)
+  - 498 tests pass, 2 skipped
+  - Next task (18.1b) will need to decide: standardize firm purple to blue, or document purple as intentional for firm portal
+---
