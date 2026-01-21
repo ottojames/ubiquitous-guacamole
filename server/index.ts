@@ -47,6 +47,7 @@ import complianceRouter from './routes/compliance';
 import draftingRouter from './routes/drafting';
 import representationAnalysisRouter from './routes/representation-analysis';
 import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth';
+import { setupSwagger } from './lib/swagger';
 
 export const app = express();
 
@@ -61,6 +62,9 @@ if (process.env.NODE_ENV === 'production') {
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
+
+// Setup Swagger API documentation at /api/docs
+setupSwagger(app);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

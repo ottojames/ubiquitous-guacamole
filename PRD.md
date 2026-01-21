@@ -634,7 +634,7 @@ npm run lint         # ESLint check
 
 ### 22.1 API Docs
 - [x] **Task 22.1a**: Create docs/api.md. **Success**: Complete. (Completed 2026-01-21 - Created comprehensive API documentation covering all endpoints: Notices, Representations, Workflow, Drafts, Certificates, Compliance, Drafting, Representation Analysis, Firm Management, Firm Departments, Firm Templates, Firm Subscriptions, Council Portal, Analytics, File Upload, Address Lookup, Councils, Statistics, and Payments. Includes authentication requirements, request/response examples, and error codes)
-- [ ] **Task 22.1b**: Add Swagger at /api/docs. **Success**: Accessible.
+- [x] **Task 22.1b**: Add Swagger at /api/docs. **Success**: Accessible. (Completed 2026-01-21 - Installed swagger-jsdoc and swagger-ui-express packages. Created server/lib/swagger.ts with OpenAPI 3.0 spec covering all major endpoints: Notices (search, get, submit), Representations (list, submit), AI (compliance check, drafting, analysis), Upload, Address lookup, Councils, Stats, Payments. Includes schemas for Notice, Representation, ComplianceResult, DraftResult, AnalysisResult. Added setupSwagger() to server/index.ts. Swagger UI accessible at /api/docs, OpenAPI JSON at /api/openapi.json. 506 tests pass)
 
 ### 22.2 Webhooks
 - [ ] **Task 22.2a**: Create webhooks table. **Success**: Exists.
