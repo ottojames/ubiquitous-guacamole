@@ -22,6 +22,7 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import AlertModal from '@/components/ui/AlertModal';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 type TabType = 'councils' | 'firms' | 'users';
 
@@ -202,6 +203,12 @@ export default function AccountManagement() {
     message: string;
   }>({ isOpen: false, variant: 'info', title: '', message: '' });
 
+  // Confirm modal state for delete confirmation
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    accountId: string | null;
+  }>({ isOpen: false, accountId: null });
+
   // Sort configuration
   const [sortField, setSortField] = useState<string>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -376,16 +383,9 @@ export default function AccountManagement() {
           break;
 
         case 'delete':
-          if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
-            // Soft delete by updating status to deleted
-            const { error: deleteError } = await supabase
-              .from('organizations')
-              .update({ status: 'deleted', deleted_at: new Date().toISOString() })
-              .eq('id', itemId);
-
-            if (deleteError) throw deleteError;
-          }
-          break;
+          setConfirmModal({ isOpen: true, accountId: itemId });
+          setShowActionMenu(null);
+          return; // Don't refresh until confirmation
 
         case 'reset_password':
           // For user password reset, we would need to implement this via Supabase Auth
@@ -416,6 +416,33 @@ export default function AccountManagement() {
         variant: 'error',
         title: 'Action Failed',
         message: 'Failed to perform action. Please try again.'
+      });
+    }
+  };
+
+  // Handle confirmed delete
+  const handleConfirmDelete = async () => {
+    if (!confirmModal.accountId) return;
+
+    try {
+      // Soft delete by updating status to deleted
+      const { error: deleteError } = await supabase
+        .from('organizations')
+        .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+        .eq('id', confirmModal.accountId);
+
+      if (deleteError) throw deleteError;
+
+      setConfirmModal({ isOpen: false, accountId: null });
+      fetchAccounts(); // Refresh data
+    } catch (error) {
+      console.error('Delete failed:', error);
+      setConfirmModal({ isOpen: false, accountId: null });
+      setAlertModal({
+        isOpen: true,
+        variant: 'error',
+        title: 'Delete Failed',
+        message: 'Failed to delete account. Please try again.'
       });
     }
   };
@@ -833,6 +860,17 @@ export default function AccountManagement() {
         variant={alertModal.variant}
         title={alertModal.title}
         message={alertModal.message}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, accountId: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Account"
+        message="Are you sure you want to delete this account? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
       />
     </div>
   );

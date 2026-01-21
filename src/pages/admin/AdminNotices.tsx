@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import { NoticeTableSkeleton } from '@/components/skeletons';
 import { AlertModal } from '@/components/ui/AlertModal';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface Notice {
   id: string;
@@ -51,6 +52,10 @@ export default function AdminNotices() {
     message: string;
     variant: 'success' | 'error' | 'warning' | 'info';
   }>({ isOpen: false, title: '', message: '', variant: 'info' });
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    noticeId: string | null;
+  }>({ isOpen: false, noticeId: null });
 
   // Fetch notices from database
   const fetchNotices = useCallback(async () => {
@@ -134,13 +139,8 @@ export default function AdminNotices() {
           break;
 
         case 'delete':
-          if (confirm('Are you sure you want to delete this notice?')) {
-            await supabase
-              .from('notices')
-              .delete()
-              .eq('id', noticeId);
-          }
-          break;
+          setConfirmModal({ isOpen: true, noticeId });
+          return; // Don't refresh notices list until confirmation
       }
 
       fetchNotices(); // Refresh the list
@@ -150,6 +150,30 @@ export default function AdminNotices() {
         isOpen: true,
         title: 'Action Failed',
         message: 'Failed to perform action. Please try again.',
+        variant: 'error',
+      });
+    }
+  };
+
+  // Handle confirmed delete
+  const handleConfirmDelete = async () => {
+    if (!confirmModal.noticeId) return;
+
+    try {
+      await supabase
+        .from('notices')
+        .delete()
+        .eq('id', confirmModal.noticeId);
+
+      setConfirmModal({ isOpen: false, noticeId: null });
+      fetchNotices(); // Refresh the list
+    } catch (error) {
+      console.error('Delete failed:', error);
+      setConfirmModal({ isOpen: false, noticeId: null });
+      setAlertModal({
+        isOpen: true,
+        title: 'Delete Failed',
+        message: 'Failed to delete notice. Please try again.',
         variant: 'error',
       });
     }
@@ -519,6 +543,17 @@ export default function AdminNotices() {
         title={alertModal.title}
         message={alertModal.message}
         variant={alertModal.variant}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, noticeId: null })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Notice"
+        message="Are you sure you want to delete this notice? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
       />
     </div>
   );
