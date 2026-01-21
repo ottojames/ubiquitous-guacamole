@@ -567,7 +567,7 @@ npm run lint         # ESLint check
 
 ### 20.1 Department Access
 - [x] **Task 20.1a**: Create council_departments table. **Success**: Exists. (Completed 2026-01-21 - Verified `departments` table exists in `20251021000000_multi_tenant_foundation.sql` with council-specific schema including type, slug, settings; used by DepartmentSwitcher.tsx and department_memberships for access control)
-- [ ] **Task 20.1b**: Create memberships table. **Success**: Exists.
+- [x] **Task 20.1b**: Create memberships table. **Success**: Exists. (Completed 2026-01-21 - Verified `organization_memberships` and `department_memberships` tables exist in `20251021000001_memberships.sql` with dual-level role system: org-wide roles (owner, org_admin) and dept-scoped roles (department_admin, editor, viewer); includes validation triggers, auto-assignment, and context switching support)
 - [ ] **Task 20.1c**: Create CouncilContext. ~60 lines. **Success**: Works.
 - [ ] **Task 20.1d**: Filter routes by membership. **Success**: Filtered.
 

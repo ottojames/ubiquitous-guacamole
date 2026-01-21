@@ -5632,3 +5632,43 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Phase 19 Payment & Billing is now COMPLETE
   - Next phase is Phase 20: Council Portal Features
 ---
+
+## Iteration 239 - Task 20.1a: Verify council_departments table exists
+- **What was verified**: The `departments` table already exists and serves as "council_departments"
+- **Files reviewed**:
+  - `supabase/migrations/20251021000000_multi_tenant_foundation.sql` - Creates `departments` table with council-specific schema
+  - `supabase/migrations/20251021000001_memberships.sql` - Creates `department_memberships` for access control
+  - `src/pages/council/DepartmentSwitcher.tsx` - Uses departments table with department_memberships
+- **Key findings**:
+  - The `departments` table is explicitly designed for councils (comment: "COUNCILS ONLY - firms do not have departments")
+  - Schema includes: type (licensing, planning, traffic, etc.), slug, email, phone, settings JSONB
+  - Separate `firm_departments` table exists for firms (migration 20260120220000)
+  - `department_memberships` table provides role-based access control
+- **Test results**: All 501 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx)
+- **Learnings for future iterations**:
+  - Phase 20 may have similar "verification" tasks where functionality already exists
+  - The `departments` table IS the council_departments table by design
+  - Check existing migrations before creating new tables
+  - Next task is Task 20.1b: Create memberships table (likely also already exists)
+---
+
+## Iteration 240 - Task 20.1b: Verify memberships table exists
+- **What was verified**: The memberships tables already exist with comprehensive implementation
+- **Files reviewed**:
+  - `supabase/migrations/20251021000001_memberships.sql` - 207 lines with complete membership system
+- **Key findings**:
+  - `organization_memberships` table exists with org-wide roles (owner, org_admin)
+  - `department_memberships` table exists with dept-scoped roles (department_admin, editor, viewer)
+  - Validation triggers ensure at least one owner/admin per org/dept
+  - Auto-assignment triggers make creator the owner/admin on creation
+  - Context switching support via `last_accessed_at` column and `update_department_access()` function
+  - Proper indexes for performance (org_id, user_id, role)
+- **Test results**: All 501 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx)
+- **Learnings for future iterations**:
+  - The memberships system follows a dual-level role model (org-wide vs dept-scoped)
+  - organization_memberships is for elevated privileges (owner can delete org, org_admin can create depts)
+  - department_memberships is for day-to-day work (department_admin, editor, viewer)
+  - Next task is Task 20.1c: Create CouncilContext (~60 lines)
+---
