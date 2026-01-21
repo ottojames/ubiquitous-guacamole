@@ -68,7 +68,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **File**: `src/pages/council/Dashboard.tsx:84-89`, `src/pages/council/Dashboard.tsx:94-178`
 
-- [ ] `[CRITICAL]` `[M]` **Enforce department_id filter on all council portal queries** - Audit and fix: Dashboard notices, Representations, Analytics. Ensure `.eq('department_id', department.id)` is applied consistently.
+- [x] `[CRITICAL]` `[M]` **Enforce department_id filter on all council portal queries** - Audit and fix: Dashboard notices, Representations, Analytics. Ensure `.eq('department_id', department.id)` is applied consistently.
 
   **Files**: `src/pages/council/Dashboard.tsx:180-186`, `src/pages/council/Representations.tsx:116-131`, `src/pages/council/Analytics.tsx`
 

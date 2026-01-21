@@ -125,12 +125,13 @@ export default function Dashboard() {
         representations_total: 0 // Will be calculated below
       };
 
-      // Calculate total representations count from recent notices
+      // Calculate total representations count for this department's notices only
       try {
-        const { data: allReps } = await supabase
+        const { count: repsCount } = await supabase
           .from('representations')
-          .select('id', { count: 'exact', head: true });
-        statsData.representations_total = allReps?.length || 0;
+          .select('*, notices!inner(department_id)', { count: 'exact', head: true })
+          .eq('notices.department_id', department.id);
+        statsData.representations_total = repsCount || 0;
       } catch (err) {
         console.error('Failed to count representations:', err);
       }

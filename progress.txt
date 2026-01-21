@@ -8423,3 +8423,49 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Phase 22: Integrations (API Docs & Webhooks)
 - **No new tasks to implement** - project is feature complete per PRD requirements
 ---
+
+## Iteration 355 - Phase 0: Create environment verification script
+- **What was implemented**: Created `scripts/verify-env.sh` - executable bash script that verifies all required environment variables exist and confirms the dev server starts successfully
+- **Files changed**: 
+  - `scripts/verify-env.sh` (new)
+  - `PRD.md` (marked task complete)
+- **Tests**: 507 passed, 2 skipped
+- **TypeScript**: Pre-existing errors in council portal files (not related to this change)
+- **Learnings for future iterations**:
+  - Don't use `set -e` with arithmetic increment operators like `((count++))` - they return exit code 1 when incrementing from 0. Use `VAR=$((VAR + 1))` instead
+  - Both ports 5173 (Vite) and 5174 (Express) need to be killed before starting dev server
+  - The script checks server readiness via curl to `/api/health` endpoint
+---
+
+## Iteration 356 - Remove demo mode bypass in Dashboard
+- **What was implemented**: Removed the `isDemoMode` bypass in `src/pages/council/Dashboard.tsx` that was causing cross-department data leakage
+- **Files changed**: 
+  - `src/pages/council/Dashboard.tsx` - Removed isDemoMode check (lines 84-89), removed entire demo mode branch that fetched all notices via public API (lines 94-178), removed fake stats override (lines 120-124)
+  - `PRD.md` - Marked task complete
+- **Tests**: 507 passed, 2 skipped
+- **TypeScript**: Pre-existing errors only (none related to this change)
+- **Commit**: 9a319ab6 "fix: Remove demo mode bypass in Dashboard to enforce department isolation"
+- **Learnings for future iterations**:
+  - The demo mode was hardcoded to specific department IDs including a production Westminster ID
+  - It bypassed RLS by using `/api/notices/search` which uses service role key
+  - Stats were also faked in demo mode (47 total, 42 published, etc)
+  - Now all queries enforce `department_id` filter for proper isolation
+---
+
+## Iteration 357 - Enforce department_id filter on all council portal queries
+- **What was implemented**: Fixed the representations count query in Dashboard.tsx to filter by department_id. The query now uses an inner join on notices to ensure only representations for the current department are counted.
+- **Files changed**: 
+  - `src/pages/council/Dashboard.tsx:128-137` - Changed representations count query from fetching all representations to filtering by department_id using `notices!inner(department_id)` join pattern
+  - `PRD.md` - Marked task complete
+- **Audit findings**:
+  - Dashboard.tsx:88-91, 98-103: Already correctly filtered notices by department_id
+  - Dashboard.tsx:130-134: Fixed - was counting ALL representations, now filters by department_id via notice join
+  - Representations.tsx:116-131: Already correctly filtered via `.eq('notices.department_id', department.id)`
+  - Analytics.tsx: Uses organization-scoped API endpoints - correct for org-level analytics
+- **Tests**: 507 passed, 2 skipped
+- **TypeScript**: Pre-existing errors in test/script files only (no new errors)
+- **Learnings for future iterations**:
+  - Supabase count queries can use inner joins with `select('*, notices!inner(department_id)', { count: 'exact', head: true })`
+  - When auditing for department isolation, check stats/aggregate queries as well as list queries
+  - The `head: true` option with `count: 'exact'` returns only the count without row data - efficient for aggregations
+---
