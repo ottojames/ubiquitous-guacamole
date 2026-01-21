@@ -1547,3 +1547,33 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in src/ files and snapshot date mismatches are unrelated to this migration
   - Next task is Task 8.11e: Create Gambling workflow function migration
 ---
+
+## Iteration 43 - Task 8.11e: Create Gambling workflow function migration
+- **What was implemented**: Created SQL migration file for the `create_default_gambling_workflow()` function
+- **Files changed**:
+  - `supabase/migrations/20260120340000_create_default_gambling_workflow.sql` - NEW FILE
+  - `PRD.md` - Marked Task 8.11e complete
+- **Function details**:
+  - Name: `create_default_gambling_workflow(p_firm_id UUID)`
+  - Returns: UUID (the workflow_config.id)
+  - Tables affected: `workflow_configs` (1 row), `workflow_stages` (10 rows)
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+  - Stages (10 total):
+    1. Operating Licence (initial)
+    2. Application Submitted
+    3. Notify Authorities (7-day deadline for Authority Notification)
+    4. Advertisement
+    5. Consultation (28-day deadline)
+    6. Representations
+    7. Determination
+    8. Decision
+    9. Appeal Period (21-day deadline)
+    10. Complete (terminal)
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - core src/ compiles fine
+- **Learnings for future iterations**:
+  - Gambling workflow includes three deadlines: 7-day authority notification, 28-day consultation, 21-day appeal window
+  - Follows Gambling Act 2005 application process stages
+  - MCP Supabase tool lacks access token so migrations must be applied via psql
+  - Next task is Task 8.11f: Apply Gambling workflow function to Supabase via psql
+---
