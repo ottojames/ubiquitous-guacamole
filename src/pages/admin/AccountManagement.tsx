@@ -540,9 +540,11 @@ export default function AccountManagement() {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
+            <label htmlFor="account-search" className="sr-only">Search {activeTab}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
               <input
+                id="account-search"
                 type="text"
                 placeholder={`Search ${activeTab}...`}
                 value={searchTerm}
@@ -554,16 +556,20 @@ export default function AccountManagement() {
 
           {/* Filters */}
           {activeTab !== 'users' && (
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white text-slate-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-              <option value="deleted">Deleted</option>
-            </select>
+            <>
+              <label htmlFor="account-status-filter" className="sr-only">Filter by status</label>
+              <select
+                id="account-status-filter"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 bg-white text-slate-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="suspended">Suspended</option>
+                <option value="deleted">Deleted</option>
+              </select>
+            </>
           )}
 
           {/* Bulk Actions */}
@@ -595,7 +601,9 @@ export default function AccountManagement() {
             <thead className="bg-slate-50 border-b border-gray-200">
               <tr>
                 <th className="p-4 text-left">
+                  <label className="sr-only" htmlFor="select-all-accounts">Select all accounts</label>
                   <input
+                    id="select-all-accounts"
                     type="checkbox"
                     checked={selectedItems.size === sortedAccounts.length && sortedAccounts.length > 0}
                     onChange={(e) => {
@@ -666,6 +674,7 @@ export default function AccountManagement() {
                     <td className="p-4">
                       <input
                         type="checkbox"
+                        aria-label={`Select ${'email' in account ? account.email : account.name}`}
                         checked={selectedItems.has(account.id)}
                         onChange={(e) => {
                           const newSelected = new Set(selectedItems);

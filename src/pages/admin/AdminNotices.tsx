@@ -231,9 +231,11 @@ export default function AdminNotices() {
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
+            <label htmlFor="notice-search" className="sr-only">Search notices</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 w-5 h-5" />
               <input
+                id="notice-search"
                 type="text"
                 placeholder="Search notices..."
                 value={searchTerm}
@@ -245,7 +247,9 @@ export default function AdminNotices() {
 
           {/* Status Filter */}
           <div className="relative">
+            <label htmlFor="notice-status-filter" className="sr-only">Filter by status</label>
             <select
+              id="notice-status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -262,7 +266,9 @@ export default function AdminNotices() {
 
           {/* Type Filter */}
           <div className="relative">
+            <label htmlFor="notice-type-filter" className="sr-only">Filter by type</label>
             <select
+              id="notice-type-filter"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

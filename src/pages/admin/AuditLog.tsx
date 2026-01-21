@@ -311,9 +311,11 @@ export default function AuditLog() {
 
         {/* Search */}
         <div className="mt-4">
+          <label htmlFor="audit-search" className="sr-only">Search audit logs</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
             <input
+              id="audit-search"
               type="text"
               placeholder="Search by action, target, or reason..."
               value={searchTerm}

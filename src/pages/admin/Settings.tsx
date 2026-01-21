@@ -59,20 +59,22 @@ export default function AdminSettings() {
               <h2 className="text-lg font-medium text-slate-900">Security Settings</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="session-timeout" className="block text-sm font-medium text-slate-700 mb-2">
                     Session Timeout (minutes)
                   </label>
                   <input
+                    id="session-timeout"
                     type="number"
                     defaultValue={120}
                     className="bg-white text-slate-900 px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="max-login-attempts" className="block text-sm font-medium text-slate-700 mb-2">
                     Max Failed Login Attempts
                   </label>
                   <input
+                    id="max-login-attempts"
                     type="number"
                     defaultValue={5}
                     className="bg-white text-slate-900 px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
