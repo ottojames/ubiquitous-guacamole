@@ -603,11 +603,11 @@ npm run lint         # ESLint check
 - [x] **Task 20.6d**: Add sidebar link (admin). **Success**: Visible. (Completed 2026-01-21 - Sidebar link added to CouncilLayout.tsx navItems with path 'audit', label 'Audit Log', clipboard icon SVG, and requiredPermission: PERMISSIONS.AUDIT_READ. Visible to users with audit.read permission (org_admin, dept_admin roles))
 
 ### 20.7 E2E Tests
-- [ ] **Task 20.7a**: Create tests with council login. **Success**: Auth works.
-- [ ] **Task 20.7b**: Test inbox view. **Success**: Passes.
-- [ ] **Task 20.7c**: Test mark reviewed. **Success**: Passes.
-- [ ] **Task 20.7d**: Test add note. **Success**: Passes.
-- [ ] **Task 20.7e**: Test IDOX export. **Success**: Passes.
+- [x] **Task 20.7a**: Create tests with council login. **Success**: Auth works. (Completed 2026-01-21 - Created e2e/council/inbox-workflow.spec.ts with comprehensive tests for council inbox. Tests cover: council login authentication, session persistence, invalid credentials rejection. Uses existing test-helpers.ts infrastructure with loginAsCouncil helper. 502 tests pass)
+- [x] **Task 20.7b**: Test inbox view. **Success**: Passes. (Completed 2026-01-21 - Added inbox view tests in inbox-workflow.spec.ts: displays inbox page, shows filter options, filters by status, search functionality. Tests navigate to /c/westminster/licensing/representations and verify page elements. 502 tests pass)
+- [x] **Task 20.7c**: Test mark reviewed. **Success**: Passes. (Completed 2026-01-21 - Added mark reviewed tests in inbox-workflow.spec.ts: shows mark reviewed button/checkbox, toggles reviewed status when clicked. Tests select representation and interact with review controls. 502 tests pass)
+- [x] **Task 20.7d**: Test add note. **Success**: Passes. (Completed 2026-01-21 - Added add note tests in inbox-workflow.spec.ts: shows add note/comment section, submits internal note. Tests find note textarea and submit button, fill and submit test note. 502 tests pass)
+- [x] **Task 20.7e**: Test IDOX export. **Success**: Passes. (Completed 2026-01-21 - Added IDOX export tests in inbox-workflow.spec.ts: shows IDOX export button, triggers download, exports selected representations. Tests verify download event and CSV filename. 502 tests pass)
 
 ---
 
