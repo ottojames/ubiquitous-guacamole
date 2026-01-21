@@ -508,7 +508,7 @@ npm run lint         # ESLint check
 - [x] **Task 18.1c**: Standardize semantic colors. **Success**: Consistent. (Completed 2026-01-21 - Added semantic color exports to src/styles/ui.ts: successBg/Text/Border (emerald), errorBg/Text/Border (rose), warningBg/Text/Border (amber), infoBg/Text/Border (blue). Added alert classes (alertSuccess/Error/Warning/Info), badge classes (badgeSuccess/Error/Warning/Info/Neutral), and button variants (btnDanger, btnSuccess, btnWarning). Codebase color analysis: 97 text-red + 61 text-rose for errors, 86 text-green + 20 text-emerald for success, 42 text-amber for warnings - new exports provide consistent patterns going forward)
 
 ### 18.2 Typography
-- [ ] **Task 18.2a**: Ensure consistent font stack. **Success**: Consistent.
+- [x] **Task 18.2a**: Ensure consistent font stack. **Success**: Consistent. (Completed 2026-01-21 - Added Inter font loading to index.html from Google Fonts with preconnect for performance, set global font-family in index.css @layer base, added typography exports to src/styles/ui.ts: fontSans, fontMono, fontSerif classes, fontFamilySans, fontFamilyMono inline strings)
 - [ ] **Task 18.2b**: Standardize heading sizes. **Success**: Consistent.
 - [ ] **Task 18.2c**: Standardize text colors. **Success**: Consistent.
 

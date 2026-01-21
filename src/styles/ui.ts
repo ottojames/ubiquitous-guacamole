@@ -1,5 +1,21 @@
 // New shared UI tokens (Stripe-like cleanliness)
 // Use CSS hero band class for reliability across browsers
+
+// ============================================================================
+// TYPOGRAPHY - Consistent font stack across the app
+// ============================================================================
+// Primary font: Inter (loaded from Google Fonts in index.html)
+// Fallbacks: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif
+// Monospace: 'Menlo', 'Monaco', 'Courier New', monospace
+// ============================================================================
+export const fontSans = "font-sans"; // Uses tailwind.config.js: Inter, ui-sans-serif, system-ui
+export const fontMono = "font-mono"; // For code, IDs, reference numbers
+export const fontSerif = "font-serif"; // For formal notice text (Georgia, Times)
+
+// Inline font-family for components that can't use Tailwind classes (e.g., inline styles)
+export const fontFamilySans = "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+export const fontFamilyMono = "'Menlo', 'Monaco', 'Courier New', monospace";
+
 export const canvas   = "bg-[var(--canvas)]";
 export const pageWrap = `hero-band min-h-screen text-[#222d35] ${canvas}`;
 export const pageWrapLg = `hero-band-lg min-h-screen text-[#222d35] bg-[var(--canvas)]`;
