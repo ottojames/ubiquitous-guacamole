@@ -204,7 +204,7 @@ npm run lint         # ESLint check
 - [x] **Task 11.4b**: Integrate KanbanBoard into `src/pages/firm/Notices.tsx` - Render board when view is 'kanban'. ~20 lines addition. (Completed 2026-01-21 - Added imports for KanbanBoard, useWorkflowConfigs hook, and workflow types; added useMemo for kanbanStages and noticesByStage transformations; added conditional rendering for kanban/calendar/list views)
 
 ### 11.4 Template Management
-- [ ] **Task 11.5a**: Create `src/pages/firm/Templates.tsx` with template list view. Shows templates, filter by type. ~60 lines.
+- [x] **Task 11.5a**: Create `src/pages/firm/Templates.tsx` with template list view. Shows templates, filter by type. ~60 lines. (Completed 2026-01-21 - Component with loading state, filter by notice type dropdown using NOTICE_CATEGORY_TREE, template list with name/description/type/usage_count/is_shared/date, empty state, admin-only create button)
 - [ ] **Task 11.5b**: Add create/edit template modal to `src/pages/firm/Templates.tsx`. Form with name, type, data fields. ~70 lines.
 - [ ] **Task 11.5c**: Add delete confirmation and usage count display to Templates page. ~30 lines.
 - [ ] **Task 11.6**: Add Templates route to `src/App.tsx` - Route `/f/:firmSlug/templates` to Templates page.

@@ -2445,3 +2445,27 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated to this task
   - Next task is Task 11.5a: Create src/pages/firm/Templates.tsx with template list view
 ---
+
+## Iteration 73 - Task 11.5a: Create src/pages/firm/Templates.tsx with template list view
+- **What was implemented**: Created Templates page component for firm portal
+- **Files created**:
+  - `src/pages/firm/Templates.tsx` (~160 lines)
+- **Files changed**:
+  - `PRD.md` - Marked task 11.5a complete
+- **Key implementation details**:
+  - Uses same patterns as FirmTeam.tsx (useOutletContext for firm/userRole, useState, useEffect)
+  - Fetches templates from /api/firm/templates endpoint with auth header
+  - Filter dropdown using NOTICE_CATEGORY_TREE for all notice types
+  - Template list shows: name, description, notice_type badge, is_shared badge, usage_count, created_at
+  - Empty state with FileText icon when no templates
+  - Admin/owner-only "New Template" button (create modal is Task 11.5b)
+  - Loading spinner while fetching
+  - Uses purple color scheme to match other firm pages
+- **Test results**: 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Templates.tsx compiles cleanly (pre-existing errors in cypress/e2e/scripts unrelated)
+- **Learnings for future iterations**:
+  - NOTICE_CATEGORY_TREE is the best source for notice type dropdown options
+  - useOutletContext<FirmContext> provides firm and userRole from FirmLayout
+  - API fetches need session.access_token in Authorization header
+  - Next tasks: 11.5b (create/edit modal), 11.5c (delete confirmation), 11.6 (route), 11.7 (sidebar link)
+---
