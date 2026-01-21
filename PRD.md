@@ -132,8 +132,8 @@ npm run lint         # ESLint check
 ### 8.3 Workflow Functions
 - [x] **Task 8.12a**: Create `transition_notice_stage()` function migration. Copy from Task 8.12. Validates stage, calculates deadline, records history. (Created 2026-01-21 - File: supabase/migrations/20260120350000_create_transition_notice_stage.sql)
 - [x] **Task 8.12b**: Apply transition_notice_stage function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role, validates stage belongs to same workflow, calculates deadline for fixed_days deadline_type, records transition history, updates notice_workflow_status with new stage and deadline)
-- [ ] **Task 8.13a**: Create `initialize_notice_workflow()` function migration. Copy from Task 8.13. Auto-creates default workflow if needed.
-- [ ] **Task 8.13b**: Apply initialize_notice_workflow function to Supabase.
+- [x] **Task 8.13a**: Create `initialize_notice_workflow()` function migration. Copy from Task 8.13. Auto-creates default workflow if needed. (Created 2026-01-21 - File: supabase/migrations/20260120360000_create_initialize_notice_workflow.sql)
+- [x] **Task 8.13b**: Apply initialize_notice_workflow function to Supabase. (Applied 2026-01-21 via psql - function created with SECURITY DEFINER, EXECUTE granted to authenticated role. Auto-creates default workflow for firm/notice-type if none exists by calling the appropriate create_default_*_workflow function. Finds initial stage, calculates deadline if applicable, creates notice_workflow_status entry, records initial history entry with 'system' transition type)
 - [ ] **Task 8.14a**: Create migration to add `firm_id` and `client_id` columns to notices table. Use IF NOT EXISTS pattern.
 - [ ] **Task 8.14b**: Apply notices table update to Supabase.
 
@@ -291,3 +291,366 @@ npm run lint         # ESLint check
 ### Supabase Project
 - Project ID: Use `mcp__supabase__list_projects` to find project ID
 - Apply migrations with: `mcp__supabase__apply_migration`
+
+---
+
+## Phase 15: Pricing Page Complete Rewrite
+
+**Goal**: Replace the incorrect pricing page with our actual three-tier pricing model.
+
+**Current State (WRONG)**:
+- Individual: £49.99/notice
+- Professional: £150/month (5 notices included)
+- Business: £400/month (15 notices included)  
+- Enterprise: £1200/month (50 notices included)
+- Parish & Town: £49/month
+- District Council: £199/month
+- Unitary & County: £499/month
+- "Trusted by 40+ UK councils" (false)
+
+**Target State (CORRECT)**:
+- Public: £50/notice (no account needed)
+- Firms: £49/month subscription + £50/notice
+- Councils: FREE portal + £19.99/notice when publishing
+
+**File**: `src/pages/Pricing.tsx`
+
+### 15.1 Remove Old Pricing Data
+- [ ] **Task 15.1a**: Delete `pricingPlans.professional` object. **Success**: Object removed, no TypeScript errors.
+- [ ] **Task 15.1b**: Delete `pricingPlans.business` object. **Success**: Object removed, no TypeScript errors.
+- [ ] **Task 15.1c**: Delete `pricingPlans.enterprise` object. **Success**: Object removed, no TypeScript errors.
+- [ ] **Task 15.1d**: Delete `pricingPlans.councilSmall` object (Parish & Town). **Success**: Object removed.
+- [ ] **Task 15.1e**: Delete `pricingPlans.councilMedium` object (District Council). **Success**: Object removed.
+- [ ] **Task 15.1f**: Delete `pricingPlans.councilLarge` object (Unitary & County). **Success**: Object removed.
+- [ ] **Task 15.1g**: Delete entire `comparisonData` array. **Success**: Array removed.
+- [ ] **Task 15.1h**: Update `pricingPlans.individual` to show £50 (not £49.99). **Success**: Price shows "£50".
+
+### 15.2 Create New Pricing Structure
+- [ ] **Task 15.2a**: Create `pricingPlans.public` object: name "One-Off Publishing", price 50, features, cta "Publish Now - £50". **Success**: Object compiles.
+- [ ] **Task 15.2b**: Create `pricingPlans.firms` object: name "Professional Portal", priceMonthly 49, cta "Start Free Trial", popular true. **Success**: Object compiles.
+- [ ] **Task 15.2c**: Create `pricingPlans.councils` object: name "Council Portal", FREE portal, £19.99/notice. **Success**: Object compiles.
+
+### 15.3 Update Hero Section
+- [ ] **Task 15.3a**: Change hero h1 to "Simple, transparent pricing". **Success**: Updated.
+- [ ] **Task 15.3b**: Change subtitle to explain three tiers. **Success**: Subtitle updated.
+- [ ] **Task 15.3c**: Update pricing text to "From £50 per notice. Councils £19.99." **Success**: Correct pricing.
+
+### 15.4 Rebuild Pricing Cards Section
+- [ ] **Task 15.4a**: Delete "For Individuals" section. **Success**: Removed.
+- [ ] **Task 15.4b**: Delete "For Law Firms" section with old tiers. **Success**: Removed.
+- [ ] **Task 15.4c**: Delete "For Councils" section with old tiers. **Success**: Removed.
+- [ ] **Task 15.4d**: Delete Comparison Table section. **Success**: Removed.
+- [ ] **Task 15.4e**: Remove `showComparison` and `billingCycle` state. **Success**: States removed.
+- [ ] **Task 15.4f**: Create three-card grid: Public, Firms (highlighted), Councils. **Success**: Cards render.
+- [ ] **Task 15.4g**: Style Public card: £50/notice, blue CTA. **Success**: Card styled.
+- [ ] **Task 15.4h**: Style Firms card: £49/month + £50/notice, "Most Popular" badge. **Success**: Card prominent.
+- [ ] **Task 15.4i**: Style Councils card: FREE portal, £19.99/notice, green accent. **Success**: Card styled.
+
+### 15.5 Update Old Way vs New Way Section
+- [ ] **Task 15.5a**: Update to "From £50 per notice". **Success**: Correct price.
+- [ ] **Task 15.5b**: Remove "40+ UK councils" claim. **Success**: False claim removed.
+
+### 15.6 Update FAQ Section
+- [ ] **Task 15.6a**: Remove outdated "pay-as-you-go" FAQ. **Success**: Removed.
+- [ ] **Task 15.6b**: Remove "switch plans" FAQ. **Success**: Removed.
+- [ ] **Task 15.6c**: Add FAQ "Why do councils get a discount?" **Success**: Added.
+- [ ] **Task 15.6d**: Add FAQ "What's in £49/month subscription?" **Success**: Added.
+- [ ] **Task 15.6e**: Add FAQ "Can I publish without subscription?" **Success**: Added.
+- [ ] **Task 15.6f**: Add FAQ "What's in free council portal?" **Success**: Added.
+
+### 15.7 Update Final CTA Section
+- [ ] **Task 15.7a**: Remove "40+ UK councils", use generic text. **Success**: Removed.
+- [ ] **Task 15.7b**: Update primary CTA to "Publish a Notice - £50". **Success**: Updated.
+- [ ] **Task 15.7c**: Add secondary CTA "Register as a Firm". **Success**: Added.
+- [ ] **Task 15.7d**: Add council link "Get free portal access". **Success**: Added.
+
+### 15.8 E2E Tests for Pricing Page
+- [ ] **Task 15.8a**: Create `e2e/pricing-page.spec.ts` - test three cards visible. **Success**: Test passes.
+- [ ] **Task 15.8b**: Test correct prices (£50, £49, FREE, £19.99). **Success**: Test passes.
+- [ ] **Task 15.8c**: Test old tiers not visible. **Success**: Test passes.
+- [ ] **Task 15.8d**: Test no false "40+" claims. **Success**: Test passes.
+- [ ] **Task 15.8e**: Test Public CTA links to /publish. **Success**: Test passes.
+- [ ] **Task 15.8f**: Test Firms CTA links to sign-up?plan=firm. **Success**: Test passes.
+- [ ] **Task 15.8g**: Test Councils CTA links to sign-up?plan=council. **Success**: Test passes.
+- [ ] **Task 15.8h**: Test FAQ questions present. **Success**: Test passes.
+
+---
+
+## Phase 16: Homepage Improvements
+
+**Goal**: Fix hardcoded stats, hero messaging, placeholder logos, trust signals.
+
+**File**: `src/pages/Home.tsx`
+
+### 16.1 Replace Hardcoded Stats with Real API
+- [ ] **Task 16.1a**: Create `server/routes/stats.ts` GET `/api/stats` returning real counts. ~40 lines. **Success**: Returns real data.
+- [ ] **Task 16.1b**: Register route in server/index.ts. **Success**: Accessible.
+- [ ] **Task 16.1c**: Create `src/hooks/useStats.ts`. ~30 lines. **Success**: Hook works.
+- [ ] **Task 16.1d**: Replace hardcoded STATS with useStats() hook. **Success**: Real counts shown.
+- [ ] **Task 16.1e**: Add fallback showing "—" on error. **Success**: Error handled.
+
+### 16.2 Fix Hero Messaging
+- [ ] **Task 16.2a**: Update h1 to "Publish legal notices digitally. £50 per notice." **Success**: Updated.
+- [ ] **Task 16.2b**: Update subtitle to be concise and compelling. **Success**: Updated.
+- [ ] **Task 16.2c**: Remove specific council count claims. **Success**: No false claims.
+
+### 16.3 Make Publish CTA More Prominent
+- [ ] **Task 16.3a**: Make Publish button larger with shadow. **Success**: Dominant.
+- [ ] **Task 16.3b**: Make Browse button secondary style. **Success**: Clear hierarchy.
+- [ ] **Task 16.3c**: Add price to CTA: "Publish a Notice - £50". **Success**: Price visible.
+
+### 16.4 Fix Placeholder Logos
+- [ ] **Task 16.4a**: Check /public/logos/, hide if missing. **Success**: No broken images.
+- [ ] **Task 16.4b**: Update or hide councilLogos array. **Success**: No broken images.
+- [ ] **Task 16.4c**: Replace specific council testimonials with generic. **Success**: No fake endorsements.
+
+### 16.5 Remove False Statistics
+- [ ] **Task 16.5a**: Remove specific council count from testimonials badge. **Success**: No false claim.
+- [ ] **Task 16.5b**: Remove count from councils section. **Success**: Updated.
+- [ ] **Task 16.5c**: Remove count from final CTA. **Success**: Updated.
+- [ ] **Task 16.5d**: Fix councils pricing to "Free portal · £19.99/notice". **Success**: Correct.
+
+### 16.6 Fix Notice Price
+- [ ] **Task 16.6a**: Change "£49.99" to "£50" in publish section. **Success**: Correct.
+- [ ] **Task 16.6b**: Search/replace all "49.99" with "50". **Success**: No wrong price.
+
+### 16.7 Add Trust Signals Section
+- [ ] **Task 16.7a**: Create section with 4 trust cards after hero. ~60 lines. **Success**: Renders.
+- [ ] **Task 16.7b**: Style with icons and gradients. **Success**: Professional.
+
+### 16.8 Mobile Spacing Review
+- [ ] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
+- [ ] **Task 16.8b**: Review testimonials on mobile. **Success**: Readable.
+- [ ] **Task 16.8c**: Review pricing cards on mobile. **Success**: Usable.
+- [ ] **Task 16.8d**: Review footer on mobile. **Success**: Good.
+
+### 16.9 E2E Tests for Homepage
+- [ ] **Task 16.9a**: Create `e2e/homepage.spec.ts` - test hero pricing. **Success**: Passes.
+- [ ] **Task 16.9b**: Test publish CTA links to /publish. **Success**: Passes.
+- [ ] **Task 16.9c**: Test no false council counts. **Success**: Passes.
+- [ ] **Task 16.9d**: Test stats load from API. **Success**: Passes.
+- [ ] **Task 16.9e**: Test no broken images. **Success**: Passes.
+- [ ] **Task 16.9f**: Test mobile layout. **Success**: Passes.
+
+---
+
+## Phase 17: Admin Panel Overhaul
+
+**Goal**: Fix theme, accessibility, broken functionality.
+
+### 17.1 Theme Update
+- [ ] **Task 17.1a**: Audit admin for dark red theme, list files. **Success**: Identified.
+- [ ] **Task 17.1b**: Replace sidebar red with bg-slate-50. **Success**: Light.
+- [ ] **Task 17.1c**: Update sidebar text to slate-700. **Success**: Readable.
+- [ ] **Task 17.1d**: Update active state to blue. **Success**: Uses blue.
+- [ ] **Task 17.1e**: Match header to public site. **Success**: Consistent.
+- [ ] **Task 17.1f**: Standardize card styles. **Success**: Consistent.
+
+### 17.2 Accessibility Fixes
+- [ ] **Task 17.2a**: Run axe-core, document failures. **Success**: Documented.
+- [ ] **Task 17.2b**: Fix contrast below 4.5:1. **Success**: WCAG AA.
+- [ ] **Task 17.2c**: Add focus states to all interactive elements. **Success**: Visible.
+- [ ] **Task 17.2d**: Ensure inputs have labels. **Success**: Labeled.
+- [ ] **Task 17.2e**: Add skip link. **Success**: Works.
+
+### 17.3 Replace Browser Alerts
+- [ ] **Task 17.3a**: Find all alert() calls, list them. **Success**: Listed.
+- [ ] **Task 17.3b**: Create ConfirmModal component. ~80 lines. **Success**: Works.
+- [ ] **Task 17.3c**: Create AlertModal component. ~50 lines. **Success**: Works.
+- [ ] **Task 17.3d**: Replace first alert(). **Success**: Replaced.
+- [ ] **Task 17.3e**: Replace all remaining alert(). **Success**: None remain.
+- [ ] **Task 17.3f**: Replace all confirm(). **Success**: None remain.
+
+### 17.4 Fix Settings Page
+- [ ] **Task 17.4a**: Identify broken edit/save, document. **Success**: Documented.
+- [ ] **Task 17.4b**: Fix form submission to call API. **Success**: Works.
+- [ ] **Task 17.4c**: Add loading state to Save. **Success**: Shows loading.
+- [ ] **Task 17.4d**: Add success/error toast. **Success**: Feedback shown.
+- [ ] **Task 17.4e**: Fix password reset. **Success**: Works.
+
+### 17.5 Fix Dashboard Stats
+- [ ] **Task 17.5a**: Find hardcoded stats, list them. **Success**: Listed.
+- [ ] **Task 17.5b**: Create admin stats API endpoint. ~50 lines. **Success**: Returns data.
+- [ ] **Task 17.5c**: Register with admin auth. **Success**: Protected.
+- [ ] **Task 17.5d**: Create useAdminStats hook. **Success**: Works.
+- [ ] **Task 17.5e**: Update Dashboard to use real stats. **Success**: Real numbers.
+- [ ] **Task 17.5f**: Add loading skeletons. **Success**: No blanks.
+
+### 17.6 Fix Sidebar Navigation
+- [ ] **Task 17.6a**: Fix current page highlighting. **Success**: Highlighted.
+- [ ] **Task 17.6b**: Fix broken links. **Success**: All work.
+- [ ] **Task 17.6c**: Fix mobile collapse. **Success**: Works.
+
+### 17.7 E2E Tests
+- [ ] **Task 17.7a**: Create `e2e/admin-panel.spec.ts` with login. **Success**: Auth works.
+- [ ] **Task 17.7b**: Test dashboard loads. **Success**: Passes.
+- [ ] **Task 17.7c**: Test sidebar navigation. **Success**: Passes.
+- [ ] **Task 17.7d**: Test settings save. **Success**: Passes.
+- [ ] **Task 17.7e**: Test no browser alerts. **Success**: Passes.
+- [ ] **Task 17.7f**: Test accessibility. **Success**: Passes.
+
+---
+
+## Phase 18: Design Consistency
+
+### 18.1 Colors
+- [ ] **Task 18.1a**: Document colors, ensure blue-600 primary. **Success**: Documented.
+- [ ] **Task 18.1b**: Replace non-standard admin colors. **Success**: Standard.
+- [ ] **Task 18.1c**: Standardize semantic colors. **Success**: Consistent.
+
+### 18.2 Typography
+- [ ] **Task 18.2a**: Ensure consistent font stack. **Success**: Consistent.
+- [ ] **Task 18.2b**: Standardize heading sizes. **Success**: Consistent.
+- [ ] **Task 18.2c**: Standardize text colors. **Success**: Consistent.
+
+### 18.3 Buttons
+- [ ] **Task 18.3a**: Ensure primary uses UI.btnPrimary. **Success**: Consistent.
+- [ ] **Task 18.3b**: Ensure secondary uses UI.btnSecondary. **Success**: Consistent.
+- [ ] **Task 18.3c**: Create UI.btnDanger. **Success**: Exists.
+- [ ] **Task 18.3d**: Apply to admin. **Success**: Uses shared.
+
+### 18.4 Forms
+- [ ] **Task 18.4a**: Create UI.input style. **Success**: Defined.
+- [ ] **Task 18.4b**: Create UI.select style. **Success**: Defined.
+- [ ] **Task 18.4c**: Apply to admin forms. **Success**: Consistent.
+- [ ] **Task 18.4d**: Apply to public forms. **Success**: Consistent.
+
+### 18.5 Loading States
+- [ ] **Task 18.5a**: Ensure Skeleton components exist. **Success**: Exist.
+- [ ] **Task 18.5b**: Use skeletons for content loading. **Success**: Used.
+- [ ] **Task 18.5c**: Use spinners for actions only. **Success**: Appropriate.
+
+---
+
+## Phase 19: Payment & Billing
+
+### 19.1 Stripe Setup
+- [ ] **Task 19.1a**: Install Stripe packages. **Success**: Installed.
+- [ ] **Task 19.1b**: Add env vars to .env.example. **Success**: Documented.
+- [ ] **Task 19.1c**: Create stripe.ts service. ~20 lines. **Success**: Initializes.
+
+### 19.2 Endpoints
+- [ ] **Task 19.2a**: Create checkout session endpoint. ~50 lines. **Success**: Creates session.
+- [ ] **Task 19.2b**: Create session status endpoint. **Success**: Works.
+- [ ] **Task 19.2c**: Create Stripe webhook endpoint. ~60 lines. **Success**: Processes.
+- [ ] **Task 19.2d**: Register routes. **Success**: Accessible.
+
+### 19.3 Frontend
+- [ ] **Task 19.3a**: Create CheckoutButton. ~40 lines. **Success**: Redirects.
+- [ ] **Task 19.3b**: Create PaymentSuccess page. ~50 lines. **Success**: Renders.
+- [ ] **Task 19.3c**: Create PaymentCancelled page. ~30 lines. **Success**: Renders.
+- [ ] **Task 19.3d**: Add routes to App.tsx. **Success**: Work.
+- [ ] **Task 19.3e**: Integrate into publish wizard. **Success**: Can pay.
+
+### 19.4 Receipts
+- [ ] **Task 19.4a**: Create receipt PDF generator. ~80 lines. **Success**: Generates.
+- [ ] **Task 19.4b**: Create download endpoint. **Success**: Works.
+- [ ] **Task 19.4c**: Add download button. **Success**: Users get receipt.
+
+### 19.5 E2E Tests
+- [ ] **Task 19.5a**: Test checkout redirect. **Success**: Passes.
+- [ ] **Task 19.5b**: Test success page. **Success**: Passes.
+- [ ] **Task 19.5c**: Test cancel page. **Success**: Passes.
+
+---
+
+## Phase 20: Council Portal Features
+
+### 20.1 Department Access
+- [ ] **Task 20.1a**: Create council_departments table. **Success**: Exists.
+- [ ] **Task 20.1b**: Create memberships table. **Success**: Exists.
+- [ ] **Task 20.1c**: Create CouncilContext. ~60 lines. **Success**: Works.
+- [ ] **Task 20.1d**: Filter routes by membership. **Success**: Filtered.
+
+### 20.2 Representation Inbox
+- [ ] **Task 20.2a**: Create RepresentationInbox page. ~100 lines. **Success**: Renders.
+- [ ] **Task 20.2b**: Add Mark as Reviewed. **Success**: Works.
+- [ ] **Task 20.2c**: Add bulk actions. **Success**: Works.
+- [ ] **Task 20.2d**: Add route. **Success**: Works.
+- [ ] **Task 20.2e**: Add sidebar link. **Success**: Visible.
+
+### 20.3 Internal Notes
+- [ ] **Task 20.3a**: Create representation_notes table. **Success**: With RLS.
+- [ ] **Task 20.3b**: Apply migration. **Success**: Applied.
+- [ ] **Task 20.3c**: Add notes UI. ~50 lines. **Success**: Works.
+- [ ] **Task 20.3d**: RLS hides from public. **Success**: Council-only.
+
+### 20.4 Templates
+- [ ] **Task 20.4a**: Create Templates page. ~80 lines. **Success**: Renders.
+- [ ] **Task 20.4b**: Add editor. **Success**: Works.
+- [ ] **Task 20.4c**: Add route. **Success**: Works.
+- [ ] **Task 20.4d**: Add sidebar link. **Success**: Visible.
+
+### 20.5 IDOX Export
+- [ ] **Task 20.5a**: Research format, document. **Success**: Documented.
+- [ ] **Task 20.5b**: Create export service. ~60 lines. **Success**: Generates.
+- [ ] **Task 20.5c**: Create endpoint. **Success**: Works.
+- [ ] **Task 20.5d**: Add button. **Success**: Downloads.
+
+### 20.6 Audit Log
+- [ ] **Task 20.6a**: Ensure actions logged. **Success**: Logged.
+- [ ] **Task 20.6b**: Create AuditLog page. ~80 lines. **Success**: Renders.
+- [ ] **Task 20.6c**: Add route. **Success**: Works.
+- [ ] **Task 20.6d**: Add sidebar link (admin). **Success**: Visible.
+
+### 20.7 E2E Tests
+- [ ] **Task 20.7a**: Create tests with council login. **Success**: Auth works.
+- [ ] **Task 20.7b**: Test inbox view. **Success**: Passes.
+- [ ] **Task 20.7c**: Test mark reviewed. **Success**: Passes.
+- [ ] **Task 20.7d**: Test add note. **Success**: Passes.
+- [ ] **Task 20.7e**: Test IDOX export. **Success**: Passes.
+
+---
+
+## Phase 21: AI Features (Future)
+
+### 21.1 Compliance Checker
+- [ ] **Task 21.1a**: Create complianceChecker service. ~80 lines. **Success**: Returns results.
+- [ ] **Task 21.1b**: Create endpoint. **Success**: Callable.
+- [ ] **Task 21.1c**: Add to wizard. **Success**: Shows feedback.
+
+### 21.2 Notice Drafting
+- [ ] **Task 21.2a**: Create noticeDrafter service. ~80 lines. **Success**: Generates.
+- [ ] **Task 21.2b**: Create endpoint. **Success**: Callable.
+- [ ] **Task 21.2c**: Add to wizard. **Success**: Pre-fills.
+
+### 21.3 Representation Analysis
+- [ ] **Task 21.3a**: Create analyzer service. ~100 lines. **Success**: Returns analysis.
+- [ ] **Task 21.3b**: Create endpoint. **Success**: Callable.
+- [ ] **Task 21.3c**: Add to council inbox. **Success**: Shows summary.
+
+---
+
+## Phase 22: Integrations (Future)
+
+### 22.1 API Docs
+- [ ] **Task 22.1a**: Create docs/api.md. **Success**: Complete.
+- [ ] **Task 22.1b**: Add Swagger at /api/docs. **Success**: Accessible.
+
+### 22.2 Webhooks
+- [ ] **Task 22.2a**: Create webhooks table. **Success**: Exists.
+- [ ] **Task 22.2b**: Apply migration. **Success**: Applied.
+- [ ] **Task 22.2c**: Create webhook service. ~60 lines. **Success**: Sends.
+- [ ] **Task 22.2d**: Integrate into endpoints. **Success**: Fires.
+
+---
+
+## Reference
+
+### Correct Pricing
+- **Public**: £50/notice (no account)
+- **Firms**: £49/month + £50/notice
+- **Councils**: Free portal + £19.99/notice
+
+### Design Tokens
+- Primary: blue-600
+- Success: emerald-600
+- Error: rose-600
+- Warning: amber-600
+- Text: slate-900/slate-600
+- Background: slate-50/white
+
+### Testing
+- All features need E2E tests
+- Playwright in e2e/ directory
+- Run: npx playwright test
