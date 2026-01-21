@@ -534,7 +534,7 @@ npm run lint         # ESLint check
 ## Phase 19: Payment & Billing
 
 ### 19.1 Stripe Setup
-- [ ] **Task 19.1a**: Install Stripe packages. **Success**: Installed.
+- [x] **Task 19.1a**: Install Stripe packages. **Success**: Installed. (Verified 2026-01-21 - stripe@20.2.0 and @stripe/stripe-js@8.6.3 already in package.json, 498 tests pass)
 - [ ] **Task 19.1b**: Add env vars to .env.example. **Success**: Documented.
 - [ ] **Task 19.1c**: Create stripe.ts service. ~20 lines. **Success**: Initializes.
 
