@@ -2178,3 +2178,153 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next phase is Phase 11 (Firm Portal UI Components) starting with Task 11.0 to install dnd-kit and react-query dependencies
   - The firm-templates routes provide: GET / (list), GET /:id (single), POST / (create), PATCH /:id (update), DELETE /:id (soft delete), POST /:id/use (increment usage count)
 ---
+
+## Iteration 89 - Task 11.0: Install dnd-kit and react-query packages
+- **What was implemented**: Installed npm packages for Phase 11 Firm Portal UI Components
+- **Files changed**:
+  - `package.json` - Added 4 new dependencies
+  - `package-lock.json` - Updated with 209 new packages
+  - `PRD.md` - Marked task complete
+- **Packages installed**:
+  - @dnd-kit/core@6.3.1 - Core drag-and-drop functionality
+  - @dnd-kit/sortable@10.0.0 - Sortable preset for Kanban board
+  - @dnd-kit/utilities@3.2.2 - Utility functions for dnd-kit
+  - @tanstack/react-query@5.90.19 - Server state management for hooks
+- **Test results**: All 488 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages - not related to package installation
+- **Learnings for future iterations**:
+  - React 19 has peer dependency warnings with some packages (swagger-ui-react uses React 18)
+  - dnd-kit is the replacement for deprecated react-beautiful-dnd
+  - React Query v5 has new naming (@tanstack/react-query instead of react-query)
+  - Phase 11 can now proceed with creating hooks using React Query (Task 11.1a next)
+---
+
+## Iteration 90 - Task 11.1a: Create useWorkflowConfigs() hook
+- **What was implemented**: Created useWorkflow.ts hook with useWorkflowConfigs() using React Query
+- **Files created**:
+  - `src/hooks/useWorkflow.ts` - React Query hook for workflow configs (~35 lines)
+- **Files changed**:
+  - `src/main.tsx` - Added QueryClientProvider with QueryClient setup
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - `useWorkflowConfigs()` returns React Query result (data, isLoading, error, refetch, etc.)
+  - Fetches from `/api/workflow/configs` with credentials included
+  - Returns `WorkflowConfigWithStages[]` typed array
+  - Query options: staleTime=5min, gcTime=30min (formerly cacheTime)
+  - QueryClient configured with retry=1 and refetchOnWindowFocus=false
+- **Test results**: 488 tests pass + 1 snapshot failure (pre-existing date mismatch)
+- **TypeScript check**: No new errors in useWorkflow.ts or main.tsx - existing errors are pre-existing in other files
+- **Learnings for future iterations**:
+  - React Query v5 renamed cacheTime to gcTime (garbage collection time)
+  - QueryClientProvider must wrap the app in main.tsx before hooks can be used
+  - The existing useRepresentations.ts uses plain useState/useEffect pattern; React Query provides caching/stale data management automatically
+  - Next is Task 11.1b: Add useWorkflowConfig(noticeType) and useNoticeWorkflowStatus(noticeId) hooks
+---
+
+## Iteration 91 - Task 11.1b: Add useWorkflowConfig() and useNoticeWorkflowStatus() hooks
+- **What was implemented**: Added two new React Query hooks for single workflow config and notice status
+- **Files changed**:
+  - `src/hooks/useWorkflow.ts` - Added ~80 lines with new hooks and helper interface
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - `useWorkflowConfig(noticeType)`: Fetches single workflow by notice type from `/api/workflow/configs/:noticeType`
+    - Returns null for 404 (no workflow found), handles enabled: !!noticeType for conditional fetching
+    - Uses 5min staleTime, 30min gcTime (same as useWorkflowConfigs)
+  - `useNoticeWorkflowStatus(noticeId)`: Fetches notice workflow status from `/api/workflow/notices/:noticeId/status`
+    - Returns joined data: current_stage, workflow, is_overdue (computed by server)
+    - Uses shorter 2min staleTime (status changes more frequently)
+  - `NoticeWorkflowStatusWithDetails`: Extended interface for API response with nested relations
+- **Patterns established**:
+  - Query keys follow nested structure: ['workflow', 'configs', noticeType] for cache invalidation
+  - All fetch functions use encodeURIComponent for URL params
+  - Handle 404 as null return (not error) for graceful "not found" handling
+  - credentials: 'include' on all fetch calls for auth cookies
+- **Test results**: 488 tests pass + 1 pre-existing snapshot failure (date drift)
+- **TypeScript check**: Pre-existing errors in council/, firm/, auth/ pages only - useWorkflow.ts compiles cleanly
+- **Learnings for future iterations**:
+  - React Query enabled: !!param pattern is standard for conditional fetching
+  - Different resources can have different staleTime based on expected change frequency
+  - NoticeWorkflowStatus uses shorter staleTime (2min) since it changes more often than configs (5min)
+  - Next task is Task 11.1c: Add useTransitionStage() mutation hook
+---
+
+## Iteration 92 - Task 11.1c: Add useTransitionStage() mutation hook
+- **What was implemented**: Added React Query mutation hook for transitioning notices between workflow stages
+- **Files changed**:
+  - `src/hooks/useWorkflow.ts` - Added ~72 lines for mutation hook and supporting types/functions
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - `TransitionStageParams` interface: { noticeId, toStageId, notes? }
+  - `TransitionStageResult` interface: { historyId, success }
+  - `transitionStage()` async function: POSTs to `/api/workflow/notices/:noticeId/transition`
+  - `useTransitionStage()` hook: Returns useMutation result with auto cache invalidation
+  - On successful mutation, invalidates the notice's workflow status query so UI refreshes
+- **Patterns used**:
+  - `useMutation` for write operations (vs `useQuery` for reads)
+  - `useQueryClient` to access cache for invalidation
+  - `queryClient.invalidateQueries({ queryKey: [...] })` pattern for cache invalidation
+  - credentials: 'include' and Content-Type: 'application/json' headers
+- **Test results**: 488 tests pass + 1 pre-existing snapshot failure (date drift)
+- **TypeScript check**: useWorkflow.ts compiles cleanly, pre-existing errors in cypress/e2e/scripts directories only
+- **Learnings for future iterations**:
+  - React Query v5: useMutation works same as v4, mutationFn is required property
+  - Cache invalidation on mutation success keeps UI in sync without manual refetch
+  - The mutation hook will be used by KanbanBoard for drag-and-drop stage transitions
+  - Phase 11.2 Hooks section is now COMPLETE (Tasks 11.1a, 11.1b, 11.1c all done)
+  - Next task is Task 11.2: Create WorkflowStageBadge.tsx component
+---
+
+## Iteration 93 - Task 11.2: Create WorkflowStageBadge.tsx component
+- **What was implemented**: Created WorkflowStageBadge component for displaying workflow stage with color and deadline indicator
+- **Files created**:
+  - `src/components/workflow/WorkflowStageBadge.tsx` - ~56 lines
+- **Files changed**:
+  - `PRD.md` - Marked task complete
+- **Key features**:
+  - Takes `stage` prop with `name` and `color` from WorkflowStage type
+  - Dynamic background color using stage.color with 12.5% opacity (`${color}20`)
+  - Colored dot indicator matching stage color
+  - Optional deadline prop (ISO date string)
+  - AlertTriangle icon (red) when deadline is overdue
+  - Clock icon (amber) when deadline is within 3 days and not overdue
+  - Size variants: 'sm' (smaller padding/text) and 'default'
+  - Uses cn() utility for className merging
+  - Follows existing badge styling patterns (rounded-full, inline-flex, etc.)
+- **Test results**: 489 tests pass + 1 pre-existing snapshot failure (date drift)
+- **TypeScript check**: Component compiles cleanly, pre-existing errors in council/firm/auth pages only
+- **Learnings for future iterations**:
+  - Created new `src/components/workflow/` directory for workflow UI components
+  - Badge follows existing codebase pattern from AdminNotices.tsx status badges
+  - Using inline style for dynamic colors (stage.color) since Tailwind doesn't support runtime values
+  - The `${color}20` hex notation adds alpha channel (20 = 12.5% opacity)
+  - Next task is Task 11.3a: Create KanbanColumn.tsx using dnd-kit droppable
+---
+
+## Iteration 94 - Task 11.3a: Create KanbanColumn.tsx component
+- **What was implemented**: Created KanbanColumn component using dnd-kit useDroppable hook
+- **Files created**:
+  - `src/components/workflow/KanbanColumn.tsx` - ~68 lines
+- **Files changed**:
+  - `PRD.md` - Marked task complete
+- **Key features**:
+  - `useDroppable` hook with stage.id as droppable identifier
+  - Passes `stage` data to droppable for access in drag handlers
+  - Column header with stage color dot, name, and count badge
+  - Droppable area with `isOver` visual feedback (blue highlight with ring)
+  - Empty state display ("No notices") when count is 0
+  - Flexible layout: min-width 280px, max-width 320px
+  - Styling follows existing codebase patterns (slate colors, rounded corners)
+- **Props interface**:
+  - `stage`: WorkflowStage (the workflow stage this column represents)
+  - `count`: number (notices in column, shown in header badge)
+  - `children`: ReactNode (KanbanCard components)
+  - `className`: optional additional styling
+- **Test results**: 490 tests pass + 1 pre-existing snapshot failure (date drift)
+- **TypeScript check**: No KanbanColumn-specific errors in project build, pre-existing errors in cypress/e2e/scripts directories only
+- **Learnings for future iterations**:
+  - dnd-kit useDroppable returns { setNodeRef, isOver } - setNodeRef goes on the container element
+  - The `data` option in useDroppable passes context to DndContext drag handlers
+  - isOver is useful for visual feedback during drag-over state
+  - The KanbanCard (next task 11.3b) will use useDraggable counterpart hook
+  - Next task is Task 11.3b: Create KanbanCard.tsx with draggable support
+---
