@@ -5990,3 +5990,39 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Phase 20 (Council Inbox) is now complete - all E2E tests written
   - Next phase is Phase 21: AI Features (Future) - Task 21.1a: Create complianceChecker service
 ---
+
+## Iteration 252 - Task 21.1a: Create complianceChecker service
+- **What was implemented**: Created complianceChecker service for validating notices against UK statutory requirements
+- **Files changed**:
+  - `server/services/complianceChecker.ts` - New file (~270 lines)
+  - `PRD.md` - Marked Task 21.1a complete
+- **Implementation details**:
+  - Created TypeScript types: ComplianceSeverity, ComplianceIssue, ComplianceResult
+  - Implemented 4 check functions:
+    1. `checkRequiredFields()` - validates applicantName, premisesAddress, postcode, councilName, consultation dates
+    2. `checkDeadlines()` - validates consultation periods by notice type:
+       - Licensing/Gambling: 28 days minimum
+       - GVOL: 21 days minimum
+       - Planning: 21 days minimum
+       - Probate (Trustee s.27): 60 days minimum
+    3. `checkFormats()` - validates UK postcode format, email format, phone number length
+    4. `checkWarnings()` - checks statutory warning presence, blue notice uploads
+  - Exported two main functions:
+    - `checkCompliance(notice: Partial<NoticeDraft>)` - for draft notices
+    - `checkNoticeBaseCompliance(notice: NoticeBase)` - for wizard flow notices
+  - Returns structured result with: passed (boolean), score (0-100), issues array, checkedAt timestamp
+  - Score calculation: starts at 100, -20 per error, -5 per warning
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Notice types from src/types/notice.ts: premises, variation, review, gvol, tro, planning, gambling, probate
+  - UK postcode regex: /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i
+  - Deadline rules vary by legislation:
+    - Licensing Act 2003: 28 days
+    - Gambling Act 2005: 28 days
+    - GVOL: 21 days from publication
+    - Planning: 21 days minimum
+    - Trustee Act s.27: 2 months
+  - Server services go in server/services/ directory
+  - Next task is Task 21.1b: Create endpoint (for compliance check API)
+---

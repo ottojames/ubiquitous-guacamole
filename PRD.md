@@ -614,7 +614,7 @@ npm run lint         # ESLint check
 ## Phase 21: AI Features (Future)
 
 ### 21.1 Compliance Checker
-- [ ] **Task 21.1a**: Create complianceChecker service. ~80 lines. **Success**: Returns results.
+- [x] **Task 21.1a**: Create complianceChecker service. ~80 lines. **Success**: Returns results. (Completed 2026-01-21 - Created server/services/complianceChecker.ts with checkCompliance() and checkNoticeBaseCompliance() functions. Validates required fields, deadline rules by notice type, format compliance, and common warnings. Returns ComplianceResult with passed boolean, score 0-100, and detailed issues array. 502 tests pass)
 - [ ] **Task 21.1b**: Create endpoint. **Success**: Callable.
 - [ ] **Task 21.1c**: Add to wizard. **Success**: Shows feedback.
 
