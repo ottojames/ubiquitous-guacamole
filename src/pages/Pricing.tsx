@@ -361,6 +361,10 @@ export default function Pricing() {
                   q: "How quickly are notices published?",
                   a: "Instantly. Unlike newspaper notices that take 5-10 working days, your notice goes live immediately and is searchable within seconds.",
                 },
+                {
+                  q: "Why do councils get a discount?",
+                  a: "Councils process thousands of notices each year and provide a vital public service. Our discounted £19.99 rate recognises their volume and helps redirect taxpayer money from expensive newspaper advertising to modern digital infrastructure.",
+                },
               ].map((faq, index) => (
                 <div
                   key={index}

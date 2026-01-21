@@ -353,7 +353,7 @@ npm run lint         # ESLint check
 ### 15.6 Update FAQ Section
 - [x] **Task 15.6a**: Remove outdated "pay-as-you-go" FAQ. **Success**: Removed. (Completed 2026-01-21 - Removed FAQ question about pay-as-you-go which referenced outdated pricing model)
 - [x] **Task 15.6b**: Remove "switch plans" FAQ. **Success**: Removed. (Completed 2026-01-21 - Removed outdated FAQ about switching plans which referenced Council/Enterprise customers)
-- [ ] **Task 15.6c**: Add FAQ "Why do councils get a discount?" **Success**: Added.
+- [x] **Task 15.6c**: Add FAQ "Why do councils get a discount?" **Success**: Added. (Completed 2026-01-21 - FAQ explains councils process thousands of notices annually and the £19.99 rate helps redirect taxpayer money from expensive newspaper advertising to modern digital infrastructure)
 - [ ] **Task 15.6d**: Add FAQ "What's in £49/month subscription?" **Success**: Added.
 - [ ] **Task 15.6e**: Add FAQ "Can I publish without subscription?" **Success**: Added.
 - [ ] **Task 15.6f**: Add FAQ "What's in free council portal?" **Success**: Added.
