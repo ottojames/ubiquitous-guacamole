@@ -97,4 +97,40 @@ test.describe('Pricing Page', () => {
 
     console.log('Old pricing tiers are correctly removed from the page');
   });
+
+  test('no false council count claims (40+)', async ({ page }) => {
+    // We must NOT make false claims about council adoption
+    // Previously the page said "Trusted by 40+ UK councils" which is false
+    const falseClaimPatterns = [
+      '40+ UK councils',
+      '40+ councils',
+      'Trusted by 40+',
+      '40+',  // Any reference to 40+ in council context
+    ];
+
+    for (const claim of falseClaimPatterns) {
+      // Search for these patterns in the page content
+      const claimElements = page.locator(`text=${claim}`);
+      const count = await claimElements.count();
+
+      // If any match found, verify it's not in a council/trust context
+      if (count > 0) {
+        for (let i = 0; i < count; i++) {
+          const element = claimElements.nth(i);
+          const text = await element.textContent();
+          // Fail if the text contains council-related claims
+          if (text && (text.toLowerCase().includes('council') || text.toLowerCase().includes('trusted'))) {
+            throw new Error(`Found false claim: "${text}"`);
+          }
+        }
+      }
+    }
+
+    // Also check there's no specific "40+ UK councils" anywhere on the page
+    const pageContent = await page.textContent('body');
+    expect(pageContent).not.toContain('40+ UK councils');
+    expect(pageContent).not.toContain('Trusted by 40+ councils');
+
+    console.log('No false council count claims found on pricing page');
+  });
 });
