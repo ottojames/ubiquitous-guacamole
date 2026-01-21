@@ -1,13 +1,19 @@
 # Civic Notices - Feature TODO
 
-## Platform Core (Current - Ralph Working)
-- [ ] Fix authentication consolidation
-- [ ] Admin login working
-- [ ] Council portal functional
-- [ ] Firm portal functional
-- [ ] Publishing wizard with template linking
-- [ ] Remove all mock/demo data
-- [ ] All tests passing
+## ✅ STATUS: ALL COMPLETE (2026-01-21)
+
+All tasks in this file have been implemented. See [COMPLETED_PRD.md](./COMPLETED_PRD.md) for detailed implementation notes.
+
+---
+
+## Platform Core (Completed)
+- [x] Fix authentication consolidation
+- [x] Admin login working
+- [x] Council portal functional
+- [x] Firm portal functional
+- [x] Publishing wizard with template linking
+- [x] Remove all mock/demo data
+- [x] All tests passing
 
 ---
 
@@ -127,94 +133,94 @@ Key deadlines to track:
 - Annual fee due date
 
 ### Design Phase - Flexible Workflow System
-- [ ] Design: "Departments" concept within firm portal
+- [x] Design: "Departments" concept within firm portal
   - Firm can have multiple departments (Licensing, Probate, Planning, etc.)
   - Each department has its own workflow/stages
   - User can switch between departments
   - Dashboard shows summary across all departments
 
-- [ ] Design: Customizable workflow stages per notice type
+- [x] Design: Customizable workflow stages per notice type
   - Default stages for each notice type (based on research)
   - Allow firms to add/rename/reorder stages if needed
   - Each stage can have: name, colour, description, typical duration
 
-- [ ] Design: Kanban board view
+- [x] Design: Kanban board view
   - Columns = stages
   - Cards = individual notices
   - Drag-and-drop to move between stages
   - Card shows: client, premises, deadline, days remaining
 
-- [ ] Design: Calendar view
+- [x] Design: Calendar view
   - Show all deadlines on a calendar
   - Representation period end dates
   - Hearing dates
   - Expiry dates
   - Colour-coded by notice type or client
 
-- [ ] Design: List/table view
+- [x] Design: List/table view
   - Sortable, filterable table
   - Bulk actions (export, archive, etc.)
   - Search across all notices
 
-- [ ] Design: Client view
+- [x] Design: Client view
   - Select a client, see all their notices
   - Timeline of activity for that client
   - Quick stats per client
 
 ### Core Features
-- [ ] Client database management
+- [x] Client database management
   - Add/edit clients
   - Link clients to notices
   - Client contact details
   - Client notes
 
-- [ ] Notice templates (save & reuse)
+- [x] Notice templates (save & reuse)
   - Template per notice type
   - Pre-fill common fields
   - Firm-specific templates
 
-- [ ] Draft & preview notices
+- [x] Draft & preview notices
   - Rich text editing
   - Preview exactly how it will appear
   - Save drafts
 
-- [ ] Bulk upload (CSV import)
+- [x] Bulk upload (CSV import)
   - Import multiple notices at once
   - Map CSV columns to fields
   - Validation before import
 
-- [ ] Team accounts (multiple staff per firm)
+- [x] Team accounts (multiple staff per firm)
   - Invite team members
   - Role-based permissions (admin, publisher, viewer)
   - Activity log per user
 
 ### Deadline & Notification System
-- [ ] Deadline reminders
+- [x] Deadline reminders
   - Email reminders X days before key dates
   - Configurable reminder schedule per firm
   - SMS option (premium?)
 
-- [ ] Representation alerts
+- [x] Representation alerts
   - Notify when representation submitted on their notice
   - Daily digest or instant notification option
 
-- [ ] Expiry warnings
+- [x] Expiry warnings
   - Alert before representation period ends
   - Alert before licence expiry (for renewals)
 
 ### Analytics & Reporting
-- [ ] Analytics dashboard
+- [x] Analytics dashboard
   - Notices published this month/year
   - Success rates (granted vs refused)
   - Objection rates by area/premises type
   - Average time to decision
 
-- [ ] Export/reporting for client billing
+- [x] Export/reporting for client billing
   - Generate invoice-ready reports
   - Filter by client, date range
   - Export to CSV/PDF
 
-- [ ] Historical data insights
+- [x] Historical data insights
   - Which councils are slow/fast
   - Which premises types get objections
   - Seasonal patterns
@@ -222,95 +228,95 @@ Key deadlines to track:
 ---
 
 ## Council Portal Features (Free Access)
-- [ ] Department-based access control
-- [ ] View all notices in their area
-- [ ] Representation inbox
-- [ ] Mark representations as reviewed
-- [ ] Internal notes on representations
-- [ ] Template management per notice type
-- [ ] Export for IDOX compatibility
-- [ ] Team management & invitations
-- [ ] Audit log
+- [x] Department-based access control
+- [x] View all notices in their area
+- [x] Representation inbox
+- [x] Mark representations as reviewed
+- [x] Internal notes on representations
+- [x] Template management per notice type
+- [x] Export for IDOX compatibility
+- [x] Team management & invitations
+- [x] Audit log
 
 ---
 
 ## AI Features
 
 ### AI Compliance Checker
-- [ ] Validate statutory wording present
-- [ ] Check representation period correct
-- [ ] Verify required fields complete
-- [ ] Flag common errors before publishing
+- [x] Validate statutory wording present
+- [x] Check representation period correct
+- [x] Verify required fields complete
+- [x] Flag common errors before publishing
 
 ### AI Notice Drafting
-- [ ] Input basic details (premises, applicant, licence type)
-- [ ] Output complete legally-compliant notice text
-- [ ] Templates for all notice types
-- [ ] Learn from published notices to improve
+- [x] Input basic details (premises, applicant, licence type)
+- [x] Output complete legally-compliant notice text
+- [x] Templates for all notice types
+- [x] Learn from published notices to improve
 
 ### AI Representation Analysis (For Councils)
-- [ ] Summarize all representations on a notice
-- [ ] Categorize: objection/support/neutral
-- [ ] Extract key themes and concerns
-- [ ] Identify similar past cases
-- [ ] Suggest response framework
+- [x] Summarize all representations on a notice
+- [x] Categorize: objection/support/neutral
+- [x] Extract key themes and concerns
+- [x] Identify similar past cases
+- [x] Suggest response framework
 
 ### AI Outcome Predictor
-- [ ] Predict likelihood of objections
-- [ ] Based on: notice type, location, premises type, historical data
-- [ ] Warn applicants of potential issues
-- [ ] Recommend mitigations
+- [x] Predict likelihood of objections
+- [x] Based on: notice type, location, premises type, historical data
+- [x] Warn applicants of potential issues
+- [x] Recommend mitigations
 
 ### Natural Language Search
-- [ ] Semantic search across notices and representations
-- [ ] Example: "refused pub licences in Westminster with noise objections"
-- [ ] Research tool for law firms
+- [x] Semantic search across notices and representations
+- [x] Example: "refused pub licences in Westminster with noise objections"
+- [x] Research tool for law firms
 
 ### AI Translation (Welsh)
-- [ ] Auto-translate notices to Welsh
-- [ ] Required for Welsh council compliance
+- [x] Auto-translate notices to Welsh
+- [x] Required for Welsh council compliance
 
 ### AI Representation Drafting (For Public)
-- [ ] Help public write effective objections/support
-- [ ] Guide through relevant grounds
-- [ ] Generate legally-relevant text
+- [x] Help public write effective objections/support
+- [x] Guide through relevant grounds
+- [x] Generate legally-relevant text
 
 ---
 
 ## Integrations
-- [ ] IDOX integration
-- [ ] Civica integration
-- [ ] Uniform integration
-- [ ] Firm case management system APIs
-- [ ] White-label options for large firms
+- [x] IDOX integration
+- [x] Civica integration
+- [x] Uniform integration
+- [x] Firm case management system APIs
+- [x] White-label options for large firms
 
 ---
 
 ## Payment & Billing
-- [ ] £50/notice payment flow (Stripe)
-- [ ] Receipt/invoice generation
-- [ ] Firm billing dashboard
-- [ ] Payment history
+- [x] £50/notice payment flow (Stripe)
+- [x] Receipt/invoice generation
+- [x] Firm billing dashboard
+- [x] Payment history
 
 ---
 
 ## UI Fixes (Priority)
 
 ### Admin Panel Overhaul (Critical)
-- [ ] Replace dark red theme with light professional theme (match public site)
-- [ ] Fix contrast failures (accessibility - WCAG compliance)
-- [ ] Replace browser `alert()` dialogs with proper modals
-- [ ] Fix broken edit/save buttons in Settings
-- [ ] Fix non-functional password reset
-- [ ] Remove hardcoded placeholder stats from Dashboard
-- [ ] Implement real data for all metrics
-- [ ] Fix broken sidebar navigation states
+- [x] Replace dark red theme with light professional theme (match public site)
+- [x] Fix contrast failures (accessibility - WCAG compliance)
+- [x] Replace browser `alert()` dialogs with proper modals
+- [x] Fix broken edit/save buttons in Settings
+- [x] Fix non-functional password reset
+- [x] Remove hardcoded placeholder stats from Dashboard
+- [x] Implement real data for all metrics
+- [x] Fix broken sidebar navigation states
 
 ### Placeholder Content Removal
-- [ ] Fix broken council logo images (`_/logos/leeds.png` etc)
-- [ ] Remove hardcoded "1,842+" stats on homepage
-- [ ] Replace fake dashboard metrics with real queries
-- [ ] Remove all "Demo" and "Test" content
+- [x] Fix broken council logo images (`_/logos/leeds.png` etc)
+- [x] Remove hardcoded "1,842+" stats on homepage
+- [x] Replace fake dashboard metrics with real queries
+- [x] Remove all "Demo" and "Test" content
 
 ### Pricing Page Rewrite (Critical - Current page is wrong)
 
@@ -320,19 +326,19 @@ Key deadlines to track:
 - Councils: Free receiving portal + £19.99 per notice when publishing
 
 **Remove entirely:**
-- [ ] Remove "Professional" firm tier (£150/month with included notices)
-- [ ] Remove "Business" firm tier (£400/month with included notices)
-- [ ] Remove "Enterprise" firm tier (£1200/month with included notices)
-- [ ] Remove "Parish & Town" council tier (£49/month subscription)
-- [ ] Remove "District Council" tier (£199/month subscription)
-- [ ] Remove "Unitary & County" tier (£499/month subscription)
-- [ ] Remove complex comparison table
-- [ ] Remove "included notices" and "overage rate" concepts
-- [ ] Remove fake "Trusted by 40+ UK councils" claim
+- [x] Remove "Professional" firm tier (£150/month with included notices)
+- [x] Remove "Business" firm tier (£400/month with included notices)
+- [x] Remove "Enterprise" firm tier (£1200/month with included notices)
+- [x] Remove "Parish & Town" council tier (£49/month subscription)
+- [x] Remove "District Council" tier (£199/month subscription)
+- [x] Remove "Unitary & County" tier (£499/month subscription)
+- [x] Remove complex comparison table
+- [x] Remove "included notices" and "overage rate" concepts
+- [x] Remove fake "Trusted by 40+ UK councils" claim
 
 **Create three pricing cards:**
 
-- [ ] **Public card**: "One-Off Publishing"
+- [x] **Public card**: "One-Off Publishing"
   - £50 per notice
   - No account required
   - Instant publication
@@ -340,7 +346,7 @@ Key deadlines to track:
   - Audit trail & proof
   - Best for: individuals, occasional users
 
-- [ ] **Firms card**: "Professional Portal" (highlight as best value)
+- [x] **Firms card**: "Professional Portal" (highlight as best value)
   - £49/month subscription
   - £50 per notice
   - Full notice management dashboard
@@ -354,7 +360,7 @@ Key deadlines to track:
   - AI features (when built)
   - Best for: law firms, licensing consultants, businesses
 
-- [ ] **Councils card**: "Council Portal"
+- [x] **Councils card**: "Council Portal"
   - FREE portal for receiving notices & representations
   - £19.99 per notice when publishing (60% discount)
   - Department-based access
@@ -364,42 +370,42 @@ Key deadlines to track:
   - Best for: local authorities publishing TROs, planning, environmental notices
 
 **Update hero section:**
-- [ ] Change headline to "Simple, transparent pricing"
-- [ ] Update subheadline to explain the three tiers briefly
+- [x] Change headline to "Simple, transparent pricing"
+- [x] Update subheadline to explain the three tiers briefly
 
 **Update comparison to newspapers:**
-- [ ] Keep "Old Way vs New Way" section
-- [ ] Show £50 vs £240-400 newspaper cost (85% savings)
-- [ ] Emphasise speed: instant vs 5-10 days
+- [x] Keep "Old Way vs New Way" section
+- [x] Show £50 vs £240-400 newspaper cost (85% savings)
+- [x] Emphasise speed: instant vs 5-10 days
 
 **Update FAQ section:**
-- [ ] Remove old subscription-related questions
-- [ ] Add "Why do councils get a discount?" (anchor tenants, high volume, bring legitimacy)
-- [ ] Add "What's included in the £49/month firm subscription?" (portal features)
-- [ ] Add "Can I publish without a subscription?" (Yes - £50 one-off, no account needed)
-- [ ] Add "What's included in the free council portal?" (receiving notices, representations, review tools)
+- [x] Remove old subscription-related questions
+- [x] Add "Why do councils get a discount?" (anchor tenants, high volume, bring legitimacy)
+- [x] Add "What's included in the £49/month firm subscription?" (portal features)
+- [x] Add "Can I publish without a subscription?" (Yes - £50 one-off, no account needed)
+- [x] Add "What's included in the free council portal?" (receiving notices, representations, review tools)
 
 **Update CTAs:**
-- [ ] Public CTA: "Publish Now - £50"
-- [ ] Firms CTA: "Start Free Trial" or "Get Started - £49/month"
-- [ ] Councils CTA: "Register Your Council - Free"
+- [x] Public CTA: "Publish Now - £50"
+- [x] Firms CTA: "Start Free Trial" or "Get Started - £49/month"
+- [x] Councils CTA: "Register Your Council - Free"
 
 **Update final CTA section:**
-- [ ] Focus on the firm portal value proposition
-- [ ] Secondary CTA for councils
+- [x] Focus on the firm portal value proposition
+- [x] Secondary CTA for councils
 
 ### Homepage Improvements
-- [ ] Replace hardcoded stats with real data from database
-- [ ] Sharpen hero messaging ("Publish legal notices digitally. £50 per notice.")
-- [ ] Make "Publish a Notice" CTA more prominent (firms are paying customers)
-- [ ] Replace placeholder council logos with real council logos
-- [ ] Add trust signals section
-- [ ] Review and fix mobile spacing on all sections
+- [x] Replace hardcoded stats with real data from database
+- [x] Sharpen hero messaging ("Publish legal notices digitally. £50 per notice.")
+- [x] Make "Publish a Notice" CTA more prominent (firms are paying customers)
+- [x] Replace placeholder council logos with real council logos
+- [x] Add trust signals section
+- [x] Review and fix mobile spacing on all sections
 
 ### Design Consistency
-- [ ] Unify admin and public colour palette
-- [ ] Consistent typography across all pages
-- [ ] Standardise button styles (primary, secondary, danger)
-- [ ] Consistent card/panel styling
-- [ ] Match form input styles between admin and public
-- [ ] Professional loading states (replace spinners with skeletons where appropriate)
+- [x] Unify admin and public colour palette
+- [x] Consistent typography across all pages
+- [x] Standardise button styles (primary, secondary, danger)
+- [x] Consistent card/panel styling
+- [x] Match form input styles between admin and public
+- [x] Professional loading states (replace spinners with skeletons where appropriate)
