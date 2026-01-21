@@ -43,6 +43,7 @@ import adminAccountsRouter from './routes/admin/accounts';
 import adminAuditRouter from './routes/admin/audit';
 import adminSettingsRouter from './routes/admin/settings';
 import adminStatsRouter from './routes/admin/stats';
+import complianceRouter from './routes/compliance';
 import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth';
 
 export const app = express();
@@ -88,6 +89,7 @@ app.use('/api/stats', statsRouter);
 app.use('/api/workflow', workflowRouter);
 app.use('/api/firm/departments', firmDepartmentsRouter);
 app.use('/api/firm/templates', firmTemplatesRouter);
+app.use('/api/compliance', complianceRouter);
 app.use('/api', testCertificateRouter);
 app.use('/api', testEmailRouter);
 app.use('/api/migration', applyMigrationRouter);
