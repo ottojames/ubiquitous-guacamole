@@ -1985,3 +1985,139 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - RLS policies already set up: firm members can view, admins can insert/update
   - Next task is Task 10.3b: Add POST / endpoint (create department, requires admin role)
 ---
+
+## Iteration 62 - Task 10.3b: Add POST / endpoint to firm-departments routes
+- **What was implemented**: POST endpoint to create departments for a firm
+- **Files changed**:
+  - `server/routes/firm-departments.ts` - Added ~55 lines for POST / endpoint
+  - `PRD.md` - Marked task 10.3b complete
+- **Key implementation details**:
+  - Validates user is admin/owner by checking organization_memberships table
+  - Accepts body with: name (required), description, default_notice_types, color, icon
+  - Generates slug from name using lowercase + alphanumeric-only + hyphen separator
+  - Inserts into firm_departments with all fields + created_by
+  - Returns 201 with created department on success
+  - Returns 400 if no firm context or missing name
+  - Returns 403 if user is not admin/owner
+  - Returns 409 if department name already exists (unique constraint violation)
+- **Pattern for admin role checking**:
+  ```typescript
+  const { data: membership } = await supabase
+    .from('organization_memberships')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('organization_id', firmId)
+    .single();
+  if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Only firm admins can create departments' });
+  }
+  ```
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Firm admin role check uses organization_memberships table with role in ['owner', 'admin']
+  - Slug generation pattern: `name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')`
+  - PostgreSQL error code 23505 indicates unique constraint violation
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ are unrelated to server code
+  - Next task is Task 10.3c: Add PATCH /:id and DELETE /:id endpoints
+---
+
+## Iteration 63 - Task 10.3c: Add PATCH /:id and DELETE /:id endpoints to firm-departments routes
+- **What was implemented**: PATCH and DELETE endpoints for updating and soft-deleting departments
+- **Files changed**:
+  - `server/routes/firm-departments.ts` - Added ~100 lines for both endpoints
+  - `PRD.md` - Marked task 10.3c complete
+- **Key implementation details**:
+  - **PATCH /:id** - Updates department fields (name, description, default_notice_types, color, icon, status)
+    - Validates admin/owner role via organization_memberships check
+    - Validates department belongs to user's firm (404 if not found)
+    - Updates slug when name changes
+    - Validates status must be 'active', 'inactive', or 'archived'
+    - Handles unique constraint violation (409 Conflict)
+    - Returns updated department
+  - **DELETE /:id** - Soft-deletes department by setting status to 'archived'
+    - Same admin role verification pattern
+    - Same firm ownership verification
+    - Returns 204 No Content on success
+- **Security patterns**:
+  - Admin check: Query organization_memberships for role in ['owner', 'admin']
+  - Firm ownership check: Query firm_departments with both id and firm_id
+  - Both checks run before any data modification
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Soft delete pattern: set status to 'archived' rather than hard delete
+  - PATCH should accept partial updates - only update fields provided in body
+  - Slug should auto-regenerate when name changes
+  - Return 204 No Content for DELETE success (no body needed)
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ are unrelated
+  - Next task is Task 10.4: Register department routes in server/index.ts at /api/firm/departments
+---
+
+## Iteration 64 - Task 10.4: Register department routes in server/index.ts at /api/firm/departments
+- **What was implemented**: Added import and route mounting for firm-departments router
+- **Files changed**:
+  - `server/index.ts` - Added import and app.use() for firmDepartmentsRouter
+  - `PRD.md` - Marked task 10.4 complete
+- **Key changes**:
+  - Import: `import firmDepartmentsRouter from './routes/firm-departments';`
+  - Mount: `app.use('/api/firm/departments', firmDepartmentsRouter);`
+  - Mounted after workflow routes, before test routes
+- **Route structure now provides**:
+  - `GET /api/firm/departments` - List departments for user's firm
+  - `POST /api/firm/departments` - Create department (admin only)
+  - `PATCH /api/firm/departments/:id` - Update department (admin only)
+  - `DELETE /api/firm/departments/:id` - Soft-delete department (admin only)
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Route registration is straightforward - import + app.use()
+  - Follow existing pattern of grouping related routes (firm-departments near firm routes)
+  - All firm-departments routes require authentication via requireAuth middleware
+  - Next task is Task 10.5a: Create server/routes/firm-templates.ts with GET / endpoint
+---
+
+## Iteration 65 - Task 10.5a: Create firm-templates.ts with GET / endpoint
+- **What was implemented**: Created server/routes/firm-templates.ts with router setup and GET / endpoint
+- **Files changed**:
+  - `server/routes/firm-templates.ts` - Created ~45 lines
+  - `PRD.md` - Marked task 10.5a complete
+- **Key implementation details**:
+  - Router with requireAuth middleware for all routes
+  - GET / endpoint queries firm_notice_templates table
+  - Filters by firm_id from req.user.organizationId
+  - Only returns active templates (is_active = true)
+  - Supports optional query param `notice_type` for filtering
+  - Returns `{ templates: [...] }` with empty array fallback
+  - Handles no firm context (400), database errors (500)
+- **firm_notice_templates table structure**:
+  - id, firm_id, department_id, name, description, notice_type
+  - template_data (JSONB), is_active, is_shared, usage_count
+  - created_at, updated_at, created_by, last_used_at
+- **Endpoint (not yet registered) will be**:
+  - GET /api/firm/templates - List all active templates for user's firm
+  - GET /api/firm/templates?notice_type=premises-licence - Filter by notice type
+- **Test results**: 488 tests pass (2 skipped), no regressions
+- **TypeScript check**: firm-templates.ts compiles cleanly (pre-existing errors in cypress/e2e/scripts unrelated)
+- **Learnings for future iterations**:
+  - Followed same pattern as firm-departments.ts
+  - firm_notice_templates has is_shared flag for visibility control (handled by RLS)
+  - Next task is Task 10.5b: Add GET /:id and POST / endpoints
+---
+
+## Iteration 66 - Task 10.5b: Add GET /:id and POST / endpoints to firm-templates routes
+- **What was implemented**: Added two new endpoints to firm-templates.ts
+- **Files changed**:
+  - `server/routes/firm-templates.ts` - Added GET /:id and POST / endpoints
+  - `PRD.md` - Marked Task 10.5b complete
+- **Key changes**:
+  - **GET /:id**: Fetches single template by ID with firm_id validation, returns 404 if not found, handles PGRST116 (no rows) gracefully
+  - **POST /**: Creates new template with required fields (name, notice_type) and optional fields (description, department_id, template_data, is_shared), sets created_by to user ID, returns 201 with created template
+- **Patterns followed**:
+  - Consistent error handling with try/catch and specific error codes
+  - Firm context validation at the start of each handler
+  - Using `.single()` for single row queries with PGRST116 handling
+  - Returning proper HTTP status codes (201 for create, 404 for not found)
+- **Learnings for future iterations**:
+  - All firm-template routes follow same pattern: check firmId, query with firm_id filter, handle errors
+  - The `is_shared` field defaults to true (not false) per the schema default
+  - created_by is automatically set to the authenticated user's ID
+  - 488 tests still pass, pre-existing TypeScript errors in cypress/e2e/scripts directories remain
+---
