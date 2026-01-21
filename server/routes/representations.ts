@@ -323,6 +323,24 @@ router.post('/representations/:representationId/comment', optionalAuth, async (r
       return res.status(500).json({ error: 'Failed to add comment' });
     }
 
+    // Log the action to audit trail
+    try {
+      await supabase.rpc('log_audit_action', {
+        p_action_type: 'representation_note_added',
+        p_resource_type: 'representation',
+        p_resource_id: representationId,
+        p_metadata: {
+          comment_id: newComment.id,
+          added_by_id: effectiveUserId,
+          added_by_name: effectiveUserName,
+          comment_preview: comment.trim().substring(0, 100)
+        }
+      });
+    } catch (auditError) {
+      console.error('Failed to create audit log for comment:', auditError);
+      // Don't fail the request if audit logging fails
+    }
+
     return res.json({
       success: true,
       comment: newComment,
@@ -574,6 +592,22 @@ router.get('/representations/export', requireAuth, loadUserPermissions, requireP
       ...csvRows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n');
 
+    // Log the export action to audit trail
+    try {
+      await supabase.rpc('log_audit_action', {
+        p_action_type: 'representations_exported_csv',
+        p_resource_type: 'notice',
+        p_resource_id: noticeId,
+        p_metadata: {
+          export_count: representations.length,
+          format: 'csv'
+        }
+      });
+    } catch (auditError) {
+      console.error('Failed to create audit log for CSV export:', auditError);
+      // Don't fail the request if audit logging fails
+    }
+
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="representations-${noticeId}.csv"`);
     return res.send(csvContent);
@@ -701,6 +735,24 @@ router.get('/representations/export/idox', requireAuth, loadUserPermissions, req
     // Generate IDOX CSV
     const csvContent = generateIdoxCsv(exportData);
     const filename = getIdoxFilename();
+
+    // Log the export action to audit trail
+    try {
+      await supabase.rpc('log_audit_action', {
+        p_action_type: 'representations_exported_idox',
+        p_resource_type: 'department',
+        p_resource_id: departmentId,
+        p_metadata: {
+          export_count: exportData.length,
+          filename,
+          filter_status: status || 'all',
+          specific_ids: ids ? (ids as string).split(',').length : null
+        }
+      });
+    } catch (auditError) {
+      console.error('Failed to create audit log for IDOX export:', auditError);
+      // Don't fail the request if audit logging fails
+    }
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

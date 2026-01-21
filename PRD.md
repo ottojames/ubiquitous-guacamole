@@ -597,7 +597,7 @@ npm run lint         # ESLint check
 - [x] **Task 20.5d**: Add button. **Success**: Downloads. (Completed 2026-01-21 - Updated exportForIdox() in Representations.tsx to call GET /api/representations/export/idox endpoint instead of client-side CSV generation. Added idoxExporting loading state with Loader2 spinner, disabled button during export, supports bulk selection export (selected IDs only), respects current filter (reviewed/unreviewed). 502 tests pass)
 
 ### 20.6 Audit Log
-- [ ] **Task 20.6a**: Ensure actions logged. **Success**: Logged.
+- [x] **Task 20.6a**: Ensure actions logged. **Success**: Logged. (Completed 2026-01-21 - Fixed MarkReviewedButton.tsx to use log_audit_action RPC instead of non-existent audit_log table. Added audit logging for: representation_marked_reviewed, representation_marked_unreviewed, representation_note_added, representations_exported_csv, representations_exported_idox. All actions logged to audit_actions table with metadata including user info, timestamps, and export counts. 502 tests pass)
 - [ ] **Task 20.6b**: Create AuditLog page. ~80 lines. **Success**: Renders.
 - [ ] **Task 20.6c**: Add route. **Success**: Works.
 - [ ] **Task 20.6d**: Add sidebar link (admin). **Success**: Visible.

@@ -44,19 +44,17 @@ export default function MarkReviewedButton({
 
       if (error) throw error;
 
-      // Create audit log entry
-      const { error: auditError } = await supabase
-        .from('audit_log')
-        .insert({
-          entity_type: 'representation',
-          entity_id: representationId,
-          action: 'marked_reviewed',
-          user_id: currentUserId,
-          user_name: currentUserName,
-          metadata: {
-            reviewed_at: now
-          }
-        });
+      // Create audit log entry using the log_audit_action RPC function
+      const { error: auditError } = await supabase.rpc('log_audit_action', {
+        p_action_type: 'representation_marked_reviewed',
+        p_resource_type: 'representation',
+        p_resource_id: representationId,
+        p_metadata: {
+          reviewed_at: now,
+          reviewed_by_id: currentUserId,
+          reviewed_by_name: currentUserName
+        }
+      });
 
       if (auditError) {
         console.error('Failed to create audit log:', auditError);
@@ -91,19 +89,17 @@ export default function MarkReviewedButton({
 
       if (error) throw error;
 
-      // Create audit log entry
-      const { error: auditError } = await supabase
-        .from('audit_log')
-        .insert({
-          entity_type: 'representation',
-          entity_id: representationId,
-          action: 'marked_unreviewed',
-          user_id: currentUserId,
-          user_name: currentUserName,
-          metadata: {
-            unmarked_at: now
-          }
-        });
+      // Create audit log entry using the log_audit_action RPC function
+      const { error: auditError } = await supabase.rpc('log_audit_action', {
+        p_action_type: 'representation_marked_unreviewed',
+        p_resource_type: 'representation',
+        p_resource_id: representationId,
+        p_metadata: {
+          unmarked_at: now,
+          unmarked_by_id: currentUserId,
+          unmarked_by_name: currentUserName
+        }
+      });
 
       if (auditError) {
         console.error('Failed to create audit log:', auditError);
