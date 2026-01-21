@@ -61,3 +61,65 @@ export const prose = "prose max-w-none text-[14px] leading-6 prose-headings:mt-0
 // Back-compat shims for previous wrappers
 export const siteCanvas = canvas + " text-[#222d35] min-h-screen";
 export const heroGradientLight = 'hero-band';
+
+// ============================================================================
+// SEMANTIC COLORS - Use these for consistent color usage across the app
+// ============================================================================
+// Success: emerald-600 (#059669)
+// Error: rose-600 (#E11D48)
+// Warning: amber-600 (#D97706)
+// Info: blue-600 (#2563EB)
+// ============================================================================
+
+// Success states (emerald)
+export const successBg = "bg-emerald-50";
+export const successBgDark = "bg-emerald-600";
+export const successText = "text-emerald-600";
+export const successTextDark = "text-emerald-700";
+export const successBorder = "border-emerald-200";
+export const successBorderDark = "border-emerald-600";
+
+// Error states (rose)
+export const errorBg = "bg-rose-50";
+export const errorBgDark = "bg-rose-600";
+export const errorText = "text-rose-600";
+export const errorTextDark = "text-rose-700";
+export const errorBorder = "border-rose-200";
+export const errorBorderDark = "border-rose-600";
+
+// Warning states (amber)
+export const warningBg = "bg-amber-50";
+export const warningBgDark = "bg-amber-600";
+export const warningText = "text-amber-600";
+export const warningTextDark = "text-amber-700";
+export const warningBorder = "border-amber-200";
+export const warningBorderDark = "border-amber-600";
+
+// Info states (blue - same as primary)
+export const infoBg = "bg-blue-50";
+export const infoBgDark = "bg-blue-600";
+export const infoText = "text-blue-600";
+export const infoTextDark = "text-blue-700";
+export const infoBorder = "border-blue-200";
+export const infoBorderDark = "border-blue-600";
+
+// Alert/Banner components
+export const alertSuccess = "rounded-lg p-4 bg-emerald-50 border border-emerald-200 text-emerald-700";
+export const alertError = "rounded-lg p-4 bg-rose-50 border border-rose-200 text-rose-700";
+export const alertWarning = "rounded-lg p-4 bg-amber-50 border border-amber-200 text-amber-700";
+export const alertInfo = "rounded-lg p-4 bg-blue-50 border border-blue-200 text-blue-700";
+
+// Badge components
+export const badgeSuccess = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800";
+export const badgeError = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800";
+export const badgeWarning = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800";
+export const badgeInfo = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800";
+export const badgeNeutral = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800";
+
+// Button variants for semantic colors
+export const btnDanger =
+  "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-rose-600 text-white font-semibold shadow-[0_6px_16px_rgba(225,29,72,0.35)] transition-all duration-200 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600 focus:ring-offset-2 focus:ring-offset-white";
+export const btnSuccess =
+  "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold shadow-[0_6px_16px_rgba(5,150,105,0.35)] transition-all duration-200 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-white";
+export const btnWarning =
+  "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-amber-600 text-white font-semibold shadow-[0_6px_16px_rgba(217,119,6,0.35)] transition-all duration-200 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:ring-offset-2 focus:ring-offset-white";
