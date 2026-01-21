@@ -2547,3 +2547,21 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Adding new firm routes: 1) import component, 2) add Route inside firm section
   - Next task is Task 11.7: Add Templates link to FirmLayout sidebar
 ---
+
+## Iteration - Task 11.7: Add Templates link to FirmLayout.tsx sidebar
+- **What was implemented**: Added Templates navigation item to firm portal sidebar
+- **Files changed**:
+  - `src/pages/firm/FirmLayout.tsx` - Added 'templates' item to navItems array
+- **Details**:
+  - Added new nav item at position after 'notices' (logical grouping - notices and templates are related)
+  - Path: 'templates' (matches the /f/:firmSlug/templates route added in Task 11.6)
+  - Label: 'Templates'
+  - Icon: FileText-style SVG path (document with horizontal lines representing text)
+- **Learnings for future iterations**:
+  - The FirmLayout uses an SVG path-based icon system in the navItems array
+  - Each navItem has { path, label, icon } where icon is the SVG path string
+  - The sidebar renders icons using a standard <svg> with stroke-based rendering
+  - All tests pass (494 passed, 2 skipped) - pre-existing skips
+  - TypeScript errors in cypress/, e2e/, scripts/, server/jobs/ are pre-existing and don't block core src/ code
+  - Phase 11 (Firm Portal UI Components) is now COMPLETE
+---

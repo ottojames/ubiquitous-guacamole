@@ -208,7 +208,7 @@ npm run lint         # ESLint check
 - [x] **Task 11.5b**: Add create/edit template modal to `src/pages/firm/Templates.tsx`. Form with name, type, data fields. ~70 lines. (Completed 2026-01-21 - Modal with form for name, description, notice_type, template_data JSON, is_shared toggle; openCreateModal/openEditModal handlers; handleSave for POST/PATCH API calls; error validation and loading state)
 - [x] **Task 11.5c**: Add delete confirmation and usage count display to Templates page. ~30 lines. (Completed 2026-01-21 - Added delete button to edit modal, confirmation modal with AlertTriangle warning, usage count warning for frequently-used templates, soft delete via API)
 - [x] **Task 11.6**: Add Templates route to `src/App.tsx` - Route `/f/:firmSlug/templates` to Templates page. (Completed 2026-01-21 - Added FirmTemplates import and route at /f/:firmSlug/templates)
-- [ ] **Task 11.7**: Add Templates link to `src/pages/firm/FirmLayout.tsx` sidebar - Navigation item with FileText icon.
+- [x] **Task 11.7**: Add Templates link to `src/pages/firm/FirmLayout.tsx` sidebar - Navigation item with FileText icon. (Completed 2026-01-21 - Added 'templates' nav item with document/text icon SVG path to navItems array at position after Notices)
 
 ---
 
