@@ -420,7 +420,7 @@ npm run lint         # ESLint check
 
 ### 16.8 Mobile Spacing Review
 - [x] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
-- [ ] **Task 16.8b**: Review testimonials on mobile. **Success**: Readable.
+- [x] **Task 16.8b**: Review testimonials on mobile. **Success**: Readable. (Completed 2026-01-21 - Text scales text-2xl→md:text-3xl, 44px touch targets on dots via p-5, chevron nav hidden on mobile, adequate padding p-8)
 - [ ] **Task 16.8c**: Review pricing cards on mobile. **Success**: Usable.
 - [ ] **Task 16.8d**: Review footer on mobile. **Success**: Good.
 
