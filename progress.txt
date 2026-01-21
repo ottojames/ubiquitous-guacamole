@@ -5795,3 +5795,76 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Template can only have one entry per notice_type per department (enforced by duplicate check)
   - Next task is Task 20.5a: Research IDOX format
 ---
+
+## Iteration 245 - Task 20.5a: Document IDOX export format
+- **What was implemented**: Created comprehensive IDOX export format documentation
+- **Files created**:
+  - `docs/idox-export-format.md` - 200+ lines of documentation
+- **Files changed**:
+  - `PRD.md` - Marked Task 20.5a complete
+- **Documentation content**:
+  - Overview of IDOX and why councils need export functionality
+  - 14-column CSV specification table with field names, types, descriptions
+  - Field mapping table for IDOX Uniform integration
+  - Example CSV data showing proper formatting
+  - UK Licensing Act 2003 requirements (4 licensing objectives)
+  - Legal requirements for valid representations
+  - References to official sources (LGA handbook, IDOX docs, Jadu integration)
+- **Research findings**:
+  - IDOX documentation is proprietary (not publicly available)
+  - Existing exportForIdox() function in Representations.tsx already implements CSV export
+  - UK council data standards based on Licensing Act 2003 requirements
+- **Test results**: All 502 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - IDOX Uniform uses SOAP-based Connector APIs for integration
+  - CSV format is common denominator for data exchange with councils
+  - Representations must relate to 4 licensing objectives to be valid
+  - 28-day consultation period is standard for new premises licence applications
+  - Next task is Task 20.5b: Create export service (~60 lines)
+---
+
+## Iteration 246 - Task 20.5b: Create IDOX export service
+- **What was implemented**: Created server/services/idoxExport.ts (~60 lines)
+- **Files created**:
+  - `server/services/idoxExport.ts` - IDOX export service
+- **Files changed**:
+  - `PRD.md` - Marked Task 20.5b complete
+- **Implementation details**:
+  - `RepresentationForExport` interface: defines structure for representations with nested notice data
+  - `getStanceLabel(type)`: maps 'support'/'objection'/'comment' to 'Support'/'Objection'/'Comment'
+  - `escapeForCsv(value)`: handles null/undefined and escapes double quotes as ""
+  - `generateIdoxCsv(representations)`: formats data into 14-column IDOX-compatible CSV per docs/idox-export-format.md
+  - `getIdoxFilename()`: returns filename with current date (idox-representations-YYYY-MM-DD.csv)
+- **CSV columns**: Representation ID, Notice Reference, Submitter Name, Submitter Email, Stance, Representation Text, Date Submitted, Reviewed Status, Reviewed By, Reviewed Date, Assigned To, Application Type, Premises Name, Premises Address
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: New service compiles without errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Service follows existing pattern in server/services/ (email.ts, stripe.ts)
+  - Frontend already has exportForIdox() function in Representations.tsx - this service can replace or supplement it
+  - Task 20.5c (Create endpoint) will use this service to provide server-side export capability
+  - Task 20.5d (Add button) may already be complete since frontend has Export for Idox button
+---
+
+## Iteration 247 - Task 20.5c: Create IDOX export endpoint
+- **What was implemented**: Created GET /api/representations/export/idox endpoint
+- **Files changed**:
+  - `server/routes/representations.ts` - Added import for idoxExport service, added new endpoint at lines 586-713
+- **Implementation details**:
+  - Endpoint: `GET /api/representations/export/idox`
+  - Required parameter: `departmentId` - filters representations by notices in that department
+  - Optional parameter: `ids` - comma-separated list of specific representation IDs
+  - Optional parameter: `status` - filter by 'reviewed', 'unreviewed', or 'all'
+  - Fetches representations with nested notice data (using Supabase join)
+  - Fetches reviewer and assignee names from profiles table
+  - Transforms data to RepresentationForExport interface format
+  - Uses generateIdoxCsv() and getIdoxFilename() from idoxExport service
+  - Returns CSV with proper Content-Type and Content-Disposition headers
+  - Protected by requireAuth, loadUserPermissions, requirePermission('representations.export')
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (same 'never' type errors as existing code in file)
+- **Learnings for future iterations**:
+  - Supabase client in this codebase is untyped, causing 'never' type errors on all data access
+  - This is a pre-existing pattern - all existing endpoints have the same issue
+  - The idoxExport service provides typed interface (RepresentationForExport) for export data
+  - Next task is Task 20.5d: Add button (may already exist - frontend has Export for Idox button)
+---

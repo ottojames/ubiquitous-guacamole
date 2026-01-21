@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth, optionalAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
 import { sendRepresentationNotificationToCouncil } from '../services/email';
+import { generateIdoxCsv, getIdoxFilename, type RepresentationForExport } from '../services/idoxExport';
 
 const router = Router();
 
@@ -578,6 +579,134 @@ router.get('/representations/export', requireAuth, loadUserPermissions, requireP
     return res.send(csvContent);
   } catch (error) {
     console.error('Error in GET /api/representations/export:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/representations/export/idox
+ * Export representations in IDOX-compatible CSV format
+ * Query params:
+ *   - departmentId (required): filter by department
+ *   - ids (optional): comma-separated list of specific representation IDs
+ *   - status (optional): filter by status ('reviewed', 'unreviewed', 'all')
+ * Protected: Requires authentication
+ */
+router.get('/representations/export/idox', requireAuth, loadUserPermissions, requirePermission('representations.export'), async (req: Request, res: Response) => {
+  try {
+    const { departmentId, ids, status } = req.query;
+
+    if (!departmentId || typeof departmentId !== 'string') {
+      return res.status(400).json({ error: 'departmentId query parameter is required' });
+    }
+
+    const supabase = getSupabase();
+
+    // Build query - get representations for notices in this department
+    let query = supabase
+      .from('representations')
+      .select(`
+        id,
+        notice_id,
+        representor_name,
+        representor_email,
+        type,
+        representation_text,
+        submitted_at,
+        reviewed_at,
+        reviewed_by,
+        assigned_to,
+        notices!inner (
+          id,
+          notice_type,
+          application_type,
+          applicant,
+          trading_name,
+          premises,
+          department_id
+        )
+      `)
+      .eq('notices.department_id', departmentId)
+      .order('submitted_at', { ascending: false });
+
+    // Filter by specific IDs if provided
+    if (ids && typeof ids === 'string') {
+      const idList = ids.split(',').map(id => id.trim()).filter(id => id);
+      if (idList.length > 0) {
+        query = query.in('id', idList);
+      }
+    }
+
+    // Filter by status if provided
+    if (status === 'reviewed') {
+      query = query.not('reviewed_at', 'is', null);
+    } else if (status === 'unreviewed') {
+      query = query.is('reviewed_at', null);
+    }
+
+    const { data: representations, error } = await query;
+
+    if (error) {
+      console.error('Error fetching representations for IDOX export:', error);
+      return res.status(500).json({ error: 'Failed to fetch representations' });
+    }
+
+    if (!representations || representations.length === 0) {
+      return res.status(404).json({ error: 'No representations found' });
+    }
+
+    // Fetch reviewer and assignee names if needed
+    const reviewerIds = [...new Set(representations.filter(r => r.reviewed_by).map(r => r.reviewed_by))];
+    const assigneeIds = [...new Set(representations.filter(r => r.assigned_to).map(r => r.assigned_to))];
+    const allUserIds = [...new Set([...reviewerIds, ...assigneeIds])];
+
+    let userNames: Record<string, string> = {};
+    if (allUserIds.length > 0) {
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', allUserIds);
+
+      if (users) {
+        users.forEach(user => {
+          userNames[user.id] = user.full_name || user.email || user.id;
+        });
+      }
+    }
+
+    // Transform to IDOX export format
+    const exportData: RepresentationForExport[] = representations.map(rep => {
+      const notice = rep.notices as any;
+      return {
+        id: rep.id,
+        notice_id: rep.notice_id,
+        representor_name: rep.representor_name,
+        representor_email: rep.representor_email,
+        type: rep.type as 'support' | 'objection' | 'comment',
+        representation_text: rep.representation_text,
+        submitted_at: rep.submitted_at,
+        reviewed_at: rep.reviewed_at,
+        reviewed_by_name: rep.reviewed_by ? userNames[rep.reviewed_by] || null : null,
+        assigned_to_name: rep.assigned_to ? userNames[rep.assigned_to] || null : null,
+        notice: notice ? {
+          notice_type: notice.notice_type,
+          application_type: notice.application_type,
+          applicant: notice.applicant,
+          trading_name: notice.trading_name,
+          premises: notice.premises,
+        } : null,
+      };
+    });
+
+    // Generate IDOX CSV
+    const csvContent = generateIdoxCsv(exportData);
+    const filename = getIdoxFilename();
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(csvContent);
+  } catch (error) {
+    console.error('Error in GET /api/representations/export/idox:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
