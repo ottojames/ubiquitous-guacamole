@@ -3,7 +3,8 @@ import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
-import { Building2, Bell, CreditCard, Settings as SettingsIcon, FileText, Users, HelpCircle, CheckCircle } from 'lucide-react';
+import { Building2, Bell, CreditCard, FileText, Users, HelpCircle, CheckCircle } from 'lucide-react';
+import { toast, useToastController } from '@/lib/ui/toast';
 
 interface Department {
   id: string;
@@ -25,13 +26,29 @@ interface ContextType {
   userRole: string;
 }
 
+// Email validation regex
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// UK phone validation regex (allows various formats)
+const PHONE_REGEX = /^[\d\s+()-]{10,20}$/;
+// URL validation regex
+const URL_REGEX = /^https?:\/\/.+/;
+
+interface ValidationErrors {
+  department_email?: string;
+  authority_email?: string;
+  authority_phone?: string;
+  online_register_url?: string;
+  licensing_manager_email?: string;
+}
+
 export default function Settings() {
   const { department: initialDepartment, userRole } = useOutletContext<ContextType>();
   const { hasPermission } = useAuth();
+  const toastMessage = useToastController();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   const [department, setDepartment] = useState<Department>(initialDepartment);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -116,7 +133,72 @@ export default function Settings() {
     setLogoPreview(null);
   };
 
+  // Validate a single field and return error message if invalid
+  const validateField = (field: string, value: string): string | undefined => {
+    if (!value) return undefined; // Empty values are handled by required attribute
+
+    switch (field) {
+      case 'department_email':
+      case 'authority_email':
+      case 'licensing_manager_email':
+        if (!EMAIL_REGEX.test(value)) {
+          return 'Please enter a valid email address';
+        }
+        break;
+      case 'authority_phone':
+        if (!PHONE_REGEX.test(value)) {
+          return 'Please enter a valid phone number';
+        }
+        break;
+      case 'online_register_url':
+        if (!URL_REGEX.test(value)) {
+          return 'Please enter a valid URL starting with http:// or https://';
+        }
+        break;
+    }
+    return undefined;
+  };
+
+  // Handle field blur for inline validation
+  const handleFieldBlur = (field: keyof ValidationErrors, value: string) => {
+    const error = validateField(field, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+  };
+
+  // Validate all fields before save
+  const validateAll = (): boolean => {
+    const errors: ValidationErrors = {};
+
+    if (department.email && !EMAIL_REGEX.test(department.email)) {
+      errors.department_email = 'Please enter a valid email address';
+    }
+    if (councilSettings.authority_email && !EMAIL_REGEX.test(councilSettings.authority_email)) {
+      errors.authority_email = 'Please enter a valid email address';
+    }
+    if (councilSettings.authority_phone && !PHONE_REGEX.test(councilSettings.authority_phone)) {
+      errors.authority_phone = 'Please enter a valid phone number';
+    }
+    if (councilSettings.online_register_url && !URL_REGEX.test(councilSettings.online_register_url)) {
+      errors.online_register_url = 'Please enter a valid URL starting with http:// or https://';
+    }
+    if (councilSettings.licensing_manager_email && !EMAIL_REGEX.test(councilSettings.licensing_manager_email)) {
+      errors.licensing_manager_email = 'Please enter a valid email address';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSave = async () => {
+    // Validate before saving
+    if (!validateAll()) {
+      setError('Please fix the validation errors before saving');
+      return;
+    }
+
     try {
       setSaving(true);
       setError(null);
@@ -206,11 +288,8 @@ export default function Settings() {
         setLogoPreview(null);
       }
 
-      setSuccess('Settings saved successfully');
+      toast('Settings saved successfully');
       setSaving(false);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to save settings:', err);
       setError(err instanceof Error ? err.message : 'Failed to save settings');
@@ -270,12 +349,6 @@ export default function Settings() {
         </div>
       )}
 
-      {success && (
-        <div className="rounded-lg p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-3">
-          <CheckCircle className="h-5 w-5 flex-shrink-0" />
-          <p className="text-sm">{success}</p>
-        </div>
-      )}
 
       {/* Section 1: Authority Details */}
       <section className={`${cardClass} p-6 md:p-8`}>
@@ -326,10 +399,19 @@ export default function Settings() {
               <input
                 type="email"
                 value={department.email}
-                onChange={(e) => setDepartment({ ...department, email: e.target.value })}
-                className={inputClass}
+                onChange={(e) => {
+                  setDepartment({ ...department, email: e.target.value });
+                  if (validationErrors.department_email) {
+                    setValidationErrors(prev => ({ ...prev, department_email: undefined }));
+                  }
+                }}
+                onBlur={(e) => handleFieldBlur('department_email', e.target.value)}
+                className={`${inputClass} ${validationErrors.department_email ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500' : ''}`}
                 placeholder="e.g., licensing@council.gov.uk"
               />
+              {validationErrors.department_email && (
+                <p className="text-sm text-rose-600 mt-1">{validationErrors.department_email}</p>
+              )}
             </div>
           </div>
 
@@ -375,11 +457,20 @@ export default function Settings() {
               <input
                 type="email"
                 value={councilSettings.authority_email}
-                onChange={(e) => setCouncilSettings({ ...councilSettings, authority_email: e.target.value })}
-                className={inputClass}
+                onChange={(e) => {
+                  setCouncilSettings({ ...councilSettings, authority_email: e.target.value });
+                  if (validationErrors.authority_email) {
+                    setValidationErrors(prev => ({ ...prev, authority_email: undefined }));
+                  }
+                }}
+                onBlur={(e) => handleFieldBlur('authority_email', e.target.value)}
+                className={`${inputClass} ${validationErrors.authority_email ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500' : ''}`}
                 placeholder="e.g., licensing@westminster.gov.uk"
                 required
               />
+              {validationErrors.authority_email && (
+                <p className="text-sm text-rose-600 mt-1">{validationErrors.authority_email}</p>
+              )}
             </div>
 
             <div>
@@ -389,11 +480,20 @@ export default function Settings() {
               <input
                 type="tel"
                 value={councilSettings.authority_phone}
-                onChange={(e) => setCouncilSettings({ ...councilSettings, authority_phone: e.target.value })}
-                className={inputClass}
+                onChange={(e) => {
+                  setCouncilSettings({ ...councilSettings, authority_phone: e.target.value });
+                  if (validationErrors.authority_phone) {
+                    setValidationErrors(prev => ({ ...prev, authority_phone: undefined }));
+                  }
+                }}
+                onBlur={(e) => handleFieldBlur('authority_phone', e.target.value)}
+                className={`${inputClass} ${validationErrors.authority_phone ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500' : ''}`}
                 placeholder="e.g., 020 7641 2500"
                 required
               />
+              {validationErrors.authority_phone && (
+                <p className="text-sm text-rose-600 mt-1">{validationErrors.authority_phone}</p>
+              )}
             </div>
           </div>
 
@@ -404,11 +504,20 @@ export default function Settings() {
             <input
               type="url"
               value={councilSettings.online_register_url}
-              onChange={(e) => setCouncilSettings({ ...councilSettings, online_register_url: e.target.value })}
-              className={inputClass}
+              onChange={(e) => {
+                setCouncilSettings({ ...councilSettings, online_register_url: e.target.value });
+                if (validationErrors.online_register_url) {
+                  setValidationErrors(prev => ({ ...prev, online_register_url: undefined }));
+                }
+              }}
+              onBlur={(e) => handleFieldBlur('online_register_url', e.target.value)}
+              className={`${inputClass} ${validationErrors.online_register_url ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500' : ''}`}
               placeholder="e.g., https://www.westminster.gov.uk/licensing/register"
               required
             />
+            {validationErrors.online_register_url && (
+              <p className="text-sm text-rose-600 mt-1">{validationErrors.online_register_url}</p>
+            )}
             <p className={helpTextClass}>
               URL where public can view the licensing register
             </p>
@@ -437,10 +546,19 @@ export default function Settings() {
                 <input
                   type="email"
                   value={councilSettings.licensing_manager_email}
-                  onChange={(e) => setCouncilSettings({ ...councilSettings, licensing_manager_email: e.target.value })}
-                  className={inputClass}
+                  onChange={(e) => {
+                    setCouncilSettings({ ...councilSettings, licensing_manager_email: e.target.value });
+                    if (validationErrors.licensing_manager_email) {
+                      setValidationErrors(prev => ({ ...prev, licensing_manager_email: undefined }));
+                    }
+                  }}
+                  onBlur={(e) => handleFieldBlur('licensing_manager_email', e.target.value)}
+                  className={`${inputClass} ${validationErrors.licensing_manager_email ? 'border-rose-500 focus:ring-rose-500/30 focus:border-rose-500' : ''}`}
                   placeholder="e.g., sarah.thompson@westminster.gov.uk"
                 />
+                {validationErrors.licensing_manager_email && (
+                  <p className="text-sm text-rose-600 mt-1">{validationErrors.licensing_manager_email}</p>
+                )}
               </div>
             </div>
           </div>
@@ -742,6 +860,17 @@ export default function Settings() {
           {saving ? 'Saving...' : 'Save Settings'}
         </button>
       </div>
+
+      {/* Toast notification */}
+      {toastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg animate-fade-in"
+        >
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

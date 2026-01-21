@@ -8916,3 +8916,93 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - `text-white/80` provides good contrast on dark backgrounds while remaining subtle
   - Phase 9 (Pricing Page UI Fixes) still has one task remaining: Highlight council free portal better
 ---
+
+## Iteration 105 - Phase 9: Highlight council free portal better on Pricing page
+- **What was implemented**: Enhanced council portal pricing card to make FREE more prominent and clarify "only pay when YOU publish"
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Enhanced council card with ring border, badge, highlighted FREE, and clearer pricing text
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Added `ring-2 ring-emerald-500` to council card for visual prominence (matches firms card's ring-2 ring-blue-600)
+  2. Added "£0 Portal Access" badge at top of card (matching "Most Popular" badge pattern)
+  3. Wrapped FREE in `bg-emerald-50 rounded-lg` pill with adjacent "portal access" text
+  4. Changed pricing explanation to: "Only pay £19.99 when *you* publish a notice" with emphasis on "you" (italic + emerald color)
+  5. FREE text remains text-4xl (36px), exceeding 24px DoD requirement
+- **DoD verification**:
+  - ✓ Council pricing card contains text "FREE" in font-size >= 24px (text-4xl = 36px)
+- **Tests**: All 508 tests pass, no regressions
+- **TypeScript**: Pre-existing errors in unrelated files only (PaymentStep, gvol.ts, NoticeEditor, etc.)
+- **Learnings for future iterations**:
+  - The card styling pattern with ring-2 border + top badge is already established in the firms card
+  - Phase 9 (Pricing Page UI Fixes) is now COMPLETE
+  - Next phase is Phase 10: Council Portal Settings & Billing (Redesign settings with proper sections)
+---
+
+## Iteration 106 - Phase 10: Redesign Settings page with proper sections and cards
+- **What was implemented**: Complete redesign of council Settings page with 5 distinct sections, consistent card styling, and improved visual hierarchy
+- **Files changed**:
+  - `src/pages/council/Settings.tsx` - Major redesign with new section structure, icons, and styling
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Reorganized into 5 sections with visible headings and colored icons:
+     - Authority Details (Building2 icon, blue) - department info + auto-population help text
+     - Notification Preferences (Bell icon, amber) - approval workflow settings
+     - Notice Settings (FileText icon, slate) - representation period, newspaper, notice types
+     - Billing (CreditCard icon, emerald) - FREE plan with feature checklist
+     - Organization Information (Users icon, slate) - logo upload and read-only details
+  2. All sections use consistent card styling: `bg-white rounded-2xl ring-1 ring-slate-200 shadow-sm`
+  3. Added auto-population help text with HelpCircle icon explaining how authority details populate wizard
+  4. Added complete Billing section with emerald gradient card, FREE badge, and "only pay when YOU publish" messaging
+  5. Defined reusable CSS classes at component level (cardClass, sectionHeaderClass, labelClass, inputClass, etc.)
+  6. Added Lucide icons: Building2, Bell, CreditCard, FileText, Users, HelpCircle, CheckCircle
+- **DoD verification**:
+  - ✓ Settings page has at least 3 distinct sections with visible headings (has 5: Authority Details, Notifications, Notice Settings, Billing, Organization)
+  - ✓ Each section wrapped in card with `ring` styling (ring-1 ring-slate-200)
+  - ✓ "Authority details" section contains help text explaining auto-population
+  - ✓ Billing section header contains "FREE" text (in badge: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white")
+  - ✓ Billing section explains when costs apply ("Only pay £19.99/notice when you publish")
+- **Tests**: All 508 tests pass (2 skipped), no regressions
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only
+- **Learnings for future iterations**:
+  - The Settings.tsx file uses controlled form inputs with useState
+  - Council settings are stored in a separate `council_settings` table, upserted on save
+  - The component receives department context from useOutletContext via CouncilPortalLayout
+  - Phase 10 still has 2 tasks remaining: Clarify billing messaging, Add save confirmation toast
+  - Note: This task already implemented billing messaging and checkmarks from the DoD requirements
+---
+
+## Iteration 107 - Phase 10: Add save confirmation toast and inline validation
+- **What was implemented**: Toast notification on save and inline validation for email/phone/URL fields
+- **Files changed**:
+  - `src/pages/council/Settings.tsx` - Added toast, validation state, validation functions, inline error messages
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  1. Added toast notification using `@/lib/ui/toast` (replaces success banner)
+  2. Added validation regex for email, phone, and URL fields
+  3. Added `ValidationErrors` interface and `validationErrors` state
+  4. Added `validateField` function for single field validation
+  5. Added `handleFieldBlur` function to validate on blur
+  6. Added `validateAll` function to validate before save
+  7. Updated 5 input fields with inline validation:
+     - Contact Email (department_email)
+     - Authority Email (authority_email)
+     - Authority Phone (authority_phone)
+     - Online Register URL (online_register_url)
+     - Licensing Manager Email (licensing_manager_email)
+  8. Invalid fields show red border + inline error message
+  9. Errors clear when user starts typing
+  10. Toast notification renders at bottom-right on save success
+- **DoD verification**:
+  - ✓ Click "Save" → toast notification appears confirming save
+  - ✓ Enter invalid email format → inline error message appears near field
+- **Tests**: All 508 tests pass (2 skipped), no regressions
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only
+- **Learnings for future iterations**:
+  - The toast system uses `useToastController` hook + `toast()` function
+  - Toast auto-dismisses after 1200ms (1.2 seconds)
+  - The Settings component uses controlled inputs with useState
+  - Inline validation pattern: onBlur to validate, onChange to clear errors when typing
+  - Phase 10 (Council Portal Settings & Billing) is now COMPLETE
+  - Next task: Phase 11 - Reduce color saturation and fix org name on Analytics page
+---
+

@@ -538,13 +538,28 @@ Major refactoring and bug fixes following user walkthrough review.
   - All inputs updated to use design system tokens (slate colors, consistent focus states)
   - Form validation styling uses rose-500 for required field indicators
 
-- [ ] `[MEDIUM]` `[S]` **Clarify billing messaging** - Change "Free plan" to "Council Portal (FREE)". Add explanation: "Free to receive and manage notices. Only pay £19.99/notice when YOU publish." Remove or clarify "Change plan" button.
+- [x] `[MEDIUM]` `[S]` **Clarify billing messaging** - Change "Free plan" to "Council Portal (FREE)". Add explanation: "Free to receive and manage notices. Only pay £19.99/notice when YOU publish." Remove or clarify "Change plan" button.
 
   **File**: `src/pages/council/Settings.tsx` (billing section)
 
-- [ ] `[LOW]` `[S]` **Add save confirmation toast and inline validation** - Show success feedback, validate email/phone/URL formats inline.
+  **Solution**: Already implemented in iteration 106 (Settings redesign). The billing section at lines 588-635 already has:
+  - "Council Portal" title with "FREE" badge (not "Free plan")
+  - Explanation text: "Free to receive and manage notices published to your authority. Only pay £19.99/notice when you publish a notice."
+  - No "Change plan" button exists in the implementation
+
+- [x] `[LOW]` `[S]` **Add save confirmation toast and inline validation** - Show success feedback, validate email/phone/URL formats inline.
 
   **File**: `src/pages/council/Settings.tsx:118-150`
+
+  **Solution implemented**:
+  - Added toast notification on successful save using the existing `@/lib/ui/toast` system
+  - Added inline validation for email fields (Contact Email, Authority Email, Licensing Manager Email)
+  - Added inline validation for phone field (Authority Phone)
+  - Added inline validation for URL field (Online Register URL)
+  - Validation errors appear on blur (onBlur handler) and are cleared when user starts typing
+  - Invalid fields show red border (`border-rose-500`) and inline error message below
+  - Save button validates all fields before submitting, shows error banner if validation fails
+  - Toast component renders as fixed position notification at bottom-right
 
 ### Definition of Done
 
