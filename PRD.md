@@ -557,9 +557,9 @@ npm run lint         # ESLint check
 - [x] **Task 19.4c**: Add download button. **Success**: Users get receipt. (Completed 2026-01-21 - Added download buttons to PaymentSuccess.tsx and PublishConfirmationPage.tsx)
 
 ### 19.5 E2E Tests
-- [ ] **Task 19.5a**: Test checkout redirect. **Success**: Passes.
-- [ ] **Task 19.5b**: Test success page. **Success**: Passes.
-- [ ] **Task 19.5c**: Test cancel page. **Success**: Passes.
+- [x] **Task 19.5a**: Test checkout redirect. **Success**: Passes. (Completed 2026-01-21 - Created e2e/payment-flow.spec.ts with 4 tests for checkout endpoint: redirect URL, required field validation, missing noticeId, missing session status)
+- [x] **Task 19.5b**: Test success page. **Success**: Passes. (Completed 2026-01-21 - 8 tests for PaymentSuccess page: displays correctly, shows notice ID, View notice button, Download receipt link, Return home button, confirmation message, renders without noticeId)
+- [x] **Task 19.5c**: Test cancel page. **Success**: Passes. (Completed 2026-01-21 - 6 tests for PaymentCancelled page: displays correctly, no charges message, draft saved message, Try again button navigates to /publish, Return home button, route accessibility)
 
 ---
 
