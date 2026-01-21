@@ -15,6 +15,7 @@ import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
 import { TRAFFIC_AREAS } from '@/next/publish/config/trafficAreas';
 import { supabase } from '@/lib/supabase';
+import * as UI from '@/styles/ui';
 
 const TYPE_OPTIONS = [
   'Licensing Act 2003',
@@ -511,7 +512,7 @@ export default function NoticesPage() {
                 type="date"
                 value={startFilter}
                 onChange={(event) => handleDateChange('start', event.target.value)}
-                className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`${UI.input} h-9 flex-1 text-xs`}
               />
             </label>
             <label className="flex items-center gap-1.5 text-xs">
@@ -520,7 +521,7 @@ export default function NoticesPage() {
                 type="date"
                 value={endFilter}
                 onChange={(event) => handleDateChange('end', event.target.value)}
-                className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`${UI.input} h-9 flex-1 text-xs`}
               />
             </label>
           </div>
@@ -539,7 +540,7 @@ export default function NoticesPage() {
                   }
                 }, true);
               }}
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className={`${UI.selectSmall}`}
             >
               <option value="">All Areas</option>
               {TRAFFIC_AREAS.map((area) => (
@@ -564,7 +565,7 @@ export default function NoticesPage() {
                   }
                 }, true);
               }}
-              className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className={`${UI.selectSmall}`}
             >
               <option value="">All Councils</option>
               {councils.map((council) => (
@@ -590,7 +591,7 @@ export default function NoticesPage() {
                     }
                   }, true);
                 }}
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className={`${UI.selectSmall}`}
               >
                 <option value="1">1 km</option>
                 <option value="2">2 km</option>

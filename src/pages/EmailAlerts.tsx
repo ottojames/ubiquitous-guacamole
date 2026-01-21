@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import * as UI from '@/styles/ui';
 
 interface Subscription {
   id: string;
@@ -269,7 +270,7 @@ export default function EmailAlerts() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={UI.inputFull}
                     placeholder="your.email@example.com"
                     required
                   />
@@ -283,7 +284,7 @@ export default function EmailAlerts() {
                     type="text"
                     value={postcode}
                     onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={UI.inputFull}
                     placeholder="SW1A 1AA"
                     required
                   />
@@ -422,7 +423,7 @@ export default function EmailAlerts() {
                     type="text"
                     value={postcode}
                     onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={UI.inputFull}
                   />
                 </div>
 

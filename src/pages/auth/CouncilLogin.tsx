@@ -4,6 +4,7 @@ import { Building2, AlertCircle, Lock, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 import { getAuthErrorMessage, getAuthErrorAction } from '@/lib/authErrors';
+import * as UI from '@/styles/ui';
 
 interface DepartmentMembership {
   department_id: string;
@@ -256,7 +257,7 @@ export default function CouncilLogin() {
                 disabled={isSubmitting}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${UI.inputFull} mt-1`}
                 placeholder="you@council.gov.uk"
               />
             </div>
@@ -283,7 +284,7 @@ export default function CouncilLogin() {
                 disabled={isSubmitting}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${UI.inputFull} mt-1`}
                 placeholder="Enter your password"
               />
             </div>

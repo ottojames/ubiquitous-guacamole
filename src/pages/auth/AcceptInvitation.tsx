@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Building2, AlertCircle, CheckCircle, UserPlus, LogIn, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
+import * as UI from '@/styles/ui';
 
 interface InvitationDetails {
   id: string;
@@ -397,7 +398,7 @@ export default function AcceptInvitation() {
                 type="email"
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-gray-100"
+                className={`${UI.inputFull} bg-gray-100`}
                 disabled
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -413,7 +414,7 @@ export default function AcceptInvitation() {
                 type="password"
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className={UI.inputFull}
                 placeholder="Create a password"
                 required
                 minLength={8}
@@ -428,7 +429,7 @@ export default function AcceptInvitation() {
                 type="password"
                 value={signupConfirmPassword}
                 onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className={UI.inputFull}
                 placeholder="Confirm your password"
                 required
               />

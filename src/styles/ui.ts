@@ -136,6 +136,9 @@ export const inputSmall =
 export const textareaBase =
   "px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-[15px] text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400 resize-y disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed";
 
+// Full-width textarea (most common usage)
+export const textareaFull = `w-full ${textareaBase}`;
+
 // Input with icon on left (use with pl-10 on the input, wrap in relative container)
 export const inputWithIconLeft = `${inputBase} pl-10`;
 export const inputIconLeft = "absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none";

@@ -353,7 +353,7 @@ export default function SubmitRepresentation() {
                       autoComplete="new-password"
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className={UI.inputFull}
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -370,7 +370,7 @@ export default function SubmitRepresentation() {
                       autoComplete="new-password"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className={UI.inputFull}
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -387,7 +387,7 @@ export default function SubmitRepresentation() {
                       rows={3}
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className={UI.textareaFull}
                       placeholder="Your full postal address"
                     />
                   </div>
@@ -511,7 +511,7 @@ export default function SubmitRepresentation() {
                       rows={8}
                       value={formData.comments}
                       onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className={UI.textareaFull}
                       placeholder="Explain your representation in detail. Include any relevant concerns or reasons for your position."
                     />
                     {formData.comments.length > 0 && formData.comments.length < 10 && (
