@@ -3,6 +3,7 @@ import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Building2, B
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
+import Footer from "@/components/Footer";
 
 // Error messages for redirect errors
 const ERROR_MESSAGES: Record<string, string> = {
@@ -280,20 +281,10 @@ export default function Login() {
 
       <main className="flex-1">
         {/* Hero section with gradient - matches site branding */}
-        <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32">
+        <section className="relative overflow-hidden pb-32 pt-20 md:pb-40 md:pt-28">
           {/* Decorative elements */}
           <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
           <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
-
-          {/* Gradient fade */}
-          <div
-            className="absolute inset-x-0 bottom-0 pointer-events-none"
-            style={{
-              height: '300px',
-              background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.5) 40%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
-            }}
-            aria-hidden="true"
-          />
 
           <div className={`${UI.container} relative z-10`}>
             {!portalType ? (
@@ -509,48 +500,28 @@ export default function Login() {
                       </a>
                     </p>
                   </div>
-                </div>
 
-                {/* Trust Indicators */}
-                <div className="mt-8 flex items-center justify-center gap-6 text-sm text-white/70">
-                  <div className="flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
-                    <span>256-bit SSL</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    <span>GDPR compliant</span>
+                  {/* Trust Indicators */}
+                  <div className="mt-6 flex items-center justify-center gap-6 text-xs text-slate-500">
+                    <div className="flex items-center gap-1.5">
+                      <Lock className="h-3.5 w-3.5" />
+                      <span>256-bit SSL</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <span>GDPR compliant</span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Help text */}
-                <p className="mt-4 text-center text-sm text-white/70">
-                  Need access? Contact{" "}
-                  <a href="mailto:support@civicnotices.co.uk" className="text-white underline underline-offset-2 hover:text-white/80">
-                    support@civicnotices.co.uk
-                  </a>
-                </p>
               </div>
             )}
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 py-8 border-t border-slate-200 bg-slate-50">
-        <div className={UI.container}>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p>© {new Date().getFullYear()} CivicNotices</p>
-            <div className="flex items-center gap-6">
-              <a href="/privacy" className="hover:text-slate-700 transition-colors">Privacy</a>
-              <a href="/terms" className="hover:text-slate-700 transition-colors">Terms</a>
-              <a href="/contact" className="hover:text-slate-700 transition-colors">Contact</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
