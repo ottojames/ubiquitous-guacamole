@@ -2529,3 +2529,21 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Modal footer can be split into justify-between for left (delete) and right (cancel/save) actions
   - Next task is Task 11.6: Add Templates route to src/App.tsx
 ---
+
+## Iteration 101 - Task 11.6: Add Templates route to src/App.tsx
+- **What was implemented**: Added route for firm templates page
+- **Files changed**:
+  - `src/App.tsx` - Added FirmTemplates import and route
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Added import: `import FirmTemplates from "@/pages/firm/Templates";` (line 50)
+  - Added route: `<Route path="templates" element={<FirmTemplates />} />` within firm portal routes (line 172)
+  - Route placed between "team" and "settings" routes (alphabetical order maintained in nav section)
+  - Full path: `/f/:firmSlug/templates`
+- **Test results**: All 494 tests pass (same as before)
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - App.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Firm portal routes are nested under `/f/:firmSlug` with FirmLayout as parent
+  - Adding new firm routes: 1) import component, 2) add Route inside firm section
+  - Next task is Task 11.7: Add Templates link to FirmLayout sidebar
+---

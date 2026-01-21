@@ -47,6 +47,7 @@ import FirmBilling from "@/pages/firm/Billing";
 import FirmBulkUpload from "@/pages/firm/BulkUpload";
 import FirmSettings from "@/pages/firm/Settings";
 import FirmTeam from "@/pages/firm/Team";
+import FirmTemplates from "@/pages/firm/Templates";
 import Register from "@/pages/Register";
 import Privacy from "@/pages/legal/Privacy";
 import Terms from "@/pages/legal/Terms";
@@ -168,6 +169,7 @@ export default function App() {
           <Route path="bulk-upload" element={<FirmBulkUpload />} />
           <Route path="billing" element={<FirmBilling />} />
           <Route path="team" element={<FirmTeam />} />
+          <Route path="templates" element={<FirmTemplates />} />
           <Route path="settings" element={<FirmSettings />} />
           {/* Comprehensive publish wizard - maintains firm portal context */}
           <Route path="publish/*" element={<NewPublishFlow />} />
