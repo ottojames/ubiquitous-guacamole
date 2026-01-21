@@ -740,7 +740,7 @@ export default function Home() {
               Built for councils, designed for scale
             </h2>
             <p className="mt-6 text-xl leading-relaxed text-slate-600">
-              From parish councils to metropolitan authorities — {STATS.councils} UK councils trust CivicNotices for their statutory publishing.
+              From parish councils to metropolitan authorities — we support all UK council types for statutory publishing.
             </p>
           </div>
 

@@ -405,8 +405,8 @@ npm run lint         # ESLint check
 - [x] **Task 16.4c**: Replace specific council testimonials with generic. **Success**: No fake endorsements. (Completed 2026-01-21 - Changed testimonials from specific councils (Leeds, Westminster, Manchester) to generic roles (Legal Officer/Local Authority, Licensing Manager/Council Licensing Team, Planning Officer/Planning Department))
 
 ### 16.5 Remove False Statistics
-- [ ] **Task 16.5a**: Remove specific council count from testimonials badge. **Success**: No false claim.
-- [ ] **Task 16.5b**: Remove count from councils section. **Success**: Updated.
+- [x] **Task 16.5a**: Remove specific council count from testimonials badge. **Success**: No false claim. (Already completed in Task 16.2c - testimonials badge changed to "What our users say")
+- [x] **Task 16.5b**: Remove count from councils section. **Success**: Updated. (Completed 2026-01-21 - Changed from "{STATS.councils} UK councils trust CivicNotices" to "we support all UK council types")
 - [ ] **Task 16.5c**: Remove count from final CTA. **Success**: Updated.
 - [ ] **Task 16.5d**: Fix councils pricing to "Free portal · £19.99/notice". **Success**: Correct.
 
