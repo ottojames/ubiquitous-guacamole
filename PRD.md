@@ -582,9 +582,25 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[LOW]` `[S]` **Reduce color saturation and fix org name** - Use muted colors consistent with site design tokens, replace hardcoded org name with actual context value.
+- [x] `[LOW]` `[S]` **Reduce color saturation and fix org name** - Use muted colors consistent with site design tokens, replace hardcoded org name with actual context value.
 
   **File**: `src/pages/council/Analytics.tsx`
+
+  **Solution implemented**:
+  - Replaced hardcoded "Westminster City Council" references with `department.organization.name`:
+    - CSV export header now uses dynamic org name
+    - Download filename now uses kebab-cased org name
+    - Department comparison section header now shows actual org name
+    - Removed hardcoded Westminster reference from savings description
+  - Replaced all lurid/saturated colors with design tokens:
+    - `purple-*` → `blue-*` (primary color)
+    - `pink-*` → `slate-*` (neutral)
+    - `orange-*` → `amber-*` (warning color per design tokens)
+    - `green-*` → `emerald-*` (success color per design tokens)
+    - `red-*` → `rose-*` (error color per design tokens)
+    - `gray-*` → `slate-*` (consistent with design system)
+  - Reduced border thickness from `border-2` to `border` for subtler appearance
+  - All icon colors now use design tokens: blue-600, emerald-600, amber-600, rose-600
 
 - [ ] `[LOW]` `[S]` **Add data source indicators** - Label data as "Live", "Projected", or "Sample" so users know if they're seeing real metrics.
 
