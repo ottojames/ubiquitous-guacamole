@@ -109,6 +109,7 @@ export default function TemplateTextEditor({
 
   /**
    * Insert a placeholder at the current cursor position
+   * Ensures cursor is positioned immediately after the inserted variable
    */
   const insertPlaceholder = (token: string) => {
     const editor = editorRef.current;
@@ -122,15 +123,35 @@ export default function TemplateTextEditor({
     // Get the current selection
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      // No selection, just append to the end
+      // No selection, append to the end and position cursor after
       isUserInputRef.current = true;
       const newValue = value + placeholder;
       onChange(newValue);
-      // Also update the DOM directly for this case
+      // Update the DOM directly
       editor.innerHTML = newValue;
+
+      // Position cursor at the end after the inserted placeholder
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false); // collapse to end
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     } else {
-      // Insert at cursor position using execCommand
-      document.execCommand('insertText', false, placeholder);
+      // Save the current range before inserting
+      const range = selection.getRangeAt(0);
+
+      // Delete any selected text first
+      range.deleteContents();
+
+      // Create a text node for the placeholder
+      const textNode = document.createTextNode(placeholder);
+      range.insertNode(textNode);
+
+      // Move cursor to immediately after the inserted text node
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(range);
 
       // Mark as user input and update the value
       isUserInputRef.current = true;

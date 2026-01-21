@@ -248,9 +248,15 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Track whether changes came from user input vs external props. Only reset innerHTML for external changes (like loading a template), not for user input. Used refs (`isUserInputRef`, `lastValueRef`) to track the source of changes.
 
-- [ ] `[MEDIUM]` `[S]` **Add template variable insertion without cursor disruption** - When inserting `{{APPLICANT_NAME}}` etc, maintain cursor position after variable.
+- [x] `[MEDIUM]` `[S]` **Add template variable insertion without cursor disruption** - When inserting `{{APPLICANT_NAME}}` etc, maintain cursor position after variable.
 
-  **File**: `src/pages/council/Templates.tsx:139-148`
+  **File**: `src/pages/council/TemplateTextEditor.tsx:114-163`
+
+  **Solution**: Replaced deprecated `execCommand('insertText')` with Range API for direct DOM manipulation. When inserting placeholders:
+  - Creates a text node with the placeholder content
+  - Uses `range.insertNode()` to insert at cursor position
+  - Uses `range.setStartAfter(textNode)` and `range.setEndAfter(textNode)` to position cursor immediately after the inserted text
+  - Works for both insertion at cursor and appending to end
 
 ### Definition of Done
 
