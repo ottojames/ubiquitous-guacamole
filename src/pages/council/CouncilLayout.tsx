@@ -3,18 +3,10 @@ import { Outlet, useNavigate, useParams, Link, useLocation } from 'react-router-
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
+import { CouncilProvider, CouncilDepartment } from '@/contexts/CouncilContext';
 
-interface Department {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-  organization: {
-    id: string;
-    name: string;
-    slug?: string;
-  };
-}
+// Using CouncilDepartment from CouncilContext
+type Department = CouncilDepartment;
 
 export default function CouncilLayout() {
   const { orgSlug, deptSlug } = useParams<{ orgSlug: string; deptSlug: string }>();
@@ -419,7 +411,14 @@ export default function CouncilLayout() {
         }`}
       >
         <div className="p-6">
-          <Outlet context={{ department, userRole }} />
+          <CouncilProvider
+            department={department}
+            userRole={userRole}
+            organizationSlug={orgSlug || ''}
+            departmentSlug={deptSlug || ''}
+          >
+            <Outlet context={{ department, userRole }} />
+          </CouncilProvider>
         </div>
       </main>
     </div>

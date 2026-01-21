@@ -5672,3 +5672,25 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - department_memberships is for day-to-day work (department_admin, editor, viewer)
   - Next task is Task 20.1c: Create CouncilContext (~60 lines)
 ---
+
+## Iteration 241 - Task 20.1c: Create CouncilContext
+- **What was implemented**: Created CouncilContext for council department access management
+- **Files created**:
+  - `src/contexts/CouncilContext.tsx` (~70 lines) - React context with provider and hook
+- **Files changed**:
+  - `src/pages/council/CouncilLayout.tsx` - Integrated CouncilProvider wrapping Outlet
+  - `PRD.md` - Marked Task 20.1c complete
+- **Implementation details**:
+  - `CouncilDepartment` interface: id, name, slug, type, organization info
+  - `CouncilContextType`: department, userRole, organizationSlug, departmentSlug, basePath
+  - `CouncilProvider` component accepts props and provides context value
+  - `useCouncil()` hook with proper error boundary if used outside provider
+  - Maintains backward compatibility: Outlet still receives `context={{ department, userRole }}` for existing components using useOutletContext
+- **Test results**: All 502 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - Council pages currently use `useOutletContext<ContextType>()` pattern
+  - CouncilContext provides cleaner alternative with `useCouncil()` hook
+  - Keep backward compatibility by keeping Outlet context alongside new CouncilProvider
+  - Pattern can be extended to filter routes by membership in Task 20.1d
+  - Next task is Task 20.1d: Filter routes by membership
+---
