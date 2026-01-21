@@ -339,12 +339,12 @@ npm run lint         # ESLint check
 - [x] **Task 15.4a**: Delete "For Individuals" section. **Success**: Removed. (Completed 2026-01-21 - Removed lines 257-299 "For Individuals & One-Off Publishing" section and pricingPlans.individual object, 494 tests pass)
 - [x] **Task 15.4b**: Delete "For Law Firms" section with old tiers. **Success**: Removed. (Completed 2026-01-21 - Removed placeholder comment "Law Firms - Section temporarily hidden while pricing restructure in progress", 494 tests pass)
 - [x] **Task 15.4c**: Delete "For Councils" section with old tiers. **Success**: Removed. (Completed 2026-01-21 - Old council tier objects councilSmall/councilMedium/councilLarge already removed in previous iterations, 494 tests pass)
-- [ ] **Task 15.4d**: Delete Comparison Table section. **Success**: Removed.
-- [ ] **Task 15.4e**: Remove `showComparison` and `billingCycle` state. **Success**: States removed.
-- [ ] **Task 15.4f**: Create three-card grid: Public, Firms (highlighted), Councils. **Success**: Cards render.
-- [ ] **Task 15.4g**: Style Public card: £50/notice, blue CTA. **Success**: Card styled.
-- [ ] **Task 15.4h**: Style Firms card: £49/month + £50/notice, "Most Popular" badge. **Success**: Card prominent.
-- [ ] **Task 15.4i**: Style Councils card: FREE portal, £19.99/notice, green accent. **Success**: Card styled.
+- [x] **Task 15.4d**: Delete Comparison Table section. **Success**: Removed. (Completed 2026-01-21 - Already removed in Task 15.1f/15.1g, no comparisonData exists in Pricing.tsx)
+- [x] **Task 15.4e**: Remove `showComparison` and `billingCycle` state. **Success**: States removed. (Completed 2026-01-21 - Already removed in Task 15.1f, only activeFaq state exists)
+- [x] **Task 15.4f**: Create three-card grid: Public, Firms (highlighted), Councils. **Success**: Cards render. (Completed 2026-01-21 - Added Pricing Cards section with 3-column grid, uses pricingPlans object, 494 tests pass)
+- [x] **Task 15.4g**: Style Public card: £50/notice, blue CTA. **Success**: Card styled. (Completed 2026-01-21 - Shows £50/notice, blue primary CTA button)
+- [x] **Task 15.4h**: Style Firms card: £49/month + £50/notice, "Most Popular" badge. **Success**: Card prominent. (Completed 2026-01-21 - ring-2 ring-blue-600 shadow-xl styling, "Most Popular" badge positioned at top)
+- [x] **Task 15.4i**: Style Councils card: FREE portal, £19.99/notice, green accent. **Success**: Card styled. (Completed 2026-01-21 - emerald-600 FREE text, emerald border CTA button, green check icons)
 
 ### 15.5 Update Old Way vs New Way Section
 - [ ] **Task 15.5a**: Update to "From £50 per notice". **Success**: Correct price.

@@ -235,6 +235,107 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Pricing Cards */}
+      <section className="py-16 md:py-24 bg-slate-50">
+        <div className={UI.container}>
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              Choose your plan
+            </h2>
+            <p className="mt-4 text-lg text-slate-600">
+              Whether you're publishing once or managing hundreds of notices
+            </p>
+          </div>
+
+          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+            {/* Public Card */}
+            <div className={`${UI.card} relative flex flex-col p-8`}>
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-slate-900">{pricingPlans.public.name}</h3>
+                <p className="mt-2 text-sm text-slate-600">{pricingPlans.public.description}</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold text-slate-900">£{pricingPlans.public.price}</span>
+                <span className="ml-2 text-slate-600">/notice</span>
+              </div>
+              <ul className="mb-8 flex-1 space-y-3">
+                {pricingPlans.public.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-slate-700">
+                    <Check className="h-5 w-5 flex-shrink-0 text-blue-600" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={pricingPlans.public.ctaHref}
+                className={`${UI.btnPrimary} w-full justify-center`}
+              >
+                {pricingPlans.public.cta}
+              </a>
+            </div>
+
+            {/* Firms Card - Highlighted */}
+            <div className={`${UI.card} relative flex flex-col p-8 ring-2 ring-blue-600 shadow-xl`}>
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="rounded-full bg-blue-600 px-4 py-1 text-sm font-semibold text-white">
+                  Most Popular
+                </span>
+              </div>
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-slate-900">{pricingPlans.firms.name}</h3>
+                <p className="mt-2 text-sm text-slate-600">{pricingPlans.firms.description}</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold text-slate-900">£{pricingPlans.firms.priceMonthly}</span>
+                <span className="ml-2 text-slate-600">/month</span>
+                <div className="mt-1 text-sm text-slate-500">+ £{pricingPlans.firms.pricePerNotice} per notice</div>
+              </div>
+              <ul className="mb-8 flex-1 space-y-3">
+                {pricingPlans.firms.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-slate-700">
+                    <Check className="h-5 w-5 flex-shrink-0 text-blue-600" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={pricingPlans.firms.ctaHref}
+                className={`${UI.btnPrimary} w-full justify-center`}
+              >
+                {pricingPlans.firms.cta}
+              </a>
+            </div>
+
+            {/* Councils Card */}
+            <div className={`${UI.card} relative flex flex-col p-8`}>
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-slate-900">{pricingPlans.councils.name}</h3>
+                <p className="mt-2 text-sm text-slate-600">{pricingPlans.councils.description}</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold text-emerald-600">FREE</span>
+                <span className="ml-2 text-slate-600">portal access</span>
+                <div className="mt-1 text-sm text-slate-500">£{pricingPlans.councils.pricePerNotice} per notice when publishing</div>
+              </div>
+              <ul className="mb-8 flex-1 space-y-3">
+                {pricingPlans.councils.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-slate-700">
+                    <Check className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={pricingPlans.councils.ctaHref}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-600 bg-white px-6 py-3 font-semibold text-emerald-700 transition hover:bg-emerald-50 w-full"
+              >
+                {pricingPlans.councils.cta}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="py-16 md:py-24">
         <div className={UI.container}>
