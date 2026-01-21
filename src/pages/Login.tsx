@@ -354,19 +354,21 @@ export default function Login() {
             ) : (
               /* Login Form */
               <div className="max-w-md mx-auto">
-                {/* Back button */}
-                <button
-                  onClick={() => {
-                    setPortalType(null);
-                    setError(null);
-                    setEmail("");
-                    setPassword("");
-                  }}
-                  className="mb-8 inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                  <span className="font-medium">Back to portal selection</span>
-                </button>
+                {/* Back button - centered */}
+                <div className="text-center mb-8">
+                  <button
+                    onClick={() => {
+                      setPortalType(null);
+                      setError(null);
+                      setEmail("");
+                      setPassword("");
+                    }}
+                    className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span className="font-medium">Back to portal selection</span>
+                  </button>
+                </div>
 
                 {/* Header */}
                 <div className="text-center mb-8">
