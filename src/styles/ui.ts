@@ -109,6 +109,41 @@ export const pillBtn = btnPrimary;
 export const ghostPill = btnSecondary;
 export const prose = "prose max-w-none text-[14px] leading-6 prose-headings:mt-0";
 
+// ============================================================================
+// FORM INPUTS - Standardized input styles for consistent forms
+// ============================================================================
+// All inputs use blue-600 focus ring for consistency with primary color
+// Height: 44px (11 Tailwind units) for touch-friendly targets
+// Border radius: 12px (lg/xl) for modern look
+// ============================================================================
+
+// Base input style (without width - add w-full or specific width as needed)
+export const inputBase =
+  "h-11 px-3 rounded-xl border border-slate-300 bg-white text-[15px] text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed";
+
+// Full-width input (most common usage)
+export const inputFull = `w-full ${inputBase}`;
+
+// Input with error state
+export const inputError =
+  "h-11 px-3 rounded-xl border border-rose-300 bg-rose-50/30 text-[15px] text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600 hover:border-rose-400";
+
+// Small input for compact layouts (e.g., filters, inline forms)
+export const inputSmall =
+  "h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400";
+
+// Textarea (multiline input)
+export const textareaBase =
+  "px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-[15px] text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400 resize-y disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed";
+
+// Input with icon on left (use with pl-10 on the input, wrap in relative container)
+export const inputWithIconLeft = `${inputBase} pl-10`;
+export const inputIconLeft = "absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none";
+
+// Input with icon on right (use with pr-10 on the input)
+export const inputWithIconRight = `${inputBase} pr-10`;
+export const inputIconRight = "absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none";
+
 // Back-compat shims for previous wrappers
 export const siteCanvas = canvas + " text-[#222d35] min-h-screen";
 export const heroGradientLight = 'hero-band';

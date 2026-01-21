@@ -519,7 +519,7 @@ npm run lint         # ESLint check
 - [x] **Task 18.3d**: Apply to admin. **Success**: Uses shared. (Completed 2026-01-21 - Updated AdminNotices.tsx and AccountManagement.tsx to import UI and use UI.btnDanger/UI.btnSuccess for semantic button styles, 498 tests pass)
 
 ### 18.4 Forms
-- [ ] **Task 18.4a**: Create UI.input style. **Success**: Defined.
+- [x] **Task 18.4a**: Create UI.input style. **Success**: Defined. (Completed 2026-01-21 - Added inputBase, inputFull, inputError, inputSmall, textareaBase, inputWithIconLeft/Right, inputIconLeft/Right to src/styles/ui.ts with comprehensive documentation)
 - [ ] **Task 18.4b**: Create UI.select style. **Success**: Defined.
 - [ ] **Task 18.4c**: Apply to admin forms. **Success**: Consistent.
 - [ ] **Task 18.4d**: Apply to public forms. **Success**: Consistent.

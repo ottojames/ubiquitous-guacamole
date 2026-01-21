@@ -5237,3 +5237,18 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - These inverse styles are for CTA sections on blue gradient backgrounds
   - 498 tests pass after changes
 ---
+
+## Iteration - Task 18.3c-d: UI.btnDanger in admin
+- **What was implemented**: Applied shared UI.btnDanger and UI.btnSuccess styles to admin panel
+- **Files changed**:
+  - `src/pages/admin/AdminNotices.tsx` - Added UI import, changed Approve button to UI.btnSuccess, Reject button to UI.btnDanger
+  - `src/pages/admin/AccountManagement.tsx` - Added UI import, changed Bulk Suspend button to UI.btnDanger
+  - `PRD.md` - Marked tasks 18.3c and 18.3d complete
+- **Learnings for future iterations**:
+  - Task 18.3c was already complete - UI.btnDanger was added to src/styles/ui.ts in Task 18.1c
+  - Two admin files had inline red button styles: AdminNotices.tsx and AccountManagement.tsx
+  - Template literals can combine UI classes with additional styles: `\`${UI.btnDanger} flex items-center gap-2\``
+  - The shared styles add consistent focus rings, shadows, and hover states
+  - 498 tests pass after changes
+  - Next tasks: 18.4a (Create UI.input style)
+---
