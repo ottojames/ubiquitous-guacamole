@@ -419,7 +419,7 @@ npm run lint         # ESLint check
 - [x] **Task 16.7b**: Style with icons and gradients. **Success**: Professional. (Completed 2026-01-21 - Added section header "Why Choose Us / Built for legal compliance", vibrant gradient icons (blue/emerald/violet/amber), card hover animations with scale, themed ring colors, background gradients)
 
 ### 16.8 Mobile Spacing Review
-- [ ] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
+- [x] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
 - [ ] **Task 16.8b**: Review testimonials on mobile. **Success**: Readable.
 - [ ] **Task 16.8c**: Review pricing cards on mobile. **Success**: Usable.
 - [ ] **Task 16.8d**: Review footer on mobile. **Success**: Good.
