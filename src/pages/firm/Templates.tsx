@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { NOTICE_CATEGORY_TREE } from '@/next/publish/config/noticeTypes';
-import { FileText, Plus, Filter, X } from 'lucide-react';
+import { FileText, Plus, Filter, X, Trash2, AlertTriangle } from 'lucide-react';
 
 interface FirmContext {
   firm: {
@@ -50,6 +50,9 @@ export default function FirmTemplates() {
   const [formData, setFormData] = useState<TemplateFormData>(initialFormData);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadTemplates();
@@ -173,6 +176,41 @@ export default function FirmTemplates() {
       setFormError('An error occurred while saving');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openDeleteConfirmation = (template: Template) => {
+    setTemplateToDelete(template);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setTemplateToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!templateToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`/api/firm/templates/${templateToDelete.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+
+      if (response.ok) {
+        closeDeleteModal();
+        closeModal();
+        loadTemplates();
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -380,19 +418,77 @@ export default function FirmTemplates() {
               </div>
             </div>
 
+            <div className="flex items-center justify-between p-6 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                {editingTemplate && (
+                  <>
+                    <button
+                      onClick={() => openDeleteConfirmation(editingTemplate)}
+                      className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                    <span className="text-sm text-gray-500">
+                      Used {editingTemplate.usage_count} times
+                    </span>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Saving...' : editingTemplate ? 'Save Changes' : 'Create Template'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && templateToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Delete Template</h2>
+              </div>
+              <p className="text-gray-600 mb-2">
+                Are you sure you want to delete <strong>{templateToDelete.name}</strong>?
+              </p>
+              {templateToDelete.usage_count > 0 && (
+                <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                  This template has been used {templateToDelete.usage_count} time{templateToDelete.usage_count !== 1 ? 's' : ''}. Deleting it won't affect previously created notices.
+                </p>
+              )}
+            </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100">
               <button
-                onClick={closeModal}
+                onClick={closeDeleteModal}
+                disabled={deleting}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-6 py-2 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-6 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? 'Saving...' : editingTemplate ? 'Save Changes' : 'Create Template'}
+                {deleting ? 'Deleting...' : 'Delete Template'}
               </button>
             </div>
           </div>

@@ -2469,3 +2469,63 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - API fetches need session.access_token in Authorization header
   - Next tasks: 11.5b (create/edit modal), 11.5c (delete confirmation), 11.6 (route), 11.7 (sidebar link)
 ---
+
+## Iteration 99 - Task 11.5b: Add create/edit template modal to src/pages/firm/Templates.tsx
+- **What was implemented**: Create/edit modal for firm templates with full form validation
+- **Files changed**:
+  - `src/pages/firm/Templates.tsx` - Added ~115 lines for modal component and handlers
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Added state: modalOpen, editingTemplate, formData, saving, formError
+  - Added initialFormData constant for clean form reset
+  - Added Template interface extension for template_data field
+  - Added TemplateFormData interface for form state
+  - Added openCreateModal/openEditModal/closeModal handlers
+  - Added handleSave function with validation:
+    - Requires name (trimmed)
+    - Requires notice_type
+    - Validates template_data is valid JSON
+  - Modal uses purple theme to match firm portal styling
+  - Form fields: name input, description textarea, notice_type select (using NOTICE_CATEGORY_TREE), template_data textarea (monospace), is_shared checkbox
+  - Edit mode populates form from template, stringifying template_data
+  - Create uses POST /api/firm/templates, Edit uses PATCH /api/firm/templates/:id
+  - Success closes modal and reloads templates list
+  - Error displays in red box above form
+- **Test results**: All 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - Templates.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Modal pattern: Fixed overlay with bg-black/50, max-w-lg centered card, max-h-[90vh] with overflow-y-auto
+  - Form state pattern: initialFormData constant + setFormData spread syntax for individual field updates
+  - JSON validation: try/catch around JSON.parse before API call
+  - Edit mode detection: editingTemplate state is null for create, populated Template for edit
+  - API method selection: editingTemplate ? 'PATCH' : 'POST' pattern
+  - Next task is Task 11.5c: Add delete confirmation and usage count display to Templates page
+---
+
+## Iteration 100 - Task 11.5c: Add delete confirmation and usage count display to Templates page
+- **What was implemented**: Delete confirmation modal with usage count warning for firm templates
+- **Files changed**:
+  - `src/pages/firm/Templates.tsx` - Added ~50 lines for delete functionality
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Added imports: Trash2, AlertTriangle from lucide-react
+  - Added state: deleteModalOpen, templateToDelete, deleting
+  - Added openDeleteConfirmation(template) - sets templateToDelete and opens modal
+  - Added closeDeleteModal() - resets delete modal state
+  - Added handleDelete() - calls DELETE /api/firm/templates/:id, closes both modals, reloads list
+  - Delete button in edit modal footer (left side, red text with Trash2 icon)
+  - Usage count displayed next to delete button in edit modal: "Used N times"
+  - Delete confirmation modal features:
+    - AlertTriangle icon in red circle
+    - Template name in bold
+    - Conditional warning for templates with usage_count > 0: amber background explaining deletion won't affect previously created notices
+    - Cancel and "Delete Template" (red) buttons with loading state
+- **Test results**: All 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - Templates.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Delete confirmation pattern: separate modal state (deleteModalOpen) from main modal state (modalOpen)
+  - Usage count warning helps users understand the impact of deletion
+  - The API soft-deletes templates (sets is_active=false) so historical references remain valid
+  - Modal footer can be split into justify-between for left (delete) and right (cancel/save) actions
+  - Next task is Task 11.6: Add Templates route to src/App.tsx
+---
