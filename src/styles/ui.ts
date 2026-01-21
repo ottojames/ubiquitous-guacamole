@@ -174,3 +174,50 @@ export const btnSuccess =
   "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold shadow-[0_6px_16px_rgba(5,150,105,0.35)] transition-all duration-200 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 focus:ring-offset-white";
 export const btnWarning =
   "inline-flex items-center justify-center px-5 py-3 rounded-xl bg-amber-600 text-white font-semibold shadow-[0_6px_16px_rgba(217,119,6,0.35)] transition-all duration-200 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:ring-offset-2 focus:ring-offset-white";
+
+// ============================================================================
+// TEXT COLORS - Standardized text colors for consistent typography
+// ============================================================================
+// Primary text: slate-900 (#0f172a) - headings, important text
+// Secondary text: slate-600 (#475569) - body text, descriptions
+// Tertiary text: slate-500 (#64748b) - labels, captions, subtle text
+// Muted text: slate-400 (#94a3b8) - placeholders, disabled text
+// Inverse text: white (#ffffff) - text on dark backgrounds
+// Link text: blue-600 (#2563EB) - interactive links
+// ============================================================================
+
+// Primary text (headings, important content)
+export const textPrimary = "text-slate-900";
+export const textPrimaryHex = "#0f172a";
+
+// Secondary text (body text, descriptions)
+export const textSecondary = "text-slate-600";
+export const textSecondaryHex = "#475569";
+
+// Tertiary text (labels, captions, subtle text)
+export const textTertiary = "text-slate-500";
+export const textTertiaryHex = "#64748b";
+
+// Muted text (placeholders, disabled states)
+export const textMuted = "text-slate-400";
+export const textMutedHex = "#94a3b8";
+
+// Inverse text (on dark backgrounds)
+export const textInverse = "text-white";
+export const textInverseSubtle = "text-white/85";
+
+// Link colors
+export const textLink = "text-blue-600 hover:text-blue-700";
+export const textLinkSubtle = "text-slate-600 hover:text-blue-600";
+
+// Light mode backgrounds
+export const bgPage = "bg-slate-50";       // Page backgrounds
+export const bgCard = "bg-white";          // Card backgrounds
+export const bgSubtle = "bg-slate-100";    // Subtle backgrounds (hovers, sections)
+export const bgMuted = "bg-slate-200";     // Muted backgrounds (disabled, borders)
+
+// Dark mode text (for dark backgrounds like admin, modals)
+export const textPrimaryDark = "text-white";
+export const textSecondaryDark = "text-slate-300";
+export const textTertiaryDark = "text-slate-400";
+export const textMutedDark = "text-slate-500";
