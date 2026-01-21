@@ -706,7 +706,7 @@ export default function Home() {
               <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </a>
             <p className="mt-6 text-base text-slate-600">
-              <span className="font-semibold">£49.99 per notice</span> · No subscription · Instant activation
+              <span className="font-semibold">£50 per notice</span> · No subscription · Instant activation
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
               <span className="flex items-center gap-2">

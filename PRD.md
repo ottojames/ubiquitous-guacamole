@@ -411,7 +411,7 @@ npm run lint         # ESLint check
 - [x] **Task 16.5d**: Fix councils pricing to "Free portal · £19.99/notice". **Success**: Correct. (Completed 2026-01-21 - Changed homepage councils section from "From £299/month · Unlimited notices · 14-day free trial" to "Free portal · £19.99/notice when publishing")
 
 ### 16.6 Fix Notice Price
-- [ ] **Task 16.6a**: Change "£49.99" to "£50" in publish section. **Success**: Correct.
+- [x] **Task 16.6a**: Change "£49.99" to "£50" in publish section. **Success**: Correct. (Completed 2026-01-21 - Changed src/pages/Home.tsx line 709 from "£49.99 per notice" to "£50 per notice")
 - [ ] **Task 16.6b**: Search/replace all "49.99" with "50". **Success**: No wrong price.
 
 ### 16.7 Add Trust Signals Section
