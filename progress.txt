@@ -5714,3 +5714,31 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - useMemo is appropriate for filtering that depends on state (userRole)
   - Next task is Task 20.2a: Create RepresentationInbox page
 ---
+
+## Iteration 243 - Tasks 20.2a-e: Representation Inbox Bulk Actions
+- **What was implemented**: Verified existing RepresentationInbox page and added bulk actions
+- **Files changed**:
+  - `src/pages/council/Representations.tsx` - Added bulk actions (checkboxes, select all, bulk mark reviewed, bulk export)
+  - `PRD.md` - Marked Tasks 20.2a, 20.2b, 20.2c, 20.2d, 20.2e complete
+- **Discovery**: Tasks 20.2a, 20.2b, 20.2d, 20.2e were already complete
+  - RepresentationInbox page already existed at 610+ lines with full functionality
+  - Mark as Reviewed button already existed
+  - Route already existed at /c/:orgSlug/:deptSlug/representations
+  - Sidebar link already existed with REPRESENTATIONS_READ permission
+- **Implementation details for Task 20.2c (bulk actions)**:
+  - Added `selectedIds` Set<string> state and `bulkActionLoading` boolean state
+  - Added `toggleSelectAll()` and `toggleSelect(id)` handler functions
+  - Added `handleBulkMarkReviewed()` to mark all unreviewed selected items
+  - Added `handleBulkExport()` to export only selected items to CSV
+  - Added Bulk Actions Bar (appears when selections exist): shows count, Mark as Reviewed button, Export Selected button, Clear selection
+  - Added Select All Header with checkbox and item count
+  - Added checkbox to each representation row with visual selection highlight (bg-blue-50)
+  - Imported CheckSquare, Square, CheckCircle icons from lucide-react
+- **Test results**: All 502 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - Always check if tasks are already complete before implementing
+  - RepresentationInbox was fully featured except for bulk actions
+  - Bulk selection uses Set<string> for O(1) lookup/delete operations
+  - Visual feedback important: selected rows highlighted, disabled buttons when inappropriate
+  - Next task is Task 20.3a: Create representation_notes table
+---

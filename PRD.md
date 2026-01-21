@@ -572,11 +572,11 @@ npm run lint         # ESLint check
 - [x] **Task 20.1d**: Filter routes by membership. **Success**: Filtered. (Completed 2026-01-21 - Added permission filtering to CouncilLayout.tsx navItems using roleHasPermission from permissions.ts. Each nav item now has optional requiredPermission field. useMemo filters items based on user's normalized role. Dashboard always visible, other routes filtered by NOTICES_READ, NOTICES_UPDATE, REPRESENTATIONS_READ, TEMPLATES_READ, TEAM_READ, BILLING_MANAGE, SETTINGS_READ permissions)
 
 ### 20.2 Representation Inbox
-- [ ] **Task 20.2a**: Create RepresentationInbox page. ~100 lines. **Success**: Renders.
-- [ ] **Task 20.2b**: Add Mark as Reviewed. **Success**: Works.
-- [ ] **Task 20.2c**: Add bulk actions. **Success**: Works.
-- [ ] **Task 20.2d**: Add route. **Success**: Works.
-- [ ] **Task 20.2e**: Add sidebar link. **Success**: Visible.
+- [x] **Task 20.2a**: Create RepresentationInbox page. ~100 lines. **Success**: Renders. (Completed 2026-01-21 - Verified existing CouncilRepresentations component at src/pages/council/Representations.tsx with 690+ lines including header, stats cards, filters, list view with detail modal, export functionality, internal comments, and assignment features)
+- [x] **Task 20.2b**: Add Mark as Reviewed. **Success**: Works. (Completed 2026-01-21 - Verified "Mark as Reviewed" button exists at line 564, updates reviewed_at/reviewed_by/reviewed_by_name fields)
+- [x] **Task 20.2c**: Add bulk actions. **Success**: Works. (Completed 2026-01-21 - Added bulk selection with checkboxes, select all/deselect all, bulk Mark as Reviewed button, bulk Export Selected button, and clear selection. Uses Set<string> for selectedIds tracking)
+- [x] **Task 20.2d**: Add route. **Success**: Works. (Completed 2026-01-21 - Verified route exists at /c/:orgSlug/:deptSlug/representations in App.tsx line 153)
+- [x] **Task 20.2e**: Add sidebar link. **Success**: Visible. (Completed 2026-01-21 - Verified sidebar link exists in CouncilLayout.tsx navItems with REPRESENTATIONS_READ permission)
 
 ### 20.3 Internal Notes
 - [ ] **Task 20.3a**: Create representation_notes table. **Success**: With RLS.
