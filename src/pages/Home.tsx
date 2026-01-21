@@ -442,6 +442,51 @@ export default function Home() {
         </div>
       </section>
 
+      {/* -------- TRUST SIGNALS -------- */}
+      <section className="py-16 md:py-20">
+        <div className={UI.container}>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: "Instant Publication",
+                desc: "Go live in seconds, not weeks. No newspaper deadlines or print delays.",
+                Icon: Upload,
+                gradient: "from-blue-50 to-blue-100/50"
+              },
+              {
+                title: "Cryptographic Proof",
+                desc: "SHA-256 timestamped certificates provide tamper-proof evidence for court.",
+                Icon: CheckCircle2,
+                gradient: "from-emerald-50 to-emerald-100/50"
+              },
+              {
+                title: "Full Audit Trail",
+                desc: "Every view, comment, and action logged with immutable records.",
+                Icon: Archive,
+                gradient: "from-slate-50 to-slate-100/50"
+              },
+              {
+                title: "Legally Compliant",
+                desc: "Meets all statutory requirements for public notice publication.",
+                Icon: FileText,
+                gradient: "from-amber-50 to-amber-100/50"
+              },
+            ].map(({ title, desc, Icon, gradient }) => (
+              <div
+                key={title}
+                className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-6 ring-1 ring-slate-200/60 transition-all hover:shadow-lg hover:ring-slate-300`}
+              >
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
+                  <Icon className="h-6 w-6 text-slate-700" aria-hidden="true" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-slate-900">{title}</h3>
+                <p className="text-sm leading-relaxed text-slate-600">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* -------- TESTIMONIALS & SOCIAL PROOF -------- */}
       <section className="py-16 md:py-24">
         <div className={UI.container}>

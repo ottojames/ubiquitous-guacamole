@@ -415,7 +415,7 @@ npm run lint         # ESLint check
 - [x] **Task 16.6b**: Search/replace all "49.99" with "50". **Success**: No wrong price. (Completed 2026-01-21 - Updated 11 files: ConferenceLanding.tsx (4 occurrences), Terms.tsx, certificates.ts, TemplatePreviewRail.tsx, Analytics.tsx (5 occurrences including savings), analytics.ts, stripe.ts (2 - unit_amount and comment), PaymentStep.tsx, RightRail.tsx, subscription_tiers.sql (2), test-notice.json)
 
 ### 16.7 Add Trust Signals Section
-- [ ] **Task 16.7a**: Create section with 4 trust cards after hero. ~60 lines. **Success**: Renders.
+- [x] **Task 16.7a**: Create section with 4 trust cards after hero. ~60 lines. **Success**: Renders. (Completed 2026-01-21 - Added 4 cards: Instant Publication, Cryptographic Proof, Full Audit Trail, Legally Compliant; located between hero and testimonials sections)
 - [ ] **Task 16.7b**: Style with icons and gradients. **Success**: Professional.
 
 ### 16.8 Mobile Spacing Review
