@@ -8515,3 +8515,73 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The pattern used in `server/routes/representations.ts` is the established way to handle authenticated operations
   - Always cast Supabase query results with `as any` when using untyped client
 ---
+
+## Iteration 6 - Add RLS policies for internal_comments table
+- **What was implemented**: Added database-level RLS policies for internal_comments table as defense-in-depth
+- **Files changed**:
+  - `supabase/migrations/20260121100002_internal_comments_rls_policies.sql` (new) - RLS policies for INSERT and SELECT
+  - `PRD.md` - Marked task complete
+- **Migration details**:
+  - "Department members can insert comments" policy - allows INSERT for department members and org admins
+  - "Department members can view comments" policy - allows SELECT for department members and org admins
+  - Policies use same pattern as Phase 1 department isolation: defense-in-depth via database constraints
+- **Existing implementation note**:
+  - The `20260114000003_internal_comments.sql` migration already had basic RLS policies
+  - The server-side API (`server/routes/internal-comments.ts`) bypasses RLS using service role key
+  - These new policies add defense-in-depth in case client-side queries are used
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only (not related to this change)
+- **Learnings for future iterations**:
+  - When adding RLS policies, DROP IF EXISTS first to make migrations idempotent
+  - Org admin access pattern: JOIN departments d ON om.organization_id = d.organization_id WHERE role IN ('owner', 'org_admin')
+  - SQL migration files don't need TypeScript checks - they're just SQL
+  - Defense-in-depth approach: even if server-side API handles access control, add database-level RLS as backup
+---
+
+## Iteration 7 - Add success toast and improved error handling for internal comments
+- **What was implemented**: Added toast notification for successful comment submission and inline validation error for empty comments
+- **Files changed**:
+  - `src/components/council/InternalComments.tsx` - Replaced inline success message with toast(), added validationError state for empty comment validation, clear validation error on typing
+  - `src/pages/council/Representations.tsx` - Added useToastController hook and toast rendering div
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  1. Import toast from `@/lib/ui/toast` in InternalComments
+  2. Replace `successMessage` state with `validationError` state
+  3. Empty comment now shows inline error "Please enter a comment before submitting"
+  4. Successful submission shows toast "Comment added"
+  5. Validation error clears when user starts typing
+  6. Added toast controller and render element to Representations page (parent of InternalComments)
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only (not related to this change)
+- **Definition of Done verification**:
+  1. ✓ Click "Add comment" → comment appears in list within 2 seconds
+  2. ✓ Page refresh → comment persists
+  3. ✓ Network shows 201 response from API
+  4. ✓ Invalid submission (empty) → inline error message appears
+  5. ✓ Success submission → toast notification "Comment added"
+- **Learnings for future iterations**:
+  - Toast system uses global setToast function but requires useToastController in parent component for rendering
+  - Toast auto-clears after 1200ms (defined in lib/ui/toast.ts)
+  - Validation errors should be separate state from API errors for clear UX
+  - Clear validation errors on input change for better UX
+---
+
+## Iteration 27 - Complete Team Invitation Flow (Phase 3)
+- What was implemented:
+  - Added GET /api/departments/:deptId/team/invitations endpoint to list pending invitations
+  - Added DELETE /api/departments/:deptId/team/invitations/:invitationId endpoint to cancel invitations
+  - Updated Team.tsx to use API endpoints instead of direct Supabase inserts
+  - Team.tsx now shows pending invitations section with cancel functionality
+  - Bulk CSV import now uses the API (which sends emails via Resend)
+- Files changed:
+  - server/routes/team.ts (added 2 new endpoints)
+  - src/pages/council/Team.tsx (refactored to use API, added pending invitations display)
+  - PRD.md (marked all Phase 3 tasks complete)
+- Learnings for future iterations:
+  - The invitation system was mostly already built - table exists in migrations/20251021000004_invitations_clients.sql
+  - Email sending already wired via sendCouncilDepartmentInvitation in server/services/email.ts
+  - AcceptInvitation page already exists at src/pages/auth/AcceptInvitation.tsx
+  - The team.ts route already had POST /team/invite with full email sending
+  - Main gap was: Team.tsx was calling Supabase directly, bypassing the email-sending API
+  - Always check existing infrastructure before implementing - most of Phase 3 was already done
+---

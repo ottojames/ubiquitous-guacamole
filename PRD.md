@@ -240,26 +240,13 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[HIGH]` `[M]` **Diagnose and fix cursor position loss** - The textarea/editor is likely using a controlled component pattern that resets selection on every keystroke. Fix by using refs and preserving selectionStart/selectionEnd.
+- [x] `[HIGH]` `[M]` **Diagnose and fix cursor position loss** - The textarea/editor is likely using a controlled component pattern that resets selection on every keystroke. Fix by using refs and preserving selectionStart/selectionEnd.
 
   **File**: `src/pages/council/TemplateTextEditor.tsx`
 
-  ```typescript
-  // Pattern to preserve cursor position
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  **Root cause**: contentEditable div was using `dangerouslySetInnerHTML={{ __html: value }}` which resets innerHTML on every parent re-render, causing cursor position loss.
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { selectionStart, selectionEnd } = e.target;
-    setValue(e.target.value);
-    // Restore cursor after React re-render
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.selectionStart = selectionStart;
-        textareaRef.current.selectionEnd = selectionEnd;
-      }
-    });
-  };
-  ```
+  **Solution**: Track whether changes came from user input vs external props. Only reset innerHTML for external changes (like loading a template), not for user input. Used refs (`isUserInputRef`, `lastValueRef`) to track the source of changes.
 
 - [ ] `[MEDIUM]` `[S]` **Add template variable insertion without cursor disruption** - When inserting `{{APPLICANT_NAME}}` etc, maintain cursor position after variable.
 

@@ -39,8 +39,12 @@ export default function TemplateTextEditor({
 }: TemplateTextEditorProps) {
   const [showPlaceholderMenu, setShowPlaceholderMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // Track if the change originated from user input to avoid resetting cursor
+  const isUserInputRef = useRef(false);
+  // Track last value to detect external changes
+  const lastValueRef = useRef(value);
 
   const placeholders = getPlaceholdersForNoticeType(noticeType);
   const requiredPlaceholders = placeholders.filter(p => p.required);
@@ -61,6 +65,29 @@ export default function TemplateTextEditor({
 
   const filteredRequired = filterPlaceholders(requiredPlaceholders);
   const filteredOptional = filterPlaceholders(optionalPlaceholders);
+
+  // Sync value prop to contentEditable when changed externally (not from user input)
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    // Only update innerHTML if value changed externally (not from user input)
+    if (value !== lastValueRef.current && !isUserInputRef.current) {
+      editor.innerHTML = value;
+    }
+
+    // Reset user input flag and update last value
+    isUserInputRef.current = false;
+    lastValueRef.current = value;
+  }, [value]);
+
+  // Initialize content on mount
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (editor && value) {
+      editor.innerHTML = value;
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -84,7 +111,7 @@ export default function TemplateTextEditor({
    * Insert a placeholder at the current cursor position
    */
   const insertPlaceholder = (token: string) => {
-    const editor = textareaRef.current as HTMLDivElement;
+    const editor = editorRef.current;
     if (!editor) return;
 
     const placeholder = `{{${token}}}`;
@@ -96,13 +123,17 @@ export default function TemplateTextEditor({
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       // No selection, just append to the end
+      isUserInputRef.current = true;
       const newValue = value + placeholder;
       onChange(newValue);
+      // Also update the DOM directly for this case
+      editor.innerHTML = newValue;
     } else {
       // Insert at cursor position using execCommand
       document.execCommand('insertText', false, placeholder);
 
-      // Update the value
+      // Mark as user input and update the value
+      isUserInputRef.current = true;
       onChange(editor.innerHTML);
     }
 
@@ -208,7 +239,12 @@ export default function TemplateTextEditor({
             type="button"
             onClick={() => {
               document.execCommand('bold', false);
-              textareaRef.current?.focus();
+              editorRef.current?.focus();
+              // Update value after formatting
+              if (editorRef.current) {
+                isUserInputRef.current = true;
+                onChange(editorRef.current.innerHTML);
+              }
             }}
             className="px-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors font-bold"
             title="Bold (Ctrl+B)"
@@ -219,7 +255,12 @@ export default function TemplateTextEditor({
             type="button"
             onClick={() => {
               document.execCommand('underline', false);
-              textareaRef.current?.focus();
+              editorRef.current?.focus();
+              // Update value after formatting
+              if (editorRef.current) {
+                isUserInputRef.current = true;
+                onChange(editorRef.current.innerHTML);
+              }
             }}
             className="px-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors underline"
             title="Underline (Ctrl+U)"
@@ -230,7 +271,12 @@ export default function TemplateTextEditor({
             type="button"
             onClick={() => {
               document.execCommand('italic', false);
-              textareaRef.current?.focus();
+              editorRef.current?.focus();
+              // Update value after formatting
+              if (editorRef.current) {
+                isUserInputRef.current = true;
+                onChange(editorRef.current.innerHTML);
+              }
             }}
             className="px-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors italic"
             title="Italic (Ctrl+I)"
@@ -331,17 +377,20 @@ export default function TemplateTextEditor({
 
       {/* Template text area - contentEditable for rich text support */}
       <div
-        ref={textareaRef as any}
+        ref={editorRef}
         contentEditable
         onInput={e => {
           const target = e.target as HTMLDivElement;
+          // Mark as user input to prevent cursor reset
+          isUserInputRef.current = true;
           onChange(target.innerHTML);
         }}
         onBlur={e => {
           const target = e.target as HTMLDivElement;
+          // Mark as user input to prevent cursor reset
+          isUserInputRef.current = true;
           onChange(target.innerHTML);
         }}
-        dangerouslySetInnerHTML={{ __html: value }}
         className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm leading-relaxed overflow-y-auto"
         style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
         data-placeholder={!value ? `Write your notice template here...
