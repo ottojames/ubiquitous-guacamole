@@ -8809,3 +8809,49 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Use `mode="wait"` on AnimatePresence for clean exit-before-enter animations
   - CSS grid with responsive columns (lg:grid-cols-3 md:grid-cols-2) handles responsive layout without JS
 ---
+
+## Iteration 100 - Phase 7: Add footer tagline
+- **What was implemented**: Added "Notice it. Understand it. Shape it." tagline to the Footer component
+- **Files changed**:
+  - `src/components/Footer.tsx` - Added tagline section between links and copyright
+  - `PRD.md` - Marked task complete with implementation notes
+- **Key changes**:
+  - Added new `{/* Tagline */}` section with centered text
+  - Used `text-base font-medium text-slate-700` styling for subtle emphasis
+  - Positioned between main links and copyright for natural flow
+- **Note**: PRD referenced `SiteFooter.tsx` but actual file is `Footer.tsx`
+- **Test results**: All 508 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Footer component is at `src/components/Footer.tsx` not SiteFooter.tsx
+  - Phase 7 (Homepage Community-First Messaging) is now COMPLETE
+  - Next task is Phase 8: Sign-In Page UI Improvement (Task: Redesign login form)
+---
+
+## Iteration 101 - Phase 8: Redesign login form with professional styling
+- **What was implemented**: Added show/hide password toggle and loading spinner to Login page
+- **Files changed**:
+  - `src/pages/Login.tsx` - Added Eye/EyeOff imports, showPassword state, password toggle button, Loader2 spinner
+  - `PRD.md` - Marked task complete with implementation details
+- **Key changes**:
+  1. Added `Eye`, `EyeOff`, `Loader2` imports from lucide-react
+  2. Added `showPassword` state to track password visibility
+  3. Password input type now toggles between "text" and "password" based on state
+  4. Added toggle button with Eye/EyeOff icon, with aria-label for accessibility
+  5. Submit button now shows `<Loader2 className="animate-spin" />` spinner when loading
+  6. Changed input padding from pr-4 to pr-11 to accommodate toggle button
+- **DoD verification**:
+  - ✓ Gradient background: `linear-gradient(112deg, #223266 0%, #6EA3F7 53%, #F4F7FD 100%)`
+  - ✓ Form card has `rounded-xl` and shadow classes
+  - ✓ Email input has Mail icon prefix
+  - ✓ Password input has Lock icon and show/hide toggle
+  - ✓ Portal toggle has descriptive text for both Council and Professional options
+  - ✓ Sign in button shows spinner and is disabled during loading
+- **Note**: Most of the professional styling was already implemented in previous iterations. This iteration added the missing password toggle and loading spinner.
+- **Tests**: All 508 tests pass, no regressions
+- **TypeScript**: No new errors (pre-existing errors in unrelated files only)
+- **Learnings for future iterations**:
+  - Login.tsx was already well-styled - previous iterations had done significant work
+  - When reviewing DoD, check what's already implemented before starting
+  - Phase 8 (Sign-In Page UI Improvement) is now COMPLETE
+  - Next task is Phase 9: Pricing Page UI Fixes (Fix hero gradient error)
+---

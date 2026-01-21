@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
+import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
@@ -177,6 +177,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const redirectInProgress = useRef(false);
 
   // Check for error in URL query params (from redirect errors)
@@ -422,13 +423,25 @@ export default function Login() {
                     <Lock className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
                     <input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full h-11 pl-11 pr-4 rounded-lg border border-slate-300 bg-white text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-400"
+                      className="w-full h-11 pl-11 pr-11 rounded-lg border border-slate-300 bg-white text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-400"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-[18px] w-[18px]" />
+                      ) : (
+                        <Eye className="h-[18px] w-[18px]" />
+                      )}
+                    </button>
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
                     Min 8 characters with uppercase, lowercase, number, and special character
@@ -463,12 +476,21 @@ export default function Login() {
                   disabled={loading}
                   className={`w-full h-11 flex items-center justify-center gap-2 rounded-lg font-semibold text-[15px] transition-all duration-200 ${
                     loading
-                      ? "bg-slate-400 text-white cursor-not-allowed"
+                      ? "bg-blue-500 text-white cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98] shadow-sm hover:shadow-md"
                   }`}
                 >
-                  {loading ? "Signing in..." : "Sign in"}
-                  {!loading && <ArrowRight className="h-[18px] w-[18px]" />}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign in</span>
+                      <ArrowRight className="h-[18px] w-[18px]" />
+                    </>
+                  )}
                 </button>
               </form>
 

@@ -431,7 +431,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[MEDIUM]` `[M]` **Redesign login form with professional styling** - Add gradient background, branded card container, icon-prefixed inputs, improved portal type toggle with descriptions, loading states.
+- [x] `[MEDIUM]` `[M]` **Redesign login form with professional styling** - Add gradient background, branded card container, icon-prefixed inputs, improved portal type toggle with descriptions, loading states.
 
   **File**: `src/pages/Login.tsx`
 
@@ -442,6 +442,17 @@ Major refactoring and bug fixes following user walkthrough review.
   - Improve Council vs Professional toggle with icons and descriptions
   - Add show/hide password toggle
   - Add loading spinner during sign-in
+
+  **Solution implemented**:
+  - Page already had gradient background: `linear-gradient(112deg, #223266 0%, #6EA3F7 53%, #F4F7FD 100%)`
+  - Form card already had `rounded-xl` and `shadow-[0_8px_30px_rgb(0,0,0,0.04)]`
+  - Email input already had Mail icon prefix
+  - Password input already had Lock icon prefix
+  - Portal toggle already had descriptive text (Council: "For council officers and licensing departments", Professional: "For solicitors, law firms & GVOL operators")
+  - Added `showPassword` state and Eye/EyeOff toggle button on password input
+  - Changed password input `type` from static "password" to dynamic based on `showPassword` state
+  - Added `Loader2` icon with `animate-spin` class to submit button when `loading` is true
+  - Button now shows spinner + "Signing in..." during request and is disabled
 
 ### Definition of Done
 
