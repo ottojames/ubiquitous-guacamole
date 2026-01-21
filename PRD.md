@@ -520,7 +520,7 @@ npm run lint         # ESLint check
 
 ### 18.4 Forms
 - [x] **Task 18.4a**: Create UI.input style. **Success**: Defined. (Completed 2026-01-21 - Added inputBase, inputFull, inputError, inputSmall, textareaBase, inputWithIconLeft/Right, inputIconLeft/Right to src/styles/ui.ts with comprehensive documentation)
-- [ ] **Task 18.4b**: Create UI.select style. **Success**: Defined.
+- [x] **Task 18.4b**: Create UI.select style. **Success**: Defined. (Completed 2026-01-21 - Added selectBase, selectFull, selectError, selectSmall, selectChevron, selectChevronSmall to src/styles/ui.ts with documentation)
 - [ ] **Task 18.4c**: Apply to admin forms. **Success**: Consistent.
 - [ ] **Task 18.4d**: Apply to public forms. **Success**: Consistent.
 

@@ -144,6 +144,38 @@ export const inputIconLeft = "absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 t
 export const inputWithIconRight = `${inputBase} pr-10`;
 export const inputIconRight = "absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none";
 
+// ============================================================================
+// SELECT INPUTS - Standardized select dropdown styles
+// ============================================================================
+// Selects use appearance-none to hide native dropdown arrow, allowing custom styling
+// Always wrap select in a relative container and add the chevron icon
+// Usage:
+//   <div className="relative">
+//     <select className={UI.selectBase}>...</select>
+//     <ChevronDown className={UI.selectChevron} />
+//   </div>
+// ============================================================================
+
+// Base select style (without width - add w-full or specific width as needed)
+// Note: pr-10 provides space for the chevron icon
+export const selectBase =
+  "h-11 px-3 pr-10 rounded-xl border border-slate-300 bg-white text-[15px] text-slate-900 appearance-none cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed";
+
+// Full-width select (most common usage)
+export const selectFull = `w-full ${selectBase}`;
+
+// Select with error state
+export const selectError =
+  "h-11 px-3 pr-10 rounded-xl border border-rose-300 bg-rose-50/30 text-[15px] text-slate-900 appearance-none cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-rose-600/30 focus:border-rose-600 hover:border-rose-400";
+
+// Small select for compact layouts (e.g., filters, inline forms)
+export const selectSmall =
+  "h-9 px-3 pr-8 rounded-lg border border-slate-300 bg-white text-sm text-slate-900 appearance-none cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 hover:border-slate-400";
+
+// Chevron icon positioning (use with <ChevronDown /> or similar icon)
+export const selectChevron = "absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none";
+export const selectChevronSmall = "absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none";
+
 // Back-compat shims for previous wrappers
 export const siteCanvas = canvas + " text-[#222d35] min-h-screen";
 export const heroGradientLight = 'hero-band';
