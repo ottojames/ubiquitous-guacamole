@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
+import AlertModal from '@/components/ui/AlertModal';
 
 type TabType = 'councils' | 'firms' | 'users';
 
@@ -192,6 +193,14 @@ export default function AccountManagement() {
     isOpen: boolean;
     item: Organization | User | null;
   }>({ isOpen: false, item: null });
+
+  // Alert modal state for replacing browser alert() calls
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    variant: 'success' | 'error' | 'warning' | 'info';
+    title: string;
+    message: string;
+  }>({ isOpen: false, variant: 'info', title: '', message: '' });
 
   // Sort configuration
   const [sortField, setSortField] = useState<string>('created_at');
@@ -381,7 +390,12 @@ export default function AccountManagement() {
         case 'reset_password':
           // For user password reset, we would need to implement this via Supabase Auth
           // This would typically send a password reset email
-          alert('Password reset functionality coming soon');
+          setAlertModal({
+            isOpen: true,
+            variant: 'info',
+            title: 'Coming Soon',
+            message: 'Password reset functionality is coming soon.'
+          });
           break;
 
         case 'view':
@@ -397,7 +411,12 @@ export default function AccountManagement() {
       setShowActionMenu(null);
     } catch (error) {
       console.error('Action failed:', error);
-      alert('Failed to perform action. Please try again.');
+      setAlertModal({
+        isOpen: true,
+        variant: 'error',
+        title: 'Action Failed',
+        message: 'Failed to perform action. Please try again.'
+      });
     }
   };
 
@@ -414,7 +433,12 @@ export default function AccountManagement() {
           .in('id', Array.from(selectedItems));
 
         if (error) throw error;
-        alert(`${selectedItems.size} accounts suspended successfully`);
+        setAlertModal({
+          isOpen: true,
+          variant: 'success',
+          title: 'Accounts Suspended',
+          message: `${selectedItems.size} account${selectedItems.size === 1 ? '' : 's'} suspended successfully.`
+        });
 
       } else if (action === 'activate') {
         // Bulk activate organizations
@@ -424,7 +448,12 @@ export default function AccountManagement() {
           .in('id', Array.from(selectedItems));
 
         if (error) throw error;
-        alert(`${selectedItems.size} accounts activated successfully`);
+        setAlertModal({
+          isOpen: true,
+          variant: 'success',
+          title: 'Accounts Activated',
+          message: `${selectedItems.size} account${selectedItems.size === 1 ? '' : 's'} activated successfully.`
+        });
 
       } else if (action === 'export') {
         // Export selected items to CSV
@@ -795,6 +824,15 @@ export default function AccountManagement() {
         onClose={() => setDetailModal({ isOpen: false, item: null })}
         item={detailModal.item}
         type={activeTab}
+      />
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        variant={alertModal.variant}
+        title={alertModal.title}
+        message={alertModal.message}
       />
     </div>
   );

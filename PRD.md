@@ -458,7 +458,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.3b**: Create ConfirmModal component. ~80 lines. **Success**: Works. (Completed 2026-01-21 - Created src/components/ui/ConfirmModal.tsx with 130 lines. Features: danger/warning/info variants, loading state, keyboard handling (Escape to close), focus management (Cancel button auto-focused), backdrop click to close, accessible ARIA labels, styled with Tailwind to match codebase patterns)
 - [x] **Task 17.3c**: Create AlertModal component. ~50 lines. **Success**: Works. (Completed 2026-01-21 - Created src/components/ui/AlertModal.tsx with 122 lines. Features: success/error/warning/info variants with different icons (CheckCircle, AlertTriangle, Info), keyboard handling (Escape to close), focus management (OK button auto-focused), backdrop click to close, accessible ARIA labels with role="alertdialog")
 - [x] **Task 17.3d**: Replace first alert(). **Success**: Replaced. (Completed 2026-01-21 - Replaced alert('Failed to perform action...') in AdminNotices.tsx handleNoticeAction catch block with AlertModal component using error variant)
-- [ ] **Task 17.3e**: Replace all remaining alert(). **Success**: None remain.
+- [x] **Task 17.3e**: Replace all remaining alert(). **Success**: None remain. (Completed 2026-01-21 - Replaced 4 alert() calls in AccountManagement.tsx with AlertModal: password reset coming soon (info variant), action failed (error variant), bulk suspend success (success variant), bulk activate success (success variant))
 - [ ] **Task 17.3f**: Replace all confirm(). **Success**: None remain.
 
 ### 17.4 Fix Settings Page
