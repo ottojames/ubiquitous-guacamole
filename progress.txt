@@ -4801,3 +4801,51 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Add meaningful error messages for auth failures instead of generic errors
   - Next task is 17.5e: Update Dashboard to use real stats
 ---
+
+## Iteration 141 - Task 17.5e: Update Dashboard to use real stats
+- **What was implemented**: Updated admin Dashboard to use the useAdminStats hook instead of direct Supabase queries
+- **Files changed**:
+  - `src/pages/admin/Dashboard.tsx` - Major refactor to use useAdminStats hook
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Imported `useAdminStats` hook and removed most of the `fetchDashboardData` function
+  - Added TrendingDown and Minus icons for growth indicators (positive, negative, zero)
+  - Created `renderFirmGrowth()` helper function that shows real growth percentage from API
+  - Replaced hardcoded "+12% this month" with actual `firmGrowthPercent` from API
+  - Replaced wrong revenue calculation (activeCouncils*500 + totalFirms*250) with real monthly revenue from API (based on correct pricing: £49/mo subscription + £50/notice + £19.99 council notice)
+  - Changed "notices across all organizations" to show "N this month" for actionable metric
+  - Replaced hardcoded "45ms" API response time with real `apiResponseTime` from API, with color coding (green <200ms, yellow <500ms, red >500ms)
+  - Changed hardcoded "12%" database load and "99.98%" uptime to show "N/A" since these require external monitoring tools
+  - Added optional chaining (`stats?.`) throughout since stats is undefined while loading
+  - Recent admin actions still fetched separately (not part of stats API)
+- **Learnings for future iterations**:
+  - The useAdminStats hook uses React Query with 2-min stale time, which handles caching and refetching automatically
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/, server/ directories don't affect compilation of src/ files
+  - 498 tests pass (same count as before)
+  - Next task is 17.5f: Add loading skeletons
+---
+
+## Iteration 142 - Task 17.5f: Verify admin Dashboard loading skeletons
+- **What was implemented**: Verified that admin Dashboard already has comprehensive loading skeletons
+- **Files verified** (no changes needed):
+  - `src/pages/admin/Dashboard.tsx` - Lines 154-206 contain full skeleton UI
+  - `src/components/skeletons/index.ts` - Exports CardSkeleton and ActivityFeedSkeleton
+  - `src/components/skeletons/CardSkeleton.tsx` - CardSkeleton component exists
+  - `src/components/skeletons/ListItemSkeleton.tsx` - ActivityFeedSkeleton component exists
+- **Files changed**:
+  - `PRD.md` - Marked task complete with verification details
+- **Existing skeleton implementation**:
+  - Combined loading state: `const loading = statsLoading || actionsLoading;` (line 68)
+  - Header skeleton with pulse animation
+  - 5 CardSkeleton cards for statistics in responsive grid
+  - ActivityFeedSkeleton with 6 items for recent admin actions timeline
+  - System health panel skeleton with 3 stat lines
+  - Quick actions panel skeleton with 4 button placeholders
+- **Test results**: All 498 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only; core src/ compiles
+- **Learnings for future iterations**:
+  - Always check if work is already done before implementing
+  - Dashboard skeleton was implemented in Phase 7.2 (Loading States) but task 17.5f exists for verification
+  - The skeleton components are reusable across all dashboards
+  - Next task is 17.6a: Fix current page highlighting in admin sidebar
+---
