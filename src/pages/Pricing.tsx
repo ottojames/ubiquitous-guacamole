@@ -350,10 +350,6 @@ export default function Pricing() {
                   a: "Yes. While the government is modernising regulations, CivicNotices provides cryptographic proof, timestamping, and audit trails that meet and exceed current legal requirements for statutory notices.",
                 },
                 {
-                  q: "How does pay-as-you-go work?",
-                  a: "No subscription needed. Simply visit our platform, create your notice, and pay £50 per publication. You'll receive instant publication and a legal compliance certificate immediately.",
-                },
-                {
                   q: "Can I switch plans later?",
                   a: "Absolutely. Council and Enterprise customers can upgrade, downgrade, or pause their subscription at any time. No long-term contracts required.",
                 },

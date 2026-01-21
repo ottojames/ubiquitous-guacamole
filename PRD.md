@@ -351,7 +351,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.5b**: Remove "40+ UK councils" claim. **Success**: False claim removed. (Completed 2026-01-21 - Already removed from Old Way vs New Way section in Task 15.3c; also removed from Final CTA section line 411)
 
 ### 15.6 Update FAQ Section
-- [ ] **Task 15.6a**: Remove outdated "pay-as-you-go" FAQ. **Success**: Removed.
+- [x] **Task 15.6a**: Remove outdated "pay-as-you-go" FAQ. **Success**: Removed. (Completed 2026-01-21 - Removed FAQ question about pay-as-you-go which referenced outdated pricing model)
 - [ ] **Task 15.6b**: Remove "switch plans" FAQ. **Success**: Removed.
 - [ ] **Task 15.6c**: Add FAQ "Why do councils get a discount?" **Success**: Added.
 - [ ] **Task 15.6d**: Add FAQ "What's in £49/month subscription?" **Success**: Added.
