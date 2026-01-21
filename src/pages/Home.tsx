@@ -841,7 +841,7 @@ export default function Home() {
                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </a>
                   <p className="mt-4 text-sm text-slate-600">
-                    From <span className="font-semibold">£299/month</span> · Unlimited notices · 14-day free trial
+                    <span className="font-semibold text-emerald-600">Free portal</span> · £19.99/notice when publishing
                   </p>
                 </div>
               </div>
