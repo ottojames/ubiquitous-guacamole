@@ -477,9 +477,9 @@ npm run lint         # ESLint check
 - [x] **Task 17.5f**: Add loading skeletons. **Success**: No blanks. (Completed 2026-01-21 - Dashboard.tsx lines 154-206 show comprehensive skeleton UI during loading: header skeleton, 5 CardSkeleton cards for stats, ActivityFeedSkeleton for recent actions, system health panel skeleton, quick actions skeleton. Uses combined loading state from statsLoading and actionsLoading)
 
 ### 17.6 Fix Sidebar Navigation
-- [ ] **Task 17.6a**: Fix current page highlighting. **Success**: Highlighted.
-- [ ] **Task 17.6b**: Fix broken links. **Success**: All work.
-- [ ] **Task 17.6c**: Fix mobile collapse. **Success**: Works.
+- [x] **Task 17.6a**: Fix current page highlighting. **Success**: Highlighted. (Verified 2026-01-21 - isActivePath() function at line 104-106 correctly uses location.pathname, applies bg-blue-600 text-white for active state in both desktop sidebar and mobile menu)
+- [x] **Task 17.6b**: Fix broken links. **Success**: All work. (Completed 2026-01-21 - Fixed 2 broken links in Dashboard.tsx Quick Actions: /admin/audit-log → /admin/audit, /admin/reports → /admin/notices (reports page didn't exist))
+- [x] **Task 17.6c**: Fix mobile collapse. **Success**: Works. (Verified 2026-01-21 - mobileMenuOpen state toggles correctly, hamburger/X button toggles menu, clicking nav links closes menu via onClick={() => setMobileMenuOpen(false)})
 
 ### 17.7 E2E Tests
 - [ ] **Task 17.7a**: Create `e2e/admin-panel.spec.ts` with login. **Success**: Auth works.

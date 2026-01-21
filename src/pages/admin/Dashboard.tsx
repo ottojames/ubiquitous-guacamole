@@ -388,7 +388,7 @@ export default function AdminDashboard() {
                 View All Accounts
               </button>
               <button
-                onClick={() => navigate('/admin/audit-log')}
+                onClick={() => navigate('/admin/audit')}
                 className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 Check Audit Logs
               </button>
@@ -398,9 +398,9 @@ export default function AdminDashboard() {
                 System Settings
               </button>
               <button
-                onClick={() => navigate('/admin/reports')}
+                onClick={() => navigate('/admin/notices')}
                 className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                Export Reports
+                View All Notices
               </button>
             </div>
           </div>
