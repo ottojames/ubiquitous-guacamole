@@ -4467,3 +4467,29 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The skip link must be the first focusable element on the page
   - Next task is 17.3a: Find all alert() calls in admin panel
 ---
+
+## Iteration 129 - Task 17.3a: Find all alert() calls in admin panel
+- **What was implemented**: Audited all browser alert() and confirm() calls in admin panel
+- **Files searched**:
+  - `src/pages/admin/AdminNotices.tsx`
+  - `src/pages/admin/AccountManagement.tsx`
+  - `src/pages/admin/Settings.tsx`
+- **Findings**:
+  - **5 alert() calls**:
+    1. AdminNotices.tsx:142 - "Failed to perform action. Please try again." (error handling)
+    2. AccountManagement.tsx:384 - "Password reset functionality coming soon" (placeholder)
+    3. AccountManagement.tsx:400 - "Failed to perform action. Please try again." (error handling)
+    4. AccountManagement.tsx:417 - "${selectedItems.size} accounts suspended successfully" (success)
+    5. AccountManagement.tsx:427 - "${selectedItems.size} accounts activated successfully" (success)
+  - **2 confirm() calls**:
+    1. AdminNotices.tsx:130 - "Are you sure you want to delete this notice?"
+    2. AccountManagement.tsx:370 - "Are you sure you want to delete this account? This action cannot be undone."
+  - Settings.tsx has no alert() or confirm() calls
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Admin panel has 7 total browser dialogs to replace
+  - Pattern: errors use alert(), success messages use alert(), confirmations use confirm()
+  - Settings.tsx does not use browser dialogs
+  - Next tasks will create AlertModal and ConfirmModal components to replace these
+  - Task 17.3b: Create ConfirmModal component
+---
