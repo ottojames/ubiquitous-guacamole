@@ -173,7 +173,7 @@ npm run lint         # ESLint check
 - [x] **Task 10.4**: Register department routes in `server/index.ts` - Mount at `/api/firm/departments`. (Completed 2026-01-21 - Added import for firmDepartmentsRouter and mounted at /api/firm/departments, 488 tests pass)
 
 ### 10.3 Template Routes
-- [ ] **Task 10.5a**: Create `server/routes/firm-templates.ts` with router setup and GET `/` endpoint. Lists templates for firm. ~30 lines.
+- [x] **Task 10.5a**: Create `server/routes/firm-templates.ts` with router setup and GET `/` endpoint. Lists templates for firm. ~30 lines. (Created 2026-01-21 - File: server/routes/firm-templates.ts with router setup, requireAuth middleware, GET / endpoint querying firm_notice_templates by firm_id and is_active=true, supports notice_type query filter)
 - [ ] **Task 10.5b**: Add GET `/:id` and POST `/` endpoints to firm-templates routes. Get single and create. ~40 lines.
 - [ ] **Task 10.5c**: Add PATCH `/:id` and DELETE `/:id` endpoints to firm-templates routes. Update and delete. ~40 lines.
 - [ ] **Task 10.5d**: Add POST `/:id/use` endpoint to firm-templates routes. Increments usage_count. ~20 lines.
