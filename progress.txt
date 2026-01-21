@@ -5252,3 +5252,88 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - 498 tests pass after changes
   - Next tasks: 18.4a (Create UI.input style)
 ---
+
+## Iteration 156 - Task 18.4a: Create UI.input style
+- **What was implemented**: Added comprehensive input style exports to src/styles/ui.ts
+- **Files changed**:
+  - `src/styles/ui.ts` - Added 35 lines of input style exports with documentation
+  - `PRD.md` - Marked Task 18.4a complete
+- **Key implementation details**:
+  - `inputBase` - Base input style without width (h-11, rounded-xl, slate-300 border, blue-600/30 focus ring)
+  - `inputFull` - Full-width version (`w-full ${inputBase}`)
+  - `inputError` - Error state with rose-300 border, rose-50/30 background, rose-600 focus
+  - `inputSmall` - Compact version (h-9, rounded-lg) for filters and inline forms
+  - `textareaBase` - Multiline input with resize-y
+  - `inputWithIconLeft`/`inputWithIconRight` - Base with pl-10/pr-10 for icon space
+  - `inputIconLeft`/`inputIconRight` - Positioning classes for icons (absolute, centered vertically)
+  - All inputs include disabled states (bg-slate-50, text-slate-500, cursor-not-allowed)
+  - All inputs use transition-all duration-200 for smooth state changes
+  - Focus uses blue-600/30 opacity ring (subtle, consistent with primary color)
+- **Codebase patterns discovered**:
+  - Many files use inline input styles with varying patterns (border-gray-300 vs border-slate-300)
+  - Some use rounded-lg, others rounded-xl - standardized on rounded-xl for main inputs
+  - Focus styles vary: some use focus:border-blue-500, others focus:ring-2 - standardized on both for consistency
+  - Height varies from h-9 to h-11 - kept both as inputSmall (h-9) and inputBase (h-11)
+- **Test results**: All 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx), no new errors in ui.ts
+- **Learnings for future iterations**:
+  - Template literals can compose styles: `inputFull = \`w-full \${inputBase}\``
+  - Including disabled states is important for form accessibility
+  - The existing `input` export at line 107 is simpler but kept for backwards compatibility
+  - New exports provide more comprehensive options (error state, small variant, icon positioning)
+  - Next task is Task 18.4b: Create UI.select style
+---
+
+## Iteration 157 - Task 18.4b: Create UI.select style
+- **What was implemented**: Added comprehensive select dropdown style exports to src/styles/ui.ts
+- **Files changed**:
+  - `src/styles/ui.ts` - Added 32 lines of select style exports with documentation
+  - `PRD.md` - Marked Task 18.4b complete
+- **Key implementation details**:
+  - `selectBase` - Base select style without width (h-11, rounded-xl, slate-300 border, blue-600/30 focus ring, appearance-none, cursor-pointer)
+  - `selectFull` - Full-width version (`w-full ${selectBase}`)
+  - `selectError` - Error state with rose-300 border, rose-50/30 background, rose-600 focus
+  - `selectSmall` - Compact version (h-9, rounded-lg, pr-8) for filters and inline forms
+  - `selectChevron` - Icon positioning (absolute, right-3, centered vertically, h-4 w-4, pointer-events-none)
+  - `selectChevronSmall` - Icon positioning for small selects (right-2)
+  - All selects include disabled states (bg-slate-50, text-slate-500, cursor-not-allowed)
+  - All selects use transition-all duration-200 for smooth state changes
+  - Documented usage pattern: wrap select in relative container, add ChevronDown icon with selectChevron class
+- **Codebase patterns discovered**:
+  - Many files use inline select styles with varying patterns
+  - Most selects use appearance-none with absolute-positioned chevron icon
+  - pr-8/pr-10 padding needed to make room for chevron
+  - Existing selects use rounded-lg; new standard uses rounded-xl for consistency with inputBase
+- **Test results**: All 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only; no new errors
+- **Learnings for future iterations**:
+  - Select styles follow same pattern as input styles (Base, Full, Error, Small variants)
+  - Selects need appearance-none to hide native dropdown arrow, then custom chevron icon
+  - pr-10 (selectBase) vs pr-8 (selectSmall) for different sized chevron spacing
+  - Icon positioning uses pointer-events-none to allow clicks to pass through to select
+  - Next task is Task 18.4c: Apply to admin forms
+---
+
+## Iteration 158 - Task 18.4c: Apply UI.input and UI.select styles to admin forms
+- **What was implemented**: Applied shared UI input and select styles to all admin form components
+- **Files changed**:
+  - `src/pages/admin/AdminNotices.tsx` - Updated search input (UI.inputWithIconLeft/inputIconLeft), status and type filter selects (UI.selectBase/selectChevron)
+  - `src/pages/admin/Settings.tsx` - Added UI import, updated session timeout input (UI.inputBase)
+  - `src/pages/admin/AuditLog.tsx` - Added UI import, updated date inputs (UI.inputFull), all 4 filter selects (UI.selectFull/selectChevron), search input (UI.inputWithIconLeft/inputIconLeft)
+  - `src/pages/admin/AccountManagement.tsx` - Updated search input (UI.inputWithIconLeft/inputIconLeft), status filter select (UI.selectBase/selectChevron)
+  - `PRD.md` - Marked Task 18.4c complete
+- **Key implementation details**:
+  - Used template literals for combining styles: `\`w-full \${UI.inputWithIconLeft}\``
+  - Select dropdowns wrapped in `<div className="relative">` for chevron positioning
+  - Filter selects with labels use `style={{ top: 'calc(50% + 10px)' }}` to offset chevron below label
+  - Icon positions use UI.inputIconLeft for search icons, UI.selectChevron for dropdown chevrons
+- **Test results**: All 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ only; no new errors from changes
+- **Learnings for future iterations**:
+  - AdminNotices.tsx already imported `* as UI` - only needed to update element classes
+  - AuditLog.tsx and Settings.tsx needed UI import added
+  - AccountManagement.tsx already had UI import from previous work (btnDanger usage)
+  - Select dropdowns with labels above them need chevron positioned lower (top: calc(50% + 10px))
+  - Consistent patterns make admin forms visually uniform across pages
+  - Next task is Task 18.4d: Apply to public forms
+---

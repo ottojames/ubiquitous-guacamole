@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import * as UI from '@/styles/ui';
 
 interface AuditLogEntry {
   id: string;
@@ -215,53 +216,54 @@ export default function AuditLog() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {/* Date Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700  mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               From Date
             </label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={UI.inputFull}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700  mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               To Date
             </label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={UI.inputFull}
             />
           </div>
 
           {/* Admin User */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700  mb-1">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Admin User
             </label>
             <select
               value={selectedAdmin}
               onChange={(e) => setSelectedAdmin(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={UI.selectFull}
             >
               <option value="">All Users</option>
               {/* Admin users would be populated from API */}
             </select>
+            <ChevronDown className={UI.selectChevron} style={{ top: 'calc(50% + 10px)' }} />
           </div>
 
           {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700  mb-1">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={UI.selectFull}
             >
               <option value="">All Categories</option>
               <option value="account_management">Account Management</option>
@@ -271,34 +273,36 @@ export default function AuditLog() {
               <option value="security">Security</option>
               <option value="billing">Billing</option>
             </select>
+            <ChevronDown className={UI.selectChevron} style={{ top: 'calc(50% + 10px)' }} />
           </div>
 
           {/* Severity */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700  mb-1">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Severity
             </label>
             <select
               value={selectedSeverity}
               onChange={(e) => setSelectedSeverity(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={UI.selectFull}
             >
               <option value="">All Levels</option>
               <option value="info">Info</option>
               <option value="warning">Warning</option>
               <option value="critical">Critical</option>
             </select>
+            <ChevronDown className={UI.selectChevron} style={{ top: 'calc(50% + 10px)' }} />
           </div>
 
           {/* Target Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700  mb-1">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Target Type
             </label>
             <select
               value={selectedTargetType}
               onChange={(e) => setSelectedTargetType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={UI.selectFull}
             >
               <option value="">All Types</option>
               <option value="organization">Organization</option>
@@ -306,6 +310,7 @@ export default function AuditLog() {
               <option value="user">User</option>
               <option value="notice">Notice</option>
             </select>
+            <ChevronDown className={UI.selectChevron} style={{ top: 'calc(50% + 10px)' }} />
           </div>
         </div>
 
@@ -313,14 +318,14 @@ export default function AuditLog() {
         <div className="mt-4">
           <label htmlFor="audit-search" className="sr-only">Search audit logs</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+            <Search className={UI.inputIconLeft} />
             <input
               id="audit-search"
               type="text"
               placeholder="Search by action, target, or reason..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
+              className={`w-full ${UI.inputWithIconLeft}`}
             />
           </div>
         </div>

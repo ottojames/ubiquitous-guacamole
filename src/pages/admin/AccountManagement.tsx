@@ -627,34 +627,35 @@ export default function AccountManagement() {
           <div className="flex-1">
             <label htmlFor="account-search" className="sr-only">Search {activeTab}</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <Search className={UI.inputIconLeft} />
               <input
                 id="account-search"
                 type="text"
                 placeholder={`Search ${activeTab}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white text-slate-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full ${UI.inputWithIconLeft}`}
               />
             </div>
           </div>
 
           {/* Filters */}
           {activeTab !== 'users' && (
-            <>
+            <div className="relative">
               <label htmlFor="account-status-filter" className="sr-only">Filter by status</label>
               <select
                 id="account-status-filter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 bg-white text-slate-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={UI.selectBase}
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="suspended">Suspended</option>
                 <option value="deleted">Deleted</option>
               </select>
-            </>
+              <ChevronDown className={UI.selectChevron} />
+            </div>
           )}
 
           {/* Bulk Actions */}

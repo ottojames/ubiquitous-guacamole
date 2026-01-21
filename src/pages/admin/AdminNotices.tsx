@@ -270,14 +270,14 @@ export default function AdminNotices() {
           <div className="flex-1">
             <label htmlFor="notice-search" className="sr-only">Search notices</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 w-5 h-5" />
+              <Search className={UI.inputIconLeft} />
               <input
                 id="notice-search"
                 type="text"
                 placeholder="Search notices..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full ${UI.inputWithIconLeft}`}
               />
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function AdminNotices() {
               id="notice-status-filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={UI.selectBase}
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -298,7 +298,7 @@ export default function AdminNotices() {
               <option value="rejected">Rejected</option>
               <option value="expired">Expired</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
+            <ChevronDown className={UI.selectChevron} />
           </div>
 
           {/* Type Filter */}
@@ -308,7 +308,7 @@ export default function AdminNotices() {
               id="notice-type-filter"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={UI.selectBase}
             >
               <option value="all">All Types</option>
               <option value="premises-licence">Premises Licence</option>
@@ -317,7 +317,7 @@ export default function AdminNotices() {
               <option value="minor-variation">Minor Variation</option>
               <option value="club-premises-certificate">Club Premises</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
+            <ChevronDown className={UI.selectChevron} />
           </div>
         </div>
       </div>

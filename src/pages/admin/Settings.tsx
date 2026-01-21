@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/UnifiedAuthContext";
 import { Settings as SettingsIcon, Key, Globe, Bell, Shield, Save, Loader2 } from "lucide-react";
 import { AlertModal } from "@/components/ui/AlertModal";
+import * as UI from "@/styles/ui";
 
 interface AdminSettings {
   session_timeout_minutes: number;
@@ -239,7 +240,7 @@ export default function AdminSettings() {
                       max={1440}
                       value={settings.session_timeout_minutes}
                       onChange={(e) => handleSessionTimeoutChange(e.target.value)}
-                      className="bg-white text-slate-900 px-3 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-32"
+                      className={`${UI.inputBase} w-32`}
                     />
                     <p className="text-sm text-slate-500 mt-1">
                       How long until admin sessions expire (5-1440 minutes)

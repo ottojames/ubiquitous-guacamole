@@ -521,7 +521,7 @@ npm run lint         # ESLint check
 ### 18.4 Forms
 - [x] **Task 18.4a**: Create UI.input style. **Success**: Defined. (Completed 2026-01-21 - Added inputBase, inputFull, inputError, inputSmall, textareaBase, inputWithIconLeft/Right, inputIconLeft/Right to src/styles/ui.ts with comprehensive documentation)
 - [x] **Task 18.4b**: Create UI.select style. **Success**: Defined. (Completed 2026-01-21 - Added selectBase, selectFull, selectError, selectSmall, selectChevron, selectChevronSmall to src/styles/ui.ts with documentation)
-- [ ] **Task 18.4c**: Apply to admin forms. **Success**: Consistent.
+- [x] **Task 18.4c**: Apply to admin forms. **Success**: Consistent. (Completed 2026-01-21 - Updated 4 admin files: AdminNotices.tsx (search input with UI.inputWithIconLeft/inputIconLeft, status and type filter selects with UI.selectBase/selectChevron), Settings.tsx (session timeout input with UI.inputBase), AuditLog.tsx (date inputs with UI.inputFull, all filter selects with UI.selectFull/selectChevron, search input with UI.inputWithIconLeft), AccountManagement.tsx (search input with UI.inputWithIconLeft, status filter select with UI.selectBase/selectChevron). All 498 tests pass)
 - [ ] **Task 18.4d**: Apply to public forms. **Success**: Consistent.
 
 ### 18.5 Loading States
