@@ -28,6 +28,23 @@ const pricingPlans = {
     ctaHref: "/publish",
     popular: false,
   },
+  public: {
+    name: "One-Off Publishing",
+    description: "Publish a single notice without creating an account. Perfect for solicitors, businesses, and members of the public.",
+    price: 50,
+    features: [
+      "No account or subscription required",
+      "Instant publication & timestamped proof",
+      "Full audit trail with cryptographic hash",
+      "PDF certificate for legal compliance",
+      "Public comments & engagement tracking",
+      "Geospatial search & discovery",
+      "Email support within 24 hours",
+    ],
+    cta: "Publish Now - £50",
+    ctaHref: "/publish",
+    popular: false,
+  },
 };
 
 const oldWayData = [

@@ -326,7 +326,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.1h**: Update `pricingPlans.individual` to show £50 (not £49.99). **Success**: Price shows "£50". (Completed 2026-01-21 - Updated priceMonthly from 49.99 to 50, updated all £49.99 references to £50 in hero, features, old-vs-new section, and FAQ)
 
 ### 15.2 Create New Pricing Structure
-- [ ] **Task 15.2a**: Create `pricingPlans.public` object: name "One-Off Publishing", price 50, features, cta "Publish Now - £50". **Success**: Object compiles.
+- [x] **Task 15.2a**: Create `pricingPlans.public` object: name "One-Off Publishing", price 50, features, cta "Publish Now - £50". **Success**: Object compiles. (Completed 2026-01-21 - Added pricingPlans.public with name, description, price, features, cta, ctaHref, popular fields)
 - [ ] **Task 15.2b**: Create `pricingPlans.firms` object: name "Professional Portal", priceMonthly 49, cta "Start Free Trial", popular true. **Success**: Object compiles.
 - [ ] **Task 15.2c**: Create `pricingPlans.councils` object: name "Council Portal", FREE portal, £19.99/notice. **Success**: Object compiles.
 
