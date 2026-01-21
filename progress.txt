@@ -5694,3 +5694,23 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pattern can be extended to filter routes by membership in Task 20.1d
   - Next task is Task 20.1d: Filter routes by membership
 ---
+
+## Iteration 242 - Task 20.1d: Filter routes by membership
+- **What was implemented**: Added permission-based filtering to council portal navigation routes
+- **Files changed**:
+  - `src/pages/council/CouncilLayout.tsx` - Added imports for roleHasPermission, PERMISSIONS, RoleName, PermissionName; added requiredPermission to navItems; added useMemo for filtering
+  - `PRD.md` - Marked Task 20.1d complete
+- **Implementation details**:
+  - Each nav item now has optional `requiredPermission` field (PermissionName type)
+  - Dashboard has no required permission (always visible)
+  - Other routes: Pending (NOTICES_UPDATE), Notices (NOTICES_READ), Representations (REPRESENTATIONS_READ), Drafts (NOTICES_UPDATE), Analytics (NOTICES_READ), Templates (TEMPLATES_READ), Team (TEAM_READ), Billing (BILLING_MANAGE), Settings (SETTINGS_READ)
+  - useMemo filters navItems based on user's role using roleHasPermission function
+  - Normalizes role names from database (owner→org_admin, department_admin→dept_admin, editor→officer)
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (cypress/, e2e/, scripts/, server/jobs/) - core src/ compiles fine
+- **Learnings for future iterations**:
+  - roleHasPermission function in src/types/permissions.ts maps roles to their allowed permissions
+  - Role names in database may differ from RoleName type (owner vs org_admin, department_admin vs dept_admin, editor vs officer)
+  - useMemo is appropriate for filtering that depends on state (userRole)
+  - Next task is Task 20.2a: Create RepresentationInbox page
+---
