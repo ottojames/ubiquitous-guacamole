@@ -177,7 +177,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[HIGH]` `[L]` **Create invitations database table and API** - Build the full invitation flow: table, RLS policies, API endpoints for create/accept.
+- [x] `[HIGH]` `[L]` **Create invitations database table and API** - Build the full invitation flow: table, RLS policies, API endpoints for create/accept.
 
   ```sql
   CREATE TABLE invitations (
@@ -208,15 +208,15 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Rollback**: `DROP TABLE IF EXISTS invitations;`
 
-- [ ] `[HIGH]` `[M]` **Wire up invitation email via Resend** - Create email template with accept link, department info, expiry warning.
+- [x] `[HIGH]` `[M]` **Wire up invitation email via Resend** - Create email template with accept link, department info, expiry warning.
 
   **File**: `server/services/email.ts`
 
-- [ ] `[HIGH]` `[M]` **Create invitation acceptance page** - Handle token validation, account creation/linking, department_membership creation.
+- [x] `[HIGH]` `[M]` **Create invitation acceptance page** - Handle token validation, account creation/linking, department_membership creation.
 
   **File**: `src/pages/AcceptInvitation.tsx` (new)
 
-- [ ] `[MEDIUM]` `[S]` **Update Team page to call API and show pending invitations** - Replace direct Supabase insert with API call, display pending invites with cancel option.
+- [x] `[MEDIUM]` `[S]` **Update Team page to call API and show pending invitations** - Replace direct Supabase insert with API call, display pending invites with cancel option.
 
   **File**: `src/pages/council/Team.tsx:83-123`
 

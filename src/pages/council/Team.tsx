@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
@@ -28,15 +28,26 @@ interface TeamMember {
   user_email?: string;
 }
 
+interface PendingInvitation {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
+}
+
 export default function Team() {
   const { department, userRole } = useOutletContext<ContextType>();
   const { orgSlug, deptSlug } = useParams();
   const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('viewer');
   const [inviting, setInviting] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -51,11 +62,7 @@ export default function Team() {
     errors: string[];
   } | null>(null);
 
-  useEffect(() => {
-    loadTeamMembers();
-  }, [department.id]);
-
-  const loadTeamMembers = async () => {
+  const loadTeamMembers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('department_memberships')
@@ -73,12 +80,39 @@ export default function Team() {
       // Get user emails from auth.users (requires service role in production)
       // For now, we'll show user IDs
       setMembers(data || []);
-      setLoading(false);
     } catch (err) {
       console.error('Failed to load team members:', err);
-      setLoading(false);
     }
-  };
+  }, [department.id]);
+
+  const loadPendingInvitations = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`/api/departments/${department.id}/team/invitations`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPendingInvitations(data.invitations || []);
+      }
+    } catch (err) {
+      console.error('Failed to load pending invitations:', err);
+    }
+  }, [department.id]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([loadTeamMembers(), loadPendingInvitations()]);
+      setLoading(false);
+    };
+    loadData();
+  }, [loadTeamMembers, loadPendingInvitations]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,29 +130,77 @@ export default function Team() {
         throw new Error('Not authenticated');
       }
 
-      // Create invitation
-      const { error: inviteError } = await supabase
-        .from('invitations')
-        .insert({
-          department_id: department.id,
+      // Send invitation via API (which sends the email)
+      const response = await fetch(`/api/departments/${department.id}/team/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
           email: inviteEmail,
-          role: inviteRole,
-          invited_by: session.user.id
-        });
+          role: inviteRole
+        })
+      });
 
-      if (inviteError) throw inviteError;
+      const data = await response.json();
 
-      setSuccess(`Invitation sent to ${inviteEmail}`);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send invitation');
+      }
+
+      setSuccess(data.emailSent
+        ? `Invitation sent to ${inviteEmail}`
+        : `${inviteEmail} was added to the team`);
       setInviteEmail('');
       setInviteRole('viewer');
-      setInviting(false);
 
-      // Refresh team list after a delay
-      setTimeout(loadTeamMembers, 1000);
+      // Refresh data
+      await Promise.all([loadTeamMembers(), loadPendingInvitations()]);
     } catch (err) {
       console.error('Failed to send invitation:', err);
       setError(err instanceof Error ? err.message : 'Failed to send invitation');
+    } finally {
       setInviting(false);
+    }
+  };
+
+  const handleCancelInvitation = async (invitationId: string) => {
+    if (!confirm('Are you sure you want to cancel this invitation?')) {
+      return;
+    }
+
+    setCancellingId(invitationId);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(
+        `/api/departments/${department.id}/team/invitations/${invitationId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to cancel invitation');
+      }
+
+      setSuccess('Invitation cancelled');
+      await loadPendingInvitations();
+    } catch (err) {
+      console.error('Failed to cancel invitation:', err);
+      setError(err instanceof Error ? err.message : 'Failed to cancel invitation');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -229,22 +311,22 @@ export default function Team() {
             continue;
           }
 
-          // TODO: In production, this would:
-          // 1. Check if user exists in auth.users
-          // 2. If not, send an invitation email
-          // 3. Create department_membership record
-
-          const { error: inviteError } = await supabase
-            .from('invitations')
-            .insert({
-              department_id: department.id,
+          // Send invitation via API (which sends the email)
+          const response = await fetch(`/api/departments/${department.id}/team/invite`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
               email: email,
-              role: normalizedRole,
-              invited_by: session.user.id
-            });
+              role: normalizedRole
+            })
+          });
 
-          if (inviteError) {
-            results.errors.push(`Row ${i}: ${inviteError.message}`);
+          if (!response.ok) {
+            const data = await response.json();
+            results.errors.push(`Row ${i}: ${data.error || 'Failed to send invitation'}`);
             results.failed++;
           } else {
             results.successful++;
@@ -258,8 +340,9 @@ export default function Team() {
       setImportResults(results);
 
       if (results.successful > 0) {
-        setSuccess(`Successfully imported ${results.successful} team members`);
-        setTimeout(loadTeamMembers, 1000);
+        setSuccess(`Successfully sent ${results.successful} invitation${results.successful !== 1 ? 's' : ''}`);
+        // Refresh both members (in case existing users were added) and invitations
+        await Promise.all([loadTeamMembers(), loadPendingInvitations()]);
       }
 
       if (results.failed > 0 && results.successful === 0) {
@@ -518,6 +601,61 @@ export default function Team() {
           </div>
         )}
       </div>
+
+      {/* Pending Invitations */}
+      {canManageTeam && pendingInvitations.length > 0 && (
+        <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            Pending Invitations ({pendingInvitations.length})
+          </h2>
+
+          <div className="space-y-3">
+            {pendingInvitations.map((invitation) => (
+              <div
+                key={invitation.id}
+                className="flex items-center justify-between p-4 border border-amber-200 bg-amber-50 rounded-xl"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-amber-600"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{invitation.email}</p>
+                      <p className="text-sm text-gray-600">
+                        Invited {formatDate(invitation.created_at)} • Expires {formatDate(invitation.expires_at)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(invitation.role)}`}>
+                    {formatRoleName(invitation.role)}
+                  </span>
+                  <button
+                    onClick={() => handleCancelInvitation(invitation.id)}
+                    disabled={cancellingId === invitation.id}
+                    className="text-red-600 hover:text-red-700 font-semibold text-sm disabled:opacity-50"
+                  >
+                    {cancellingId === invitation.id ? 'Cancelling...' : 'Cancel'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Bulk Import Modal */}
       {showBulkImportModal && (

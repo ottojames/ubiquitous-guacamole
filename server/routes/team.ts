@@ -433,4 +433,113 @@ router.delete(
   }
 );
 
+/**
+ * GET /api/departments/:deptId/team/invitations
+ * List all pending invitations for a department
+ * Requires: team.read permission
+ */
+router.get(
+  '/departments/:deptId/team/invitations',
+  requireAuth,
+  loadUserPermissions,
+  requirePermission('team.read'),
+  async (req, res) => {
+    try {
+      const supabase = getServiceSupabaseClient();
+      const { deptId } = req.params;
+
+      if (!deptId) {
+        return res.status(400).json({ error: 'Department ID is required' });
+      }
+
+      // Get all pending invitations for this department
+      const { data: invitations, error: invitationsError } = await supabase
+        .from('invitations')
+        .select(`
+          id,
+          email,
+          role,
+          status,
+          created_at,
+          expires_at
+        `)
+        .eq('department_id', deptId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (invitationsError) {
+        console.error('Error fetching invitations:', invitationsError);
+        return res.status(500).json({ error: 'Failed to fetch invitations' });
+      }
+
+      res.json({
+        invitations: invitations || [],
+        total: invitations?.length || 0
+      });
+    } catch (error) {
+      console.error('Error in GET /departments/:deptId/team/invitations:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * DELETE /api/departments/:deptId/team/invitations/:invitationId
+ * Cancel a pending invitation
+ * Requires: team.invite permission
+ */
+router.delete(
+  '/departments/:deptId/team/invitations/:invitationId',
+  requireAuth,
+  loadUserPermissions,
+  requirePermission('team.invite'),
+  async (req, res) => {
+    try {
+      const supabase = getServiceSupabaseClient();
+      const { deptId, invitationId } = req.params;
+
+      if (!deptId || !invitationId) {
+        return res.status(400).json({ error: 'Department ID and Invitation ID are required' });
+      }
+
+      // Verify invitation belongs to this department and is pending
+      const { data: invitation, error: fetchError } = await supabase
+        .from('invitations')
+        .select('id, status')
+        .eq('id', invitationId)
+        .eq('department_id', deptId)
+        .single();
+
+      if (fetchError || !invitation) {
+        return res.status(404).json({ error: 'Invitation not found' });
+      }
+
+      if (invitation.status !== 'pending') {
+        return res.status(400).json({
+          error: 'Cannot cancel an invitation that has already been accepted or expired'
+        });
+      }
+
+      // Update status to cancelled
+      const { error: updateError } = await supabase
+        .from('invitations')
+        .update({ status: 'cancelled' })
+        .eq('id', invitationId);
+
+      if (updateError) {
+        console.error('Error cancelling invitation:', updateError);
+        return res.status(500).json({ error: 'Failed to cancel invitation' });
+      }
+
+      res.json({
+        message: 'Invitation cancelled successfully',
+        invitation_id: invitationId
+      });
+    } catch (error) {
+      console.error('Error in DELETE /departments/:deptId/team/invitations/:invitationId:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
 export default router;
