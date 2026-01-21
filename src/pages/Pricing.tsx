@@ -244,10 +244,10 @@ export default function Pricing() {
                 With CivicNotices
               </div>
               <h3 className="mb-3 text-2xl font-bold text-slate-900">
-                From £50 per notice • Instant publication • Full audit trail
+                From £50 per notice. Councils £19.99. • Instant publication • Full audit trail
               </h3>
               <p className="text-slate-700">
-                Digital-first, compliant with upcoming regulations, and trusted by 40+ UK councils
+                Digital-first, compliant with upcoming regulations, and built for the modern public sector
               </p>
             </div>
           </div>

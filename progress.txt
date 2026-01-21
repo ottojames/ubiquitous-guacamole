@@ -3308,3 +3308,31 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The FAQ section still has old FAQs that need updating (tasks 15.6a-15.6f)
   - Next task is 15.3b: Change subtitle to explain three tiers
 ---
+
+## Iteration 82 - Task 15.3b: Change subtitle to explain three tiers
+- **What was implemented**: Updated the hero section subtitle to explain the three pricing tiers
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Lines 161-165: Changed subtitle from "From £50 per notice. Save up to 85% compared to traditional newspaper publication." to "Three ways to publish: £50/notice for one-off publishing, £49/month for professional firms, or free portal for councils."
+  - `PRD.md` - Marked Task 15.3b complete
+- **Test results**: 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - src/pages/Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The new subtitle clearly explains all three pricing options in one sentence
+  - Each tier is highlighted with bold text for emphasis
+  - The "85% savings" claim has been removed as it's not directly relevant to explaining the tiers
+  - Next task is 15.3c: Update pricing text to "From £50 per notice. Councils £19.99."
+---
+
+## Iteration 83 - Task 15.3c: Update pricing text to "From £50 per notice. Councils £19.99."
+- **What was implemented**: Updated the "Old Way vs New Way" section pricing text to include council pricing
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Lines 246-251: Changed h3 from "From £50 per notice • Instant publication • Full audit trail" to "From £50 per notice. Councils £19.99. • Instant publication • Full audit trail". Also removed false "40+ UK councils" claim from the paragraph below.
+  - `PRD.md` - Marked Task 15.3c complete
+- **Test results**: 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - src/pages/Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The pricing text now shows both public (£50) and council (£19.99) rates
+  - Removed the "trusted by 40+ UK councils" claim since it's false - replaced with "built for the modern public sector"
+  - The Final CTA section (line 377) still has "40+ UK councils" claim - this will be fixed in task 15.7a
+  - Next task is 15.4a: Delete "For Individuals" section
+---

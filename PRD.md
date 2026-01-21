@@ -333,7 +333,7 @@ npm run lint         # ESLint check
 ### 15.3 Update Hero Section
 - [x] **Task 15.3a**: Change hero h1 to "Simple, transparent pricing". **Success**: Updated. (Completed 2026-01-21 - Changed from "Transparent pricing. No hidden fees." to single line "Simple, transparent pricing")
 - [x] **Task 15.3b**: Change subtitle to explain three tiers. **Success**: Subtitle updated. (Completed 2026-01-21 - Changed from "From £50 per notice. Save up to 85%..." to "Three ways to publish: £50/notice for one-off publishing, £49/month for professional firms, or free portal for councils.")
-- [ ] **Task 15.3c**: Update pricing text to "From £50 per notice. Councils £19.99." **Success**: Correct pricing.
+- [x] **Task 15.3c**: Update pricing text to "From £50 per notice. Councils £19.99." **Success**: Correct pricing. (Completed 2026-01-21 - Updated "Old Way vs New Way" section h3 to include "Councils £19.99", also removed false "40+ UK councils" claim from that section)
 
 ### 15.4 Rebuild Pricing Cards Section
 - [ ] **Task 15.4a**: Delete "For Individuals" section. **Success**: Removed.
