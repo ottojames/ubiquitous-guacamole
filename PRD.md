@@ -217,10 +217,10 @@ npm run lint         # ESLint check
 **Goal**: Send email notifications for deadline reminders and representation alerts.
 
 ### 12.1 Email Service
-- [ ] **Task 12.1a**: Create `server/services/email.ts` with base email sending function using Resend. Configure from environment. ~40 lines.
-- [ ] **Task 12.1b**: Create `server/services/deadlineReminders.ts` with `processDeadlineReminders()` function. Queries pending reminders, sends emails, updates status. ~60 lines.
-- [ ] **Task 12.1c**: Add `scheduleDeadlineReminders()` function to deadlineReminders.ts. Creates reminder records for 7, 3, 1, 0 days before deadline. ~50 lines.
-- [ ] **Task 12.1d**: Create `server/templates/deadlineEmail.ts` with HTML email template function. Professional styling. ~60 lines.
+- [x] **Task 12.1a**: Create `server/services/email.ts` with base email sending function using Resend. Configure from environment. ~40 lines. (Already implemented - comprehensive email service with 9 email functions)
+- [x] **Task 12.1b**: Create `server/services/deadlineReminders.ts` with `processDeadlineReminders()` function. Queries pending reminders, sends emails, updates status. ~60 lines. (Implemented 2026-01-21)
+- [x] **Task 12.1c**: Add `scheduleDeadlineReminders()` function to deadlineReminders.ts. Creates reminder records for 7, 3, 1, 0 days before deadline. ~50 lines. (Implemented 2026-01-21 - included in deadlineReminders.ts)
+- [x] **Task 12.1d**: Create `server/templates/deadlineEmail.ts` with HTML email template function. Professional styling. ~60 lines. (Already implemented - sendDeadlineReminder() in email.ts has professional HTML template)
 
 ---
 

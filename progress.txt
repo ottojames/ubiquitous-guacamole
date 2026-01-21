@@ -2565,3 +2565,23 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - TypeScript errors in cypress/, e2e/, scripts/, server/jobs/ are pre-existing and don't block core src/ code
   - Phase 11 (Firm Portal UI Components) is now COMPLETE
 ---
+
+## Iteration 102 - Task 12.1a-d: Email Notification System Complete
+- **What was implemented**: Phase 12.1 Email Service - all tasks verified/implemented
+- **Files changed**:
+  - `server/services/deadlineReminders.ts` - NEW FILE: processDeadlineReminders() and scheduleDeadlineReminders() functions
+  - `PRD.md` - Marked Tasks 12.1a through 12.1d complete
+- **Key implementation details**:
+  - **Task 12.1a**: Already existed - `server/services/email.ts` has comprehensive Resend integration with 9 email functions
+  - **Task 12.1b**: Created `processDeadlineReminders()` - fetches pending reminders from deadline_reminders table, sends via sendDeadlineReminder(), updates status to sent/failed
+  - **Task 12.1c**: Created `scheduleDeadlineReminders()` - creates reminder records for 7, 3, 1, 0 days before deadline for all firm admins/owners
+  - **Task 12.1d**: Already existed - `sendDeadlineReminder()` in email.ts has professional HTML template with urgency colors
+  - Also added `cancelNoticeReminders()` helper for when notices are completed or deadline changes
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only
+- **Learnings for future iterations**:
+  - Check existing files before implementing - email.ts was already comprehensive
+  - The deadline_reminders table tracks: notice_id, firm_id, reminder_type, scheduled_for, status, channel, recipient_email, subject, related_deadline_date
+  - sendDeadlineReminder expects: noticeId, noticeType, premisesName, premisesAddress, deadline, hoursRemaining, noticeUrl, recipientEmail
+  - Phase 12.1 (Email Service) is now COMPLETE
+---
