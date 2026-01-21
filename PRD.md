@@ -421,7 +421,7 @@ npm run lint         # ESLint check
 ### 16.8 Mobile Spacing Review
 - [x] **Task 16.8a**: Review hero on 375px viewport. **Success**: Looks good.
 - [x] **Task 16.8b**: Review testimonials on mobile. **Success**: Readable. (Completed 2026-01-21 - Text scales text-2xl→md:text-3xl, 44px touch targets on dots via p-5, chevron nav hidden on mobile, adequate padding p-8)
-- [ ] **Task 16.8c**: Review pricing cards on mobile. **Success**: Usable.
+- [x] **Task 16.8c**: Review pricing cards on mobile. **Success**: Usable. (Completed 2026-01-21 - Grid uses md:grid-cols-3, stacks to single column on mobile, p-8 card padding provides 263px content width at 375px, text-4xl prices readable, flex-shrink-0 icons, w-full CTAs)
 - [ ] **Task 16.8d**: Review footer on mobile. **Success**: Good.
 
 ### 16.9 E2E Tests for Homepage
