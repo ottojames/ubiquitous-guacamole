@@ -224,7 +224,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex justify-between items-start">
             <div>
@@ -278,12 +278,42 @@ export default function AdminDashboard() {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm text-gray-600">Monthly Revenue</p>
+              <p className="text-sm text-gray-600">Subscription Revenue</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {formatCurrency(stats?.firmSubscriptionRevenue ?? 0)}
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                {stats?.totalFirms ?? 0} firms × £49/mo
+              </p>
+            </div>
+            <DollarSign className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">Notice Revenue</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {formatCurrency(stats?.noticeRevenue ?? 0)}
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                {stats?.noticesThisMonth ?? 0} notices this month
+              </p>
+            </div>
+            <FileText className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-600">Total Monthly Revenue</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {formatCurrency(stats?.monthlyRevenue ?? 0)}
               </p>
-              <p className="text-sm text-gray-600 mt-2" title={`Subscriptions: ${formatCurrency(stats?.firmSubscriptionRevenue ?? 0)} + Notices: ${formatCurrency(stats?.noticeRevenue ?? 0)}`}>
-                Calculated from actual pricing
+              <p className="text-sm text-gray-600 mt-2">
+                Subscriptions + Notices
               </p>
             </div>
             <DollarSign className="w-8 h-8 text-slate-500" />
@@ -363,13 +393,13 @@ export default function AdminDashboard() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Database Load</span>
                 <span className="text-gray-600 font-medium">
-                  {stats?.databaseLoad !== null ? `${stats.databaseLoad}%` : 'N/A'}
+                  {stats?.databaseLoad != null ? `${stats.databaseLoad}%` : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Uptime</span>
                 <span className="text-gray-600 font-medium">
-                  {stats?.uptime !== null ? `${stats.uptime}%` : 'N/A'}
+                  {stats?.uptime != null ? `${stats.uptime}%` : 'N/A'}
                 </span>
               </div>
             </div>
