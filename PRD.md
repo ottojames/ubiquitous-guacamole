@@ -255,7 +255,7 @@ npm run lint         # ESLint check
 
 - [x] **Task 14.1a**: Create migration to fix role names in existing RLS policies. Use `'org_admin'` consistently. (Created 2026-01-21 - File: supabase/migrations/20260121000001_fix_rls_role_names.sql. Fixed 8 tables: firm_departments, workflow_configs, workflow_stages, notice_workflow_status, deadline_reminders, firm_notice_templates, firm_clients, notice_drafts_v2)
 - [x] **Task 14.1b**: Apply role name fix migration to Supabase. (Applied 2026-01-21 via psql - All policies updated to use 'org_admin' instead of 'admin', consistent with organization_memberships CHECK constraint)
-- [ ] **Task 14.2a**: Create migration to add authorization checks to SECURITY DEFINER functions.
+- [x] **Task 14.2a**: Create migration to add authorization checks to SECURITY DEFINER functions. (Created 2026-01-21 - File: supabase/migrations/20260121000002_add_security_definer_auth_checks.sql. Added auth.is_firm_member() helper function and authorization checks to 8 SECURITY DEFINER functions: transition_notice_stage, initialize_notice_workflow, and 6 create_default_*_workflow functions)
 - [ ] **Task 14.2b**: Apply authorization checks migration to Supabase.
 - [ ] **Task 14.3a**: Create migration to add `security_invoker = true` to views (PostgreSQL 15+).
 - [ ] **Task 14.3b**: Apply security_invoker migration to Supabase.
