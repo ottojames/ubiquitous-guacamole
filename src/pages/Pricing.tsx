@@ -418,7 +418,7 @@ export default function Pricing() {
               <p className="mx-auto mb-8 max-w-2xl text-lg text-blue-100">
                 Publish legally compliant notices in seconds — no newspapers, no waiting
               </p>
-              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap">
                 <a
                   href="/publish"
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
@@ -431,6 +431,12 @@ export default function Pricing() {
                   className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/20"
                 >
                   Register as a Firm
+                </a>
+                <a
+                  href="/sign-up?plan=council"
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-500/20 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-emerald-500/30"
+                >
+                  Get Free Portal Access
                 </a>
               </div>
               <p className="mt-6 text-sm text-blue-200">
