@@ -566,7 +566,7 @@ npm run lint         # ESLint check
 ## Phase 20: Council Portal Features
 
 ### 20.1 Department Access
-- [ ] **Task 20.1a**: Create council_departments table. **Success**: Exists.
+- [x] **Task 20.1a**: Create council_departments table. **Success**: Exists. (Completed 2026-01-21 - Verified `departments` table exists in `20251021000000_multi_tenant_foundation.sql` with council-specific schema including type, slug, settings; used by DepartmentSwitcher.tsx and department_memberships for access control)
 - [ ] **Task 20.1b**: Create memberships table. **Success**: Exists.
 - [ ] **Task 20.1c**: Create CouncilContext. ~60 lines. **Success**: Works.
 - [ ] **Task 20.1d**: Filter routes by membership. **Success**: Filtered.
