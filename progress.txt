@@ -5337,3 +5337,45 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Consistent patterns make admin forms visually uniform across pages
   - Next task is Task 18.4d: Apply to public forms
 ---
+
+## Iteration - Task 18.4d: Apply shared UI styles to public forms
+- What was implemented:
+  - Added `UI.textareaFull` export to src/styles/ui.ts (was missing, only had textareaBase)
+  - Updated 7 public-facing pages to use shared form styles
+- Files changed:
+  - src/styles/ui.ts - Added textareaFull export
+  - src/pages/auth/SignIn.tsx - Use UI.inputFull for email/password inputs
+  - src/pages/auth/ForgotPassword.tsx - Use UI.inputFull for email input
+  - src/pages/auth/CouncilLogin.tsx - Added UI import, use UI.inputFull
+  - src/pages/auth/AcceptInvitation.tsx - Added UI import, use UI.inputFull for signup form
+  - src/pages/Notices.tsx - Added UI import, use UI.inputSmall/UI.selectSmall for filters
+  - src/pages/EmailAlerts.tsx - Added UI import, use UI.inputFull for subscription form
+  - src/pages/SubmitRepresentation.tsx - Use UI.inputFull and UI.textareaFull
+- Learnings for future iterations:
+  - ui.ts has `input` (base), `inputFull` (w-full), `inputSmall` (compact), not just `input`
+  - ui.ts has `selectBase`, `selectFull`, `selectSmall`, not just `select`
+  - ui.ts had `textareaBase` but was missing `textareaFull` - now added
+  - For compact filters, use `selectSmall` which includes h-9 sizing
+  - Pre-existing typecheck errors in other files (council/Dashboard, firm/Team, etc.) are unrelated
+---
+
+## Iteration - Tasks 18.5a-c: Verify Loading States implementation
+- What was verified:
+  - Task 18.5a: Skeleton components exist in src/components/skeletons/
+  - Task 18.5b: Skeletons are used for content loading (dashboards)
+  - Task 18.5c: Spinners (Loader2) used for actions only (20+ components)
+- Files reviewed (no changes needed):
+  - src/components/skeletons/index.ts - Exports 11 skeleton components
+  - src/components/skeletons/CardSkeleton.tsx - Card, StatCard, SubscriptionCard skeletons
+  - src/components/skeletons/TableRowSkeleton.tsx - Table, Notice table, User list skeletons
+  - src/components/skeletons/ListItemSkeleton.tsx - List item, Activity feed, Deadlines skeletons
+  - src/pages/admin/Dashboard.tsx - Uses CardSkeleton, ActivityFeedSkeleton
+  - src/pages/council/Dashboard.tsx - Uses CardSkeleton, RecentNoticesSkeleton
+  - src/pages/firm/Dashboard.tsx - Uses CardSkeleton, SubscriptionCardSkeleton, TableRowSkeleton
+- Learnings for future iterations:
+  - All skeleton components already implemented in Phase 7.2 (marked complete in PRD)
+  - Skeletons are for content loading (data fetch), spinners for actions (button clicks)
+  - Loader2 from lucide-react is the standard spinner, used with isSubmitting/isSaving states
+  - 498 tests pass, typecheck has pre-existing errors only in cypress/e2e/scripts dirs
+  - Phase 18 Design Consistency is now COMPLETE
+---
