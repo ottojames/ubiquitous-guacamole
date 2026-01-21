@@ -3728,3 +3728,54 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Next task is 16.1c: Create src/hooks/useStats.ts hook
 ---
 
+
+## Iteration 103 - Task 16.1c: Create useStats hook
+- **What was implemented**: Created React Query hook for fetching homepage stats
+- **Files changed**:
+  - `src/hooks/useStats.ts` - NEW FILE (54 lines)
+  - `PRD.md` - Marked Task 16.1c complete
+- **Key implementation details**:
+  - `StatsData` interface with notices, representations, councils number fields
+  - `fetchStats()` async function calling GET /api/stats
+  - `useStats()` hook using React Query with:
+    - queryKey: ['stats']
+    - staleTime: 5 minutes
+    - gcTime: 30 minutes (cache)
+  - Handles both HTTP errors and API-level errors (ok: false responses)
+- **Usage pattern** (documented in JSDoc):
+  ```typescript
+  const { data: stats, isLoading, error } = useStats();
+  if (isLoading) return <Skeleton />;
+  if (error) return <span>—</span>;
+  return <span>{stats.notices.toLocaleString()}</span>;
+  ```
+- **Test results**: All 495 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts only - hook compiles cleanly
+- **Learnings for future iterations**:
+  - Follow useWorkflow.ts pattern for React Query hooks: interface, fetchFn, hook
+  - Stats API returns { ok: boolean, data?: {...}, error?: {...} } format
+  - Next task 16.1d needs to replace hardcoded STATS in Home.tsx with this hook
+---
+
+## Iteration N - Tasks 16.1d & 16.1e: Replace hardcoded STATS with useStats() hook
+- **What was implemented**: Replaced static STATS constant with dynamic data from /api/stats endpoint
+- **Files changed**:
+  - `src/pages/Home.tsx` - Imported useStats hook, replaced static STATS with API data
+  - `PRD.md` - Marked tasks 16.1d and 16.1e complete
+- **Key implementation details**:
+  - Added import: `import { useStats } from '@/hooks/useStats';`
+  - Removed hardcoded `const STATS = { notices: "1,842+", comments: "12,455+", councils: "40+" }`
+  - Added inside Home component: `const { data: stats } = useStats();`
+  - Created reactive STATS object: `{ notices: stats?.notices?.toLocaleString() ?? '—', ... }`
+  - Uses toLocaleString() for proper number formatting (e.g., "1,234" not "1234")
+  - Fallback to em-dash (—) when stats is undefined (loading or error)
+- **API verification**:
+  - GET /api/stats returns: `{"ok":true,"data":{"notices":3,"representations":1,"councils":160}}`
+  - Real production counts now displayed instead of fake "40+" and "1,842+"
+- **Test results**: All 495 tests pass
+- **TypeScript check**: Pre-existing errors in cypress/ directory only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The comments/representations naming inconsistency (UI says "comments", API returns "representations")
+  - React Query staleTime of 5 minutes means stats won't refetch too frequently
+  - Phase 16 continues with Task 16.2a: Update h1 to "Publish legal notices digitally. £50 per notice."
+---
