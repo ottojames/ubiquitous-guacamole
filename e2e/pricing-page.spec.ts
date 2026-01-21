@@ -149,4 +149,17 @@ test.describe('Pricing Page', () => {
 
     console.log('Public CTA correctly links to /publish');
   });
+
+  test('Firms CTA links to sign-up?plan=firm', async ({ page }) => {
+    // Find the "Start Free Trial" CTA button in the Professional Portal card
+    // This should link to /sign-up?plan=firm
+    const firmsCta = page.locator('a').filter({ hasText: 'Start Free Trial' });
+    await expect(firmsCta).toBeVisible();
+
+    // Verify the href is correct
+    const href = await firmsCta.getAttribute('href');
+    expect(href).toBe('/sign-up?plan=firm');
+
+    console.log('Firms CTA correctly links to /sign-up?plan=firm');
+  });
 });

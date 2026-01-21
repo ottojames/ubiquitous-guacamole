@@ -370,7 +370,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.8c**: Test old tiers not visible. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying old tier names (Business, Enterprise, Parish & Town, District Council, Unitary & County) and old prices (£150/month, £400/month, £1200/month, £199/month, £499/month, £49.99) are not visible)
 - [x] **Task 15.8d**: Test no false "40+" claims. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying no "40+ UK councils" or "Trusted by 40+ councils" claims appear on pricing page)
 - [x] **Task 15.8e**: Test Public CTA links to /publish. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Publish Now - £50' button has href='/publish')
-- [ ] **Task 15.8f**: Test Firms CTA links to sign-up?plan=firm. **Success**: Test passes.
+- [x] **Task 15.8f**: Test Firms CTA links to sign-up?plan=firm. **Success**: Test passes. (Completed 2026-01-21 - Added test verifying 'Start Free Trial' button has href='/sign-up?plan=firm')
 - [ ] **Task 15.8g**: Test Councils CTA links to sign-up?plan=council. **Success**: Test passes.
 - [ ] **Task 15.8h**: Test FAQ questions present. **Success**: Test passes.
 
