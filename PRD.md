@@ -233,7 +233,7 @@ npm run lint         # ESLint check
 ### 13.1 Test Infrastructure
 - [x] **Task 13.1**: Create `e2e/fixtures/firm-auth.ts` - Multi-role auth fixtures. Define test users: owner, admin, editor, viewer. ~50 lines. (Implemented 2026-01-21 - File created with FirmTestUser interface, 4 test users with role-specific permissions, helper functions for login/logout/navigation)
 - [x] **Task 13.2**: Update `playwright.config.ts` - Add firm portal project with auth state paths. ~20 lines addition. (Implemented 2026-01-21 - Created playwright.config.ts with 6 projects: default, admin, firm-owner, firm-admin, firm-editor, firm-viewer, firm-isolation, plus setup projects. Auth states stored in .playwright/ directory)
-- [ ] **Task 13.3**: Create `e2e/global-setup.ts` - Authenticate all test users, save storage states. ~60 lines.
+- [x] **Task 13.3**: Create `e2e/global-setup.ts` - Authenticate all test users, save storage states. ~60 lines. (Implemented 2026-01-21 - Setup file creates .playwright directory, authenticates admin/firm-owner/firm-admin/firm-editor/firm-viewer users, saves storage states to JSON files. Handles non-existent test users gracefully with placeholder auth files)
 
 ### 13.2 User Journey Tests
 - [ ] **Task 13.4a**: Create `e2e/firm-portal/owner-workflow-management.spec.ts` - Test: create department. ~40 lines.
