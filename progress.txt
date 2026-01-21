@@ -3117,3 +3117,23 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - comparisonData objects have their own `professional` property separate from pricingPlans
   - Safe to delete pricingPlans.professional without affecting comparison table (for now)
 ---
+
+## Iteration 73 - Task 15.1b: Delete pricingPlans.business object
+- **What was implemented**: Removed the business tier from the pricing page
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Deleted pricingPlans.business object, updated Law Firms section layout
+  - `PRD.md` - Marked Task 15.1b complete
+- **Key changes**:
+  - Removed 24-line business object with £400/month, 15 notices, £40 overage
+  - Updated Law Firms section from `lg:grid-cols-2` grid to `mx-auto max-w-lg` centered single card
+  - Changed rendering array from `['business', 'enterprise']` to `['enterprise']`
+  - comparisonData still has `business` property in each feature - that's a separate task (15.1g)
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: No errors in Pricing.tsx, pre-existing errors in cypress/e2e/scripts only
+- **Learnings for future iterations**:
+  - Phase 15 is incrementally removing old pricing tiers (professional already removed in 15.1a)
+  - When removing a plan, must also update the rendering section that maps over plan keys
+  - Layout should adapt: 3 cols → 2 cols → centered single card
+  - comparisonData has its own properties for each tier - will be deleted entirely in Task 15.1g
+  - Next task: 15.1c - Delete pricingPlans.enterprise (will empty Law Firms section entirely)
+---

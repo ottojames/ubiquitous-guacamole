@@ -98,30 +98,6 @@ const pricingPlans = {
     ctaHref: "#contact",
     popular: false,
   },
-  enterprise: {
-    name: "Enterprise",
-    description: "For large firms with dedicated licensing departments",
-    priceMonthly: 1200,
-    priceAnnual: 11520,
-    includedNotices: 50,
-    overageRate: 35,
-    avgPerNotice: 24,
-    features: [
-      "50 notices included per month",
-      "Overage at £35 per notice",
-      "Average £24 per notice (52% savings)",
-      "Everything in Business, plus:",
-      "White-label branding options",
-      "Advanced API & webhooks",
-      "Custom integrations",
-      "Dedicated account manager",
-      "24/7 priority support",
-      "Custom SLA agreements",
-    ],
-    cta: "Contact sales",
-    ctaHref: "#contact",
-    popular: false,
-  },
 };
 
 const comparisonData = [
@@ -404,84 +380,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Law Firms */}
-      <section className="pb-16 md:pb-24">
-        <div className={UI.container}>
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-              For Law Firms & Professional Services
-            </h2>
-            <p className="mt-4 text-lg text-slate-600">Volume-based pricing with professional tools and support</p>
-          </div>
-
-          <div className="mx-auto max-w-lg">
-            {['enterprise'].map((key) => {
-              const plan = pricingPlans[key as keyof typeof pricingPlans];
-              const price =
-                plan.priceAnnual && billingCycle === "annual"
-                  ? plan.priceAnnual
-                  : plan.priceMonthly;
-
-              return (
-                <div
-                  key={key}
-                  className={`${UI.card} relative overflow-hidden p-8 ${
-                    plan.popular ? "ring-2 ring-blue-600 shadow-2xl" : ""
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute right-6 top-6">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white">
-                        <Zap className="h-3 w-3" />
-                        Most popular
-                      </span>
-                    </div>
-                  )}
-
-                  <div>
-                    <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
-                    <p className="mt-2 text-sm text-slate-600">{plan.description}</p>
-                  </div>
-
-                  <div className="mt-6">
-                    <span className="text-5xl font-extrabold tracking-tight text-slate-900">
-                      £{price}
-                    </span>
-                    <span className="ml-2 text-lg text-slate-600">
-                      /{billingCycle === "monthly" ? "month" : "year"}
-                    </span>
-                    {billingCycle === "annual" && plan.priceAnnual && (
-                      <div className="mt-2 text-sm text-emerald-600 font-medium">
-                        Save £{plan.priceMonthly! * 12 - plan.priceAnnual} per year
-                      </div>
-                    )}
-                  </div>
-
-                  <a
-                    href={plan.ctaHref}
-                    className={`mt-8 block w-full rounded-xl py-3 text-center text-base font-semibold transition ${
-                      plan.popular
-                        ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
-                        : "bg-slate-100 text-slate-900 hover:bg-slate-200"
-                    }`}
-                  >
-                    {plan.cta}
-                  </a>
-
-                  <ul className="mt-8 space-y-3">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
-                        <span className="text-sm text-slate-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      {/* Law Firms - Section temporarily hidden while pricing restructure in progress */}
 
       {/* Council - Premium Section */}
       <section className="pb-16 md:pb-24">
