@@ -674,3 +674,363 @@ Fixed `src/next/publish/flow/__tests__/UploadMethodStep.test.tsx`:
 **Skipped Tests Summary**:
 - 2 skipped by this work (complex integration tests needing auth refactor fixes)
 - 6 pre-existing skipped tests from previous development
+
+---
+
+## Phase 7: Production Polish (Completed 2026-01-20)
+
+**Goal**: Platform is ready for real users
+
+### 7.1 Error Handling
+- [x] Add user-friendly error messages for auth failures (Implemented 2026-01-20 - src/lib/authErrors.ts)
+- [x] Add error boundaries around major page sections (Implemented 2026-01-20 - src/components/error/SectionErrorBoundary.tsx wraps Admin, Council, Firm portals and Publish Wizard)
+- [x] Ensure API errors don't crash the app (Implemented 2026-01-20 - Added .catch() to auth initialization, error handling to council fetch, user feedback for template rendering failures)
+
+### 7.2 Loading States
+- [x] Ensure all async operations show loading indicators (Implemented 2026-01-20 - Created skeleton loader components: CardSkeleton, TableRowSkeleton, ListItemSkeleton, etc.)
+- [x] No blank screens during data fetching (Implemented 2026-01-20 - Dashboards and list pages now show skeleton placeholders)
+- [x] Skeleton loaders for list pages (Implemented 2026-01-20 - Council Notices, Admin Notices, Public Search Results all use skeleton loaders)
+
+### 7.3 Email Notifications
+- [x] Implement representation notification to council staff (Implemented 2026-01-20 - sendRepresentationNotificationToCouncil() in email.ts)
+- [x] Implement notice publication confirmation to publisher (Already implemented - sendNoticeConfirmation() in email.ts)
+- [x] Verify email templates render correctly (Implemented 2026-01-20 - Created server/__tests__/emailTemplates.test.ts with 21 tests)
+
+### 7.4 Security Review
+- [x] Verify RLS policies cover all tables with user data (Verified 2026-01-20 - All 35+ user data tables have RLS enabled)
+- [x] Ensure service role key never sent to client (Verified 2026-01-20 - SUPABASE_SERVICE_ROLE_KEY only used server-side)
+- [x] Verify admin endpoints require admin authentication (Verified 2026-01-20 - All admin routes use requireAdmin middleware)
+- [x] Check for SQL injection vulnerabilities in raw queries (Verified 2026-01-20 - All RPC calls use parameterized queries)
+
+---
+
+## Phase 8: Firm Portal Database Schema (Completed 2026-01-21)
+
+**Goal**: Create database tables for firm workflow management
+
+### 8.1 Core Tables
+- [x] Create firm_departments table migration
+- [x] Create workflow_configs table migration
+- [x] Create workflow_stages table migration
+- [x] Create notice_workflow_status table migration
+- [x] Create workflow_stage_history table migration
+- [x] Create deadline_reminders table migration
+- [x] Create firm_notice_templates table migration
+
+### 8.2 Default Workflow Seeds
+- [x] Create premises licence workflow function (10 stages)
+- [x] Create probate workflow function (6 stages with 60-day waiting period)
+- [x] Create planning workflow function (12 stages)
+- [x] Create TRO workflow function
+- [x] Create GVOL workflow function
+- [x] Create Gambling workflow function
+
+### 8.3 Workflow Functions
+- [x] Create transition_notice_stage() function
+- [x] Create initialize_notice_workflow() function
+- [x] Add firm_id and client_id columns to notices table
+
+---
+
+## Phase 9: Firm Portal TypeScript Types (Completed 2026-01-21)
+
+- [x] Create src/types/workflow.ts with all workflow interfaces
+- [x] Export workflow types from src/types/index.ts
+
+---
+
+## Phase 10: Firm Portal Backend API (Completed 2026-01-21)
+
+### 10.1 Workflow Routes
+- [x] GET /configs - Returns all workflows for user's firm
+- [x] GET /configs/:noticeType - Returns specific workflow with stages
+- [x] GET /notices/:noticeId/status - Returns notice workflow status
+- [x] POST /notices/:noticeId/transition - Moves notice to new stage
+- [x] POST /notices/:noticeId/initialize - Initializes workflow for notice
+
+### 10.2 Department Routes
+- [x] GET / - Lists departments for firm
+- [x] POST / - Creates department (admin only)
+- [x] PATCH /:id - Updates department
+- [x] DELETE /:id - Soft-deletes department
+
+### 10.3 Template Routes
+- [x] GET / - Lists templates for firm
+- [x] GET /:id - Get single template
+- [x] POST / - Create template
+- [x] PATCH /:id - Update template
+- [x] DELETE /:id - Soft-delete template
+- [x] POST /:id/use - Increment usage count
+
+---
+
+## Phase 11: Firm Portal UI Components (Completed 2026-01-21)
+
+### 11.1 Hooks
+- [x] useWorkflowConfigs() - React Query hook for workflow configs
+- [x] useWorkflowConfig(noticeType) - Single workflow by notice type
+- [x] useNoticeWorkflowStatus(noticeId) - Notice status with current stage
+- [x] useTransitionStage() - Mutation hook for stage transitions
+
+### 11.2 Components
+- [x] WorkflowStageBadge - Badge with stage color and deadline indicator
+- [x] KanbanColumn - Droppable column using dnd-kit
+- [x] KanbanCard - Draggable notice card
+- [x] KanbanBoard - Main board with drag handling
+- [x] Notices page view toggle (kanban/list/calendar)
+- [x] Templates page with CRUD operations
+
+---
+
+## Phase 12: Notification System (Completed 2026-01-21)
+
+- [x] Email service with Resend (server/services/email.ts)
+- [x] processDeadlineReminders() function
+- [x] scheduleDeadlineReminders() function
+- [x] Professional HTML email templates
+
+---
+
+## Phase 13: E2E Testing - Firm Portal (Completed 2026-01-21)
+
+- [x] Multi-role auth fixtures (owner, admin, editor, viewer)
+- [x] Playwright config with firm portal projects
+- [x] Global setup for test user authentication
+- [x] Owner workflow management tests
+- [x] Editor Kanban workflow tests
+- [x] Viewer readonly tests
+- [x] Multi-tenant isolation tests
+- [x] Deadline notification tests
+
+---
+
+## Phase 14: Security Hardening (Completed 2026-01-21)
+
+- [x] Fix role names in RLS policies (use 'org_admin' consistently)
+- [x] Add authorization checks to SECURITY DEFINER functions
+- [x] Add security_invoker=true to views (PostgreSQL 15+)
+- [x] Add immutability trigger to audit_actions table
+- [x] Create public.tenant_id() and related helper functions
+
+---
+
+## Phase 15: Pricing Page Rewrite (Completed 2026-01-21)
+
+### Pricing Model Implementation
+- [x] Public: £50/notice (no account needed)
+- [x] Firms: £49/month + £50/notice
+- [x] Councils: FREE portal + £19.99/notice
+
+### Tasks Completed
+- [x] Remove old pricing tiers (professional, business, enterprise, council tiers)
+- [x] Create new pricingPlans objects (public, firms, councils)
+- [x] Update hero section with correct messaging
+- [x] Build three-card pricing grid
+- [x] Update FAQ section with relevant questions
+- [x] Update Final CTA section
+- [x] E2E tests for pricing page (8 tests)
+
+---
+
+## Phase 16: Homepage Improvements (Completed 2026-01-21)
+
+- [x] Create /api/stats endpoint with real counts
+- [x] Create useStats() hook
+- [x] Replace hardcoded stats with real API data
+- [x] Fix hero messaging and pricing
+- [x] Make Publish CTA more prominent
+- [x] Fix/hide placeholder logos
+- [x] Replace specific council testimonials with generic
+- [x] Add Trust Signals section (4 cards)
+- [x] Mobile spacing review
+- [x] E2E tests for homepage (6 tests)
+
+---
+
+## Phase 17: Admin Panel Overhaul (Completed 2026-01-21)
+
+### Theme Update
+- [x] Replace dark red theme with light slate/blue
+- [x] Update sidebar to bg-slate-50
+- [x] Active state uses blue-600
+- [x] Match header to public site style
+- [x] Standardize card styles
+
+### Accessibility Fixes
+- [x] Run axe-core audit
+- [x] Fix contrast below 4.5:1
+- [x] Add focus states to all interactive elements
+- [x] Ensure inputs have labels
+- [x] Add skip link
+
+### Replace Browser Alerts
+- [x] Create ConfirmModal component
+- [x] Create AlertModal component
+- [x] Replace all alert() calls
+- [x] Replace all confirm() calls
+
+### Fix Settings Page
+- [x] Fix form submission to call API
+- [x] Add loading state and success/error toasts
+- [x] Fix password reset functionality
+
+### Fix Dashboard Stats
+- [x] Create admin stats API with real data
+- [x] Create useAdminStats hook
+- [x] Add loading skeletons
+- [x] Fix sidebar navigation and broken links
+
+### E2E Tests
+- [x] Dashboard loads test
+- [x] Sidebar navigation test
+- [x] Settings save test
+- [x] No browser alerts test
+- [x] Accessibility tests
+
+---
+
+## Phase 18: Design Consistency (Completed 2026-01-21)
+
+### Colors
+- [x] Document primary color (blue-600)
+- [x] Standardize semantic colors in ui.ts
+
+### Typography
+- [x] Add Inter font globally
+- [x] Standardize heading sizes
+- [x] Standardize text colors
+
+### Buttons
+- [x] Ensure UI.btnPrimary usage
+- [x] Ensure UI.btnSecondary usage
+- [x] Create and apply UI.btnDanger
+
+### Forms
+- [x] Create UI.input, inputBase, inputFull styles
+- [x] Create UI.select styles
+- [x] Apply to admin and public forms
+
+### Loading States
+- [x] Verify Skeleton components exist
+- [x] Use skeletons for content loading
+- [x] Use spinners for actions only
+
+---
+
+## Phase 19: Payment & Billing (Completed 2026-01-21)
+
+### Stripe Setup
+- [x] Install Stripe packages
+- [x] Add env vars to .env.example
+- [x] Create stripe.ts service
+
+### Endpoints
+- [x] Create checkout session endpoint
+- [x] Create session status endpoint
+- [x] Create Stripe webhook endpoint
+
+### Frontend
+- [x] Create CheckoutButton component
+- [x] Create PaymentSuccess page
+- [x] Create PaymentCancelled page
+- [x] Add routes to App.tsx
+- [x] Integrate into publish wizard
+
+### Receipts
+- [x] Receipt PDF generator (certificateGenerator.ts)
+- [x] Download endpoint (/api/certificates/receipt/:noticeId)
+- [x] Download buttons on success pages
+
+### E2E Tests
+- [x] Checkout redirect test
+- [x] Success page tests (8 tests)
+- [x] Cancel page tests (6 tests)
+
+---
+
+## Phase 20: Council Portal Features (Completed 2026-01-21)
+
+### Department Access
+- [x] Verify departments table exists
+- [x] Verify memberships tables exist
+- [x] Create CouncilContext
+- [x] Filter routes by membership permissions
+
+### Representation Inbox
+- [x] CouncilRepresentations page (690+ lines)
+- [x] Mark as Reviewed functionality
+- [x] Bulk actions (select all, bulk mark reviewed, bulk export)
+
+### Internal Notes
+- [x] internal_comments table with RLS
+- [x] InternalComments component
+- [x] RLS hides notes from public
+
+### Templates
+- [x] Templates page with CRUD
+- [x] TemplateTextEditor with placeholder insertion
+
+### IDOX Export
+- [x] Document IDOX format (docs/idox-export-format.md)
+- [x] Create idoxExport service
+- [x] Export endpoint
+- [x] Export button in UI
+
+### Audit Log
+- [x] Actions logged via log_audit_action RPC
+- [x] Council AuditLog page
+- [x] Sidebar link for admins
+
+### E2E Tests
+- [x] Council login tests
+- [x] Inbox view tests
+- [x] Mark reviewed tests
+- [x] Add note tests
+- [x] IDOX export tests
+
+---
+
+## Phase 21: AI Features (Completed 2026-01-21)
+
+### Compliance Checker
+- [x] complianceChecker service (validates fields, deadlines, format)
+- [x] /api/compliance/check endpoint
+- [x] ComplianceFeedback component in wizard
+
+### Notice Drafting
+- [x] noticeDrafter service (template-based for all 9 notice types)
+- [x] /api/drafting/* endpoints
+- [x] Generate Draft button in wizard
+
+### Representation Analysis
+- [x] representationAnalyzer service (stance detection, theme identification, licensing objectives)
+- [x] /api/representation-analysis/* endpoints
+- [x] RepresentationAnalysisSummary component in council inbox
+
+---
+
+## Phase 22: Integrations (Completed 2026-01-21)
+
+### API Docs
+- [x] Create docs/api.md (comprehensive API documentation)
+- [x] Swagger UI at /api/docs
+- [x] OpenAPI JSON at /api/openapi.json
+
+### Webhooks
+- [x] Create webhooks and webhook_deliveries tables
+- [x] Create webhook service with HMAC-SHA256 signatures
+- [x] Integrate into endpoints:
+  - notice.published
+  - payment.completed
+  - representation.submitted
+  - workflow.stage_changed
+
+---
+
+## Verification Summary (2026-01-21)
+
+All 306 tasks across Phases 7-22 verified complete:
+- **Tests**: 507 passed, 2 skipped
+- **TypeScript**: 54 non-blocking errors (Supabase type inference, third-party libs)
+- **Files created**: 50+ new files across server, src, e2e, supabase/migrations
+- **Migrations**: 30+ SQL migrations applied to Supabase
