@@ -13,7 +13,7 @@ export function getStripeClient(): Stripe {
       throw new Error('STRIPE_SECRET_KEY environment variable is not set');
     }
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
+      apiVersion: '2025-12-15.clover',
     });
   }
   return stripeClient;

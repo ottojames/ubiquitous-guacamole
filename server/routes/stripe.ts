@@ -71,6 +71,45 @@ router.post('/create-checkout-session', async (req, res) => {
 });
 
 /**
+ * Get checkout session status
+ * Used by frontend to verify payment completion after redirect
+ */
+router.get('/session/:sessionId/status', async (req, res) => {
+  try {
+    if (!isStripeConfigured()) {
+      return res.status(500).json({
+        error: 'Payment processing not configured'
+      });
+    }
+
+    const stripe = getStripeClient();
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID required' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // Return relevant status information
+    res.json({
+      status: session.status, // 'complete', 'expired', 'open'
+      paymentStatus: session.payment_status, // 'paid', 'unpaid', 'no_payment_required'
+      customerEmail: session.customer_email,
+      metadata: session.metadata,
+      amountTotal: session.amount_total,
+      currency: session.currency,
+    });
+  } catch (error: any) {
+    console.error('Session status error:', error);
+    if (error.code === 'resource_missing') {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    res.status(500).json({ error: 'Failed to retrieve session status' });
+  }
+});
+
+/**
  * Stripe webhook handler for payment confirmations
  */
 router.post('/webhook', async (req, res) => {

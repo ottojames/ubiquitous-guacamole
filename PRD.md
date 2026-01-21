@@ -539,10 +539,10 @@ npm run lint         # ESLint check
 - [x] **Task 19.1c**: Create stripe.ts service. ~20 lines. **Success**: Initializes. (Completed 2026-01-21 - Created server/services/stripe.ts with getStripeClient() and isStripeConfigured() functions, updated server/routes/stripe.ts to use the service)
 
 ### 19.2 Endpoints
-- [ ] **Task 19.2a**: Create checkout session endpoint. ~50 lines. **Success**: Creates session.
-- [ ] **Task 19.2b**: Create session status endpoint. **Success**: Works.
-- [ ] **Task 19.2c**: Create Stripe webhook endpoint. ~60 lines. **Success**: Processes.
-- [ ] **Task 19.2d**: Register routes. **Success**: Accessible.
+- [x] **Task 19.2a**: Create checkout session endpoint. ~50 lines. **Success**: Creates session. (Verified 2026-01-21 - POST /api/stripe/create-checkout-session exists with £50 line item, Stripe metadata, success/cancel URLs)
+- [x] **Task 19.2b**: Create session status endpoint. **Success**: Works. (Implemented 2026-01-21 - GET /api/stripe/session/:sessionId/status returns status, paymentStatus, metadata, amountTotal)
+- [x] **Task 19.2c**: Create Stripe webhook endpoint. ~60 lines. **Success**: Processes. (Verified 2026-01-21 - POST /api/stripe/webhook handles checkout.session.completed, updates notice to published, sends confirmation email)
+- [x] **Task 19.2d**: Register routes. **Success**: Accessible. (Verified 2026-01-21 - Routes mounted at /api/stripe in server/index.ts)
 
 ### 19.3 Frontend
 - [ ] **Task 19.3a**: Create CheckoutButton. ~40 lines. **Success**: Redirects.
