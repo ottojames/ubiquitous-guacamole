@@ -169,7 +169,7 @@ npm run lint         # ESLint check
 ### 10.2 Department Routes
 - [x] **Task 10.3a**: Create `server/routes/firm-departments.ts` with router setup and GET `/` endpoint. Lists departments for firm. ~30 lines. (Created 2026-01-21 - File: server/routes/firm-departments.ts with router setup, requireAuth middleware, and GET / endpoint that queries firm_departments by firm_id and status='active')
 - [x] **Task 10.3b**: Add POST `/` endpoint to firm-departments routes. Creates department. Requires admin role. ~35 lines. (Created 2026-01-21 - Validates admin role via organization_memberships, accepts name/description/default_notice_types/color/icon, generates slug from name, returns 201 with created department)
-- [ ] **Task 10.3c**: Add PATCH `/:id` and DELETE `/:id` endpoints to firm-departments routes. Updates/deletes department. ~40 lines.
+- [x] **Task 10.3c**: Add PATCH `/:id` and DELETE `/:id` endpoints to firm-departments routes. Updates/deletes department. ~40 lines. (Completed 2026-01-21 - Added PATCH for updating name/description/color/icon/status with validation, DELETE soft-deletes to 'archived' status, both require admin role check)
 - [ ] **Task 10.4**: Register department routes in `server/index.ts` - Mount at `/api/firm/departments`.
 
 ### 10.3 Template Routes
