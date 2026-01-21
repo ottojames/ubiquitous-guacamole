@@ -64,6 +64,25 @@ const pricingPlans = {
     ctaHref: "/sign-up?plan=firm",
     popular: true,
   },
+  councils: {
+    name: "Council Portal",
+    description: "Free receiving portal for councils to view notices, manage representations, and track engagement in their jurisdiction.",
+    priceMonthly: 0,
+    pricePerNotice: 19.99,
+    features: [
+      "FREE receiving portal - no subscription fee",
+      "£19.99 per notice when publishing",
+      "View all notices in your jurisdiction",
+      "Manage public representations & objections",
+      "Department-level access controls",
+      "Customisable notice templates",
+      "IDOX export compatibility",
+      "Dedicated council support",
+    ],
+    cta: "Get Free Portal Access",
+    ctaHref: "/sign-up?plan=council",
+    popular: false,
+  },
 };
 
 const oldWayData = [

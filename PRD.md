@@ -328,7 +328,7 @@ npm run lint         # ESLint check
 ### 15.2 Create New Pricing Structure
 - [x] **Task 15.2a**: Create `pricingPlans.public` object: name "One-Off Publishing", price 50, features, cta "Publish Now - £50". **Success**: Object compiles. (Completed 2026-01-21 - Added pricingPlans.public with name, description, price, features, cta, ctaHref, popular fields)
 - [x] **Task 15.2b**: Create `pricingPlans.firms` object: name "Professional Portal", priceMonthly 49, cta "Start Free Trial", popular true. **Success**: Object compiles. (Completed 2026-01-21 - Added pricingPlans.firms with name, description, priceMonthly=49, pricePerNotice=50, 8 features including Kanban/templates/team, cta="Start Free Trial", ctaHref="/sign-up?plan=firm", popular=true)
-- [ ] **Task 15.2c**: Create `pricingPlans.councils` object: name "Council Portal", FREE portal, £19.99/notice. **Success**: Object compiles.
+- [x] **Task 15.2c**: Create `pricingPlans.councils` object: name "Council Portal", FREE portal, £19.99/notice. **Success**: Object compiles. (Completed 2026-01-21 - Added pricingPlans.councils with name="Council Portal", priceMonthly=0, pricePerNotice=19.99, 8 features including FREE receiving portal/IDOX export, cta="Get Free Portal Access", ctaHref="/sign-up?plan=council")
 
 ### 15.3 Update Hero Section
 - [ ] **Task 15.3a**: Change hero h1 to "Simple, transparent pricing". **Success**: Updated.
