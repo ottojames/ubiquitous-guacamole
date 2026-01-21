@@ -156,9 +156,7 @@ export default function Pricing() {
         <div className={`${UI.container} relative z-10`}>
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-6xl">
-              Transparent pricing.
-              <br />
-              No hidden fees.
+              Simple, transparent pricing
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl">
               From £50 per notice. Save up to <strong className="text-white">85%</strong> compared to traditional newspaper publication.

@@ -3273,3 +3273,38 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - popular: true will make this card highlighted in the three-card grid (Task 15.4)
   - Next task is 15.2c: Create pricingPlans.councils object (FREE portal + £19.99/notice)
 ---
+
+## Iteration 99 - Task 15.2c: Create pricingPlans.councils object
+- **What was implemented**: Added pricingPlans.councils object to Pricing.tsx for the Council Portal tier
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Added councils pricing plan object
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - name: "Council Portal"
+  - priceMonthly: 0 (FREE receiving portal - no subscription fee)
+  - pricePerNotice: 19.99 (when councils publish notices)
+  - 8 features: FREE portal, £19.99/notice publishing, jurisdiction notice view, representation management, department access controls, customisable templates, IDOX export, dedicated support
+  - cta: "Get Free Portal Access" → /sign-up?plan=council
+  - popular: false (firms tier is the highlighted one)
+- **Learnings for future iterations**:
+  - Phase 15 is restructuring the pricing page from old incorrect tiers to the three correct tiers: Public (£50/notice), Firms (£49/month + £50/notice), Councils (FREE portal + £19.99/notice)
+  - pricingPlans.individual still exists but is being kept for the "For Individuals" section
+  - pricingPlans.public is the simplified version for one-off publishing
+  - The councils sections and firms sections are currently hidden with HTML comments while restructure is in progress
+  - 494 tests pass, no TypeScript errors in src/ files
+  - Next tasks in Phase 15.3 will update the hero section messaging
+---
+
+## Iteration 81 - Task 15.3a: Change hero h1 to 'Simple, transparent pricing'
+- **What was implemented**: Updated the hero section h1 from two lines ("Transparent pricing. / No hidden fees.") to single line "Simple, transparent pricing"
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Lines 158-162: Simplified h1 text
+  - `PRD.md` - Marked Task 15.3a complete
+- **Test results**: 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - src/pages/Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Phase 15 (Pricing Page Complete Rewrite) is progressing through hero section updates
+  - The pricing page still has "40+ UK councils" false claim in the Old Way vs New Way section (line 250-251) and Final CTA (line 377) - these will be fixed in tasks 15.5b and 15.7a
+  - The FAQ section still has old FAQs that need updating (tasks 15.6a-15.6f)
+  - Next task is 15.3b: Change subtitle to explain three tiers
+---

@@ -331,7 +331,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.2c**: Create `pricingPlans.councils` object: name "Council Portal", FREE portal, £19.99/notice. **Success**: Object compiles. (Completed 2026-01-21 - Added pricingPlans.councils with name="Council Portal", priceMonthly=0, pricePerNotice=19.99, 8 features including FREE receiving portal/IDOX export, cta="Get Free Portal Access", ctaHref="/sign-up?plan=council")
 
 ### 15.3 Update Hero Section
-- [ ] **Task 15.3a**: Change hero h1 to "Simple, transparent pricing". **Success**: Updated.
+- [x] **Task 15.3a**: Change hero h1 to "Simple, transparent pricing". **Success**: Updated. (Completed 2026-01-21 - Changed from "Transparent pricing. No hidden fees." to single line "Simple, transparent pricing")
 - [ ] **Task 15.3b**: Change subtitle to explain three tiers. **Success**: Subtitle updated.
 - [ ] **Task 15.3c**: Update pricing text to "From £50 per notice. Councils £19.99." **Success**: Correct pricing.
 
