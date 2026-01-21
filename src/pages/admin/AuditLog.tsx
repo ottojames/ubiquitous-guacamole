@@ -202,7 +202,7 @@ export default function AuditLog() {
 
           <button
             onClick={exportLogs}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             <Download className="w-4 h-4" />
             Export CSV
@@ -430,7 +430,7 @@ export default function AuditLog() {
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <button
                         onClick={() => setSelectedLog(log)}
-                        className="text-blue-600 hover:text-blue-700 "
+                        className="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                       >
                         View Details
                       </button>
@@ -461,7 +461,7 @@ export default function AuditLog() {
                 </h2>
                 <button
                   onClick={() => setSelectedLog(null)}
-                  className="p-2 hover:bg-gray-100  rounded-lg"
+                  className="p-2 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <X className="w-5 h-5" />
                 </button>

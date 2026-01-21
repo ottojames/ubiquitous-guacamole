@@ -130,7 +130,7 @@ export default function AdminLayout() {
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="px-3 py-1 bg-black text-amber-500 rounded hover:bg-gray-800 transition-colors"
+              className="px-3 py-1 bg-black text-amber-500 rounded hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-amber-500"
             >
               Refresh Session
             </button>
@@ -177,7 +177,7 @@ export default function AdminLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded transition-all group ${
+                className={`flex items-center gap-3 px-4 py-3 rounded transition-all group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                   isActive
                     ? 'bg-blue-600 text-white'
                     : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900'
@@ -206,7 +206,7 @@ export default function AdminLayout() {
             <div className="space-y-2">
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 w-full px-4 py-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors"
+                className="flex items-center gap-2 w-full px-4 py-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -215,7 +215,7 @@ export default function AdminLayout() {
           ) : (
             <button
               onClick={handleSignOut}
-              className="flex items-center justify-center w-full p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors"
+              className="flex items-center justify-center w-full p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               title="Sign Out"
             >
               <LogOut className="w-5 h-5" />
@@ -224,7 +224,7 @@ export default function AdminLayout() {
 
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mt-2 w-full flex items-center justify-center p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors"
+            className="mt-2 w-full flex items-center justify-center p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             <Menu className={`w-5 h-5 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`} />
@@ -238,14 +238,14 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-slate-700"
+              className="text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
             <h2 className="text-lg font-bold text-slate-900">Admin Panel</h2>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative text-slate-600 hover:text-slate-900">
+            <button className="relative text-slate-600 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full"></span>
             </button>
@@ -279,7 +279,7 @@ export default function AdminLayout() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                       isActive
                         ? 'bg-blue-600 text-white'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900'
@@ -297,7 +297,7 @@ export default function AdminLayout() {
             <div className="p-4 border-t border-slate-200">
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 w-full px-4 py-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded"
+                className="flex items-center gap-2 w-full px-4 py-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
@@ -332,7 +332,7 @@ export default function AdminLayout() {
             )}
 
             {/* Notification Bell */}
-            <button className="relative text-slate-500 hover:text-slate-900 transition-colors">
+            <button className="relative text-slate-500 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
             </button>

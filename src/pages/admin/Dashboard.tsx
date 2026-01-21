@@ -418,22 +418,22 @@ export default function AdminDashboard() {
             <div className="space-y-2">
               <button
                 onClick={() => navigate('/admin/accounts')}
-                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 View All Accounts
               </button>
               <button
                 onClick={() => navigate('/admin/audit-log')}
-                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 Check Audit Logs
               </button>
               <button
                 onClick={() => navigate('/admin/settings')}
-                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 System Settings
               </button>
               <button
                 onClick={() => navigate('/admin/reports')}
-                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md">
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 Export Reports
               </button>
             </div>
@@ -441,9 +441,9 @@ export default function AdminDashboard() {
 
           {/* Alerts/Warnings */}
           {stats.pendingVerifications > 0 && (
-            <div
+            <button
               onClick={() => navigate('/admin/accounts?status=pending_verification')}
-              className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 cursor-pointer hover:bg-yellow-100 transition-colors">
+              className="w-full text-left bg-yellow-50 border border-yellow-200 rounded-lg p-4 cursor-pointer hover:bg-yellow-100 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -455,7 +455,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
               </div>
-            </div>
+            </button>
           )}
         </div>
       </div>

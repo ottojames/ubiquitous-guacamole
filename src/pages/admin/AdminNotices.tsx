@@ -356,7 +356,7 @@ export default function AdminNotices() {
                             setSelectedNotice(notice);
                             setShowDetailModal(true);
                           }}
-                          className="text-slate-500 hover:text-gray-600"
+                          className="text-slate-500 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -365,14 +365,14 @@ export default function AdminNotices() {
                           <>
                             <button
                               onClick={() => handleNoticeAction('approve', notice.id)}
-                              className="text-green-600 hover:text-green-700"
+                              className="text-green-600 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 rounded"
                               title="Approve"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleNoticeAction('reject', notice.id)}
-                              className="text-red-600 hover:text-red-700"
+                              className="text-red-600 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                               title="Reject"
                             >
                               <XCircle className="w-4 h-4" />
@@ -397,7 +397,7 @@ export default function AdminNotices() {
             <div className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full p-6">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="absolute top-4 right-4 text-slate-500 hover:text-gray-600"
+                className="absolute top-4 right-4 text-slate-500 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
               >
                 <XCircle className="h-6 w-6" />
               </button>
@@ -467,7 +467,7 @@ export default function AdminNotices() {
                         handleNoticeAction('approve', selectedNotice.id);
                         setShowDetailModal(false);
                       }}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     >
                       Approve
                     </button>
@@ -476,7 +476,7 @@ export default function AdminNotices() {
                         handleNoticeAction('reject', selectedNotice.id);
                         setShowDetailModal(false);
                       }}
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                     >
                       Reject
                     </button>
@@ -484,7 +484,7 @@ export default function AdminNotices() {
                 )}
                 <button
                   onClick={() => setShowDetailModal(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   Close
                 </button>

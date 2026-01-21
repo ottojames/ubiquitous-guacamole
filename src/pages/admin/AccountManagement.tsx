@@ -65,7 +65,7 @@ function AccountDetailModal({ isOpen, onClose, item, type }: DetailModalProps) {
         <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
           >
             <X className="h-6 w-6" />
           </button>
@@ -167,7 +167,7 @@ function AccountDetailModal({ isOpen, onClose, item, type }: DetailModalProps) {
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition"
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Close
             </button>
@@ -502,7 +502,7 @@ export default function AccountManagement() {
       <div className="flex gap-1 mb-6 bg-slate-100 rounded-lg p-1">
         <button
           onClick={() => setActiveTab('councils')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition ${
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             activeTab === 'councils'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 hover:text-slate-900'
@@ -513,7 +513,7 @@ export default function AccountManagement() {
         </button>
         <button
           onClick={() => setActiveTab('firms')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition ${
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             activeTab === 'firms'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 hover:text-slate-900'
@@ -524,7 +524,7 @@ export default function AccountManagement() {
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition ${
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             activeTab === 'users'
               ? 'bg-blue-600 text-white'
               : 'text-slate-600 hover:text-slate-900'
@@ -571,14 +571,14 @@ export default function AccountManagement() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleBulkAction('suspend')}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 <Ban className="h-4 w-4" />
                 Suspend ({selectedItems.size})
               </button>
               <button
                 onClick={() => handleBulkAction('export')}
-                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition flex items-center gap-2"
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <Download className="h-4 w-4" />
                 Export
@@ -715,7 +715,7 @@ export default function AccountManagement() {
                       <div className="relative">
                         <button
                           onClick={() => setShowActionMenu(showActionMenu === account.id ? null : account.id)}
-                          className="p-2 text-slate-400 hover:text-slate-600 transition"
+                          className="p-2 text-slate-400 hover:text-slate-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                         >
                           <MoreVertical className="h-5 w-5" />
                         </button>
@@ -727,13 +727,13 @@ export default function AccountManagement() {
                                 setDetailModal({ isOpen: true, item: account });
                                 setShowActionMenu(null);
                               }}
-                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                             >
                               <Eye className="h-4 w-4" />
                               View Details
                             </button>
                             <button
-                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                             >
                               <Edit className="h-4 w-4" />
                               Edit
@@ -741,7 +741,7 @@ export default function AccountManagement() {
                             {(account as any).status === 'active' ? (
                               <button
                                 onClick={() => handleAction('suspend', account.id)}
-                                className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                               >
                                 <Ban className="h-4 w-4" />
                                 Suspend
@@ -749,21 +749,21 @@ export default function AccountManagement() {
                             ) : (
                               <button
                                 onClick={() => handleAction('activate', account.id)}
-                                className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2"
+                                className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                               >
                                 <CheckCircle className="h-4 w-4" />
                                 Activate
                               </button>
                             )}
                             <button
-                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                             >
                               <Key className="h-4 w-4" />
                               Reset Password
                             </button>
                             <button
                               onClick={() => handleAction('delete', account.id)}
-                              className="w-full px-4 py-2 text-left text-red-600 hover:bg-slate-50 transition flex items-center gap-2"
+                              className="w-full px-4 py-2 text-left text-red-600 hover:bg-slate-50 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
                             >
                               <Trash2 className="h-4 w-4" />
                               Delete

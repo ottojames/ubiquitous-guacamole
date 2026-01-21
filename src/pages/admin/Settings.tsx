@@ -29,7 +29,7 @@ export default function AdminSettings() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center space-x-2 py-4 border-b-2 transition-colors
+                  flex items-center space-x-2 py-4 border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-t
                   ${
                     activeTab === tab.id
                       ? "border-blue-600 text-blue-600"
