@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Building2, Briefcase, ArrowLeft } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
+import SiteHeader from "@/components/SiteHeader";
 
 // Error messages for redirect errors
 const ERROR_MESSAGES: Record<string, string> = {
@@ -273,245 +274,272 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Minimal header - logo only */}
-      <header className="py-6">
-        <div className={UI.container}>
-          <a href="/" className="inline-flex items-center text-slate-900 font-extrabold text-xl tracking-tight hover:text-slate-700 transition-colors">
-            CivicNotices
-          </a>
-        </div>
-      </header>
+    <div className={`${UI.pageWrap} relative flex flex-col font-sans min-h-screen`}>
+      <SiteHeader />
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
 
-      {/* Main content - centered */}
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          {!portalType ? (
-            /* Portal Selection */
-            <div className="space-y-8">
-              {/* Header */}
-              <div className="text-center">
-                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                  Sign in to CivicNotices
-                </h1>
-                <p className="mt-2 text-sm text-slate-600">
-                  Select your portal to continue
-                </p>
-              </div>
+      <main className="flex-1">
+        {/* Hero section with gradient - matches site branding */}
+        <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32">
+          {/* Decorative elements */}
+          <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
-              {/* Portal cards */}
-              <div className="space-y-3">
-                {/* Council Portal */}
-                <button
-                  onClick={() => setPortalType('council')}
-                  className="w-full flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <Building2 className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-semibold text-slate-900">Council Portal</h2>
-                    <p className="text-sm text-slate-500">For council officers and licensing departments</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                </button>
+          {/* Gradient fade */}
+          <div
+            className="absolute inset-x-0 bottom-0 pointer-events-none"
+            style={{
+              height: '300px',
+              background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.5) 40%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
+            }}
+            aria-hidden="true"
+          />
 
-                {/* Professional Portal */}
-                <button
-                  onClick={() => setPortalType('professional')}
-                  className="w-full flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                    <Briefcase className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-semibold text-slate-900">Professional Portal</h2>
-                    <p className="text-sm text-slate-500">For solicitors, law firms & GVOL operators</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                </button>
-              </div>
-
-              {/* Sign up link */}
-              <p className="text-center text-sm text-slate-600">
-                Don't have an account?{" "}
-                <a href="/register" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
-                  Create one here
-                </a>
-              </p>
-            </div>
-          ) : (
-            /* Login Form */
-            <div className="space-y-6">
-              {/* Back button */}
-              <button
-                onClick={() => {
-                  setPortalType(null);
-                  setError(null);
-                  setEmail("");
-                  setPassword("");
-                }}
-                className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to portal selection
-              </button>
-
-              {/* Header */}
-              <div>
-                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                  {portalType === 'council' ? 'Council Portal' : 'Professional Portal'}
-                </h1>
-                <p className="mt-1 text-sm text-slate-600">
-                  Enter your credentials to continue
-                </p>
-              </div>
-
-              {/* Form card */}
-              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Email Field */}
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
-                      Email address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className={UI.inputFull + " pl-10"}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password Field */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                        Password
-                      </label>
-                      <a
-                        href="/forgot-password"
-                        className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
-                      >
-                        Forgot password?
-                      </a>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
-                      <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className={UI.inputFull + " pl-10 pr-10"}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-[18px] w-[18px]" />
-                        ) : (
-                          <Eye className="h-[18px] w-[18px]" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Remember Me */}
-                  <div className="flex items-center">
-                    <input
-                      id="remember"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 transition-colors"
-                    />
-                    <label htmlFor="remember" className="ml-2 text-sm text-slate-600">
-                      Remember me for 30 days
-                    </label>
-                  </div>
-
-                  {/* Error Message */}
-                  {error && (
-                    <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-3">
-                      <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600 mt-0.5" />
-                      <p className="text-sm text-rose-700">{error}</p>
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={UI.btnPrimary + " w-full"}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-[18px] w-[18px] animate-spin" />
-                        <span>Signing in...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Sign in</span>
-                        <ArrowRight className="h-[18px] w-[18px]" />
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Sign Up Link */}
-                <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-                  <p className="text-sm text-slate-600">
-                    Don't have an account?{" "}
-                    <a
-                      href={portalType === 'council' ? '/register/council' : '/register/firm'}
-                      className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                    >
-                      Sign up for free
-                    </a>
+          <div className={`${UI.container} relative z-10`}>
+            {!portalType ? (
+              /* Portal Selection */
+              <div className="max-w-3xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-12">
+                  <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+                    Welcome Back
+                  </h1>
+                  <p className="mt-4 text-lg text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)]">
+                    Choose your portal to sign in
                   </p>
                 </div>
-              </div>
 
-              {/* Trust Indicators */}
-              <div className="flex items-center justify-center gap-6 text-xs text-slate-500">
-                <div className="flex items-center gap-1.5">
-                  <Lock className="h-3.5 w-3.5" />
-                  <span>256-bit SSL</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span>GDPR compliant</span>
-                </div>
-              </div>
+                {/* Portal Cards - Grid */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Council Portal */}
+                  <button
+                    onClick={() => setPortalType('council')}
+                    className="group relative bg-white rounded-2xl p-8 text-left shadow-xl shadow-slate-900/5 border border-white/50 hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-shadow">
+                        <Building2 className="w-10 h-10 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Council Portal</h2>
+                      <p className="text-slate-600">
+                        For council officers and licensing departments
+                      </p>
+                      <div className="mt-6 flex items-center gap-2 text-blue-600 font-semibold">
+                        <span>Continue</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </button>
 
-              {/* Help text */}
-              <p className="text-center text-xs text-slate-500">
-                Need access? Contact{" "}
-                <a href="mailto:support@civicnotices.co.uk" className="text-blue-600 hover:text-blue-700">
-                  support@civicnotices.co.uk
-                </a>
-              </p>
-            </div>
-          )}
-        </div>
+                  {/* Professional Portal */}
+                  <button
+                    onClick={() => setPortalType('professional')}
+                    className="group relative bg-white rounded-2xl p-8 text-left shadow-xl shadow-slate-900/5 border border-white/50 hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-shadow">
+                        <Briefcase className="w-10 h-10 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional Portal</h2>
+                      <p className="text-slate-600">
+                        For solicitors, law firms & GVOL operators
+                      </p>
+                      <div className="mt-6 flex items-center gap-2 text-blue-600 font-semibold">
+                        <span>Continue</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Sign up link */}
+                <p className="mt-10 text-center text-white/90">
+                  Don't have an account?{" "}
+                  <a href="/register" className="font-semibold text-white underline underline-offset-2 hover:text-white/80 transition-colors">
+                    Create one here
+                  </a>
+                </p>
+              </div>
+            ) : (
+              /* Login Form */
+              <div className="max-w-md mx-auto">
+                {/* Back button */}
+                <button
+                  onClick={() => {
+                    setPortalType(null);
+                    setError(null);
+                    setEmail("");
+                    setPassword("");
+                  }}
+                  className="mb-8 inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="font-medium">Back to portal selection</span>
+                </button>
+
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mb-6 shadow-lg shadow-blue-500/25">
+                    {portalType === 'council' ? (
+                      <Building2 className="w-8 h-8 text-white" />
+                    ) : (
+                      <Briefcase className="w-8 h-8 text-white" />
+                    )}
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+                    {portalType === 'council' ? 'Council Portal' : 'Professional Portal'}
+                  </h1>
+                  <p className="mt-3 text-white/90">
+                    Enter your credentials to continue
+                  </p>
+                </div>
+
+                {/* Form card */}
+                <div className="bg-white rounded-2xl p-8 shadow-xl shadow-slate-900/5 border border-white/50">
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Email Field */}
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Email address
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                        <input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 bg-slate-50 text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white hover:border-slate-300"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password Field */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                          Password
+                        </label>
+                        <a
+                          href="/forgot-password"
+                          className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                          Forgot password?
+                        </a>
+                      </div>
+                      <div className="relative">
+                        <Lock className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                        <input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="w-full h-12 pl-11 pr-11 rounded-xl border border-slate-200 bg-slate-50 text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white hover:border-slate-300"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-[18px] w-[18px]" />
+                          ) : (
+                            <Eye className="h-[18px] w-[18px]" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Remember Me */}
+                    <div className="flex items-center">
+                      <input
+                        id="remember"
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 transition-colors"
+                      />
+                      <label htmlFor="remember" className="ml-2.5 text-sm text-slate-600">
+                        Remember me for 30 days
+                      </label>
+                    </div>
+
+                    {/* Error Message */}
+                    {error && (
+                      <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                        <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600 mt-0.5" />
+                        <p className="text-sm text-rose-700">{error}</p>
+                      </div>
+                    )}
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white font-semibold text-[15px] shadow-lg shadow-blue-600/25 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                          <span>Signing in...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Sign in</span>
+                          <ArrowRight className="h-[18px] w-[18px]" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  {/* Sign Up Link */}
+                  <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+                    <p className="text-sm text-slate-600">
+                      Don't have an account?{" "}
+                      <a
+                        href={portalType === 'council' ? '/register/council' : '/register/firm'}
+                        className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        Sign up for free
+                      </a>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Trust Indicators */}
+                <div className="mt-8 flex items-center justify-center gap-6 text-sm text-white/70">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    <span>256-bit SSL</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <span>GDPR compliant</span>
+                  </div>
+                </div>
+
+                {/* Help text */}
+                <p className="mt-4 text-center text-sm text-white/70">
+                  Need access? Contact{" "}
+                  <a href="mailto:support@civicnotices.co.uk" className="text-white underline underline-offset-2 hover:text-white/80">
+                    support@civicnotices.co.uk
+                  </a>
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
       </main>
 
-      {/* Minimal footer */}
-      <footer className="py-6 border-t border-slate-200">
+      {/* Footer */}
+      <footer className="relative z-10 py-8 border-t border-slate-200 bg-slate-50">
         <div className={UI.container}>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
             <p>© {new Date().getFullYear()} CivicNotices</p>
