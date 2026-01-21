@@ -12,10 +12,10 @@ const pricingPlans = {
   individual: {
     name: "Pay as you go",
     description: "Perfect for solicitors, businesses, and individuals publishing occasional notices",
-    priceMonthly: 49.99,
+    priceMonthly: 50,
     priceAnnual: null,
     features: [
-      "£49.99 per notice",
+      "£50 per notice",
       "Instant publication & timestamped proof",
       "Full audit trail with cryptographic hash",
       "PDF certificate for legal compliance",
@@ -106,7 +106,7 @@ export default function Pricing() {
               No hidden fees.
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl">
-              From £49.99 per notice. Save up to <strong className="text-white">85%</strong> compared to traditional newspaper publication.
+              From £50 per notice. Save up to <strong className="text-white">85%</strong> compared to traditional newspaper publication.
             </p>
           </div>
 
@@ -189,7 +189,7 @@ export default function Pricing() {
                 With CivicNotices
               </div>
               <h3 className="mb-3 text-2xl font-bold text-slate-900">
-                From £49.99 per notice • Instant publication • Full audit trail
+                From £50 per notice • Instant publication • Full audit trail
               </h3>
               <p className="text-slate-700">
                 Digital-first, compliant with upcoming regulations, and trusted by 40+ UK councils
@@ -262,7 +262,7 @@ export default function Pricing() {
                 },
                 {
                   q: "How does pay-as-you-go work?",
-                  a: "No subscription needed. Simply visit our platform, create your notice, and pay £49.99 per publication. You'll receive instant publication and a legal compliance certificate immediately.",
+                  a: "No subscription needed. Simply visit our platform, create your notice, and pay £50 per publication. You'll receive instant publication and a legal compliance certificate immediately.",
                 },
                 {
                   q: "Can I switch plans later?",

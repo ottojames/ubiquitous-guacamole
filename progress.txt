@@ -3206,3 +3206,25 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - 494 tests pass
   - Next task (15.1g) will delete the entire comparisonData array (already done in this iteration as part of cleanup)
 ---
+
+## Iteration 69 - Tasks 15.1g & 15.1h: Complete Phase 15.1 pricing cleanup
+- **What was implemented**: Verified comparisonData removal (15.1g) and updated all pricing from £49.99 to £50 (15.1h)
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Updated priceMonthly from 49.99 to 50, updated all £49.99 references to £50
+  - `PRD.md` - Marked tasks 15.1g and 15.1h complete
+- **Key changes**:
+  - Task 15.1g: Verified comparisonData was already removed in Task 15.1f - no code changes needed
+  - Task 15.1h: Updated 4 locations:
+    1. `pricingPlans.individual.priceMonthly`: 49.99 → 50
+    2. Features list: "£49.99 per notice" → "£50 per notice"
+    3. Hero subtitle: "From £49.99 per notice" → "From £50 per notice"
+    4. Old Way vs New Way section: "From £49.99 per notice" → "From £50 per notice"
+    5. FAQ pay-as-you-go answer: "pay £49.99" → "pay £50"
+- **Test results**: 494 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts/server only
+- **Learnings for future iterations**:
+  - Phase 15.1 (Remove Old Pricing Data) is now COMPLETE - all 8 subtasks done
+  - The pricing page now shows £50 consistently everywhere
+  - Next is Phase 15.2: Create New Pricing Structure (tasks 15.2a, 15.2b, 15.2c)
+  - The correct pricing model per PRD: Public £50/notice, Firms £49/month + £50/notice, Councils FREE + £19.99/notice
+---

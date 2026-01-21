@@ -322,8 +322,8 @@ npm run lint         # ESLint check
 - [x] **Task 15.1d**: Delete `pricingPlans.councilSmall` object (Parish & Town). **Success**: Object removed. (Completed 2026-01-21 - Removed object and all councilSmall references from comparisonData and table rendering, updated grid to 2 cols, 494 tests pass)
 - [x] **Task 15.1e**: Delete `pricingPlans.councilMedium` object (District Council). **Success**: Object removed. (Completed 2026-01-21 - Removed object, all councilMedium references from comparisonData and table rendering, updated colspan to 6, 494 tests pass)
 - [x] **Task 15.1f**: Delete `pricingPlans.councilLarge` object (Unitary & County). **Success**: Object removed. (Completed 2026-01-21 - Removed councilLarge object, removed comparisonData array, temporarily hid Council section, removed billing toggle and unused state, 494 tests pass)
-- [ ] **Task 15.1g**: Delete entire `comparisonData` array. **Success**: Array removed.
-- [ ] **Task 15.1h**: Update `pricingPlans.individual` to show £50 (not £49.99). **Success**: Price shows "£50".
+- [x] **Task 15.1g**: Delete entire `comparisonData` array. **Success**: Array removed. (Completed 2026-01-21 - Already removed in Task 15.1f, verified no comparisonData exists in Pricing.tsx)
+- [x] **Task 15.1h**: Update `pricingPlans.individual` to show £50 (not £49.99). **Success**: Price shows "£50". (Completed 2026-01-21 - Updated priceMonthly from 49.99 to 50, updated all £49.99 references to £50 in hero, features, old-vs-new section, and FAQ)
 
 ### 15.2 Create New Pricing Structure
 - [ ] **Task 15.2a**: Create `pricingPlans.public` object: name "One-Off Publishing", price 50, features, cta "Publish Now - £50". **Success**: Object compiles.
