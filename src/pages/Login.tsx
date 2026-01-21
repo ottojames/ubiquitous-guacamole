@@ -3,6 +3,7 @@ import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from "lucid
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
 import SiteHeader from "@/components/SiteHeader";
+import Footer from "@/components/Footer";
 
 // Error messages for redirect errors
 const ERROR_MESSAGES: Record<string, string> = {
@@ -274,117 +275,122 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen text-slate-900 relative" style={{
-      background: 'linear-gradient(112deg, #223266 0%, #6EA3F7 53%, #F4F7FD 100%)'
-    }}>
-      {/* Subtle decorative elements */}
-      <div className="absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-white/30 blur-3xl pointer-events-none" />
-      <div className="absolute left-0 top-[300px] h-[400px] w-[400px] rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
-
-      {/* Header sentinel for SiteHeader compact mode */}
-      <div id="header-sentinel" className="h-2" aria-hidden="true" />
+    <div className={`${UI.pageWrap} relative flex flex-col font-sans`}>
       <SiteHeader />
+      {/* Sentinel right after header for compact mode detection */}
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
 
-      {/* Hero - minimal, refined */}
-      <section className="relative pt-12 md:pt-16 pb-12">
-        <div className={`${UI.container} relative z-10`}>
-          <div className="mx-auto max-w-xl text-center">
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-5xl" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-              {!portalType ? 'Choose Your Portal' : 'Welcome back'}
-            </h1>
-            <p className="mt-4 text-base leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] font-normal md:text-lg">
-              {!portalType ? 'Select the portal type to continue' : 'Sign in to your CivicNotices account'}
-            </p>
-          </div>
-        </div>
-      </section>
+      <main>
+        {/* Hero - matches Home/Pricing/EmailAlerts structure */}
+        <section className="relative overflow-hidden pb-32 pt-20 md:pb-40 md:pt-32 lg:pb-48">
+          <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
 
-      {/* Portal Selection or Login Form */}
-      <section className="pb-20 md:pb-28">
-        <div className={UI.container}>
-          {!portalType ? (
-            /* Portal Selection */
-            <div className="mx-auto max-w-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Council Portal */}
-                <button
-                  onClick={() => setPortalType('council')}
-                  className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-blue-400 hover:shadow-xl transition-all duration-200 text-left"
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
-                      <svg className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Council Portal</h2>
-                    <p className="text-slate-600 text-sm">
-                      For council officers and licensing departments
-                    </p>
-                  </div>
-                </button>
-
-                {/* Professional Portal */}
-                <button
-                  onClick={() => setPortalType('professional')}
-                  className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-purple-400 hover:shadow-xl transition-all duration-200 text-left"
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mb-4 group-hover:bg-purple-600 transition-colors">
-                      <svg className="w-8 h-8 text-purple-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional Portal</h2>
-                    <p className="text-slate-600 text-sm">
-                      For solicitors, law firms & GVOL operators
-                    </p>
-                  </div>
-                </button>
-              </div>
-
-              {/* Sign Up Link */}
-              <div className="mt-8 text-center">
-                <p className="text-sm text-white/90 mb-2">
-                  Don't have an account?
-                </p>
-                <a
-                  href="/register"
-                  className="text-sm text-white underline hover:text-white/80 transition-colors"
-                >
-                  Create one here
-                </a>
-              </div>
+          {/* Vertical gradient fade - matches other pages */}
+          <div
+            className="absolute inset-x-0 bottom-0 pointer-events-none"
+            style={{
+              height: '400px',
+              background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.5) 40%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
+            }}
+            aria-hidden="true"
+          />
+          <div className={`${UI.container} relative z-10`}>
+            <div className="mx-auto max-w-3xl text-center">
+              <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-6xl">
+                {!portalType ? 'Choose Your Portal' : 'Welcome Back'}
+              </h1>
+              <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl">
+                {!portalType ? 'Select the portal type to continue' : 'Sign in to your CivicNotices account'}
+              </p>
             </div>
-          ) : (
-            /* Login Form */
-            <div className="mx-auto max-w-md">
-              {/* Back Button */}
-              <button
-                onClick={() => {
-                  setPortalType(null);
-                  setError(null);
-                  setEmail("");
-                  setPassword("");
-                }}
-                className="mb-6 flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="text-sm font-medium">Back to portal selection</span>
-              </button>
+          </div>
 
-              <div className="rounded-xl bg-white border border-slate-200/60 p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
-                {/* Help Text - Production */}
-                <div className="mb-6 text-center">
-                  <p className="text-sm text-slate-600">
-                    Need access? Contact{" "}
-                    <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
-                      support@civicnotices.co.uk
-                    </a>
-                  </p>
+          {/* Portal Selection or Login Form - inside hero section */}
+          <div className={`${UI.container} relative z-10 mt-12`}>
+            {!portalType ? (
+              /* Portal Selection */
+              <div className="mx-auto max-w-2xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Council Portal */}
+                  <button
+                    onClick={() => setPortalType('council')}
+                    className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-blue-400 hover:shadow-xl transition-all duration-200 text-left"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
+                        <svg className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Council Portal</h2>
+                      <p className="text-slate-600 text-sm">
+                        For council officers and licensing departments
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Professional Portal */}
+                  <button
+                    onClick={() => setPortalType('professional')}
+                    className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-blue-400 hover:shadow-xl transition-all duration-200 text-left"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
+                        <svg className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional Portal</h2>
+                      <p className="text-slate-600 text-sm">
+                        For solicitors, law firms & GVOL operators
+                      </p>
+                    </div>
+                  </button>
                 </div>
+
+                {/* Sign Up Link */}
+                <div className="mt-8 text-center">
+                  <p className="text-sm text-white/90 mb-2">
+                    Don't have an account?
+                  </p>
+                  <a
+                    href="/register"
+                    className="text-sm text-white underline hover:text-white/80 transition-colors"
+                  >
+                    Create one here
+                  </a>
+                </div>
+              </div>
+            ) : (
+              /* Login Form */
+              <div className="mx-auto max-w-md">
+                {/* Back Button */}
+                <button
+                  onClick={() => {
+                    setPortalType(null);
+                    setError(null);
+                    setEmail("");
+                    setPassword("");
+                  }}
+                  className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span className="text-sm font-medium">Back to portal selection</span>
+                </button>
+
+                <div className={`${UI.card} p-8 md:p-10`}>
+                  {/* Help Text - Production */}
+                  <div className="mb-6 text-center">
+                    <p className="text-sm text-slate-600">
+                      Need access? Contact{" "}
+                      <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
+                        support@civicnotices.co.uk
+                      </a>
+                    </p>
+                  </div>
 
               <form onSubmit={handleSubmit} className="space-y-7">
                 {/* Email Field */}
@@ -508,86 +514,23 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Sign Up Link */}
-              <div className="mt-8 text-center">
-                <p className="text-sm text-slate-600">
-                  Don't have an account?{" "}
-                  <a href={portalType === 'council' ? '/register/council' : '/register/firm'} className="font-medium text-slate-700 hover:text-slate-900 transition-colors duration-150">
-                    Sign up for free
-                  </a>
-                </p>
-              </div>
-            </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Benefits Section - lighter, more spaced */}
-      <section className="pb-20 md:pb-28">
-        <div className={UI.container}>
-          <div className="mx-auto max-w-5xl">
-            <h2 className="mb-12 text-center text-xl font-medium text-slate-700">
-              The modern way to publish statutory notices
-            </h2>
-            <div className="grid gap-8 md:grid-cols-3">
-              <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50/80">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                {/* Sign Up Link */}
+                <div className="mt-8 text-center">
+                  <p className="text-sm text-slate-600">
+                    Don't have an account?{" "}
+                    <a href={portalType === 'council' ? '/register/council' : '/register/firm'} className="font-medium text-slate-700 hover:text-slate-900 transition-colors duration-150">
+                      Sign up for free
+                    </a>
+                  </p>
                 </div>
-                <h3 className="mb-2 font-medium text-slate-900 text-[15px]">Instant publication</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">Publish notices in seconds, not weeks</p>
               </div>
-
-              <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50/80">
-                  <Lock className="h-5 w-5 text-blue-600" strokeWidth={2} />
-                </div>
-                <h3 className="mb-2 font-medium text-slate-900 text-[15px]">Full audit trail</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">Cryptographic proof for legal compliance</p>
               </div>
-
-              <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50/80">
-                  <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="mb-2 font-medium text-slate-900 text-[15px]">Save up to 85%</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">Compared to traditional newspaper notices</p>
-              </div>
-            </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* Footer - lighter, more minimal */}
-      <footer className="border-t border-slate-200/60 py-10">
-        <div className={`${UI.container} text-center`}>
-          <div className="mb-5 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
-            <a href="/about" className="hover:text-slate-700 transition-colors duration-150">
-              About
-            </a>
-            <a href="/docs" className="hover:text-slate-700 transition-colors duration-150">
-              Docs
-            </a>
-            <a href="/privacy" className="hover:text-slate-700 transition-colors duration-150">
-              Privacy
-            </a>
-            <a href="/terms" className="hover:text-slate-700 transition-colors duration-150">
-              Terms
-            </a>
-            <a href="/contact" className="hover:text-slate-700 transition-colors duration-150">
-              Contact
-            </a>
-          </div>
-          <p className="text-xs text-slate-400">
-            © {new Date().getFullYear()} CivicNotices. Modernising statutory notices for the digital age.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
