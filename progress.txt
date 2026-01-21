@@ -2585,3 +2585,28 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - sendDeadlineReminder expects: noticeId, noticeType, premisesName, premisesAddress, deadline, hoursRemaining, noticeUrl, recipientEmail
   - Phase 12.1 (Email Service) is now COMPLETE
 ---
+
+## Iteration 103 - Task 13.1: Create e2e/fixtures/firm-auth.ts
+- **What was implemented**: Multi-role auth fixtures for firm portal E2E tests
+- **Files changed**:
+  - `e2e/fixtures/firm-auth.ts` - NEW FILE: ~180 lines of auth fixtures and helpers
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Created FirmTestUser interface with: email, password, role, displayRole, firmSlug, firmName, and detailed permissions object
+  - Defined 4 test users (OWNER, ADMIN, EDITOR, VIEWER) mapped to database roles:
+    - OWNER → 'owner' role (full permissions including billing)
+    - ADMIN → 'org_admin' role (all except billing)
+    - EDITOR → 'officer' role (create/edit/publish notices, drag Kanban, no team/template management)
+    - VIEWER → 'viewer' role (read-only, cannot drag Kanban)
+  - Added ALTERNATE_FIRM_USER for multi-tenant isolation tests
+  - Helper functions: loginAsFirmUser(), logoutFirmUser(), navigateToFirmDashboard/Notices/Templates/Team(), getFirmSlugFromUrl(), assertOnCorrectFirm(), assertCannotAccessOtherFirm()
+  - Uses BASE_URL from env or defaults to localhost:5173
+  - Login flow: selects "Professional Portal" tab, fills credentials, waits for /f/{firmSlug}/ redirect
+- **Test results**: All 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - firm-auth.ts compiles cleanly
+- **Learnings for future iterations**:
+  - Database roles map: owner/org_admin/officer/viewer (not "editor" - but displayed as Editor for firms)
+  - Permissions object helps tests know what each role can/cannot do
+  - Multi-tenant isolation needs an alternate firm user
+  - Next task is Task 13.2: Update playwright.config.ts with firm portal project
+---
