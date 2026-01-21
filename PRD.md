@@ -196,7 +196,7 @@ npm run lint         # ESLint check
 - [x] **Task 11.1c**: Add `useTransitionStage()` mutation hook. ~25 lines. (Created 2026-01-21 - Added useMutation hook with TransitionStageParams/TransitionStageResult interfaces, auto-invalidates notice workflow status cache on success)
 
 ### 11.3 Components
-- [ ] **Task 11.2**: Create `src/components/workflow/WorkflowStageBadge.tsx` - Badge showing stage name, color, deadline indicator. ~50 lines.
+- [x] **Task 11.2**: Create `src/components/workflow/WorkflowStageBadge.tsx` - Badge showing stage name, color, deadline indicator. ~50 lines. (Created 2026-01-21 - Component displays stage name with dynamic color styling, colored dot indicator, and deadline warnings: AlertTriangle for overdue, Clock for upcoming within 3 days)
 - [ ] **Task 11.3a**: Create `src/components/workflow/KanbanColumn.tsx` - Single column for Kanban board. Uses dnd-kit droppable. ~60 lines.
 - [ ] **Task 11.3b**: Create `src/components/workflow/KanbanCard.tsx` - Card for notice in Kanban. Shows client, premises, deadline. Draggable. ~50 lines.
 - [ ] **Task 11.3c**: Create `src/components/workflow/KanbanBoard.tsx` - Main board component. Maps stages to columns, handles drag events. ~80 lines.
