@@ -219,4 +219,77 @@ router.post('/notices/:noticeId/transition', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/workflow/notices/:noticeId/initialize
+ * Initializes the workflow for a notice (creates workflow status and initial stage)
+ */
+router.post('/notices/:noticeId/initialize', async (req, res) => {
+  try {
+    const supabase = getServiceSupabaseClient();
+    const firmId = req.user?.organizationId;
+    const { noticeId } = req.params;
+    const { noticeType } = req.body;
+
+    if (!firmId) {
+      return res.status(400).json({ error: 'No firm context' });
+    }
+
+    if (!noticeId) {
+      return res.status(400).json({ error: 'Notice ID is required' });
+    }
+
+    if (!noticeType) {
+      return res.status(400).json({ error: 'Notice type is required' });
+    }
+
+    // Verify notice belongs to this firm
+    const { data: notice, error: noticeError } = await supabase
+      .from('notices')
+      .select('id, firm_id')
+      .eq('id', noticeId)
+      .single();
+
+    if (noticeError && noticeError.code !== 'PGRST116') {
+      console.error('[workflow/notices/:noticeId/initialize] Notice check error:', noticeError);
+      return res.status(500).json({ error: 'Failed to verify notice access' });
+    }
+
+    if (!notice) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    if (notice.firm_id !== firmId) {
+      return res.status(403).json({ error: 'Access denied to this notice' });
+    }
+
+    // Check if workflow is already initialized
+    const { data: existingStatus } = await supabase
+      .from('notice_workflow_status')
+      .select('id')
+      .eq('notice_id', noticeId)
+      .single();
+
+    if (existingStatus) {
+      return res.status(409).json({ error: 'Workflow already initialized for this notice' });
+    }
+
+    // Initialize the workflow
+    const { data, error } = await supabase.rpc('initialize_notice_workflow', {
+      p_notice_id: noticeId,
+      p_firm_id: firmId,
+      p_notice_type: noticeType
+    });
+
+    if (error) {
+      console.error('[workflow/notices/:noticeId/initialize] Initialize error:', error);
+      return res.status(400).json({ error: error.message || 'Failed to initialize workflow' });
+    }
+
+    return res.status(201).json({ statusId: data, success: true });
+  } catch (error: any) {
+    console.error('[workflow/notices/:noticeId/initialize] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

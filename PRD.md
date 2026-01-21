@@ -163,7 +163,7 @@ npm run lint         # ESLint check
 - [x] **Task 10.1b**: Add GET `/configs/:noticeType` endpoint to workflow routes. Returns specific workflow with stages. ~30 lines. (Created 2026-01-21 - Added endpoint to server/routes/workflow.ts that queries workflow_configs by firm_id and notice_type, returns config with stages sorted by position, handles 404 for missing workflows)
 - [x] **Task 10.1c**: Add GET `/notices/:noticeId/status` endpoint to workflow routes. Returns notice workflow status with current stage. ~30 lines. (Created 2026-01-21 - Added endpoint to server/routes/workflow.ts that queries notice_workflow_status with current_stage and workflow joins, validates firm_id for authorization, calculates is_overdue in application layer)
 - [x] **Task 10.1d**: Add POST `/notices/:noticeId/transition` endpoint to workflow routes. Moves notice to new stage. ~40 lines. (Created 2026-01-21 - Endpoint validates firm access, calls transition_notice_stage RPC, returns historyId on success)
-- [ ] **Task 10.1e**: Add POST `/notices/:noticeId/initialize` endpoint to workflow routes. Initializes workflow for notice. ~30 lines.
+- [x] **Task 10.1e**: Add POST `/notices/:noticeId/initialize` endpoint to workflow routes. Initializes workflow for notice. ~30 lines. (Created 2026-01-21 - Validates notice belongs to firm, checks workflow not already initialized, calls initialize_notice_workflow RPC, returns statusId on success)
 - [ ] **Task 10.2**: Register workflow routes in `server/index.ts` - Import and mount at `/api/workflow`.
 
 ### 10.2 Department Routes
