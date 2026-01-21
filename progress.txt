@@ -1626,3 +1626,58 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Pre-existing TypeScript errors in src/ files are unrelated to this migration
   - Next task is Task 8.12b: Apply transition_notice_stage function to Supabase
 ---
+
+## Iteration 46 - Task 8.13a/b: Create and apply initialize_notice_workflow() function
+- **What was implemented**: Created and applied the initialize_notice_workflow() function migration
+- **Files created**:
+  - `supabase/migrations/20260120360000_create_initialize_notice_workflow.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.13a and 8.13b complete
+- **Function details**:
+  - Name: `initialize_notice_workflow(p_notice_id UUID, p_firm_id UUID, p_notice_type TEXT)`
+  - Returns: UUID (the notice_workflow_status.id)
+  - Purpose: Called when firm publishes a notice to set up workflow tracking
+  - Auto-creates default workflow: If no firm-specific workflow exists for notice type, calls the appropriate `create_default_*_workflow()` function:
+    - premises-licence, probate, planning, tro, gvol, gambling
+    - Falls back to premises-licence for unknown types
+  - Finds initial stage (is_initial=TRUE or first by position)
+  - Calculates deadline if initial stage has_deadline with fixed_days type
+  - Creates notice_workflow_status entry with workflow_id, current_stage_id, firm_id, deadline
+  - Records initial history entry with from_stage=NULL, transition_type='system', notes='Workflow initialized'
+  - Security: SECURITY DEFINER with GRANT EXECUTE to authenticated
+- **Migration output**: `CREATE FUNCTION`, `GRANT` - both successful via psql
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **Learnings for future iterations**:
+  - This function ties together all the workflow infrastructure created in Phase 8
+  - It ensures every notice gets a workflow even if firm hasn't configured one yet
+  - The CASE statement approach allows easy extension for new notice types
+  - History entry with NULL from_stage marks the workflow initialization event
+  - Phase 8.3 Workflow Functions are nearly complete - only Task 8.14 remains (add firm_id/client_id to notices table)
+  - Pre-existing TypeScript errors in src/ files and snapshot date mismatches are unrelated
+  - Next task is Task 8.14a: Create migration to add firm_id and client_id columns to notices table
+---
+
+## Iteration 47 - Task 8.14a: Create migration to add firm_id and client_id to notices table
+- **What was implemented**: Created SQL migration to add firm_id and client_id columns to the notices table
+- **Files created**:
+  - `supabase/migrations/20260120370000_add_firm_client_to_notices.sql`
+- **Files changed**:
+  - `PRD.md` - Marked Task 8.14a complete
+- **Migration details**:
+  - Uses IF NOT EXISTS pattern to safely add columns if they don't already exist
+  - Adds `firm_id UUID` column with FK reference to organizations(id) ON DELETE SET NULL
+  - Adds `client_id UUID` column with FK reference to organizations(id) ON DELETE SET NULL
+  - Creates 3 indexes for efficient queries:
+    - `idx_notices_firm_id` - for filtering notices by firm
+    - `idx_notices_client_id` - for filtering notices by client
+    - `idx_notices_firm_client` - composite index for firm+client queries
+  - Adds descriptive COMMENT on each column explaining their purpose
+- **Test results**: 32 snapshot date mismatches (pre-existing), 454 tests pass, no new regressions
+- **TypeScript check**: Pre-existing errors in council/, firm/, pages/ directories only - not related to this migration
+- **Learnings for future iterations**:
+  - SQL migrations don't affect TypeScript compilation
+  - The IF NOT EXISTS pattern in DO $$ blocks is idempotent - safe to run multiple times
+  - ON DELETE SET NULL is appropriate since we want to preserve notices even if the firm is deleted
+  - The 32 snapshot failures are date-dependent (templates generate dates based on NOW())
+  - Next task is Task 8.14b: Apply the migration to Supabase via psql
+---
