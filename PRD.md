@@ -72,7 +72,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Files**: `src/pages/council/Dashboard.tsx:180-186`, `src/pages/council/Representations.tsx:116-131`, `src/pages/council/Analytics.tsx`
 
-- [ ] `[CRITICAL]` `[L]` **Add database-level RLS policies for department isolation** - Defense in depth: even if frontend filter is bypassed, database should reject cross-department queries.
+- [x] `[CRITICAL]` `[L]` **Add database-level RLS policies for department isolation** - Defense in depth: even if frontend filter is bypassed, database should reject cross-department queries.
 
   ```sql
   -- Add to new migration
