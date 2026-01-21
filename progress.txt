@@ -5399,3 +5399,65 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Phase 19 Payment & Billing is now in progress
   - Next task is Task 19.1b: Add env vars to .env.example
 ---
+
+## Iteration - Task 19.1b: Add Stripe env vars to .env.example
+- **What was implemented**: Added Stripe-related environment variables to .env.example
+- **Files changed**:
+  - `.env.example` - Added 4 new environment variables with documentation
+- **Environment variables added**:
+  - `VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...` - Client-side publishable key (safe for browser)
+  - `STRIPE_SECRET_KEY=sk_test_...` - Server-side secret key (never expose to frontend)
+  - `STRIPE_WEBHOOK_SECRET=whsec_...` - Webhook signature verification
+  - `VITE_APP_URL=http://localhost:5173` - Base URL for Stripe return URLs and email links
+- **Test results**: All 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx, auth/Callback.tsx)
+- **Learnings for future iterations**:
+  - Stripe keys already used in server/routes/stripe.ts and src/hooks/useStripePayment.ts
+  - Client keys use VITE_ prefix, server keys do not
+  - Include helpful comments with dashboard URLs for where to get keys
+  - VITE_APP_URL needed for return URLs after Stripe checkout
+  - Next task is Task 19.1c: Create stripe.ts service (but it may already exist as server/routes/stripe.ts)
+---
+
+## Iteration - Task 19.1c: Create stripe.ts service
+- **What was implemented**: Created centralized Stripe service for lazy initialization
+- **Files changed**:
+  - `server/services/stripe.ts` - New file with getStripeClient() and isStripeConfigured() functions
+  - `server/routes/stripe.ts` - Updated to use the service instead of inline initialization
+  - `PRD.md` - Marked Task 19.1c complete
+- **Key implementation details**:
+  - `getStripeClient()` - Lazy initialization pattern (same as email.ts uses getResendClient())
+  - `isStripeConfigured()` - Helper to check if STRIPE_SECRET_KEY is set without throwing
+  - apiVersion: "2024-06-20" - Consistent with previous inline usage
+  - Routes now get client per-request via getStripeClient() instead of module-level constant
+- **Test results**: All 498 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (cypress/, e2e/, scripts/ directories)
+- **Learnings for future iterations**:
+  - Follow existing service patterns in server/services/ (lazy init with getter function)
+  - Separate "is configured" check from "get client" for graceful degradation
+  - Module-level Stripe constant was replaced with per-request initialization
+  - Next task is Task 19.2a: Create checkout session endpoint
+---
+
+## Iteration - Tasks 19.2a-d: Stripe Endpoints
+- **What was implemented**: 
+  - Task 19.2a: Verified checkout session endpoint already exists (POST /api/stripe/create-checkout-session)
+  - Task 19.2b: Added session status endpoint (GET /api/stripe/session/:sessionId/status)
+  - Task 19.2c: Verified webhook endpoint exists (POST /api/stripe/webhook)
+  - Task 19.2d: Verified routes registered at /api/stripe
+- **Files changed**:
+  - `server/routes/stripe.ts` - Added session status endpoint (~35 lines)
+  - `server/services/stripe.ts` - Updated API version from 2024-06-20 to 2025-12-15.clover
+  - `PRD.md` - Marked Tasks 19.2a-d complete
+- **Key implementation details**:
+  - Session status endpoint returns: status, paymentStatus, customerEmail, metadata, amountTotal, currency
+  - Handles error codes: 404 for resource_missing, 400 for missing sessionId, 500 for other errors
+  - Uses getStripeClient() lazy initialization pattern
+- **Learnings for future iterations**:
+  - Stripe API version must match package version (stripe@20.2.0 requires 2025-12-15.clover)
+  - TypeScript compiler will catch API version mismatches
+  - Many Phase 19 endpoints already exist - check before implementing
+  - isStripeConfigured() allows graceful degradation when Stripe not set up
+- **Test results**: All 498 tests pass, 2 skipped
+- **Next tasks**: Task 19.3a (Create CheckoutButton component)
+---
