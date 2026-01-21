@@ -163,7 +163,7 @@ export default function ConferenceLanding() {
                   Ready to see it in action?
                 </h2>
                 <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-                  {activeAudience === 'councils' && "Join 40+ UK councils already using CivicNotices"}
+                  {activeAudience === 'councils' && "Modernise your statutory notice publishing with CivicNotices"}
                   {activeAudience === 'applicants' && "Publish your first notice in minutes, not weeks"}
                   {activeAudience === 'public' && "Search notices in your area right now"}
                 </p>

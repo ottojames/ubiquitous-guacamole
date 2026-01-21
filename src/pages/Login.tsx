@@ -2,7 +2,6 @@ import { useState } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
-import { isDemoModeEnabled, DEMO_ACCOUNTS } from "@/lib/demoMode";
 
 const NAV_LINKS = [
   { href: "/#notices", label: "Find notices" },
@@ -31,26 +30,11 @@ export default function Login() {
       return;
     }
 
-    // Check if this is a demo account (regardless of demo mode)
-    const isKnownDemoAccount =
-      DEMO_ACCOUNTS.council.some(acc => acc.email === email) ||
-      DEMO_ACCOUNTS.firm.some(acc => acc.email === email) ||
-      email === DEMO_ACCOUNTS.public.email ||
-      // Also include additional known demo accounts
-      email === 'licensing@westminster.gov.uk' ||
-      email === 'licensing@sampletonborough.gov.uk' ||
-      email === 'solicitor@wilsonpartners.com';
-
-    // Skip validation for demo accounts using testpass123
-    const isDemoPassword = password === 'testpass123';
-
-    // Only validate password complexity for non-demo accounts or non-demo passwords
-    if (!isKnownDemoAccount || !isDemoPassword) {
-      if (!validatePassword(password)) {
-        setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
-        setLoading(false);
-        return;
-      }
+    // Validate password complexity
+    if (!validatePassword(password)) {
+      setError("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
+      setLoading(false);
+      return;
     }
 
     // All logins use real Supabase authentication
@@ -73,39 +57,7 @@ export default function Login() {
           document.cookie = `sb-auth-token=${data.session.access_token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
         }
 
-        // Demo mode bypass for known demo accounts - HARDCODED FIX FOR 500 ERROR
-        const demoAccounts: Record<string, { orgSlug: string; deptSlug?: string; type: 'council' | 'firm' }> = {
-          'licensing@westminster.gov.uk': { orgSlug: 'westminster', deptSlug: 'licensing', type: 'council' },
-          'licensing@sampletonborough.gov.uk': { orgSlug: 'sampletonborough', deptSlug: 'licensing', type: 'council' },
-          'solicitor@wilsonpartners.com': { orgSlug: 'wilson-partners', type: 'firm' }
-        };
-
-        // CRITICAL FIX: Check with case-insensitive comparison and RETURN EARLY
-        const normalizedEmail = email.toLowerCase().trim();
-        const demoConfig = demoAccounts[normalizedEmail];
-
-        if (demoConfig) {
-          console.log("DEMO ACCOUNT DETECTED:", normalizedEmail);
-          console.log("Portal type:", portalType, "Demo type:", demoConfig.type);
-
-          if (portalType === 'council' && demoConfig.type === 'council') {
-            // Direct redirect for council demo accounts
-            console.log("BYPASSING DATABASE - Redirecting to council dashboard");
-            window.location.href = `/c/${demoConfig.orgSlug}/${demoConfig.deptSlug}/dashboard`;
-            setLoading(false);
-            return; // CRITICAL: Return here to prevent any further code execution
-          } else if (portalType === 'professional' && demoConfig.type === 'firm') {
-            // Direct redirect for firm demo accounts
-            console.log("BYPASSING DATABASE - Redirecting to firm dashboard");
-            window.location.href = `/f/${demoConfig.orgSlug}/dashboard`;
-            setLoading(false);
-            return; // CRITICAL: Return here to prevent any further code execution
-          }
-        }
-
-        // IMPORTANT: Only run database queries if NOT a demo account
-        console.log("Not a demo account, proceeding with database queries");
-
+        // Query database for user's organization/department access
         if (portalType === 'council') {
           // Council portal: Check department membership
           // First get the membership
@@ -362,60 +314,6 @@ export default function Login() {
                   </p>
                 </div>
 
-                {/* Demo Accounts - Only shown when demo mode is enabled */}
-                {isDemoModeEnabled() && (
-                  <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-amber-900 mb-2">
-                          Demo Mode - Development Only
-                        </p>
-                        <div className="space-y-1 text-sm text-amber-800">
-                          {portalType === 'council' && DEMO_ACCOUNTS.council.map(account => (
-                            <button
-                              key={account.email}
-                              type="button"
-                              onClick={() => {
-                                setEmail(account.email);
-                                setPassword('testpass123');
-                              }}
-                              className="block text-left hover:underline"
-                            >
-                              {account.name} - {account.email}
-                            </button>
-                          ))}
-                          {portalType === 'professional' && DEMO_ACCOUNTS.firm.map(account => (
-                            <button
-                              key={account.email}
-                              type="button"
-                              onClick={() => {
-                                setEmail(account.email);
-                                setPassword('testpass123');
-                              }}
-                              className="block text-left hover:underline"
-                            >
-                              {account.name} - {account.email}
-                            </button>
-                          ))}
-                          {portalType === 'public' && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEmail(DEMO_ACCOUNTS.public.email);
-                                setPassword('testpass123');
-                              }}
-                              className="block text-left hover:underline"
-                            >
-                              {DEMO_ACCOUNTS.public.name} - {DEMO_ACCOUNTS.public.email}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
               <form onSubmit={handleSubmit} className="space-y-7">
                 {/* Email Field */}
                 <div>
@@ -537,7 +435,7 @@ export default function Login() {
         <div className={UI.container}>
           <div className="mx-auto max-w-5xl">
             <h2 className="mb-12 text-center text-xl font-medium text-slate-700">
-              Trusted by 40+ UK councils and thousands of users
+              The modern way to publish statutory notices
             </h2>
             <div className="grid gap-8 md:grid-cols-3">
               <div className="rounded-lg bg-white/60 border border-slate-200/50 p-7 text-center backdrop-blur-sm transition-all hover:bg-white hover:border-slate-300/60 hover:shadow-sm">
