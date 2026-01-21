@@ -2163,3 +2163,18 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - This endpoint doesn't need owner/admin permission checks since tracking usage is not a destructive operation
   - Next task is Task 10.6: Register template routes in server/index.ts
 ---
+
+## Iteration 88 - Task 10.6: Register firm-templates routes
+- **What was implemented**: Registered firm-templates routes in server/index.ts at /api/firm/templates
+- **Files changed**:
+  - `server/index.ts` - Added import for firmTemplatesRouter and route registration
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Line 39: Added `import firmTemplatesRouter from './routes/firm-templates';`
+  - Line 86: Added `app.use('/api/firm/templates', firmTemplatesRouter);`
+- **Verification**: 488 tests pass
+- **Learnings for future iterations**:
+  - Phase 10 (Firm Portal Backend API) is now COMPLETE - all 6 tasks done
+  - Next phase is Phase 11 (Firm Portal UI Components) starting with Task 11.0 to install dnd-kit and react-query dependencies
+  - The firm-templates routes provide: GET / (list), GET /:id (single), POST / (create), PATCH /:id (update), DELETE /:id (soft delete), POST /:id/use (increment usage count)
+---
