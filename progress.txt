@@ -3448,3 +3448,29 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - 494 tests pass after this change
   - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are not blocking
 ---
+
+## Iteration 91 - Task 15.6c: Add FAQ "Why do councils get a discount?"
+- **What was implemented**: Added new FAQ explaining the council discount pricing
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Added new FAQ object with question "Why do councils get a discount?"
+  - PRD.md - Marked task complete with implementation notes
+- **FAQ Answer**: "Councils process thousands of notices each year and provide a vital public service. Our discounted £19.99 rate recognises their volume and helps redirect taxpayer money from expensive newspaper advertising to modern digital infrastructure."
+- **Test results**: All 494 tests pass
+- **Learnings for future iterations**:
+  - The FAQ section currently has 5 items after this addition
+  - Remaining FAQ tasks: 15.6d (£49/month subscription), 15.6e (publish without subscription), 15.6f (free council portal)
+  - Next task is Task 15.6d: Add FAQ "What's in £49/month subscription?"
+---
+
+## Iteration 92 - Task 15.6d: Add FAQ "What's in £49/month subscription?"
+- **What was implemented**: Added new FAQ explaining what's included in the £49/month Professional Portal subscription
+- **Files changed**: 
+  - src/pages/Pricing.tsx - Added new FAQ object with question "What's included in the £49/month subscription?"
+  - PRD.md - Marked task complete with implementation notes
+- **FAQ Answer**: "The Professional Portal subscription includes unlimited team members, Kanban workflow management for tracking notice stages, client matter tracking with billing integration, deadline reminders with calendar sync, custom notice templates, and priority email support. Notices are charged separately at £50 each."
+- **Test results**: All 494 tests pass
+- **Learnings for future iterations**:
+  - The FAQ section now has 6 items
+  - Remaining FAQ tasks: 15.6e (publish without subscription), 15.6f (free council portal)
+  - Next task is Task 15.6e: Add FAQ "Can I publish without subscription?"
+---

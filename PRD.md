@@ -355,7 +355,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.6b**: Remove "switch plans" FAQ. **Success**: Removed. (Completed 2026-01-21 - Removed outdated FAQ about switching plans which referenced Council/Enterprise customers)
 - [x] **Task 15.6c**: Add FAQ "Why do councils get a discount?" **Success**: Added. (Completed 2026-01-21 - FAQ explains councils process thousands of notices annually and the £19.99 rate helps redirect taxpayer money from expensive newspaper advertising to modern digital infrastructure)
 - [x] **Task 15.6d**: Add FAQ "What's in £49/month subscription?" **Success**: Added. (Completed 2026-01-21 - FAQ explains subscription includes unlimited team members, Kanban workflow, client matter tracking, deadline reminders, custom templates, and priority support; notes £50/notice charged separately)
-- [ ] **Task 15.6e**: Add FAQ "Can I publish without subscription?" **Success**: Added.
+- [x] **Task 15.6e**: Add FAQ "Can I publish without subscription?" **Success**: Added. (Completed 2026-01-21 - FAQ explains One-Off Publishing at £50, no account required, only subscription needed for team collaboration and professional features)
 - [ ] **Task 15.6f**: Add FAQ "What's in free council portal?" **Success**: Added.
 
 ### 15.7 Update Final CTA Section

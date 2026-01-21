@@ -369,6 +369,10 @@ export default function Pricing() {
                   q: "What's included in the £49/month subscription?",
                   a: "The Professional Portal subscription includes unlimited team members, Kanban workflow management for tracking notice stages, client matter tracking with billing integration, deadline reminders with calendar sync, custom notice templates, and priority email support. Notices are charged separately at £50 each.",
                 },
+                {
+                  q: "Can I publish without a subscription?",
+                  a: "Absolutely! Our One-Off Publishing option lets anyone publish a notice for £50 with no account or subscription required. You get instant publication, full audit trail, and a PDF certificate. The subscription is only needed if you want team collaboration, workflow management, and other professional features.",
+                },
               ].map((faq, index) => (
                 <div
                   key={index}
