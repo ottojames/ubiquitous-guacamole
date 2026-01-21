@@ -4232,3 +4232,101 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Sidebar text will need updating to be readable on light background (current gray-400 may be too light)
   - The red-themed elements (text-red-500, bg-red-900, bg-red-600) still need updating in subsequent tasks
 ---
+
+## Iteration 121 - Task 17.1c: Update sidebar text to slate-700
+- **What was implemented**: Changed admin sidebar text colors from dark theme (gray-400, red variants) to light theme slate colors
+- **Files changed**:
+  - `src/pages/admin/AdminLayout.tsx` - 4 edits: header text, nav items, footer buttons, collapsed icon
+  - `PRD.md` - Marked Task 17.1c complete
+- **Key changes**:
+  1. Header (lines 151-158): Title `text-red-500` → `text-slate-900`, email `text-gray-400` → `text-slate-600`, role badge `bg-red-900 text-red-200` → `bg-slate-200 text-slate-700`
+  2. Nav items (lines 181-183): Active `bg-red-900 text-white` → `bg-blue-600 text-white`, inactive `text-gray-400 hover:bg-gray-900` → `text-slate-700 hover:bg-slate-200`
+  3. Active description (line 192): `text-red-300` → `text-blue-100`
+  4. Footer buttons (lines 209, 218, 227): `text-gray-400 hover:bg-gray-900 hover:text-white` → `text-slate-700 hover:bg-slate-200 hover:text-slate-900`
+  5. Collapsed icon (line 163): `bg-red-600` → `bg-blue-600`
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in council/firm pages only - AdminLayout.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Task 17.1c is complete - sidebar now has readable text on light background
+  - Note: Also updated active state to blue (Task 17.1d) as part of this work since it was necessary for coherent design
+  - The mobile header/menu still uses dark theme - will need separate updates if required
+  - Next task is 17.1d: Update active state to blue (partially done in this iteration)
+---
+
+## Iteration 122 - Task 17.1d: Update active state to blue
+- **What was implemented**: Completed blue theme for admin panel active states and mobile menu
+- **Files changed**:
+  - `src/pages/admin/AdminLayout.tsx` - 9 edits
+  - `PRD.md` - Marked Task 17.1d complete
+- **Key changes**:
+  1. Mobile header title (line 245): `text-red-500` → `text-slate-900`
+  2. Mobile header hamburger button (line 241): `text-white` → `text-slate-700`
+  3. Mobile header bell icon (line 248-251): `text-gray-400 hover:text-white` → `text-slate-600 hover:text-slate-900`, notification dot `bg-red-500` → `bg-blue-600`
+  4. Mobile menu container (lines 264-267): `bg-gray-900` → `bg-slate-50`, border `border-gray-800` → `border-slate-200`, email `text-gray-400` → `text-slate-600`
+  5. Mobile role badge (line 268): `bg-red-900 text-red-200` → `bg-slate-200 text-slate-700`
+  6. Mobile nav active state (line 284): `bg-red-900` → `bg-blue-600`
+  7. Mobile nav inactive (line 285): `text-gray-400 hover:bg-gray-800 hover:text-white` → `text-slate-700 hover:bg-slate-200 hover:text-slate-900`
+  8. Mobile nav description (line 291): `text-gray-500` → `text-slate-500`
+  9. Mobile signout button (lines 297-300): border `border-gray-800` → `border-slate-200`, button `text-gray-400 hover:bg-gray-800 hover:text-white` → `text-slate-700 hover:bg-slate-200 hover:text-slate-900`
+  10. Top bar avatar circle (line 350): `bg-red-600` → `bg-blue-600`
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Desktop sidebar active state (bg-blue-600) was already updated in Task 17.1c
+  - Task 17.1d focused on mobile menu and remaining red theme elements
+  - The admin panel now has consistent light theme with blue accents
+  - Note: The top bar (desktop) still has `bg-gray-900` dark background - may need updating in Task 17.1e
+  - Next task is 17.1e: Match header to public site
+---
+
+## Iteration 123 - Task 17.1e: Match header to public site
+- **What was implemented**: Updated admin top bar to match the public site header style
+- **Files changed**:
+  - `src/pages/admin/AdminLayout.tsx` - 12 class changes
+  - `PRD.md` - Marked Task 17.1e complete
+- **Key changes**:
+  1. Page container (line 120): `bg-gray-900` → `bg-slate-100`
+  2. Top bar (line 311): `bg-gray-900 border-b border-gray-800` → `bg-white/80 backdrop-blur-lg border-b border-slate-200`
+  3. Page title (line 316): `text-white` → `text-slate-900`
+  4. Session timer warning (line 323): `bg-amber-900 text-amber-200` → `bg-amber-100 text-amber-800`
+  5. Session timer normal (line 328): `text-gray-400` → `text-slate-500`
+  6. Notification bell (line 335): `text-gray-400 hover:text-white` → `text-slate-500 hover:text-slate-900`
+  7. Notification dot (line 337): `bg-red-500` → `bg-blue-600`
+  8. User info border (line 341): `border-l border-gray-800` → `border-l border-slate-200`
+  9. User name (line 343): `text-white` → `text-slate-900`
+  10. User role (line 346): `text-gray-400` → `text-slate-500`
+- **Public site header comparison**:
+  - Public site uses: `bg-white/80 backdrop-blur-lg border-b border-white/10`
+  - Admin now uses: `bg-white/80 backdrop-blur-lg border-b border-slate-200`
+  - Both use similar light, semi-transparent style with backdrop blur
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts only
+- **Learnings for future iterations**:
+  - The admin panel now has a consistent light theme throughout (sidebar, mobile menu, top bar)
+  - The color scheme matches the public site: white/slate backgrounds, slate text colors, blue accents
+  - Next task is 17.1f: Standardize card styles
+---
+
+## Iteration 124 - Task 17.1f: Standardize card styles in admin panel
+- **What was implemented**: Updated 4 admin files to use consistent light theme card styles matching Dashboard
+- **Files changed**:
+  - `src/pages/admin/Settings.tsx` - Changed from dark to light theme (bg-gray-800→bg-white, text-white→text-slate-900)
+  - `src/pages/admin/AccountManagement.tsx` - Modal, tabs, toolbar, table all converted to light theme
+  - `src/pages/admin/AuditLog.tsx` - Removed all dark: prefixes, simplified to light theme only
+  - `src/pages/admin/AdminNotices.tsx` - Updated focus ring colors to blue
+  - `PRD.md` - Marked Task 17.1f complete
+- **Key changes**:
+  - Settings.tsx: bg-gray-800→bg-white rounded-lg shadow-sm border border-gray-200, text-white→text-slate-900
+  - AccountManagement.tsx: modal bg-gray-800→bg-white, tabs bg-gray-800→bg-slate-100, table bg-gray-800→bg-white
+  - AuditLog.tsx: Removed ~20 dark: prefixes (dark:bg-gray-800, dark:text-gray-300, etc.)
+  - All files: focus:ring-red-500→focus:ring-blue-500, bg-red-600→bg-blue-600
+  - Status badges: bg-green-900/text-green-200→bg-green-100/text-green-700 pattern
+- **Standard admin card pattern**: bg-white rounded-lg shadow-sm border border-gray-200
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/scripts only - not blocking
+- **Learnings for future iterations**:
+  - Admin Dashboard already had correct light theme card patterns - use it as reference
+  - AdminNotices.tsx was mostly correct, just needed focus ring color updates
+  - Settings/AccountManagement/AuditLog had dark theme holdovers from original design
+  - AuditLog had dark mode variants (dark:bg-gray-800) - easier to remove all at once with replace_all
+  - Next task is 17.2a: Run axe-core accessibility audit
+---

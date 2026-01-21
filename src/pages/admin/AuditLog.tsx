@@ -175,11 +175,11 @@ export default function AuditLog() {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+        return 'bg-red-100 text-red-700';
       case 'warning':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400';
+        return 'bg-amber-100 text-amber-700';
       default:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+        return 'bg-blue-100 text-blue-700';
     }
   };
 
@@ -189,12 +189,12 @@ export default function AuditLog() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-red-600" />
+            <Shield className="w-8 h-8 text-blue-600" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-gray-900 ">
                 Audit Log
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 ">
                 Track all administrative actions and changes
               </p>
             </div>
@@ -202,7 +202,7 @@ export default function AuditLog() {
 
           <button
             onClick={exportLogs}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Download className="w-4 h-4" />
             Export CSV
@@ -211,42 +211,42 @@ export default function AuditLog() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+      <div className="bg-white  rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {/* Date Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700  mb-1">
               From Date
             </label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700  mb-1">
               To Date
             </label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             />
           </div>
 
           {/* Admin User */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700  mb-1">
               Admin User
             </label>
             <select
               value={selectedAdmin}
               onChange={(e) => setSelectedAdmin(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             >
               <option value="">All Users</option>
               {/* Admin users would be populated from API */}
@@ -255,13 +255,13 @@ export default function AuditLog() {
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700  mb-1">
               Category
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             >
               <option value="">All Categories</option>
               <option value="account_management">Account Management</option>
@@ -275,13 +275,13 @@ export default function AuditLog() {
 
           {/* Severity */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700  mb-1">
               Severity
             </label>
             <select
               value={selectedSeverity}
               onChange={(e) => setSelectedSeverity(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             >
               <option value="">All Levels</option>
               <option value="info">Info</option>
@@ -292,13 +292,13 @@ export default function AuditLog() {
 
           {/* Target Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700  mb-1">
               Target Type
             </label>
             <select
               value={selectedTargetType}
               onChange={(e) => setSelectedTargetType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             >
               <option value="">All Types</option>
               <option value="organization">Organization</option>
@@ -318,51 +318,51 @@ export default function AuditLog() {
               placeholder="Search by action, target, or reason..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500  "
             />
           </div>
         </div>
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+      <div className="bg-white  rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <tr className="bg-gray-50  border-b border-gray-200 ">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   Timestamp
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   Admin
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   Action
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   Target
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   Severity
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   IP Address
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-gray-200 ">
               {loading && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500 ">
                     Loading audit logs...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500 ">
                     No audit logs found
                   </td>
                 </tr>
@@ -370,34 +370,34 @@ export default function AuditLog() {
                 logs.map((log) => (
                   <tr
                     key={log.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="hover:bg-gray-50  transition-colors"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 ">
                       <div>
                         <div className="font-medium">
                           {format(new Date(log.created_at), 'MMM d, yyyy')}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-gray-500 ">
                           {format(new Date(log.created_at), 'HH:mm:ss')}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                        <div className="font-medium text-gray-900 ">
                           {log.admin_email}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-gray-500 ">
                           {log.admin_role}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                        <div className="font-medium text-gray-900 ">
                           {log.action}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-gray-500 ">
                           {log.action_category.replace(/_/g, ' ')}
                         </div>
                       </div>
@@ -405,10 +405,10 @@ export default function AuditLog() {
                     <td className="px-4 py-3 text-sm">
                       {log.target_identifier ? (
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-gray-100">
+                          <div className="font-medium text-gray-900 ">
                             {log.target_identifier}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                          <div className="text-xs text-gray-500 ">
                             {log.target_type}
                           </div>
                         </div>
@@ -424,13 +424,13 @@ export default function AuditLog() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-mono">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900  font-mono">
                       {log.ip_address}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <button
                         onClick={() => setSelectedLog(log)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        className="text-blue-600 hover:text-blue-700 "
                       >
                         View Details
                       </button>
@@ -444,7 +444,7 @@ export default function AuditLog() {
 
         {/* Infinite scroll target */}
         {hasMore && (
-          <div ref={observerTarget} className="p-4 text-center text-gray-500 dark:text-gray-400">
+          <div ref={observerTarget} className="p-4 text-center text-gray-500 ">
             Loading more logs...
           </div>
         )}
@@ -453,15 +453,15 @@ export default function AuditLog() {
       {/* Detail Modal */}
       {selectedLog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white  rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="sticky top-0 bg-white  border-b border-gray-200  p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-gray-900 ">
                   Audit Log Details
                 </h2>
                 <button
                   onClick={() => setSelectedLog(null)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                  className="p-2 hover:bg-gray-100  rounded-lg"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -471,52 +471,52 @@ export default function AuditLog() {
             <div className="p-6 space-y-6">
               {/* Basic Info */}
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="font-semibold text-gray-900  mb-3">
                   Basic Information
                 </h3>
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Timestamp
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                    <dd className="mt-1 text-sm text-gray-900 ">
                       {format(new Date(selectedLog.created_at), 'PPpp')}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Admin User
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                    <dd className="mt-1 text-sm text-gray-900 ">
                       {selectedLog.admin_email} ({selectedLog.admin_role})
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Action
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                    <dd className="mt-1 text-sm text-gray-900 ">
                       {selectedLog.action}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Category
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                    <dd className="mt-1 text-sm text-gray-900 ">
                       {selectedLog.action_category.replace(/_/g, ' ')}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Target
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                    <dd className="mt-1 text-sm text-gray-900 ">
                       {selectedLog.target_identifier || 'N/A'} ({selectedLog.target_type})
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Severity
                     </dt>
                     <dd className="mt-1">
@@ -532,10 +532,10 @@ export default function AuditLog() {
               {/* Reason */}
               {selectedLog.reason && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                  <h3 className="font-semibold text-gray-900  mb-3">
                     Reason
                   </h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                  <p className="text-sm text-gray-700  bg-gray-50  p-3 rounded-lg">
                     {selectedLog.reason}
                   </p>
                 </div>
@@ -544,26 +544,26 @@ export default function AuditLog() {
               {/* Changes */}
               {(selectedLog.old_values || selectedLog.new_values) && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                  <h3 className="font-semibold text-gray-900  mb-3">
                     Changes
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedLog.old_values && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <h4 className="text-sm font-medium text-gray-700  mb-2">
                           Old Values
                         </h4>
-                        <pre className="text-xs bg-gray-50 dark:bg-gray-900 p-3 rounded-lg overflow-auto">
+                        <pre className="text-xs bg-gray-50  p-3 rounded-lg overflow-auto">
                           {JSON.stringify(selectedLog.old_values, null, 2)}
                         </pre>
                       </div>
                     )}
                     {selectedLog.new_values && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <h4 className="text-sm font-medium text-gray-700  mb-2">
                           New Values
                         </h4>
-                        <pre className="text-xs bg-gray-50 dark:bg-gray-900 p-3 rounded-lg overflow-auto">
+                        <pre className="text-xs bg-gray-50  p-3 rounded-lg overflow-auto">
                           {JSON.stringify(selectedLog.new_values, null, 2)}
                         </pre>
                       </div>
@@ -574,31 +574,31 @@ export default function AuditLog() {
 
               {/* Technical Details */}
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="font-semibold text-gray-900  mb-3">
                   Technical Details
                 </h3>
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       IP Address
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono">
+                    <dd className="mt-1 text-sm text-gray-900  font-mono">
                       {selectedLog.ip_address}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       Session ID
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono text-xs">
+                    <dd className="mt-1 text-sm text-gray-900  font-mono text-xs">
                       {selectedLog.session_id || 'N/A'}
                     </dd>
                   </div>
                   <div className="col-span-2">
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <dt className="text-sm font-medium text-gray-500 ">
                       User Agent
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 font-mono text-xs">
+                    <dd className="mt-1 text-sm text-gray-900  font-mono text-xs">
                       {selectedLog.user_agent || 'N/A'}
                     </dd>
                   </div>
