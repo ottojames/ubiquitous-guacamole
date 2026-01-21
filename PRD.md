@@ -469,7 +469,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.4e**: Fix password reset. **Success**: Works. (Completed 2026-01-21 - Implemented supabase.auth.resetPasswordForEmail() in AccountManagement.tsx, sends reset link email to user with success/error AlertModal feedback)
 
 ### 17.5 Fix Dashboard Stats
-- [ ] **Task 17.5a**: Find hardcoded stats, list them. **Success**: Listed.
+- [x] **Task 17.5a**: Find hardcoded stats, list them. **Success**: Listed. (Completed 2026-01-21 - Found 5 hardcoded values in src/pages/admin/Dashboard.tsx: 1) Line 287-289 "+12% this month" growth for law firms, 2) Line 107 monthly revenue formula uses wrong multipliers (councils*500 + firms*250) instead of actual pricing model, 3) Line 399 "45ms" API response time, 4) Line 403 "12%" database load, 5) Line 407 "99.98%" uptime)
 - [ ] **Task 17.5b**: Create admin stats API endpoint. ~50 lines. **Success**: Returns data.
 - [ ] **Task 17.5c**: Register with admin auth. **Success**: Protected.
 - [ ] **Task 17.5d**: Create useAdminStats hook. **Success**: Works.
