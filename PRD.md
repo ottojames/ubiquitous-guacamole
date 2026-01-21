@@ -591,7 +591,7 @@ npm run lint         # ESLint check
 - [x] **Task 20.4d**: Add sidebar link. **Success**: Visible. (Completed 2026-01-21 - Sidebar link exists at line 249 of CouncilLayout.tsx with path 'templates', label 'Templates', icon SVG, and requiredPermission: PERMISSIONS.TEMPLATES_READ)
 
 ### 20.5 IDOX Export
-- [ ] **Task 20.5a**: Research format, document. **Success**: Documented.
+- [x] **Task 20.5a**: Research format, document. **Success**: Documented. (Completed 2026-01-21 - Created docs/idox-export-format.md with comprehensive documentation: 14-column CSV specification, field mapping table, IDOX integration notes, UK Licensing Act 2003 requirements, example CSV data, references to IDOX docs and LGA handbook)
 - [ ] **Task 20.5b**: Create export service. ~60 lines. **Success**: Generates.
 - [ ] **Task 20.5c**: Create endpoint. **Success**: Works.
 - [ ] **Task 20.5d**: Add button. **Success**: Downloads.
