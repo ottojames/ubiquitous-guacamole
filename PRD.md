@@ -321,7 +321,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.1c**: Delete `pricingPlans.enterprise` object. **Success**: Object removed, no TypeScript errors. (Completed 2026-01-21 - Removed lines 101-124, temporarily hid Law Firms section, 494 tests pass)
 - [x] **Task 15.1d**: Delete `pricingPlans.councilSmall` object (Parish & Town). **Success**: Object removed. (Completed 2026-01-21 - Removed object and all councilSmall references from comparisonData and table rendering, updated grid to 2 cols, 494 tests pass)
 - [x] **Task 15.1e**: Delete `pricingPlans.councilMedium` object (District Council). **Success**: Object removed. (Completed 2026-01-21 - Removed object, all councilMedium references from comparisonData and table rendering, updated colspan to 6, 494 tests pass)
-- [ ] **Task 15.1f**: Delete `pricingPlans.councilLarge` object (Unitary & County). **Success**: Object removed.
+- [x] **Task 15.1f**: Delete `pricingPlans.councilLarge` object (Unitary & County). **Success**: Object removed. (Completed 2026-01-21 - Removed councilLarge object, removed comparisonData array, temporarily hid Council section, removed billing toggle and unused state, 494 tests pass)
 - [ ] **Task 15.1g**: Delete entire `comparisonData` array. **Success**: Array removed.
 - [ ] **Task 15.1h**: Update `pricingPlans.individual` to show £50 (not £49.99). **Success**: Price shows "£50".
 

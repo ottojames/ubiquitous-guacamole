@@ -8,8 +8,6 @@ const NAV_LINKS = [
   { href: "/pricing", label: "Pricing" },
 ] as const;
 
-type BillingCycle = "monthly" | "annual";
-
 const pricingPlans = {
   individual: {
     name: "Pay as you go",
@@ -30,64 +28,7 @@ const pricingPlans = {
     ctaHref: "/publish",
     popular: false,
   },
-  councilLarge: {
-    name: "Unitary & County",
-    description: "For large unitary, county councils, and combined authorities",
-    priceMonthly: 499,
-    priceAnnual: 4990,
-    includedNotices: null, // Unlimited
-    overageRate: null,
-    features: [
-      "Unlimited notice publications",
-      "Receiving departments get free portals",
-      "Bulk import & API access",
-      "Single sign-on (SSO)",
-      "Advanced role-based permissions",
-      "Custom branding & domain",
-      "Priority email & phone support",
-      "Dedicated account manager",
-      "FOI-ready export packs",
-      "Retention & redaction tools",
-      "SLA guarantee (99.9% uptime)",
-      "Onboarding & training",
-    ],
-    cta: "Contact sales",
-    ctaHref: "#contact",
-    popular: false,
-  },
 };
-
-const comparisonData = [
-  {
-    category: "Publishing",
-    features: [
-      { name: "Number of notices", individual: "Pay per notice", professional: "5/month", business: "15/month", councilLarge: "Unlimited", enterprise: "50/month" },
-      { name: "Instant publication", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
-      { name: "Bulk import", individual: false, professional: true, business: true, councilLarge: true, enterprise: true },
-      { name: "API access", individual: false, professional: false, business: true, councilLarge: true, enterprise: true },
-      { name: "White-label", individual: false, professional: false, business: false, councilLarge: false, enterprise: true },
-    ],
-  },
-  {
-    category: "Compliance & Legal",
-    features: [
-      { name: "Cryptographic proof", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
-      { name: "Audit trail", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
-      { name: "PDF certificates", individual: true, professional: true, business: true, councilLarge: true, enterprise: true },
-      { name: "FOI-ready exports", individual: false, professional: false, business: false, councilLarge: true, enterprise: false },
-      { name: "Custom retention policies", individual: false, professional: false, business: false, councilLarge: true, enterprise: false },
-    ],
-  },
-  {
-    category: "Support & Service",
-    features: [
-      { name: "Email support", individual: "24h response", professional: "12h response", business: "4h response", councilLarge: "4h response", enterprise: "1h response" },
-      { name: "Phone support", individual: false, professional: false, business: true, councilLarge: true, enterprise: true },
-      { name: "Dedicated account manager", individual: false, professional: false, business: false, councilLarge: true, enterprise: true },
-      { name: "SLA guarantee", individual: false, professional: false, business: false, councilLarge: "99.9%", enterprise: "99.99%" },
-    ],
-  },
-];
 
 const oldWayData = [
   {
@@ -114,8 +55,6 @@ const oldWayData = [
 ];
 
 export default function Pricing() {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
-  const [showComparison, setShowComparison] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   return (
@@ -260,39 +199,6 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Billing Toggle */}
-      <section className="py-8">
-        <div className={UI.container}>
-          <div className="flex justify-center">
-            <div className="inline-flex items-center gap-3 rounded-full bg-white p-1.5 shadow-md ring-1 ring-slate-200">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`rounded-full px-6 py-2 text-sm font-semibold transition ${
-                  billingCycle === "monthly"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle("annual")}
-                className={`rounded-full px-6 py-2 text-sm font-semibold transition ${
-                  billingCycle === "annual"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Annual
-                <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
-                  Save 17%
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Individual/Direct Publishing */}
       <section className="pb-8">
         <div className={UI.container}>
@@ -339,179 +245,7 @@ export default function Pricing() {
 
       {/* Law Firms - Section temporarily hidden while pricing restructure in progress */}
 
-      {/* Council - Premium Section */}
-      <section className="pb-16 md:pb-24">
-        <div className={UI.container}>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 p-12 md:p-16">
-            <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-            <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-
-            <div className="relative">
-              <div className="mb-12 text-center">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-sm font-semibold text-white backdrop-blur">
-                  <Shield className="h-4 w-4" />
-                  Government Solution
-                </div>
-                <h2 className="text-3xl font-bold text-white md:text-4xl">
-                  For Local Councils & Authorities
-                </h2>
-                <p className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
-                  Scalable pricing for councils of all sizes. For departments that publish notices (Planning, Traffic, Environmental Health). Departments that only receive notices (Licensing) get free access.
-                </p>
-              </div>
-
-              <div className="mx-auto max-w-lg">
-                {(() => {
-                  const plan = pricingPlans.councilLarge;
-                  const price =
-                    plan.priceAnnual && billingCycle === "annual"
-                      ? plan.priceAnnual
-                      : plan.priceMonthly;
-
-                  return (
-                    <div
-                      className="rounded-2xl border-2 bg-white/10 p-6 backdrop-blur-xl border-white/20"
-                    >
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{plan.name}</h3>
-                        <p className="mt-2 text-sm text-blue-100">{plan.description}</p>
-                      </div>
-
-                      <div className="mt-6">
-                        <span className="text-4xl font-extrabold tracking-tight text-white">
-                          £{price}
-                        </span>
-                        <span className="ml-2 text-base text-blue-100">
-                          /{billingCycle === "monthly" ? "month" : "year"}
-                        </span>
-                        {billingCycle === "annual" && plan.priceAnnual && (
-                          <div className="mt-2 text-sm font-medium text-emerald-300">
-                            Save £{plan.priceMonthly! * 12 - plan.priceAnnual} per year
-                          </div>
-                        )}
-                      </div>
-
-                      <a
-                        href={plan.ctaHref}
-                        className="mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold transition bg-white/20 text-white hover:bg-white/30"
-                      >
-                        {plan.cta}
-                      </a>
-
-                      <ul className="mt-6 space-y-2.5">
-                        {plan.features.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-300" />
-                            <span className="text-xs text-white">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              <div className="mt-8 space-y-4">
-                <div className="rounded-xl border border-emerald-300/30 bg-emerald-400/10 p-4 backdrop-blur">
-                  <p className="text-sm font-semibold text-emerald-200">
-                    💡 Important: Pricing is per publishing department
-                  </p>
-                  <p className="mt-2 text-xs text-emerald-100">
-                    Each department that publishes notices (Planning, Traffic, Environmental Health) requires its own subscription. Departments that only receive notices (Licensing) get free portal access at no cost.
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/20 bg-white/5 p-4 text-center backdrop-blur">
-                  <p className="text-sm text-blue-100">
-                    Trusted by 40+ UK local authorities • 99.9% uptime SLA • FOI-ready exports
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison Table Section */}
-      <section className="pb-16 md:pb-24">
-        <div className={UI.container}>
-          {/* Comparison Table Toggle */}
-          <div className="text-center">
-            <button
-              onClick={() => setShowComparison(!showComparison)}
-              className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-800"
-            >
-              {showComparison ? "Hide" : "View"} detailed comparison
-              <ArrowRight className={`h-4 w-4 transition ${showComparison ? "rotate-90" : ""}`} />
-            </button>
-          </div>
-
-          {/* Comparison Table */}
-          {showComparison && (
-            <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                        Features
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
-                        Pay as you go
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
-                        Professional
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
-                        Business
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-slate-900">
-                        Enterprise
-                      </th>
-                      <th className="px-3 py-4 text-center text-xs font-semibold text-blue-700 bg-blue-50">
-                        Unitary & County
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comparisonData.map((category, catIndex) => (
-                      <>
-                        <tr key={`cat-${catIndex}`} className="border-b border-slate-200 bg-slate-50/50">
-                          <td colSpan={6} className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            {category.category}
-                          </td>
-                        </tr>
-                        {category.features.map((feature, featIndex) => {
-                          const renderCell = (value: any) => {
-                            if (typeof value === "boolean") {
-                              return value ? (
-                                <Check className="inline h-4 w-4 text-blue-600" />
-                              ) : (
-                                <span className="text-slate-400">—</span>
-                              );
-                            }
-                            return <span className="text-slate-700 text-xs">{value}</span>;
-                          };
-
-                          return (
-                            <tr key={`feat-${catIndex}-${featIndex}`} className="border-b border-slate-100">
-                              <td className="px-6 py-4 text-sm text-slate-700">{feature.name}</td>
-                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.individual)}</td>
-                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.professional)}</td>
-                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.business)}</td>
-                              <td className="px-3 py-4 text-center text-xs">{renderCell(feature.enterprise)}</td>
-                              <td className="px-3 py-4 text-center text-xs bg-blue-50/50">{renderCell(feature.councilLarge)}</td>
-                            </tr>
-                          );
-                        })}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Council - Section temporarily hidden while pricing restructure in progress */}
 
       {/* FAQ */}
       <section className="py-16 md:py-24">
