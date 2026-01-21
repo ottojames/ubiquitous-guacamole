@@ -235,10 +235,6 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Law Firms - Section temporarily hidden while pricing restructure in progress */}
-
-      {/* Council - Section temporarily hidden while pricing restructure in progress */}
-
       {/* FAQ */}
       <section className="py-16 md:py-24">
         <div className={UI.container}>

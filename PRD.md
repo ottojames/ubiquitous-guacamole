@@ -337,7 +337,7 @@ npm run lint         # ESLint check
 
 ### 15.4 Rebuild Pricing Cards Section
 - [x] **Task 15.4a**: Delete "For Individuals" section. **Success**: Removed. (Completed 2026-01-21 - Removed lines 257-299 "For Individuals & One-Off Publishing" section and pricingPlans.individual object, 494 tests pass)
-- [ ] **Task 15.4b**: Delete "For Law Firms" section with old tiers. **Success**: Removed.
+- [x] **Task 15.4b**: Delete "For Law Firms" section with old tiers. **Success**: Removed. (Completed 2026-01-21 - Removed placeholder comment "Law Firms - Section temporarily hidden while pricing restructure in progress", 494 tests pass)
 - [ ] **Task 15.4c**: Delete "For Councils" section with old tiers. **Success**: Removed.
 - [ ] **Task 15.4d**: Delete Comparison Table section. **Success**: Removed.
 - [ ] **Task 15.4e**: Remove `showComparison` and `billingCycle` state. **Success**: States removed.
