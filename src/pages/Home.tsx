@@ -33,11 +33,11 @@ const NAV_LINKS = [
   { href: "/email-alerts", label: "Email alerts" },
 ] as const;
 
-// Testimonials
+// Testimonials (generic - no specific council endorsements implied)
 const testimonials = [
-  { text: "Instant publication, easy exports, and our legal team love the audit trail.", name: "David J, Legal Officer", council: "Leeds City Council" },
-  { text: "Residents are submitting comments online and we have the proof for every step.", name: "Amrita P, Licensing Team", council: "City of Westminster" },
-  { text: "No more last-minute print bookings — everything is digital, accessible, and timestamped.", name: "Gemma S, Planning Officer", council: "Manchester City Council" },
+  { text: "Instant publication, easy exports, and our legal team love the audit trail.", name: "Legal Officer", org: "Local Authority" },
+  { text: "Residents are submitting comments online and we have the proof for every step.", name: "Licensing Manager", org: "Council Licensing Team" },
+  { text: "No more last-minute print bookings — everything is digital, accessible, and timestamped.", name: "Planning Officer", org: "Planning Department" },
 ];
 
 // Council logos hidden until we have verified partnerships
@@ -496,7 +496,7 @@ export default function Home() {
                     <div className="mb-4 text-base text-slate-700">
                       <span className="font-semibold">{testimonials[prevIdx].name}</span>
                       <span className="mx-2 text-slate-400">·</span>
-                      <span>{testimonials[prevIdx].council}</span>
+                      <span>{testimonials[prevIdx].org}</span>
                     </div>
                   </div>
                 )}
@@ -516,7 +516,7 @@ export default function Home() {
                   <div className="mb-4 text-base text-slate-700">
                     <span className="font-semibold">{testimonials[testiIdx].name}</span>
                     <span className="mx-2 text-slate-400">·</span>
-                    <span>{testimonials[testiIdx].council}</span>
+                    <span>{testimonials[testiIdx].org}</span>
                   </div>
                 </div>
               </div>
