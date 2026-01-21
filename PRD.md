@@ -462,7 +462,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.3f**: Replace all confirm(). **Success**: None remain. (Completed 2026-01-21 - Replaced 2 confirm() calls: AdminNotices.tsx delete notice and AccountManagement.tsx delete account. Both now use ConfirmModal with danger variant, proper async handlers, and error handling via AlertModal)
 
 ### 17.4 Fix Settings Page
-- [ ] **Task 17.4a**: Identify broken edit/save, document. **Success**: Documented.
+- [x] **Task 17.4a**: Identify broken edit/save, document. **Success**: Documented. (Completed 2026-01-21 - Settings page has critical issues: 1) No form submission - missing <form> wrapper and submit handler, 2) No Save button anywhere, 3) No API call to persist settings, 4) Uses uncontrolled inputs (defaultValue) instead of useState, 5) General/Notifications/API/Integrations tabs are placeholders. Database table `platform_admin_settings` exists with fields: session_timeout_minutes, ip_allowlist, require_ip_allowlist, two_factor_enabled. Security tab has Session Timeout and Max Failed Login inputs but they don't persist.)
 - [ ] **Task 17.4b**: Fix form submission to call API. **Success**: Works.
 - [ ] **Task 17.4c**: Add loading state to Save. **Success**: Shows loading.
 - [ ] **Task 17.4d**: Add success/error toast. **Success**: Feedback shown.
