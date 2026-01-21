@@ -8764,3 +8764,48 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The messaging change removes "£50" and "per notice" from the hero (DoD requirement)
   - Contains resident-focused language: "informed", "your area", "your community" (DoD requirement)
 ---
+
+## Iteration 37 - Reposition CTAs (Phase 7)
+- **What was implemented**: Swapped hero CTAs to prioritize notice search over publishing
+- **Files changed**:
+  - `src/pages/Home.tsx` - Changed hero CTA buttons and supporting text
+  - `PRD.md` - Marked task complete with solution details
+- **Key changes**:
+  - Primary CTA: Changed from "Publish a Notice - £50" (→ /publish) to "Search notices near you" (→ /notices)
+  - Secondary CTA: Changed from "Browse notices" (→ #notices) to "Publish a notice" (→ #publish, scrolls to publish section)
+  - Supporting text: Changed from "No sign-up needed · Full audit trail · Save up to 85% vs newspapers" to "Free to search · No sign-up needed · Updated daily"
+  - Removed tracking call from primary CTA (was publish-focused)
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in PaymentStep, gvol.ts, NoticeEditor, TemplateTextEditor, etc. (not related to this change)
+- **Learnings for future iterations**:
+  - Hero CTAs are at lines 420-436 in Home.tsx
+  - The publish section (id="publish" at line 690) already has comprehensive publish CTA with pricing - no need to duplicate pricing in hero
+  - The #publish anchor scroll works correctly to scroll to the publish section lower on the page
+  - DoD requires: First/primary CTA links to `/notices` (not `/publish`), "Publish" CTA still exists but appears BELOW latest notices section
+---
+
+## Iteration 38 - Add notices carousel to homepage (Phase 7)
+- **What was implemented**: Created NoticeCarousel component and replaced static grid on homepage
+- **Files changed**:
+  - `src/components/home/NoticeCarousel.tsx` (new) - Carousel component with framer-motion animations
+  - `src/pages/Home.tsx` - Changed limit from 5 to 12, replaced SearchResults with NoticeCarousel
+  - `PRD.md` - Marked task complete
+- **Key features**:
+  - 12 notices fetched (up from 5)
+  - 3 notices per page on desktop, 2 on tablet, 1 on mobile (CSS grid responsive)
+  - Left/right arrow buttons for manual navigation
+  - Dot indicators showing current page (active page = wider blue dot)
+  - 5-second autoplay with pause on hover/focus
+  - Keyboard navigation (arrow keys) when carousel is focused
+  - AnimatePresence for smooth slide transitions
+  - Skeleton loader during loading state
+  - Empty state handling
+- **Note**: PRD mentioned Embla Carousel but it was not in dependencies - used framer-motion (already available) instead
+- **Tests**: 508 passed, 2 skipped (no regressions)
+- **TypeScript**: No new errors (pre-existing errors in cypress/e2e/scripts directories)
+- **Learnings for future iterations**:
+  - Check package.json for actual dependencies before assuming a library is available
+  - framer-motion AnimatePresence works well for carousel-style page transitions
+  - Use `mode="wait"` on AnimatePresence for clean exit-before-enter animations
+  - CSS grid with responsive columns (lg:grid-cols-3 md:grid-cols-2) handles responsive layout without JS
+---

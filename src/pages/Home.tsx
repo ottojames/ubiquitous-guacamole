@@ -11,6 +11,7 @@ import FilterBar from "../components/FilterBar";
 import type { Filters } from "../lib/filter";
 import AddressSearchBar, { type AddressSearchSubmitPayload } from "@/components/search/AddressSearchBar";
 import SearchResults from "@/components/home/SearchResults";
+import NoticeCarousel from "@/components/home/NoticeCarousel";
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import useNoticeSearch from '@/hooks/useNoticeSearch';
@@ -118,7 +119,7 @@ export default function Home() {
   const [showExplainer, setShowExplainer] = useState(false);
 
   const { notices: latestNotices, loading: latestLoading, error: latestError, refetch: refetchLatest } = useNoticeSearch({
-    limit: 5,
+    limit: 12,
     sort: 'created_at.desc',
   });
 
@@ -660,12 +661,12 @@ export default function Home() {
               <div className="absolute -right-24 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-blue-300/10 blur-3xl" />
 
               <div className="relative">
-                <SearchResults
-                  results={latestNotices}
-                  query="latest notices"
+                <NoticeCarousel
+                  notices={latestNotices}
                   loading={latestLoading}
                   loadingMessage="Loading the most recent notices…"
                   emptyMessage="No notices published yet. Check back soon."
+                  autoplayInterval={5000}
                 />
               </div>
             </div>

@@ -383,7 +383,7 @@ Major refactoring and bug fixes following user walkthrough review.
   - Updated supporting text from "No sign-up needed · Full audit trail · Save up to 85% vs newspapers" to "Free to search · No sign-up needed · Updated daily" (community-focused)
   - The publish section (line 690-785) already has full "Start publishing now" CTA with £50 pricing, so publish is now properly deferred to lower on page
 
-- [ ] `[LOW]` `[M]` **Add notices carousel** - Replace static grid with carousel showing recent notices, allowing users to browse without leaving homepage.
+- [x] `[LOW]` `[M]` **Add notices carousel** - Replace static grid with carousel showing recent notices, allowing users to browse without leaving homepage.
 
   **Files**: `src/components/home/NoticeCarousel.tsx` (new), `src/pages/Home.tsx:664-671`
 
@@ -393,7 +393,16 @@ Major refactoring and bug fixes following user walkthrough review.
   - Dot indicators showing current position
   - 5-second autoplay between slides (pause on hover)
   - Keyboard accessible (arrow keys to navigate when focused)
-  - Use Embla Carousel (already in dependencies)
+  - Use framer-motion for animations (Embla was not installed; framer-motion was available)
+
+  **Solution implemented**:
+  - Created `NoticeCarousel.tsx` with framer-motion AnimatePresence for smooth page transitions
+  - Shows 3 notices per page on desktop (CSS grid: lg:grid-cols-3), 2 on tablet, 1 on mobile
+  - Left/right arrow buttons positioned outside carousel content area
+  - Dot indicators show current page with active state (wider blue dot vs small slate dots)
+  - 5-second autoplay with pause on hover/focus
+  - Keyboard navigation (arrow keys) when carousel is focused
+  - Updated `useNoticeSearch` limit from 5 to 12 for homepage
 
 - [ ] `[LOW]` `[S]` **Add footer tagline** - Add "Notice it. Understand it. Shape it." tagline to site footer across all pages.
 
