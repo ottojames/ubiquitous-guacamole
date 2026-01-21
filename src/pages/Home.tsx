@@ -862,7 +862,7 @@ export default function Home() {
                 Ready to modernise your statutory notices?
               </h2>
               <p className="mx-auto mb-8 max-w-2xl text-lg text-blue-100">
-                Join {STATS.councils} UK councils already saving time and money with CivicNotices
+                Publish legally compliant notices in seconds — no newspapers, no waiting
               </p>
 
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">

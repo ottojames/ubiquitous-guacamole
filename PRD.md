@@ -407,7 +407,7 @@ npm run lint         # ESLint check
 ### 16.5 Remove False Statistics
 - [x] **Task 16.5a**: Remove specific council count from testimonials badge. **Success**: No false claim. (Already completed in Task 16.2c - testimonials badge changed to "What our users say")
 - [x] **Task 16.5b**: Remove count from councils section. **Success**: Updated. (Completed 2026-01-21 - Changed from "{STATS.councils} UK councils trust CivicNotices" to "we support all UK council types")
-- [ ] **Task 16.5c**: Remove count from final CTA. **Success**: Updated.
+- [x] **Task 16.5c**: Remove count from final CTA. **Success**: Updated. (Completed 2026-01-21 - Changed "Join {STATS.councils} UK councils already saving" to "Publish legally compliant notices in seconds — no newspapers, no waiting")
 - [ ] **Task 16.5d**: Fix councils pricing to "Free portal · £19.99/notice". **Success**: Correct.
 
 ### 16.6 Fix Notice Price
