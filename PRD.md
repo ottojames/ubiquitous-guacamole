@@ -463,9 +463,9 @@ npm run lint         # ESLint check
 
 ### 17.4 Fix Settings Page
 - [x] **Task 17.4a**: Identify broken edit/save, document. **Success**: Documented. (Completed 2026-01-21 - Settings page has critical issues: 1) No form submission - missing <form> wrapper and submit handler, 2) No Save button anywhere, 3) No API call to persist settings, 4) Uses uncontrolled inputs (defaultValue) instead of useState, 5) General/Notifications/API/Integrations tabs are placeholders. Database table `platform_admin_settings` exists with fields: session_timeout_minutes, ip_allowlist, require_ip_allowlist, two_factor_enabled. Security tab has Session Timeout and Max Failed Login inputs but they don't persist.)
-- [ ] **Task 17.4b**: Fix form submission to call API. **Success**: Works.
-- [ ] **Task 17.4c**: Add loading state to Save. **Success**: Shows loading.
-- [ ] **Task 17.4d**: Add success/error toast. **Success**: Feedback shown.
+- [x] **Task 17.4b**: Fix form submission to call API. **Success**: Works. (Completed 2026-01-21 - Created server/routes/admin/settings.ts with GET/PATCH endpoints using requireAdmin middleware, registered at /api/admin/settings. Updated src/pages/admin/Settings.tsx with controlled inputs, useEffect for fetching settings, handleSave function calling PATCH API, hasChanges tracking for conditional Save button)
+- [x] **Task 17.4c**: Add loading state to Save. **Success**: Shows loading. (Completed 2026-01-21 - Added saving state with Loader2 spinner, disabled button during save, "Saving..." text while processing)
+- [x] **Task 17.4d**: Add success/error toast. **Success**: Feedback shown. (Completed 2026-01-21 - Added AlertModal with success variant for successful save, error variant for failures. Shows "Settings Saved" on success, error message on failure)
 - [ ] **Task 17.4e**: Fix password reset. **Success**: Works.
 
 ### 17.5 Fix Dashboard Stats

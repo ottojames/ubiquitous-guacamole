@@ -41,6 +41,7 @@ import firmTemplatesRouter from './routes/firm-templates';
 import adminAuthRouter from './routes/admin/auth';
 import adminAccountsRouter from './routes/admin/accounts';
 import adminAuditRouter from './routes/admin/audit';
+import adminSettingsRouter from './routes/admin/settings';
 import { requireAdmin, enforceIPAllowlist } from './middleware/adminAuth';
 
 export const app = express();
@@ -97,6 +98,9 @@ app.use('/api/migration', applyMigrationRouter);
 // Protected admin routes - also commented during migration
 // app.use('/api/admin/accounts', requireAdmin, enforceIPAllowlist, adminAccountsRouter);
 // app.use('/api/admin/audit', requireAdmin, enforceIPAllowlist, adminAuditRouter);
+
+// Admin settings route (active - uses unified auth)
+app.use('/api/admin/settings', adminSettingsRouter);
 
 // Sentry error handler MUST be after routes but BEFORE other error handlers
 app.use(sentryErrorHandler());
