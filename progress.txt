@@ -2328,3 +2328,32 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The KanbanCard (next task 11.3b) will use useDraggable counterpart hook
   - Next task is Task 11.3b: Create KanbanCard.tsx with draggable support
 ---
+
+## Iteration 95 - Task 11.3b: Create KanbanCard.tsx component
+- **What was implemented**: Created draggable Kanban card component for notices
+- **Files created**:
+  - `src/components/workflow/KanbanCard.tsx` (~85 lines)
+- **Files changed**:
+  - `PRD.md` - Marked Task 11.3b complete
+  - `src/next/publish/templates/__snapshots__/templates.test.ts.snap` - Updated TRO snapshot for date drift
+- **Key implementation details**:
+  - Uses dnd-kit's `useDraggable` hook with notice.id as draggable ID
+  - CSS.Translate.toString(transform) for smooth drag positioning
+  - Passes notice data in useDraggable.data for access in drag handlers
+  - Shows applicant_name as main heading, premises with MapPin icon
+  - Deadline row shows date with AlertTriangle (overdue) or Clock (upcoming) icons
+  - isDragging state provides opacity-50 visual feedback
+  - Uses cn() utility for className merging (consistent with KanbanColumn)
+- **Component structure**:
+  - Applicant name (truncated, font-medium)
+  - Premises address (with optional premises_name, line-clamp-2)
+  - Deadline indicator (color-coded: red for overdue, amber for upcoming, slate otherwise)
+- **Test results**: 492 tests pass, snapshot updated for date drift
+- **TypeScript check**: KanbanCard.tsx compiles cleanly - pre-existing errors in cypress/e2e/scripts/ only
+- **Learnings for future iterations**:
+  - CSS.Translate from @dnd-kit/utilities handles transform string conversion
+  - useDraggable returns { attributes, listeners, setNodeRef, transform, isDragging }
+  - Pattern: spread {...listeners} and {...attributes} on the draggable element
+  - cursor-grab/cursor-grabbing provides clear drag affordance
+  - Next task is Task 11.3c: Create KanbanBoard.tsx main board component
+---

@@ -198,7 +198,7 @@ npm run lint         # ESLint check
 ### 11.3 Components
 - [x] **Task 11.2**: Create `src/components/workflow/WorkflowStageBadge.tsx` - Badge showing stage name, color, deadline indicator. ~50 lines. (Created 2026-01-21 - Component displays stage name with dynamic color styling, colored dot indicator, and deadline warnings: AlertTriangle for overdue, Clock for upcoming within 3 days)
 - [x] **Task 11.3a**: Create `src/components/workflow/KanbanColumn.tsx` - Single column for Kanban board. Uses dnd-kit droppable. ~60 lines. (Created 2026-01-21 - Component with useDroppable hook, stage header with color dot and count badge, droppable area with isOver visual feedback, empty state display)
-- [ ] **Task 11.3b**: Create `src/components/workflow/KanbanCard.tsx` - Card for notice in Kanban. Shows client, premises, deadline. Draggable. ~50 lines.
+- [x] **Task 11.3b**: Create `src/components/workflow/KanbanCard.tsx` - Card for notice in Kanban. Shows client, premises, deadline. Draggable. ~50 lines. (Created 2026-01-21 - Component with useDraggable hook, displays applicant name, premises address with MapPin icon, deadline with overdue/upcoming indicators, isDragging opacity effect)
 - [ ] **Task 11.3c**: Create `src/components/workflow/KanbanBoard.tsx` - Main board component. Maps stages to columns, handles drag events. ~80 lines.
 - [ ] **Task 11.4a**: Add view toggle state to `src/pages/firm/Notices.tsx` - State for 'kanban' | 'list' | 'calendar'. Toggle buttons UI. ~30 lines addition.
 - [ ] **Task 11.4b**: Integrate KanbanBoard into `src/pages/firm/Notices.tsx` - Render board when view is 'kanban'. ~20 lines addition.
