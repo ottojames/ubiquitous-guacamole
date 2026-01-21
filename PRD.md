@@ -585,10 +585,10 @@ npm run lint         # ESLint check
 - [x] **Task 20.3d**: RLS hides from public. **Success**: Council-only. (Completed 2026-01-21 - RLS policies enforce department membership checks; `view_comments_by_role` policy uses `can_view_internal_comment()` function for role-based visibility)
 
 ### 20.4 Templates
-- [ ] **Task 20.4a**: Create Templates page. ~80 lines. **Success**: Renders.
-- [ ] **Task 20.4b**: Add editor. **Success**: Works.
-- [ ] **Task 20.4c**: Add route. **Success**: Works.
-- [ ] **Task 20.4d**: Add sidebar link. **Success**: Visible.
+- [x] **Task 20.4a**: Create Templates page. ~80 lines. **Success**: Renders. (Completed 2026-01-21 - Verified `src/pages/council/Templates.tsx` exists (617 lines) with full functionality: template list cards, create/edit modal, TemplateTextEditor integration, TemplateValidationWarnings, delete with confirm, use template button, duplicate warning modal, loading state, error/success notifications, permission checks for canManageTemplates)
+- [x] **Task 20.4b**: Add editor. **Success**: Works. (Completed 2026-01-21 - Verified `src/pages/council/TemplateTextEditor.tsx` provides rich text editor with placeholder insertion dropdown, grouped placeholders by category (Required/Optional), search filter, character count, cursor position tracking for placeholder insertion)
+- [x] **Task 20.4c**: Add route. **Success**: Works. (Completed 2026-01-21 - Route exists at line 157 of App.tsx: `<Route path="templates" element={<Templates />} />` nested under `/c/:orgSlug/:deptSlug`)
+- [x] **Task 20.4d**: Add sidebar link. **Success**: Visible. (Completed 2026-01-21 - Sidebar link exists at line 249 of CouncilLayout.tsx with path 'templates', label 'Templates', icon SVG, and requiredPermission: PERMISSIONS.TEMPLATES_READ)
 
 ### 20.5 IDOX Export
 - [ ] **Task 20.5a**: Research format, document. **Success**: Documented.

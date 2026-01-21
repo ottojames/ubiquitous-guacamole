@@ -5742,3 +5742,56 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Visual feedback important: selected rows highlighted, disabled buttons when inappropriate
   - Next task is Task 20.3a: Create representation_notes table
 ---
+
+## Iteration N - Tasks 20.3a-d: Verify Internal Notes functionality complete
+- **What was implemented**: Verified that internal notes for representations functionality already exists
+- **Existing implementation found**:
+  - `internal_comments` table in `20260114000003_internal_comments.sql` with full RLS
+  - `internal_notes` JSONB column in `20251124000001_add_internal_notes.sql` as backup
+  - `InternalComments.tsx` component (220 lines) with add/view comments UI
+  - Component integrated into `Representations.tsx` at lines 694-700
+- **Files changed**:
+  - `PRD.md` - Marked all 4 tasks (20.3a-d) as complete
+- **RLS details**:
+  - Table has `view_comments_by_role` policy using `can_view_internal_comment()` function
+  - Head/Admin: see all comments in department
+  - Senior/Editor: see all comments in department
+  - Junior/Viewer: see only own comments
+  - `insert_own_department_comments` policy requires department membership
+- **Test results**: All 502 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - PRD may use different names than actual implementation (representation_notes vs internal_comments)
+  - Always check existing migrations for similar functionality before creating new tables
+  - The `internal_comments` table is fully production-ready with proper RLS
+  - Next task is Task 20.4a: Create Templates page
+---
+
+## Iteration 244 - Tasks 20.4a-d: Verify Council Templates functionality complete
+- **What was verified**: All Council Templates tasks (20.4a-d) were already complete
+- **Existing implementation found**:
+  - `src/pages/council/Templates.tsx` - 617 lines with full functionality
+  - `src/pages/council/TemplateTextEditor.tsx` - Rich text editor with placeholder insertion
+  - `src/pages/council/TemplateValidationWarnings.tsx` - Validation warnings component
+  - Route in App.tsx line 157: `<Route path="templates" element={<Templates />} />`
+  - Sidebar link in CouncilLayout.tsx line 249 with TEMPLATES_READ permission
+- **Files changed**:
+  - `PRD.md` - Marked Tasks 20.4a, 20.4b, 20.4c, 20.4d complete
+- **Templates.tsx features**:
+  - Template list with cards showing name, description, type, usage count, date
+  - Create/Edit modal with name, notice_type dropdown, description, template text
+  - TemplateTextEditor integration for rich editing with placeholders
+  - TemplateValidationWarnings for checking template completeness
+  - Delete button with confirm dialog
+  - Use Template button linking to notice editor
+  - Duplicate warning modal when creating template for same notice type
+  - Permission checks (canManageTemplates for owner/org_admin/department_admin/editor)
+  - Loading spinner, error/success notifications
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: Pre-existing errors only (council/*.tsx, firm/Team.tsx)
+- **Learnings for future iterations**:
+  - Council Templates page is significantly more sophisticated than firm's (~617 vs ~200 lines)
+  - Uses direct Supabase queries from `templates` table (not `notice_templates`)
+  - TemplateTextEditor provides placeholder insertion via dropdown menu with search
+  - Template can only have one entry per notice_type per department (enforced by duplicate check)
+  - Next task is Task 20.5a: Research IDOX format
+---
