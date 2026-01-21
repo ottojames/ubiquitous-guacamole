@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Building2, Briefcase, ArrowLeft } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
-import SiteHeader from "@/components/SiteHeader";
-import Footer from "@/components/Footer";
 
 // Error messages for redirect errors
 const ERROR_MESSAGES: Record<string, string> = {
@@ -275,233 +273,219 @@ export default function Login() {
   };
 
   return (
-    <div className={`${UI.pageWrap} relative flex flex-col font-sans`}>
-      <SiteHeader />
-      {/* Sentinel right after header for compact mode detection */}
-      <div id="header-sentinel" className="h-2" aria-hidden="true" />
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+      {/* Minimal header - logo only */}
+      <header className="py-6">
+        <div className={UI.container}>
+          <a href="/" className="inline-flex items-center text-slate-900 font-extrabold text-xl tracking-tight hover:text-slate-700 transition-colors">
+            CivicNotices
+          </a>
+        </div>
+      </header>
 
-      <main>
-        {/* Hero - matches Home/Pricing/EmailAlerts structure */}
-        <section className="relative overflow-hidden pb-32 pt-20 md:pb-40 md:pt-32 lg:pb-48">
-          <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
+      {/* Main content - centered */}
+      <main className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          {!portalType ? (
+            /* Portal Selection */
+            <div className="space-y-8">
+              {/* Header */}
+              <div className="text-center">
+                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+                  Sign in to CivicNotices
+                </h1>
+                <p className="mt-2 text-sm text-slate-600">
+                  Select your portal to continue
+                </p>
+              </div>
 
-          {/* Vertical gradient fade - matches other pages */}
-          <div
-            className="absolute inset-x-0 bottom-0 pointer-events-none"
-            style={{
-              height: '400px',
-              background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.5) 40%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
-            }}
-            aria-hidden="true"
-          />
-          <div className={`${UI.container} relative z-10`}>
-            <div className="mx-auto max-w-3xl text-center">
-              <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] md:text-6xl">
-                {!portalType ? 'Choose Your Portal' : 'Welcome Back'}
-              </h1>
-              <p className="mt-6 text-lg leading-relaxed text-white/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.12)] md:text-xl">
-                {!portalType ? 'Select the portal type to continue' : 'Sign in to your CivicNotices account'}
+              {/* Portal cards */}
+              <div className="space-y-3">
+                {/* Council Portal */}
+                <button
+                  onClick={() => setPortalType('council')}
+                  className="w-full flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                    <Building2 className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="font-semibold text-slate-900">Council Portal</h2>
+                    <p className="text-sm text-slate-500">For council officers and licensing departments</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                </button>
+
+                {/* Professional Portal */}
+                <button
+                  onClick={() => setPortalType('professional')}
+                  className="w-full flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                    <Briefcase className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="font-semibold text-slate-900">Professional Portal</h2>
+                    <p className="text-sm text-slate-500">For solicitors, law firms & GVOL operators</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                </button>
+              </div>
+
+              {/* Sign up link */}
+              <p className="text-center text-sm text-slate-600">
+                Don't have an account?{" "}
+                <a href="/register" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                  Create one here
+                </a>
               </p>
             </div>
-          </div>
+          ) : (
+            /* Login Form */
+            <div className="space-y-6">
+              {/* Back button */}
+              <button
+                onClick={() => {
+                  setPortalType(null);
+                  setError(null);
+                  setEmail("");
+                  setPassword("");
+                }}
+                className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to portal selection
+              </button>
 
-          {/* Portal Selection or Login Form - inside hero section */}
-          <div className={`${UI.container} relative z-10 mt-12`}>
-            {!portalType ? (
-              /* Portal Selection */
-              <div className="mx-auto max-w-2xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Council Portal */}
-                  <button
-                    onClick={() => setPortalType('council')}
-                    className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-blue-400 hover:shadow-xl transition-all duration-200 text-left"
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
-                        <svg className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Council Portal</h2>
-                      <p className="text-slate-600 text-sm">
-                        For council officers and licensing departments
-                      </p>
-                    </div>
-                  </button>
+              {/* Header */}
+              <div>
+                <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+                  {portalType === 'council' ? 'Council Portal' : 'Professional Portal'}
+                </h1>
+                <p className="mt-1 text-sm text-slate-600">
+                  Enter your credentials to continue
+                </p>
+              </div>
 
-                  {/* Professional Portal */}
-                  <button
-                    onClick={() => setPortalType('professional')}
-                    className="group relative bg-white border-2 border-slate-200/60 rounded-2xl p-8 hover:border-blue-400 hover:shadow-xl transition-all duration-200 text-left"
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
-                        <svg className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional Portal</h2>
-                      <p className="text-slate-600 text-sm">
-                        For solicitors, law firms & GVOL operators
-                      </p>
+              {/* Form card */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Email Field */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Email address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className={UI.inputFull + " pl-10"}
+                        required
+                      />
                     </div>
+                  </div>
+
+                  {/* Password Field */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                        Password
+                      </label>
+                      <a
+                        href="/forgot-password"
+                        className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                      >
+                        Forgot password?
+                      </a>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className={UI.inputFull + " pl-10 pr-10"}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-[18px] w-[18px]" />
+                        ) : (
+                          <Eye className="h-[18px] w-[18px]" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Me */}
+                  <div className="flex items-center">
+                    <input
+                      id="remember"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 transition-colors"
+                    />
+                    <label htmlFor="remember" className="ml-2 text-sm text-slate-600">
+                      Remember me for 30 days
+                    </label>
+                  </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-3">
+                      <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600 mt-0.5" />
+                      <p className="text-sm text-rose-700">{error}</p>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={UI.btnPrimary + " w-full"}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                        <span>Signing in...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Sign in</span>
+                        <ArrowRight className="h-[18px] w-[18px]" />
+                      </>
+                    )}
                   </button>
-                </div>
+                </form>
 
                 {/* Sign Up Link */}
-                <div className="mt-8 text-center">
-                  <p className="text-sm text-white/90 mb-2">
-                    Don't have an account?
+                <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+                  <p className="text-sm text-slate-600">
+                    Don't have an account?{" "}
+                    <a
+                      href={portalType === 'council' ? '/register/council' : '/register/firm'}
+                      className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                      Sign up for free
+                    </a>
                   </p>
-                  <a
-                    href="/register"
-                    className="text-sm text-white underline hover:text-white/80 transition-colors"
-                  >
-                    Create one here
-                  </a>
                 </div>
               </div>
-            ) : (
-              /* Login Form */
-              <div className="mx-auto max-w-md">
-                {/* Back Button */}
-                <button
-                  onClick={() => {
-                    setPortalType(null);
-                    setError(null);
-                    setEmail("");
-                    setPassword("");
-                  }}
-                  className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  <span className="text-sm font-medium">Back to portal selection</span>
-                </button>
-
-                <div className={`${UI.card} p-8 md:p-10`}>
-                  {/* Help Text - Production */}
-                  <div className="mb-6 text-center">
-                    <p className="text-sm text-slate-600">
-                      Need access? Contact{" "}
-                      <a href="mailto:support@civicnotices.co.uk" className="font-medium text-blue-600 hover:text-blue-700">
-                        support@civicnotices.co.uk
-                      </a>
-                    </p>
-                  </div>
-
-              <form onSubmit={handleSubmit} className="space-y-7">
-                {/* Email Field */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                    Email address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full h-11 pl-11 pr-4 rounded-lg border border-slate-300 bg-white text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-400"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Password Field */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                      Password
-                    </label>
-                    <a
-                      href="/forgot-password"
-                      className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-150"
-                    >
-                      Forgot password?
-                    </a>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full h-11 pl-11 pr-11 rounded-lg border border-slate-300 bg-white text-[15px] placeholder:text-slate-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:border-slate-400"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-[18px] w-[18px]" />
-                      ) : (
-                        <Eye className="h-[18px] w-[18px]" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    Min 8 characters with uppercase, lowercase, number, and special character
-                  </p>
-                </div>
-
-                {/* Remember Me */}
-                <div className="flex items-center pt-1">
-                  <input
-                    id="remember"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 transition-colors"
-                  />
-                  <label htmlFor="remember" className="ml-2.5 text-sm text-slate-600">
-                    Remember me for 30 days
-                  </label>
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                  <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
-                    <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-600" />
-                    <p className="text-sm text-rose-700">{error}</p>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full h-11 flex items-center justify-center gap-2 rounded-lg font-semibold text-[15px] transition-all duration-200 ${
-                    loading
-                      ? "bg-blue-500 text-white cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98] shadow-sm hover:shadow-md"
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-[18px] w-[18px] animate-spin" />
-                      <span>Signing in...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Sign in</span>
-                      <ArrowRight className="h-[18px] w-[18px]" />
-                    </>
-                  )}
-                </button>
-              </form>
 
               {/* Trust Indicators */}
-              <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-center gap-5 text-xs text-slate-500">
+              <div className="flex items-center justify-center gap-6 text-xs text-slate-500">
                 <div className="flex items-center gap-1.5">
                   <Lock className="h-3.5 w-3.5" />
                   <span>256-bit SSL</span>
@@ -514,23 +498,31 @@ export default function Login() {
                 </div>
               </div>
 
-                {/* Sign Up Link */}
-                <div className="mt-8 text-center">
-                  <p className="text-sm text-slate-600">
-                    Don't have an account?{" "}
-                    <a href={portalType === 'council' ? '/register/council' : '/register/firm'} className="font-medium text-slate-700 hover:text-slate-900 transition-colors duration-150">
-                      Sign up for free
-                    </a>
-                  </p>
-                </div>
-              </div>
-              </div>
-            )}
-          </div>
-        </section>
+              {/* Help text */}
+              <p className="text-center text-xs text-slate-500">
+                Need access? Contact{" "}
+                <a href="mailto:support@civicnotices.co.uk" className="text-blue-600 hover:text-blue-700">
+                  support@civicnotices.co.uk
+                </a>
+              </p>
+            </div>
+          )}
+        </div>
       </main>
 
-      <Footer />
+      {/* Minimal footer */}
+      <footer className="py-6 border-t border-slate-200">
+        <div className={UI.container}>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+            <p>© {new Date().getFullYear()} CivicNotices</p>
+            <div className="flex items-center gap-6">
+              <a href="/privacy" className="hover:text-slate-700 transition-colors">Privacy</a>
+              <a href="/terms" className="hover:text-slate-700 transition-colors">Terms</a>
+              <a href="/contact" className="hover:text-slate-700 transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
