@@ -5868,3 +5868,87 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The idoxExport service provides typed interface (RepresentationForExport) for export data
   - Next task is Task 20.5d: Add button (may already exist - frontend has Export for Idox button)
 ---
+
+## Iteration 248 - Task 20.5d: Connect IDOX export button to server API
+- **What was implemented**: Connected frontend IDOX export button to the new server API endpoint
+- **Files changed**:
+  - `src/pages/council/Representations.tsx` - Updated exportForIdox() function and button
+  - `PRD.md` - Marked Task 20.5d complete
+- **Implementation details**:
+  - Changed exportForIdox() from client-side CSV generation to calling GET /api/representations/export/idox
+  - Added `idoxExporting` loading state with useState
+  - Added Loader2 icon import from lucide-react
+  - Button shows spinner animation while exporting, text changes to "Exporting..."
+  - Button disabled during export to prevent double-clicks
+  - Supports bulk selection: if selectedIds.size > 0, only exports those IDs
+  - Respects current filter: passes 'reviewed' or 'unreviewed' status to API
+  - Error handling: catches fetch errors and displays via existing setError state
+  - Downloads CSV with filename from Content-Disposition header or default
+- **Test results**: All 502 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - Frontend already had exportForIdox() function - task was to connect it to new API, not create new button
+  - The endpoint (GET /api/representations/export/idox) was created in Task 20.5c
+  - Loading states with spinner + disabled button prevent user frustration during async operations
+  - URLSearchParams is a clean way to build query strings
+  - Next task is Task 20.6a: Ensure actions logged (Audit Log section)
+---
+
+## Iteration 249 - Task 20.6a: Ensure actions logged (Audit Log)
+- **What was implemented**: Added audit logging for council inbox actions
+- **Files changed**:
+  - `src/components/council/MarkReviewedButton.tsx` - Fixed to use log_audit_action RPC
+  - `server/routes/representations.ts` - Added audit logging to comment and export endpoints
+  - `PRD.md` - Marked Task 20.6a complete
+- **Implementation details**:
+  - BUGFIX: MarkReviewedButton.tsx was inserting into `audit_log` table (doesn't exist) - changed to use `log_audit_action` RPC which inserts into `audit_actions` table
+  - Added audit logging for 5 action types:
+    1. `representation_marked_reviewed` - when marking representation as reviewed
+    2. `representation_marked_unreviewed` - when unmarking reviewed status
+    3. `representation_note_added` - when adding internal comment/note
+    4. `representations_exported_csv` - when exporting to CSV format
+    5. `representations_exported_idox` - when exporting to IDOX format
+  - All audit entries include metadata: user info, timestamps, counts
+  - Audit logging failures are caught and logged but don't fail the main operation
+- **Test results**: All 502 tests pass, 2 skipped
+- **Learnings for future iterations**:
+  - This codebase has TWO audit tables: `audit_logs` (org-scoped, with auto-triggers) and `audit_actions` (general actions via RPC)
+  - The `log_audit_action` RPC function is the correct way to log actions - it's defined in migration 20251122000001
+  - Client-side audit logging uses `supabase.rpc('log_audit_action', {...})` 
+  - Server-side audit logging uses `supabase.rpc('log_audit_action', {...})` with getSupabase() client
+  - TypeScript errors in cypress/, e2e/, scripts/ directories are pre-existing and unrelated to core code
+  - Next task is Task 20.6b: Create AuditLog page (~80 lines)
+---
+
+## Iteration 250 - Tasks 20.6b-d: Council Audit Log page and sidebar link
+- **What was implemented**: Updated Council AuditLog page to use correct schema columns, added sidebar link
+- **Files changed**:
+  - `src/pages/council/AuditLog.tsx` - Updated column names to match audit_logs table schema
+  - `src/pages/council/CouncilLayout.tsx` - Added sidebar link for Audit Log with AUDIT_READ permission
+  - `PRD.md` - Marked Tasks 20.6b, 20.6c, 20.6d complete
+- **Implementation details**:
+  - AuditLog.tsx changes:
+    - Updated interface to use correct column names: resource_type, resource_id, action_category, user_email, severity, metadata
+    - Changed filters from INSERT/UPDATE/DELETE to action_category values (notice, template, team, department, representation)
+    - Changed table filter to resource_type values (notice, template, department_membership, organization)
+    - Updated getActionColor to use severity and action name patterns
+    - Updated getActionIcon to detect created/updated/deleted patterns in action names
+    - Updated CSV export with new columns including metadata
+    - Updated log entry display to show severity badges and better details
+  - CouncilLayout.tsx changes:
+    - Added audit nav item with path 'audit', label 'Audit Log', clipboard icon, requiredPermission: PERMISSIONS.AUDIT_READ
+  - Route already existed at App.tsx line 160
+- **Key findings**:
+  - The `audit_logs` table has different column names than the original AuditLog.tsx interface
+  - Original: table_name, record_id, action (INSERT/UPDATE/DELETE)
+  - Actual: resource_type, resource_id, action (descriptive like 'notice.created'), action_category, severity
+  - PERMISSIONS.AUDIT_READ exists at src/types/permissions.ts for controlling access
+- **Test results**: All 502 tests pass, 2 skipped
+- **TypeScript check**: No new errors in modified files (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Always verify database schema column names match interface definitions
+  - audit_logs table uses descriptive action names like 'notice.created' not 'INSERT'
+  - action_category groups related actions (notice, template, team, department, representation)
+  - severity field indicates importance (info, warning, critical)
+  - user_email is snapshotted at time of action for audit trail preservation
+  - Next task is Task 20.7a: Create E2E tests with council login
+---

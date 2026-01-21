@@ -598,9 +598,9 @@ npm run lint         # ESLint check
 
 ### 20.6 Audit Log
 - [x] **Task 20.6a**: Ensure actions logged. **Success**: Logged. (Completed 2026-01-21 - Fixed MarkReviewedButton.tsx to use log_audit_action RPC instead of non-existent audit_log table. Added audit logging for: representation_marked_reviewed, representation_marked_unreviewed, representation_note_added, representations_exported_csv, representations_exported_idox. All actions logged to audit_actions table with metadata including user info, timestamps, and export counts. 502 tests pass)
-- [ ] **Task 20.6b**: Create AuditLog page. ~80 lines. **Success**: Renders.
-- [ ] **Task 20.6c**: Add route. **Success**: Works.
-- [ ] **Task 20.6d**: Add sidebar link (admin). **Success**: Visible.
+- [x] **Task 20.6b**: Create AuditLog page. ~80 lines. **Success**: Renders. (Completed 2026-01-21 - Council AuditLog page at src/pages/council/AuditLog.tsx (~470 lines) with full functionality: queries audit_logs table by department_id, displays action/category/severity/resource type/user info, filters by action_category and resource_type, date range filters (7/30/90 days or custom), search, pagination, CSV export. Updated column names to match actual audit_logs schema: resource_type, resource_id, action_category, user_email, severity, metadata. 502 tests pass)
+- [x] **Task 20.6c**: Add route. **Success**: Works. (Completed 2026-01-21 - Route exists at line 160 of App.tsx: `<Route path="audit" element={<AuditLog />} />` nested under `/c/:orgSlug/:deptSlug`)
+- [x] **Task 20.6d**: Add sidebar link (admin). **Success**: Visible. (Completed 2026-01-21 - Sidebar link added to CouncilLayout.tsx navItems with path 'audit', label 'Audit Log', clipboard icon SVG, and requiredPermission: PERMISSIONS.AUDIT_READ. Visible to users with audit.read permission (org_admin, dept_admin roles))
 
 ### 20.7 E2E Tests
 - [ ] **Task 20.7a**: Create tests with council login. **Success**: Auth works.

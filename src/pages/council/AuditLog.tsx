@@ -20,17 +20,21 @@ interface ContextType {
 
 interface AuditLogEntry {
   id: string;
-  table_name: string;
-  record_id: string;
+  resource_type: string;
+  resource_id: string;
   action: string;
+  action_category: string;
   old_values: any;
   new_values: any;
   user_id: string;
+  user_email: string;
   created_at: string;
+  severity: string;
+  metadata: any;
 }
 
-type FilterAction = 'all' | 'INSERT' | 'UPDATE' | 'DELETE';
-type FilterTable = 'all' | 'notices' | 'templates' | 'department_memberships' | 'invitations';
+type FilterAction = 'all' | 'notice' | 'template' | 'team' | 'department' | 'representation';
+type FilterTable = 'all' | 'notice' | 'template' | 'department_membership' | 'organization';
 
 export default function AuditLog() {
   const { department, userRole } = useOutletContext<ContextType>();
@@ -77,14 +81,14 @@ export default function AuditLog() {
   const filterLogs = () => {
     let filtered = logs;
 
-    // Filter by action
+    // Filter by action category
     if (filterAction !== 'all') {
-      filtered = filtered.filter(log => log.action === filterAction);
+      filtered = filtered.filter(log => log.action_category === filterAction);
     }
 
-    // Filter by table
+    // Filter by resource type
     if (filterTable !== 'all') {
-      filtered = filtered.filter(log => log.table_name === filterTable);
+      filtered = filtered.filter(log => log.resource_type === filterTable);
     }
 
     // Filter by date range
@@ -105,9 +109,10 @@ export default function AuditLog() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(log =>
-        log.table_name.toLowerCase().includes(query) ||
+        (log.resource_type || '').toLowerCase().includes(query) ||
         log.action.toLowerCase().includes(query) ||
-        log.record_id.toLowerCase().includes(query)
+        (log.resource_id || '').toLowerCase().includes(query) ||
+        (log.user_email || '').toLowerCase().includes(query)
       );
     }
 
@@ -120,17 +125,20 @@ export default function AuditLog() {
       setExporting(true);
 
       // Prepare CSV headers
-      const headers = ['Date/Time', 'Action', 'Table', 'Record ID', 'User ID', 'Old Values', 'New Values'];
+      const headers = ['Date/Time', 'Action', 'Category', 'Resource Type', 'Resource ID', 'User Email', 'Severity', 'Old Values', 'New Values', 'Metadata'];
 
       // Prepare CSV rows
       const rows = filteredLogs.map(log => [
         formatDate(log.created_at),
         log.action,
-        log.table_name,
-        log.record_id,
-        log.user_id,
+        log.action_category,
+        log.resource_type || '',
+        log.resource_id || '',
+        log.user_email || '',
+        log.severity,
         log.old_values ? JSON.stringify(log.old_values) : '',
-        log.new_values ? JSON.stringify(log.new_values) : ''
+        log.new_values ? JSON.stringify(log.new_values) : '',
+        log.metadata ? JSON.stringify(log.metadata) : ''
       ]);
 
       // Create CSV content
@@ -168,44 +176,51 @@ export default function AuditLog() {
     setEndDate(end.toISOString().split('T')[0]);
   };
 
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case 'INSERT':
-        return 'bg-green-100 text-green-800';
-      case 'UPDATE':
-        return 'bg-blue-100 text-blue-800';
-      case 'DELETE':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getActionColor = (action: string, severity: string) => {
+    // Color by severity first
+    if (severity === 'critical') return 'bg-red-100 text-red-800';
+    if (severity === 'warning') return 'bg-amber-100 text-amber-800';
+
+    // Then by action type
+    if (action.includes('created') || action.includes('added')) return 'bg-green-100 text-green-800';
+    if (action.includes('updated') || action.includes('changed')) return 'bg-blue-100 text-blue-800';
+    if (action.includes('deleted') || action.includes('removed')) return 'bg-red-100 text-red-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'INSERT':
-        return (
-          <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-            <path d="M12 4v16m8-8H4" />
-          </svg>
-        );
-      case 'UPDATE':
-        return (
-          <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-            <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        );
-      case 'DELETE':
-        return (
-          <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        );
+    if (action.includes('created') || action.includes('added')) {
+      return (
+        <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M12 4v16m8-8H4" />
+        </svg>
+      );
     }
+    if (action.includes('updated') || action.includes('changed')) {
+      return (
+        <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      );
+    }
+    if (action.includes('deleted') || action.includes('removed')) {
+      return (
+        <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      );
+    }
+    // Default icon for other actions
+    return (
+      <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+        <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
   };
 
-  const formatTableName = (tableName: string) => {
-    return tableName.split('_').map(word =>
+  const formatTableName = (resourceType: string) => {
+    if (!resourceType) return '';
+    return resourceType.split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
@@ -278,29 +293,31 @@ export default function AuditLog() {
             />
           </div>
 
-          {/* Action Filter */}
+          {/* Action Category Filter */}
           <select
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value as FilterAction)}
             className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">All Actions</option>
-            <option value="INSERT">Created</option>
-            <option value="UPDATE">Updated</option>
-            <option value="DELETE">Deleted</option>
+            <option value="all">All Categories</option>
+            <option value="notice">Notice</option>
+            <option value="template">Template</option>
+            <option value="team">Team</option>
+            <option value="department">Department</option>
+            <option value="representation">Representation</option>
           </select>
 
-          {/* Table Filter */}
+          {/* Resource Type Filter */}
           <select
             value={filterTable}
             onChange={(e) => setFilterTable(e.target.value as FilterTable)}
             className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">All Tables</option>
-            <option value="notices">Notices</option>
-            <option value="templates">Templates</option>
-            <option value="department_memberships">Team Members</option>
-            <option value="invitations">Invitations</option>
+            <option value="all">All Resources</option>
+            <option value="notice">Notices</option>
+            <option value="template">Templates</option>
+            <option value="department_membership">Team Members</option>
+            <option value="organization">Organization</option>
           </select>
         </div>
 
@@ -399,21 +416,32 @@ export default function AuditLog() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${getActionColor(log.action)}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${getActionColor(log.action, log.severity)}`}>
                           {getActionIcon(log.action)}
-                          {log.action}
+                          {log.action.replace(/_/g, ' ').replace(/\./g, ' ')}
                         </span>
-                        <span className="text-sm font-semibold text-gray-900">
-                          {formatTableName(log.table_name)}
-                        </span>
+                        {log.resource_type && (
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatTableName(log.resource_type)}
+                          </span>
+                        )}
+                        {log.severity !== 'info' && (
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            log.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {log.severity}
+                          </span>
+                        )}
                       </div>
 
                       <div className="space-y-1 text-sm text-gray-600">
+                        {log.resource_id && (
+                          <p>
+                            Resource ID: <span className="font-mono text-xs">{log.resource_id.slice(0, 8)}...</span>
+                          </p>
+                        )}
                         <p>
-                          Record ID: <span className="font-mono text-xs">{log.record_id.slice(0, 8)}...</span>
-                        </p>
-                        <p>
-                          User: <span className="font-mono text-xs">{log.user_id.slice(0, 8)}...</span>
+                          User: <span className="font-mono text-xs">{log.user_email || (log.user_id ? log.user_id.slice(0, 8) + '...' : 'System')}</span>
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatDate(log.created_at)}
@@ -421,15 +449,36 @@ export default function AuditLog() {
                       </div>
 
                       {/* Show changed values for updates */}
-                      {log.action === 'UPDATE' && log.new_values && (
+                      {(log.new_values || log.old_values || log.metadata) && (
                         <details className="mt-3">
                           <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-700">
-                            View Changes
+                            View Details
                           </summary>
-                          <div className="mt-2 p-3 bg-gray-50 rounded-xl">
-                            <pre className="text-xs overflow-x-auto">
-                              {JSON.stringify(log.new_values, null, 2)}
-                            </pre>
+                          <div className="mt-2 p-3 bg-gray-50 rounded-xl space-y-2">
+                            {log.old_values && (
+                              <div>
+                                <p className="text-xs font-semibold text-gray-700 mb-1">Previous Values:</p>
+                                <pre className="text-xs overflow-x-auto text-gray-600">
+                                  {JSON.stringify(log.old_values, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                            {log.new_values && (
+                              <div>
+                                <p className="text-xs font-semibold text-gray-700 mb-1">New Values:</p>
+                                <pre className="text-xs overflow-x-auto text-gray-600">
+                                  {JSON.stringify(log.new_values, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                            {log.metadata && (
+                              <div>
+                                <p className="text-xs font-semibold text-gray-700 mb-1">Additional Info:</p>
+                                <pre className="text-xs overflow-x-auto text-gray-600">
+                                  {JSON.stringify(log.metadata, null, 2)}
+                                </pre>
+                              </div>
+                            )}
                           </div>
                         </details>
                       )}
