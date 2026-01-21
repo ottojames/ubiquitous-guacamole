@@ -579,10 +579,10 @@ npm run lint         # ESLint check
 - [x] **Task 20.2e**: Add sidebar link. **Success**: Visible. (Completed 2026-01-21 - Verified sidebar link exists in CouncilLayout.tsx navItems with REPRESENTATIONS_READ permission)
 
 ### 20.3 Internal Notes
-- [ ] **Task 20.3a**: Create representation_notes table. **Success**: With RLS.
-- [ ] **Task 20.3b**: Apply migration. **Success**: Applied.
-- [ ] **Task 20.3c**: Add notes UI. ~50 lines. **Success**: Works.
-- [ ] **Task 20.3d**: RLS hides from public. **Success**: Council-only.
+- [x] **Task 20.3a**: Create representation_notes table. **Success**: With RLS. (Completed 2026-01-21 - Verified `internal_comments` table exists in `20260114000003_internal_comments.sql` with proper RLS policies; table linked to representations via representation_id with department-scoped visibility rules)
+- [x] **Task 20.3b**: Apply migration. **Success**: Applied. (Completed 2026-01-21 - Migration `20260114000003_internal_comments.sql` creates table with indexes, triggers, and RLS policies; also `20251124000001_add_internal_notes.sql` adds JSONB column backup)
+- [x] **Task 20.3c**: Add notes UI. ~50 lines. **Success**: Works. (Completed 2026-01-21 - Verified `src/components/council/InternalComments.tsx` (220 lines) provides full UI; integrated into Representations.tsx detail modal at line 694-700)
+- [x] **Task 20.3d**: RLS hides from public. **Success**: Council-only. (Completed 2026-01-21 - RLS policies enforce department membership checks; `view_comments_by_role` policy uses `can_view_internal_comment()` function for role-based visibility)
 
 ### 20.4 Templates
 - [ ] **Task 20.4a**: Create Templates page. ~80 lines. **Success**: Renders.
