@@ -480,9 +480,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Added a dark gradient overlay (`bg-gradient-to-b from-transparent via-transparent to-slate-900/30`) as the first child of the hero section. This overlay is transparent at the top and gradually darkens toward the bottom (30% opacity slate-900), ensuring white text remains readable even where the background gradient transitions to light colors.
 
-- [ ] `[MEDIUM]` `[S]` **Improve section spacing** - Add padding above/below "Why CivicNotices is the better way" section.
+- [x] `[MEDIUM]` `[S]` **Improve section spacing** - Add padding above/below "Why CivicNotices is the better way" section.
 
-  **File**: `src/pages/Pricing.tsx:184-236`
+  **File**: `src/pages/Pricing.tsx:152`
+
+  **Solution**: Increased vertical padding on the "Old Way vs New Way" section from `py-16 md:py-24` (64px/96px) to `py-20 md:py-28` (80px/112px). This provides at least 64px spacing as required by DoD, with comfortable separation from the hero section above.
 
 - [ ] `[LOW]` `[S]` **Add resident escape hatch** - Subtle link at top: "Just looking for notices? Search here →"
 

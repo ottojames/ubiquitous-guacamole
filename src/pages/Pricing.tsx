@@ -149,7 +149,7 @@ export default function Pricing() {
       </section>
 
       {/* Old Way vs New Way */}
-      <section className="py-16 md:py-24">
+      <section className="py-20 md:py-28">
         <div className={UI.container}>
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
