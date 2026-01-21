@@ -8,6 +8,8 @@ import PublishPage from "@/pages/PublishPage";
 import Pricing from "@/pages/Pricing";
 import Login from "@/pages/Login";
 import Success from "./pages/Success";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 import DetailsPage from "./pages/DetailsPage";
 import NoticesPage from "@/pages/Notices";
 import NoticeDetailPage from "@/pages/NoticeDetailPage";
@@ -109,6 +111,8 @@ export default function App() {
         <Route path="/publish/*" element={<PublishPage />} />
         <Route path="/notices/upload/template" element={<PublishPage />} />
         <Route path="/success" element={<Success />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/payment/cancelled" element={<PaymentCancelled />} />
         <Route path="/details" element={<DetailsPage />} />
         <Route path="/debug/address" element={<AddressLookupDebug />} />
 

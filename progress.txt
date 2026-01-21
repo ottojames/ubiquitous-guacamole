@@ -5508,3 +5508,45 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Routes will need to be added in Task 19.3d (App.tsx)
   - Next task is Task 19.3c: Create PaymentCancelled page
 ---
+
+## Iteration 235 - Task 19.3c: Create PaymentCancelled page
+- **What was implemented**: Created PaymentCancelled page for cancelled Stripe payments
+- **Files created**:
+  - `src/pages/PaymentCancelled.tsx` - 57 lines
+- **Files changed**:
+  - `PRD.md` - Marked Task 19.3c complete
+- **Component details**:
+  - Uses amber color scheme (XCircle icon in amber-100 circle with amber-600 icon)
+  - Displays cancellation message: "Your payment was cancelled. No charges have been made to your account."
+  - Explains draft is saved and user can return to complete payment
+  - Two CTAs: "Try again" (links to /publish) and "Return home" (links to /)
+  - Uses same layout as PaymentSuccess (SiteHeader, gradient background, white card)
+  - Uses UI.btnPrimary and UI.btnSecondary for consistent button styling
+  - Uses lucide-react icons: XCircle, ArrowLeft, RefreshCw
+- **Test results**: 501 tests pass, no new regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/, server/ directories only - core src/ compiles fine
+- **Learnings for future iterations**:
+  - PaymentCancelled follows same pattern as PaymentSuccess for consistency
+  - Amber color indicates warning/cancelled state (not error) since no actual failure occurred
+  - "Try again" links to /publish (the publish wizard) where user can restart payment process
+  - Next task is Task 19.3d: Add routes to App.tsx for PaymentSuccess and PaymentCancelled pages
+---
+
+## Iteration 236 - Task 19.3d: Add payment routes to App.tsx
+- **What was implemented**: Added routes for PaymentSuccess and PaymentCancelled pages to App.tsx
+- **Files changed**:
+  - `src/App.tsx` - Added 2 imports and 2 routes
+  - `PRD.md` - Marked Task 19.3d complete
+- **Route details**:
+  - `/payment/success` - Renders PaymentSuccess component
+  - `/payment/cancelled` - Renders PaymentCancelled component
+  - Routes placed after `/success` route in the public routes section
+- **Test results**: 501 tests pass, 2 skipped (no regressions)
+- **TypeScript check**: No errors in src/App.tsx, pre-existing errors in cypress/, e2e/, scripts/ only
+- **Build check**: Vite build succeeds
+- **Learnings for future iterations**:
+  - Payment routes use /payment/* prefix to group related pages
+  - Routes match Stripe success_url and cancel_url patterns (VITE_APP_URL + /payment/success or /payment/cancelled)
+  - Import style uses relative paths for local ./pages imports
+  - Next task is Task 19.3e: Integrate into publish wizard
+---
