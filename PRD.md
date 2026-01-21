@@ -127,7 +127,7 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **File**: `src/components/council/InternalComments.tsx:58-88`
 
-- [ ] `[HIGH]` `[M]` **Add/fix RLS policies for internal_comments table** - Ensure department members can INSERT and SELECT comments.
+- [x] `[HIGH]` `[M]` **Add/fix RLS policies for internal_comments table** - Ensure department members can INSERT and SELECT comments.
 
   ```sql
   CREATE POLICY "Department members can insert comments"
