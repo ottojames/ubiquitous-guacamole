@@ -191,7 +191,7 @@ npm run lint         # ESLint check
 - [x] **Task 11.0**: Install required packages: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @tanstack/react-query` (Installed 2026-01-21 - @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2, @tanstack/react-query@5.90.19)
 
 ### 11.2 Hooks
-- [ ] **Task 11.1a**: Create `src/hooks/useWorkflow.ts` with `useWorkflowConfigs()` hook using React Query. ~25 lines.
+- [x] **Task 11.1a**: Create `src/hooks/useWorkflow.ts` with `useWorkflowConfigs()` hook using React Query. ~25 lines. (Created 2026-01-21 - Hook fetches from /api/workflow/configs, QueryClientProvider added to main.tsx)
 - [ ] **Task 11.1b**: Add `useWorkflowConfig(noticeType)` and `useNoticeWorkflowStatus(noticeId)` hooks. ~30 lines.
 - [ ] **Task 11.1c**: Add `useTransitionStage()` mutation hook. ~25 lines.
 
