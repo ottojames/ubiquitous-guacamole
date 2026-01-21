@@ -6049,3 +6049,68 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
     - checkNoticeBaseCompliance() for NoticeBase (nested structure with applicant/premises/consultation)
   - Next task is Task 21.1c: Add to wizard (shows feedback in publish wizard)
 ---
+
+## Iteration 254 - Task 21.1c: Add compliance feedback to wizard
+- **What was implemented**: Created ComplianceFeedback component and integrated it into the publish wizard
+- **Files changed**:
+  - `src/next/publish/flow/components/ComplianceFeedback.tsx` - New component (~300 lines)
+  - `src/next/publish/flow/steps/ConfirmStep.tsx` - Added ComplianceFeedback import and usage
+  - `src/next/publish/flow/NewPublishFlow.tsx` - Added legalDetails prop to ConfirmStep
+  - `PRD.md` - Marked Task 21.1c complete
+- **Implementation details**:
+  - ComplianceFeedback component fetches compliance results from API endpoints created in Task 21.1b
+  - Uses /api/compliance/check-base for NoticeBase format (template mode)
+  - Uses /api/compliance/check for LegalDetails format (OCR upload mode)
+  - Displays:
+    - Compliance score (0-100) with color coding (green >= 80, amber >= 60, red < 60)
+    - Issue count badges for errors, warnings, and info items
+    - "All checks passed" badge when no issues
+    - Detailed issue list with severity icons, messages, suggestions, and field names
+  - Includes loading spinner and error states
+  - Debounces API calls by 500ms to avoid excessive requests
+  - Added legalDetails prop to ConfirmStep props type and destructuring
+  - ConfirmStep passes either notice (NoticeBase) or legalDetails to ComplianceFeedback based on what's available
+- **Test results**: All 503 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Compliance checker has two endpoints: /api/compliance/check (NoticeDraft format) and /api/compliance/check-base (NoticeBase format)
+  - ComplianceFeedback component uses useBaseEndpoint prop to choose which endpoint to call
+  - ConfirmStep is Step 3 of the wizard where users review before payment
+  - Pre-existing TS errors in NewPublishFlow.tsx are unrelated to this change
+  - Phase 21 (AI Features) Task 21.1 (Compliance Checker) is now complete
+  - Next task is Task 21.2a: Create noticeDrafter service
+---
+
+## Iteration 255 - Task 21.2a: Create noticeDrafter service
+- **What was implemented**: Created noticeDrafter service for generating draft notice text
+- **Files changed**:
+  - `server/services/noticeDrafter.ts` - New file (270 lines)
+  - `PRD.md` - Marked Task 21.2a complete
+- **Implementation details**:
+  - Created TypeScript interfaces: DraftInput, DraftResult
+  - Implemented template functions for all 9 notice types:
+    1. `draftLicensingPremises()` - Licensing Act 2003 new premises
+    2. `draftLicensingVariation()` - Licensing Act 2003 variation
+    3. `draftLicensingReview()` - Licensing Act 2003 review
+    4. `draftGambling()` - Gambling Act 2005
+    5. `draftGvol()` - Goods Vehicle Operator's Licence
+    6. `draftTro()` - Traffic Regulation Order
+    7. `draftPlanning()` - Planning application
+    8. `draftProbate()` - Trustee Act s.27
+    9. `draftOther()` - Generic notice
+  - Exported three main functions:
+    - `generateDraft(input: DraftInput)` - main drafting function
+    - `generateDraftFromNoticeBase(notice: NoticeBase)` - for wizard flow
+    - `generateDraftFromNoticeDraft(draft: Partial<NoticeDraft>)` - for legacy flow
+  - Each draft includes placeholders for required fields
+  - Returns suggestions array for fields that need attention
+  - `formatDateForNotice()` helper for proper date formatting
+- **Test results**: All 503 tests pass, 2 skipped
+- **TypeScript check**: No new errors (pre-existing errors in cypress/, e2e/, scripts/ only)
+- **Learnings for future iterations**:
+  - Server services go in server/services/ directory
+  - Notice types from src/types/notice.ts: premises, variation, review, gvol, tro, planning, gambling, probate, other
+  - Templates include statutory language and standard formatting
+  - UK notice formats follow specific statutes (Licensing Act 2003, Gambling Act 2005, Trustee Act s.27, etc.)
+  - Next task is Task 21.2b: Create endpoint (for notice drafting API)
+---

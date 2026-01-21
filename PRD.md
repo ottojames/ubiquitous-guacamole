@@ -619,7 +619,7 @@ npm run lint         # ESLint check
 - [x] **Task 21.1c**: Add to wizard. **Success**: Shows feedback. (Completed 2026-01-21 - Created ComplianceFeedback component in src/next/publish/flow/components/ComplianceFeedback.tsx that fetches compliance results from /api/compliance/check or /api/compliance/check-base endpoints and displays score, errors, warnings, and info with styled feedback cards. Added ComplianceFeedback to ConfirmStep.tsx to show validation on Step 3 of the wizard. Component displays compliance score 0-100, issue counts by severity, and detailed issue list with suggestions. 503 tests pass)
 
 ### 21.2 Notice Drafting
-- [ ] **Task 21.2a**: Create noticeDrafter service. ~80 lines. **Success**: Generates.
+- [x] **Task 21.2a**: Create noticeDrafter service. ~80 lines. **Success**: Generates. (Completed 2026-01-21 - Created server/services/noticeDrafter.ts with 270 lines. Exports generateDraft(), generateDraftFromNoticeBase(), generateDraftFromNoticeDraft() functions. Generates template-based notice text for all 9 notice types: premises/variation/review (Licensing Act 2003), gambling (Gambling Act 2005), gvol (GVOL), tro (Traffic Regulation Order), planning, probate (Trustee Act s.27), and other. Returns DraftResult with success, draftText, noticeType, generatedAt, and suggestions for incomplete fields. 503 tests pass)
 - [ ] **Task 21.2b**: Create endpoint. **Success**: Callable.
 - [ ] **Task 21.2c**: Add to wizard. **Success**: Pre-fills.
 
