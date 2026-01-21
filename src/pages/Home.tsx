@@ -14,6 +14,7 @@ import SearchResults from "@/components/home/SearchResults";
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import useNoticeSearch from '@/hooks/useNoticeSearch';
+import { useStats } from '@/hooks/useStats';
 import { toast, useToastController } from '@/lib/ui/toast';
 import Footer from '@/components/Footer';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
@@ -45,12 +46,7 @@ const councilLogos = [
   { src: "/logos/manchester.png", alt: "Manchester City Council", width: 180, height: 28 },
 ];
 
-// Stats (TODO: make dynamic via API)
-const STATS = {
-  notices: "1,842+",
-  comments: "12,455+",
-  councils: "40+",
-} as const;
+// Stats are now fetched dynamically via useStats() hook
 
 function formatPostcodeForDisplay(compact?: string | null) {
   if (!compact) return null;
@@ -70,6 +66,14 @@ export default function Home() {
   // Respect user's motion preferences for accessibility
   const prefersReducedMotion = useReducedMotion();
   const animationDuration = prefersReducedMotion ? 0 : 500;
+
+  // Stats from API
+  const { data: stats } = useStats();
+  const STATS = {
+    notices: stats?.notices?.toLocaleString() ?? '—',
+    comments: stats?.representations?.toLocaleString() ?? '—',
+    councils: stats?.councils?.toLocaleString() ?? '—',
+  };
 
   // Hysteresis-free compact header using IntersectionObserver on sentinel
   useEffect(() => {
