@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link, useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Search, Filter, Eye, FileText, MapPin } from 'lucide-react';
+import { Calendar, Search, Filter, Eye, FileText, MapPin, LayoutGrid, List, CalendarDays } from 'lucide-react';
 import ConsultationCountdown from '@/components/notice/ConsultationCountdown';
 
 interface Organization {
@@ -42,6 +42,7 @@ interface Client {
 }
 
 type FilterStatus = 'all' | 'draft' | 'published' | 'expired';
+type ViewMode = 'kanban' | 'list' | 'calendar';
 
 export default function FirmNotices() {
   const { firmSlug } = useParams<{ firmSlug: string }>();
@@ -54,6 +55,7 @@ export default function FirmNotices() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [filterClient, setFilterClient] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // Read client filter from URL on mount
   useEffect(() => {
@@ -210,9 +212,51 @@ export default function FirmNotices() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Notices</h1>
-        <p className="text-gray-600">View and manage all published notices for your firm</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Notices</h1>
+          <p className="text-gray-600">View and manage all published notices for your firm</p>
+        </div>
+
+        {/* View Toggle Buttons */}
+        <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              viewMode === 'list'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            aria-label="List view"
+          >
+            <List className="w-4 h-4" />
+            <span className="hidden sm:inline">List</span>
+          </button>
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              viewMode === 'kanban'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            aria-label="Kanban view"
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span className="hidden sm:inline">Kanban</span>
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              viewMode === 'calendar'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            aria-label="Calendar view"
+          >
+            <CalendarDays className="w-4 h-4" />
+            <span className="hidden sm:inline">Calendar</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters and Search */}

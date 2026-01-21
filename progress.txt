@@ -2357,3 +2357,60 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - cursor-grab/cursor-grabbing provides clear drag affordance
   - Next task is Task 11.3c: Create KanbanBoard.tsx main board component
 ---
+
+## Iteration 96 - Task 11.3c: Create KanbanBoard.tsx component
+- **What was implemented**: Created KanbanBoard component with dnd-kit DndContext for drag-and-drop workflow stage transitions
+- **Files created**:
+  - `src/components/workflow/KanbanBoard.tsx` (~113 lines)
+- **Files changed**:
+  - `PRD.md` - Marked task complete
+- **Key features**:
+  - DndContext wrapper with PointerSensor (8px activation distance)
+  - DragOverlay for card preview during drag (with shadow and rotation effect)
+  - useTransitionStage mutation hook for API calls on drag end
+  - Stages sorted by position for correct column order
+  - UI disabled (opacity + pointer-events) while transition is pending
+  - handleDragStart stores active notice for overlay
+  - handleDragEnd calls transitionStage mutation, skips if dropped on same stage
+  - onNoticeMoved callback prop for parent component notification
+- **Props interface**:
+  - `stages`: WorkflowStage[] - columns to display
+  - `noticesByStage`: Record<string, NoticeWithWorkflow[]> - notices grouped by stage ID
+  - `onNoticeMoved?`: callback(noticeId, fromStageId, toStageId)
+  - `className?`: additional styling
+- **Test results**: 493 tests pass + 2 skipped, no regressions
+- **TypeScript check**: KanbanBoard.tsx compiles cleanly (pre-existing errors in cypress/e2e/scripts only)
+- **Learnings for future iterations**:
+  - DndContext needs sensors configured; PointerSensor with distance constraint prevents accidental drags
+  - DragOverlay renders independently of the draggable source for smooth previews
+  - Pattern: store dragged item in state during onDragStart, clear in onDragEnd
+  - The pending state from useMutation can disable the entire board during transitions
+  - Pre-existing TypeScript errors in cypress/, e2e/, scripts/ directories are unrelated
+  - Next task is Task 11.4a: Add view toggle state to src/pages/firm/Notices.tsx
+---
+
+## Iteration 97 - Task 11.4a: Add view toggle state to src/pages/firm/Notices.tsx
+- **What was implemented**: Added view mode state and toggle buttons for kanban/list/calendar views
+- **Files changed**:
+  - `src/pages/firm/Notices.tsx` - Added ViewMode type, viewMode state, and toggle buttons UI
+  - `PRD.md` - Marked task complete
+- **Key implementation details**:
+  - Added `ViewMode` type: 'kanban' | 'list' | 'calendar'
+  - Added `viewMode` state with default value 'list'
+  - Imported additional icons: LayoutGrid, List, CalendarDays from lucide-react
+  - Added toggle button group in header section with responsive design:
+    - List view button (default/active)
+    - Kanban view button
+    - Calendar view button
+  - Toggle buttons use pill-style design with active state styling (white bg + shadow)
+  - Icons visible on all sizes, text labels hidden on small screens (sm:inline)
+  - Aria labels for accessibility
+- **Test results**: All 493 tests pass, no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts directories only - Notices.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The toggle button group uses a common pattern: bg-gray-100 container with rounded buttons inside
+  - Active state is indicated by bg-white, shadow-sm, and darker text
+  - Responsive text hiding with hidden sm:inline pattern
+  - The view mode state is ready for conditional rendering in Task 11.4b
+  - Next task is Task 11.4b: Integrate KanbanBoard into Notices.tsx
+---
