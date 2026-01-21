@@ -281,9 +281,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
   **Solution**: Replaced custom inline headers in EmailAlerts.tsx, Pricing.tsx, and Login.tsx with the shared SiteHeader component. Each page now imports and uses `<SiteHeader />` with the header-sentinel div for compact mode. Home.tsx already has its own header implementation that matches SiteHeader styling - leaving it as-is to avoid regression.
 
-- [ ] `[MEDIUM]` `[S]` **Fix "Find notices" link** - Change from `#notices` (anchor scroll) to `/notices` (route navigation).
+- [x] `[MEDIUM]` `[S]` **Fix "Find notices" link** - Change from `#notices` (anchor scroll) to `/notices` (route navigation).
 
   **Files**: `src/pages/Home.tsx:29-34`, `src/components/SiteHeader.tsx:42-56`
+
+  **Solution**: Changed `href` from `#notices` / `/#notices` to `/notices` in both SiteHeader.tsx (desktop and mobile nav arrays) and Home.tsx (NAV_LINKS constant).
 
 - [ ] `[MEDIUM]` `[S]` **Add "Email alerts" to navigation consistently** - Add to SiteHeader nav links array.
 

@@ -8585,3 +8585,65 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Main gap was: Team.tsx was calling Supabase directly, bypassing the email-sending API
   - Always check existing infrastructure before implementing - most of Phase 3 was already done
 ---
+
+## Iteration 28 - Fix cursor position loss in template editor (Phase 4)
+- **What was implemented**: Fixed the cursor jump bug in TemplateTextEditor.tsx that occurred when editing in the middle of the template
+- **Files changed**:
+  - `src/pages/council/TemplateTextEditor.tsx` - Removed dangerouslySetInnerHTML pattern, added refs to track user input vs external changes
+  - `PRD.md` - Marked task complete with root cause and solution
+- **Root cause**: The contentEditable div was using `dangerouslySetInnerHTML={{ __html: value }}` which resets innerHTML on every parent re-render (when formData state updates), causing cursor position loss
+- **Solution implemented**:
+  - Renamed `textareaRef` to `editorRef` (HTMLDivElement)
+  - Added `isUserInputRef` to track if changes came from user input
+  - Added `lastValueRef` to track the last known value
+  - useEffect syncs value prop to innerHTML only when changed externally (not from user input)
+  - onInput and onBlur handlers set `isUserInputRef.current = true` before calling onChange
+  - Formatting buttons (Bold/Underline/Italic) also mark as user input
+  - insertPlaceholder function also marks as user input
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **Learnings for future iterations**:
+  - Never use `dangerouslySetInnerHTML` on contentEditable elements - it resets DOM on every render
+  - For controlled contentEditable components, track if change is internal (user typing) vs external (props)
+  - Pre-existing TypeScript errors in categoryColor object (missing gambling, planning, etc.) are unrelated
+  - The pattern: set `isUserInputRef.current = true` before onChange, useEffect checks this flag before updating innerHTML
+---
+
+## Iteration 29 - Add template variable insertion without cursor disruption (Phase 4)
+- **What was implemented**: Fixed placeholder insertion in TemplateTextEditor to position cursor immediately after inserted variable
+- **Files changed**:
+  - `src/pages/council/TemplateTextEditor.tsx` - Replaced deprecated execCommand with Range API for placeholder insertion
+  - `PRD.md` - Marked task complete with solution details
+- **Root cause**: Previous implementation used `document.execCommand('insertText')` which is deprecated and doesn't consistently position cursor after insertion
+- **Solution implemented**:
+  - For cursor with selection: Uses `range.insertNode(textNode)` to insert a text node at cursor position, then `range.setStartAfter(textNode)` and `range.setEndAfter(textNode)` to position cursor after
+  - For no selection (append to end): Creates range at end of content using `range.selectNodeContents(editor)` then `range.collapse(false)`
+  - Both paths properly update selection with `selection.removeAllRanges()` and `selection.addRange(range)`
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in categoryColor, NoticeEditor, etc. (not related to this change)
+- **Learnings for future iterations**:
+  - `document.execCommand` is deprecated - use Range API for reliable cursor positioning
+  - `range.setStartAfter(node)` + `range.setEndAfter(node)` positions cursor immediately after a node
+  - Always call `selection.removeAllRanges()` before `selection.addRange()` when updating selection
+  - `range.collapse(false)` collapses range to end position
+---
+
+## Iteration 30 - Unify header component across all pages (Phase 5)
+- **What was implemented**: Replaced custom inline headers in EmailAlerts.tsx, Pricing.tsx, and Login.tsx with the shared SiteHeader component
+- **Files changed**:
+  - `src/pages/EmailAlerts.tsx` - Removed custom header (14 lines), added SiteHeader import and component
+  - `src/pages/Pricing.tsx` - Removed custom header (32 lines including NAV_LINKS), added SiteHeader
+  - `src/pages/Login.tsx` - Removed custom header (32 lines including NAV_LINKS), added SiteHeader
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Each page now imports `SiteHeader from '@/components/SiteHeader'`
+  - Added `header-sentinel` div before SiteHeader for compact scroll mode
+  - Removed redundant `NAV_LINKS` constants from Pricing.tsx and Login.tsx
+  - Removed unused `Link` import from EmailAlerts.tsx
+- **Tests**: 507 passed, 2 skipped (no regressions)
+- **TypeScript**: Pre-existing errors in cypress/e2e/scripts directories only (not related to this change)
+- **Learnings for future iterations**:
+  - The SiteHeader component requires a `header-sentinel` div (id="header-sentinel") to trigger compact mode on scroll
+  - Home.tsx has its own header implementation that's similar to SiteHeader but includes mobile sheet and additional features - left as-is
+  - NAV_LINKS was duplicated across multiple files - SiteHeader has its own copy internally
+  - When unifying components, check for unused imports that can be removed (e.g., Link from react-router-dom)
+---

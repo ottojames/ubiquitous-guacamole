@@ -40,9 +40,9 @@ export default function SiteHeader() {
             </a>
             <nav className="hidden md:flex items-center gap-6">
               {[
-                { href: '/#notices', label: 'Find notices' },
+                { href: '/notices', label: 'Find notices' },
                 { href: '/#for-councils', label: 'For councils' },
-                { href: '/#pricing', label: 'Pricing' },
+                { href: '/pricing', label: 'Pricing' },
                 { href: '/#docs', label: 'Docs' },
               ].map((link) => (
                 <a
@@ -102,9 +102,9 @@ export default function SiteHeader() {
             </div>
             <nav className="mt-6 flex flex-col gap-4">
               {[
-                { href: '/#notices', label: 'Find notices' },
+                { href: '/notices', label: 'Find notices' },
                 { href: '/#for-councils', label: 'For councils' },
-                { href: '/#pricing', label: 'Pricing' },
+                { href: '/pricing', label: 'Pricing' },
                 { href: '/#docs', label: 'Docs' },
               ].map((link) => (
                 <a

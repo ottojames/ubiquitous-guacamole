@@ -27,7 +27,7 @@ function track(event: string, payload: Record<string, unknown> = {}) {
 
 // Navigation links (shared constant)
 const NAV_LINKS = [
-  { href: "#notices", label: "Find notices" },
+  { href: "/notices", label: "Find notices" },
   { href: "#for-councils", label: "For councils" },
   { href: "/pricing", label: "Pricing" },
   { href: "/email-alerts", label: "Email alerts" },
