@@ -9,25 +9,6 @@ const NAV_LINKS = [
 ] as const;
 
 const pricingPlans = {
-  individual: {
-    name: "Pay as you go",
-    description: "Perfect for solicitors, businesses, and individuals publishing occasional notices",
-    priceMonthly: 50,
-    priceAnnual: null,
-    features: [
-      "£50 per notice",
-      "Instant publication & timestamped proof",
-      "Full audit trail with cryptographic hash",
-      "PDF certificate for legal compliance",
-      "Public comments & engagement tracking",
-      "Geospatial search & discovery",
-      "Email support within 24 hours",
-      "No subscription required",
-    ],
-    cta: "Publish a notice",
-    ctaHref: "/publish",
-    popular: false,
-  },
   public: {
     name: "One-Off Publishing",
     description: "Publish a single notice without creating an account. Perfect for solicitors, businesses, and members of the public.",
@@ -249,50 +230,6 @@ export default function Pricing() {
               <p className="text-slate-700">
                 Digital-first, compliant with upcoming regulations, and built for the modern public sector
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Individual/Direct Publishing */}
-      <section className="pb-8">
-        <div className={UI.container}>
-          <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-              For Individuals & One-Off Publishing
-            </h2>
-            <p className="mt-4 text-lg text-slate-600">Simple pay-as-you-go pricing with no commitment</p>
-          </div>
-
-          <div className="mx-auto max-w-lg">
-            <div className={`${UI.card} relative overflow-hidden p-8`}>
-              <div>
-                <h3 className="text-2xl font-bold text-slate-900">{pricingPlans.individual.name}</h3>
-                <p className="mt-2 text-sm text-slate-600">{pricingPlans.individual.description}</p>
-              </div>
-
-              <div className="mt-6">
-                <span className="text-5xl font-extrabold tracking-tight text-slate-900">
-                  £{pricingPlans.individual.priceMonthly}
-                </span>
-                <span className="ml-2 text-lg text-slate-600">/notice</span>
-              </div>
-
-              <a
-                href={pricingPlans.individual.ctaHref}
-                className="mt-8 block w-full rounded-xl bg-slate-100 py-3 text-center text-base font-semibold text-slate-900 transition hover:bg-slate-200"
-              >
-                {pricingPlans.individual.cta}
-              </a>
-
-              <ul className="mt-8 space-y-3">
-                {pricingPlans.individual.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
-                    <span className="text-sm text-slate-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </div>

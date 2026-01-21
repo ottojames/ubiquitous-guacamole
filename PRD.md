@@ -336,7 +336,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.3c**: Update pricing text to "From £50 per notice. Councils £19.99." **Success**: Correct pricing. (Completed 2026-01-21 - Updated "Old Way vs New Way" section h3 to include "Councils £19.99", also removed false "40+ UK councils" claim from that section)
 
 ### 15.4 Rebuild Pricing Cards Section
-- [ ] **Task 15.4a**: Delete "For Individuals" section. **Success**: Removed.
+- [x] **Task 15.4a**: Delete "For Individuals" section. **Success**: Removed. (Completed 2026-01-21 - Removed lines 257-299 "For Individuals & One-Off Publishing" section and pricingPlans.individual object, 494 tests pass)
 - [ ] **Task 15.4b**: Delete "For Law Firms" section with old tiers. **Success**: Removed.
 - [ ] **Task 15.4c**: Delete "For Councils" section with old tiers. **Success**: Removed.
 - [ ] **Task 15.4d**: Delete Comparison Table section. **Success**: Removed.

@@ -3336,3 +3336,17 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - The Final CTA section (line 377) still has "40+ UK councils" claim - this will be fixed in task 15.7a
   - Next task is 15.4a: Delete "For Individuals" section
 ---
+
+## Iteration 84 - Task 15.4a: Delete "For Individuals" section
+- **What was implemented**: Removed the "For Individuals & One-Off Publishing" section from the pricing page
+- **Files changed**:
+  - `src/pages/Pricing.tsx` - Deleted lines 257-299 containing the "For Individuals & One-Off Publishing" section that rendered pricingPlans.individual card. Also deleted pricingPlans.individual object (lines 12-30) since it's no longer used.
+  - `PRD.md` - Marked Task 15.4a complete
+- **Test results**: 494 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/, e2e/, scripts/ directories only - src/pages/Pricing.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - The pricingPlans.individual object is now deleted along with its section - no orphaned data
+  - The page now has three pricing objects remaining: public, firms, councils (the correct target state)
+  - The "Law Firms" and "Council" sections are still hidden with HTML comments
+  - Next task is 15.4b: Delete "For Law Firms" section
+---
