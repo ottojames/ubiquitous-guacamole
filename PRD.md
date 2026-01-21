@@ -454,7 +454,7 @@ npm run lint         # ESLint check
 - [x] **Task 17.2e**: Add skip link. **Success**: Works. (Completed 2026-01-21 - Added "Skip to main content" link at top of AdminLayout.tsx, visually hidden until focused, uses sr-only/focus:not-sr-only pattern, links to #main-content with tabIndex={-1} for proper focus)
 
 ### 17.3 Replace Browser Alerts
-- [ ] **Task 17.3a**: Find all alert() calls, list them. **Success**: Listed.
+- [x] **Task 17.3a**: Find all alert() calls, list them. **Success**: Listed. (Completed 2026-01-21 - Found 5 alert() calls: AdminNotices.tsx:142 (action failed), AccountManagement.tsx:384 (password reset), AccountManagement.tsx:400 (action failed), AccountManagement.tsx:417 (bulk suspend success), AccountManagement.tsx:427 (bulk activate success). Found 2 confirm() calls: AdminNotices.tsx:130 (delete notice), AccountManagement.tsx:370 (delete account). Total: 7 browser dialogs to replace)
 - [ ] **Task 17.3b**: Create ConfirmModal component. ~80 lines. **Success**: Works.
 - [ ] **Task 17.3c**: Create AlertModal component. ~50 lines. **Success**: Works.
 - [ ] **Task 17.3d**: Replace first alert(). **Success**: Replaced.
