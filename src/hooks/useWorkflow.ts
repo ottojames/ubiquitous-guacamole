@@ -3,7 +3,7 @@
  * Uses React Query for data fetching and caching
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { WorkflowConfigWithStages, NoticeWorkflowStatus, WorkflowStage, WorkflowConfig } from '@/types/workflow';
 
 /**
@@ -120,5 +120,77 @@ export function useNoticeWorkflowStatus(noticeId: string | undefined) {
     enabled: !!noticeId, // Only fetch if noticeId is provided
     staleTime: 2 * 60 * 1000, // 2 minutes (status changes more frequently)
     gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+// ============================================================
+// Workflow Stage Transition Mutations
+// ============================================================
+
+/**
+ * Parameters for transitioning a notice to a new workflow stage
+ */
+export interface TransitionStageParams {
+  noticeId: string;
+  toStageId: string;
+  notes?: string;
+}
+
+/**
+ * Response from the transition stage API
+ */
+export interface TransitionStageResult {
+  historyId: string;
+  success: boolean;
+}
+
+/**
+ * Transitions a notice to a new workflow stage
+ */
+async function transitionStage(params: TransitionStageParams): Promise<TransitionStageResult> {
+  const { noticeId, toStageId, notes } = params;
+
+  const response = await fetch(`/api/workflow/notices/${encodeURIComponent(noticeId)}/transition`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ toStageId, notes }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || 'Failed to transition notice stage');
+  }
+
+  return response.json();
+}
+
+/**
+ * Hook to transition a notice to a new workflow stage
+ * Automatically invalidates the notice workflow status cache on success
+ *
+ * @example
+ * const { mutate, isPending, error } = useTransitionStage();
+ *
+ * const handleDrop = (noticeId: string, newStageId: string) => {
+ *   mutate({ noticeId, toStageId: newStageId }, {
+ *     onSuccess: () => console.log('Moved!'),
+ *     onError: (err) => console.error(err.message)
+ *   });
+ * };
+ */
+export function useTransitionStage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: transitionStage,
+    onSuccess: (_data, variables) => {
+      // Invalidate the notice's workflow status cache so it refetches with new stage
+      queryClient.invalidateQueries({
+        queryKey: ['workflow', 'notices', variables.noticeId, 'status'],
+      });
+    },
   });
 }

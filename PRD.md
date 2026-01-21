@@ -193,7 +193,7 @@ npm run lint         # ESLint check
 ### 11.2 Hooks
 - [x] **Task 11.1a**: Create `src/hooks/useWorkflow.ts` with `useWorkflowConfigs()` hook using React Query. ~25 lines. (Created 2026-01-21 - Hook fetches from /api/workflow/configs, QueryClientProvider added to main.tsx)
 - [x] **Task 11.1b**: Add `useWorkflowConfig(noticeType)` and `useNoticeWorkflowStatus(noticeId)` hooks. ~30 lines. (Created 2026-01-21 - Added useWorkflowConfig() for single workflow by notice type, useNoticeWorkflowStatus() for notice status with current_stage and is_overdue, plus NoticeWorkflowStatusWithDetails interface)
-- [ ] **Task 11.1c**: Add `useTransitionStage()` mutation hook. ~25 lines.
+- [x] **Task 11.1c**: Add `useTransitionStage()` mutation hook. ~25 lines. (Created 2026-01-21 - Added useMutation hook with TransitionStageParams/TransitionStageResult interfaces, auto-invalidates notice workflow status cache on success)
 
 ### 11.3 Components
 - [ ] **Task 11.2**: Create `src/components/workflow/WorkflowStageBadge.tsx` - Badge showing stage name, color, deadline indicator. ~50 lines.
