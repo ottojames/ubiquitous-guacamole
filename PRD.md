@@ -356,7 +356,7 @@ npm run lint         # ESLint check
 - [x] **Task 15.6c**: Add FAQ "Why do councils get a discount?" **Success**: Added. (Completed 2026-01-21 - FAQ explains councils process thousands of notices annually and the £19.99 rate helps redirect taxpayer money from expensive newspaper advertising to modern digital infrastructure)
 - [x] **Task 15.6d**: Add FAQ "What's in £49/month subscription?" **Success**: Added. (Completed 2026-01-21 - FAQ explains subscription includes unlimited team members, Kanban workflow, client matter tracking, deadline reminders, custom templates, and priority support; notes £50/notice charged separately)
 - [x] **Task 15.6e**: Add FAQ "Can I publish without subscription?" **Success**: Added. (Completed 2026-01-21 - FAQ explains One-Off Publishing at £50, no account required, only subscription needed for team collaboration and professional features)
-- [ ] **Task 15.6f**: Add FAQ "What's in free council portal?" **Success**: Added.
+- [x] **Task 15.6f**: Add FAQ "What's in free council portal?" **Success**: Added. (Completed 2026-01-21 - FAQ explains free access to view notices/representations, department controls, templates, IDOX export, with £19.99 per notice only when publishing)
 
 ### 15.7 Update Final CTA Section
 - [x] **Task 15.7a**: Remove "40+ UK councils", use generic text. **Success**: Removed. (Completed 2026-01-21 - Changed to "Publish legally compliant notices in seconds — no newspapers, no waiting")

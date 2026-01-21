@@ -373,6 +373,10 @@ export default function Pricing() {
                   q: "Can I publish without a subscription?",
                   a: "Absolutely! Our One-Off Publishing option lets anyone publish a notice for £50 with no account or subscription required. You get instant publication, full audit trail, and a PDF certificate. The subscription is only needed if you want team collaboration, workflow management, and other professional features.",
                 },
+                {
+                  q: "What's in the free council portal?",
+                  a: "The Council Portal gives local authorities free access to view all notices published in their jurisdiction, manage public representations and objections, and track community engagement. Councils can also set up department-level access controls, create customised notice templates, and export data in IDOX-compatible format. The portal is completely free — councils only pay £19.99 per notice when they choose to publish their own notices.",
+                },
               ].map((faq, index) => (
                 <div
                   key={index}
