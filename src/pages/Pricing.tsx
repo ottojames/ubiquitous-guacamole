@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Check, ArrowRight, HelpCircle, Zap, Shield } from "lucide-react";
 import * as UI from "@/styles/ui";
-
-const NAV_LINKS = [
-  { href: "/#notices", label: "Find notices" },
-  { href: "/#for-councils", label: "For councils" },
-  { href: "/pricing", label: "Pricing" },
-] as const;
+import SiteHeader from "@/components/SiteHeader";
 
 const pricingPlans = {
   public: {
@@ -95,39 +90,9 @@ export default function Pricing() {
 
   return (
     <div className={`${UI.pageWrap} min-h-screen`}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg" style={{ height: 'var(--headerH)' }}>
-        <div className={`${UI.container} h-full`}>
-          <div className="flex h-full items-center justify-between">
-            {/* Left: logo + desktop nav */}
-            <div className="flex items-center gap-6">
-              <a href="/" className="text-xl font-extrabold tracking-tight text-slate-900" style={{ letterSpacing: '-0.5px' }}>
-                CivicNotices
-              </a>
-              <nav className="hidden items-center gap-6 md:flex">
-                {NAV_LINKS.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="text-sm text-slate-600 transition hover:text-slate-900"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            </div>
-            {/* Right: ghost + primary */}
-            <div className="flex items-center gap-3">
-              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>
-                Sign in
-              </a>
-              <a href="/publish" className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
-                Get started
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header sentinel for SiteHeader compact mode */}
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
+      <SiteHeader />
 
       {/* Hero */}
       <section className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">

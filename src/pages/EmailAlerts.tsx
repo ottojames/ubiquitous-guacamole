@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import * as UI from '@/styles/ui';
+import SiteHeader from '@/components/SiteHeader';
 
 interface Subscription {
   id: string;
@@ -210,22 +211,9 @@ export default function EmailAlerts() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              CivicNotices
-            </Link>
-            <Link
-              to="/"
-              className="text-gray-600 hover:text-gray-900 font-semibold"
-            >
-              ← Back to Search
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Header sentinel for SiteHeader compact mode */}
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
+      <SiteHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12 max-w-4xl">

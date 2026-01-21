@@ -275,9 +275,11 @@ Major refactoring and bug fixes following user walkthrough review.
 
 ### Tasks
 
-- [ ] `[HIGH]` `[M]` **Unify header component across all pages** - Ensure SiteHeader is used on Home, Pricing, EmailAlerts, Login. Remove custom headers that cause visual glitches.
+- [x] `[HIGH]` `[M]` **Unify header component across all pages** - Ensure SiteHeader is used on Home, Pricing, EmailAlerts, Login. Remove custom headers that cause visual glitches.
 
   **Files**: `src/pages/EmailAlerts.tsx:211-228`, `src/pages/Pricing.tsx:98-130`, `src/components/SiteHeader.tsx`
+
+  **Solution**: Replaced custom inline headers in EmailAlerts.tsx, Pricing.tsx, and Login.tsx with the shared SiteHeader component. Each page now imports and uses `<SiteHeader />` with the header-sentinel div for compact mode. Home.tsx already has its own header implementation that matches SiteHeader styling - leaving it as-is to avoid regression.
 
 - [ ] `[MEDIUM]` `[S]` **Fix "Find notices" link** - Change from `#notices` (anchor scroll) to `/notices` (route navigation).
 

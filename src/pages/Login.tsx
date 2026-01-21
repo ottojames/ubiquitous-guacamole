@@ -2,12 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Mail, Lock, AlertCircle } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
-
-const NAV_LINKS = [
-  { href: "/#notices", label: "Find notices" },
-  { href: "/#for-councils", label: "For councils" },
-  { href: "/pricing", label: "Pricing" },
-] as const;
+import SiteHeader from "@/components/SiteHeader";
 
 // Error messages for redirect errors
 const ERROR_MESSAGES: Record<string, string> = {
@@ -285,39 +280,9 @@ export default function Login() {
       <div className="absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-white/30 blur-3xl pointer-events-none" />
       <div className="absolute left-0 top-[300px] h-[400px] w-[400px] rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-white/80 backdrop-blur-lg" style={{ height: 'var(--headerH)' }}>
-        <div className={`${UI.container} h-full`}>
-          <div className="flex h-full items-center justify-between">
-            {/* Left: logo + desktop nav */}
-            <div className="flex items-center gap-6">
-              <a href="/" className="text-xl font-extrabold tracking-tight text-slate-900" style={{ letterSpacing: '-0.5px' }}>
-                CivicNotices
-              </a>
-              <nav className="hidden items-center gap-6 md:flex">
-                {NAV_LINKS.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="text-sm text-slate-600 transition hover:text-slate-900"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            </div>
-            {/* Right: ghost + primary */}
-            <div className="flex items-center gap-3">
-              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>
-                Sign in
-              </a>
-              <a href="/publish" className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
-                Get started
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header sentinel for SiteHeader compact mode */}
+      <div id="header-sentinel" className="h-2" aria-hidden="true" />
+      <SiteHeader />
 
       {/* Hero - minimal, refined */}
       <section className="relative pt-12 md:pt-16 pb-12">
