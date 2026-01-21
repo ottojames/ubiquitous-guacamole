@@ -24,7 +24,7 @@ export default function RightRail({
   consultationDays,
   canContinue,
   step = 1,
-  cost = 49.99,
+  cost = 50,
 }: RightRailProps) {
   return (
     <div className="space-y-4 md:sticky md:top-24">

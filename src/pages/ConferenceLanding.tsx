@@ -108,7 +108,7 @@ export default function ConferenceLanding() {
                   <div>
                     <div className="font-semibold">For Applicants</div>
                     <div className={`text-sm ${activeAudience === 'applicants' ? 'text-blue-100' : 'text-slate-500'}`}>
-                      £49.99 vs £600
+                      £50 vs £600
                     </div>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ function ApplicantsContent() {
             <div className="space-y-3 mb-6">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span className="text-sm">£49.99 per notice</span>
+                <span className="text-sm">£50 per notice</span>
               </div>
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -406,7 +406,7 @@ function ApplicantsContent() {
                 <span className="text-sm">Automatic compliance checking</span>
               </div>
             </div>
-            <div className="text-3xl font-bold text-green-900">£49.99</div>
+            <div className="text-3xl font-bold text-green-900">£50</div>
             <div className="text-sm text-green-600">
               <span className="font-semibold">92% savings</span> · Live in minutes
             </div>
@@ -441,7 +441,7 @@ function ApplicantsContent() {
               </div>
               <div className="font-semibold text-slate-900 mb-2">3. Publish</div>
               <p className="text-sm text-slate-600">
-                Pay £49.99 and go live instantly with full audit trail
+                Pay £50 and go live instantly with full audit trail
               </p>
             </div>
           </div>

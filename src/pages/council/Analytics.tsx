@@ -152,10 +152,10 @@ export default function Analytics() {
         '=== COST SAVINGS ANALYSIS ===',
         'Category,Amount',
         'Traditional Newspaper Cost per Notice,£280.00',
-        'Platform Cost per Notice,£49.99',
-        'Savings per Notice,£230.01',
+        'Platform Cost per Notice,£50',
+        'Savings per Notice,£230',
         'Percentage Reduction,82%',
-        `Quarterly Savings (${analytics.publishedNotices} notices),£${(analytics.publishedNotices * 230.01).toFixed(2)}`,
+        `Quarterly Savings (${analytics.publishedNotices} notices),£${(analytics.publishedNotices * 230).toFixed(2)}`,
         '',
         '=== STATUTORY COMPLIANCE ===',
         'Metric,Value',
@@ -374,12 +374,12 @@ export default function Analytics() {
                 </div>
                 <div className="bg-white rounded-2xl p-6 border-2 border-green-300">
                   <p className="text-sm font-bold text-green-600 mb-2">Platform Cost</p>
-                  <p className="text-4xl font-bold text-green-600">£49.99</p>
+                  <p className="text-4xl font-bold text-green-600">£50</p>
                   <p className="text-xs text-gray-600 mt-2">per notice (digital publication)</p>
                 </div>
                 <div className="bg-white rounded-2xl p-6 border-2 border-green-400">
                   <p className="text-sm font-bold text-green-700 mb-2">You Save</p>
-                  <p className="text-4xl font-bold text-green-700">£230.01</p>
+                  <p className="text-4xl font-bold text-green-700">£230</p>
                   <p className="text-xs text-green-700 font-bold mt-2">82% cost reduction</p>
                 </div>
               </div>
@@ -388,11 +388,11 @@ export default function Analytics() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-lg font-bold text-gray-900 mb-2">Quarterly Savings</p>
-                    <p className="text-sm text-gray-600">{analytics.publishedNotices} published notices × £230.01 saved per notice</p>
+                    <p className="text-sm text-gray-600">{analytics.publishedNotices} published notices × £230 saved per notice</p>
                   </div>
                   <div className="text-right">
                     <p className="text-5xl font-bold text-green-600">
-                      £{(analytics.publishedNotices * 230.01).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      £{(analytics.publishedNotices * 230).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     <p className="text-sm text-green-700 font-semibold mt-2">saved this quarter</p>
                   </div>

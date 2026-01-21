@@ -274,7 +274,7 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
                   <p className="font-semibold text-slate-900">Public Notice Publication</p>
                   <p className="text-sm text-slate-600 mt-1">One-time publication fee</p>
                 </div>
-                <p className="text-2xl font-bold text-slate-900">£49.99</p>
+                <p className="text-2xl font-bold text-slate-900">£50</p>
               </div>
 
               {paymentError && (

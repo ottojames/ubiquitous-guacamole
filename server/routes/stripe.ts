@@ -36,7 +36,7 @@ router.post('/create-checkout-session', async (req, res) => {
       });
     }
 
-    // Create Stripe checkout session for £49.99
+    // Create Stripe checkout session for £50
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -47,7 +47,7 @@ router.post('/create-checkout-session', async (req, res) => {
               name: `Public Notice - ${noticeType}`,
               description: 'Publication of statutory notice on Civic Notices platform',
             },
-            unit_amount: 4999, // £49.99 in pence
+            unit_amount: 5000, // £50 in pence
           },
           quantity: 1,
         },

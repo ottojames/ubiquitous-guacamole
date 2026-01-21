@@ -39,7 +39,7 @@ COMMENT ON COLUMN subscription_tiers.overage_rate IS 'Per-notice charge over inc
 -- =============================================================================
 
 INSERT INTO subscription_tiers (id, name, description, price_monthly, price_annual, included_notices, overage_rate) VALUES
-  ('individual', 'Pay as you go', 'Perfect for solicitors, businesses, and individuals publishing occasional notices', 49.99, NULL, NULL, 49.99), -- No subscription, pay per notice
+  ('individual', 'Pay as you go', 'Perfect for solicitors, businesses, and individuals publishing occasional notices', 50, NULL, NULL, 50), -- No subscription, pay per notice
   ('professional', 'Professional', 'For small law firms publishing 3-7 notices per month', 150.00, 1440.00, 5, 45.00),
   ('business', 'Business', 'For mid-size firms publishing 10-20 notices per month', 400.00, 3840.00, 15, 40.00),
   ('enterprise', 'Enterprise', 'For large firms with dedicated licensing departments', 1200.00, 11520.00, 50, 35.00),

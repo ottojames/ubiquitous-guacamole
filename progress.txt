@@ -3881,3 +3881,157 @@ This file tracks progress across Ralph iterations. Each iteration appends learni
   - Hero CTAs should have the core value proposition visible
   - Next task is 16.4a: Check /public/logos/, hide if missing
 ---
+
+## Iteration - Task 16.4a: Add onError handlers to hide broken council logo images
+- **What was implemented**: Added onError handlers to council logo images to hide them if they fail to load
+- **Files changed**:
+  - `src/pages/Home.tsx` - Added `onError={(e) => { e.currentTarget.style.display = 'none'; }}` to both logo render locations (testimonials section line ~551 and councils section line ~747)
+  - `PRD.md` - Marked task complete
+- **Key details**:
+  - Logo files exist: /public/logos/westminster.png, /public/logos/leeds.png, /public/logos/manchester.png
+  - councilLogos array is rendered in two places: testimonials section and councils section
+  - Simple DOM approach used (hide via style.display = 'none') rather than React state to avoid complexity
+  - If image returns 404 or fails to load, browser triggers onError which hides the element
+- **Learnings for future iterations**:
+  - onError handler on <img> fires for 404s, network errors, and corrupt image files
+  - Using e.currentTarget.style.display = 'none' is simpler than tracking state for optional images
+  - The logos currently exist but could be removed in future cleanup if testimonials are changed
+  - Task 16.5a mentions "testimonials badge" still has council count claim - that's line 740 mentioning "{STATS.councils} UK councils trust CivicNotices"
+- **Tests**: 495 passed, 2 skipped
+---
+
+## Iteration N - Task 16.4b: Hide council logos until verified partnerships
+- **What was implemented**: Set councilLogos array to empty to prevent displaying logos that could imply false endorsements
+- **Files changed**:
+  - `src/pages/Home.tsx` - Commented out original councilLogos array, set to empty typed array
+  - `PRD.md` - Marked Task 16.4b complete
+- **Key implementation details**:
+  - The logo files physically exist (/public/logos/leeds.png, westminster.png, manchester.png)
+  - But displaying specific council logos could imply false endorsements if they don't actually use the platform
+  - Original array commented out with note: "Council logos hidden until we have verified partnerships"
+  - Empty typed array preserves TypeScript types for when logos are restored
+  - Both render locations (testimonials, councils sections) now show nothing for logos
+- **Test results**: All 495 tests pass
+- **Learnings for future iterations**:
+  - Setting array to [] is cleaner than conditionally rendering sections
+  - The existing onError handlers (Task 16.4a) still work as fallback protection
+  - This aligns with removing "40+ councils" claims from Phase 15
+  - Next task is 16.4c: Replace specific council testimonials with generic
+---
+
+---
+
+## Iteration 109 - Task 16.4c: Replace specific council testimonials with generic
+- **What was implemented**: Replaced specific council testimonials with generic role descriptions
+- **Files changed**:
+  - `src/pages/Home.tsx` - Modified testimonials array and rendering code
+  - `PRD.md` - Marked task complete
+- **Key changes**:
+  - Changed testimonials from specific councils (Leeds City Council, City of Westminster, Manchester City Council) to generic descriptions
+  - Updated testimonial names from "David J, Legal Officer" to "Legal Officer"
+  - Updated testimonial organizations from "Leeds City Council" to "Local Authority", "Council Licensing Team", "Planning Department"
+  - Changed property name from `council` to `org` for clarity
+  - Updated both testimonial rendering locations (prevIdx and testiIdx) to use `.org` instead of `.council`
+- **Why this matters**: Removes implied endorsements from specific councils that do not actually use the platform
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: src/pages/Home.tsx compiles cleanly, pre-existing errors in cypress/e2e/scripts directories only
+- **Learnings for future iterations**:
+  - Testimonials should avoid implying specific endorsements unless partnerships are verified
+  - Generic role descriptions still convey credibility without legal/ethical risk
+  - PRD Task 16.4 (Fix Placeholder Logos) is now COMPLETE - all 3 subtasks done (16.4a, 16.4b, 16.4c)
+  - Next task is Task 16.5a: Remove specific council count from testimonials badge
+---
+
+
+## Iteration 110 - Task 16.5a & 16.5b: Remove false council count claims
+- **What was implemented**: Marked 16.5a as complete (already done in 16.2c), implemented 16.5b removing council count from councils section
+- **Files changed**:
+  - `src/pages/Home.tsx` - Changed line 743 from "{STATS.councils} UK councils trust CivicNotices" to "we support all UK council types"
+  - `PRD.md` - Marked Task 16.5a complete (was already done), marked Task 16.5b complete
+- **Key finding**: Task 16.5a was already completed in Task 16.2c when testimonials badge was changed to "What our users say" - just needed PRD update
+- **Remaining STATS.councils usages**:
+  - Line 411: Stats badge in hero (factual count, not false claim)
+  - Line 865: Final CTA "Join {STATS.councils} UK councils" (Task 16.5c)
+- **Test results**: All 495 tests pass
+- **TypeScript check**: Pre-existing errors in council/firm pages only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Always check if a task was completed in an earlier iteration before implementing
+  - Stats badge (line 411) showing raw count is OK, but language like "trust" or "join" implies endorsement
+  - Next task is 16.5c: Remove count from final CTA
+---
+
+## Iteration 111 - Task 16.5c: Remove count from final CTA
+- **What was implemented**: Removed false council count claim from Final CTA section in Home.tsx
+- **Files changed**:
+  - `src/pages/Home.tsx` - Line 865: Changed "Join {STATS.councils} UK councils already saving time and money with CivicNotices" to "Publish legally compliant notices in seconds — no newspapers, no waiting"
+  - `PRD.md` - Marked Task 16.5c complete
+- **Key implementation details**:
+  - The Final CTA section had a misleading "Join X councils" message implying endorsement
+  - Replaced with factual statement about the service's value proposition
+  - STATS.councils still used in stats badge (line 411) which is OK - it's factual count display, not an endorsement claim
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e directories only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - All council count claims removed from Home.tsx now, except factual stats display in hero badge
+  - Phase 16.5 (Remove False Statistics) is now complete: 16.5a, 16.5b, 16.5c done
+  - Next task is 16.5d: Fix councils pricing to "Free portal · £19.99/notice"
+---
+
+## Iteration 112 - Task 16.5d: Fix councils pricing on homepage
+- **What was implemented**: Corrected council pricing in homepage councils section from incorrect £299/month to correct free portal model
+- **Files changed**:
+  - `src/pages/Home.tsx` - Line 844: Changed from "From £299/month · Unlimited notices · 14-day free trial" to "Free portal · £19.99/notice when publishing"
+  - `PRD.md` - Marked Task 16.5d complete
+- **Key implementation details**:
+  - The incorrect pricing was in councils section under "View council pricing" button (lines 836-845)
+  - Updated to match PRD-defined council pricing: Free portal + £19.99/notice when publishing
+  - Added emerald-600 color to "Free portal" text to highlight the free aspect (consistent with pricing page)
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **TypeScript check**: Pre-existing errors in cypress/e2e/scripts directories only - Home.tsx compiles cleanly
+- **Learnings for future iterations**:
+  - Task 16.5 (Remove False Statistics) is now COMPLETE: 16.5a, 16.5b, 16.5c, 16.5d all done
+  - Correct pricing model for councils is: Free portal + £19.99/notice when publishing
+  - Next task is 16.6a: Change "£49.99" to "£50" in publish section
+---
+
+## Iteration N - Task 16.6a: Fix notice price to £50 in publish section
+- **What was implemented**: Changed "£49.99 per notice" to "£50 per notice" in the homepage publish section
+- **Files changed**:
+  - `src/pages/Home.tsx` - Line 709: Updated price from £49.99 to £50
+  - `PRD.md` - Marked Task 16.6a complete
+- **Key changes**:
+  - The publish section CTA "Start publishing now" had a pricing line below it showing "£49.99 per notice · No subscription · Instant activation"
+  - Changed to "£50 per notice · No subscription · Instant activation" to match the correct pricing model
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - This was the only occurrence of "49.99" in Home.tsx (the file grep confirmed)
+  - Task 16.6b should search/replace any remaining "49.99" in other files across the codebase
+  - The correct pricing model is £50/notice for public users, not £49.99
+---
+
+## Iteration 95 - Task 16.6b: Search/replace all "49.99" with "50"
+- **What was implemented**: Comprehensive search/replace of all £49.99 price references to £50 across the codebase
+- **Files changed**:
+  - `src/pages/ConferenceLanding.tsx` - 4 occurrences updated (pricing comparison, per notice, price display, CTA)
+  - `src/pages/legal/Terms.tsx` - Updated individual notice pricing
+  - `server/routes/certificates.ts` - Updated receipt amount from 49.99 to 50
+  - `src/features/template/TemplatePreviewRail.tsx` - Updated CostCard prop
+  - `src/pages/council/Analytics.tsx` - 5 occurrences updated (CSV export, display card, savings calculations changed from £230.01 to £230)
+  - `server/routes/analytics.ts` - Updated digitalCostPerNotice constant
+  - `server/routes/stripe.ts` - Updated unit_amount from 4999 to 5000 pence, updated comment
+  - `src/next/publish/flow/steps/PaymentStep.tsx` - Updated payment display
+  - `src/components/publish/RightRail.tsx` - Updated default cost prop
+  - `supabase/migrations/20251028000001_subscription_tiers.sql` - Updated individual tier pricing (price_monthly and overage_rate)
+  - `scripts/testing/test-notice.json` - Updated test data payment_amount
+  - `PRD.md` - Marked Task 16.6b complete
+- **Key changes**:
+  - All production code now shows £50 instead of £49.99
+  - Stripe charge updated from 4999 pence to 5000 pence (£50)
+  - Savings calculations updated from £230.01 to £230 (280 - 50 = 230)
+  - Only remaining "49.99" references are in: animation data (Thumbs up.json), e2e test checking old price is NOT visible, and historical docs (PRD.md, progress.txt)
+- **Test results**: All 495 tests pass (2 skipped), no regressions
+- **Learnings for future iterations**:
+  - Price changes require updating both display strings and actual payment amounts (Stripe uses pence)
+  - When price changes, also update dependent calculations like savings (280 - 50 = 230)
+  - Test files that verify old prices are NOT visible should NOT be updated (they test the absence of wrong prices)
+---

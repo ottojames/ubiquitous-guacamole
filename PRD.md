@@ -412,7 +412,7 @@ npm run lint         # ESLint check
 
 ### 16.6 Fix Notice Price
 - [x] **Task 16.6a**: Change "£49.99" to "£50" in publish section. **Success**: Correct. (Completed 2026-01-21 - Changed src/pages/Home.tsx line 709 from "£49.99 per notice" to "£50 per notice")
-- [ ] **Task 16.6b**: Search/replace all "49.99" with "50". **Success**: No wrong price.
+- [x] **Task 16.6b**: Search/replace all "49.99" with "50". **Success**: No wrong price. (Completed 2026-01-21 - Updated 11 files: ConferenceLanding.tsx (4 occurrences), Terms.tsx, certificates.ts, TemplatePreviewRail.tsx, Analytics.tsx (5 occurrences including savings), analytics.ts, stripe.ts (2 - unit_amount and comment), PaymentStep.tsx, RightRail.tsx, subscription_tiers.sql (2), test-notice.json)
 
 ### 16.7 Add Trust Signals Section
 - [ ] **Task 16.7a**: Create section with 4 trust cards after hero. ~60 lines. **Success**: Renders.

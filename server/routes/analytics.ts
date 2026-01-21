@@ -86,7 +86,7 @@ router.get('/council/:councilId', async (req, res) => {
 
     // Calculate cost savings
     const traditionalCostPerNotice = 280.0;
-    const digitalCostPerNotice = 49.99;
+    const digitalCostPerNotice = 50;
     const savingsPerNotice = traditionalCostPerNotice - digitalCostPerNotice;
     const totalNotices = analyticsData?.total_notices || 0;
     const totalSavings = savingsPerNotice * totalNotices;

@@ -107,7 +107,7 @@ export default function Terms() {
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">5. Payment Terms</h2>
                 <h3 className="text-xl font-semibold text-slate-900 mb-3">5.1 Pricing</h3>
                 <div className="bg-slate-50 p-4 rounded-lg mb-4">
-                  <p className="text-slate-700 mb-2"><strong>Individual Notices:</strong> £49.99 per notice (one-time payment)</p>
+                  <p className="text-slate-700 mb-2"><strong>Individual Notices:</strong> £50 per notice (one-time payment)</p>
                   <p className="text-slate-700"><strong>Council Subscriptions:</strong> From £299/month (unlimited notices)</p>
                 </div>
 

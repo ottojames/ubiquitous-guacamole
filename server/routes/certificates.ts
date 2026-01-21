@@ -104,7 +104,7 @@ router.get('/receipt/:noticeId', async (req: Request, res: Response) => {
     // Generate receipt data
     const receiptData = {
       noticeId: notice.id,
-      amount: 49.99, // Standard price - should come from payment records
+      amount: 50, // Standard price - should come from payment records
       currency: 'GBP',
       paymentDate: new Date(notice.created_at),
       paymentMethod: 'Card', // Should come from payment records
