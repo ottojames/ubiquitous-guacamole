@@ -109,9 +109,9 @@ These errors are in the main publishing wizard - the core user flow.
 
 ### Phase 5: ESLint Configuration [LOW]
 
-- [ ] **Fix ESLint config for scripts** `[M]`
+- [x] **Fix ESLint config for scripts** `[M]`
   - Issue: Scripts outside tsconfig causing parser errors
-  - Fix: Update `eslint.config.js` to exclude `scripts/**/*.js`, `scripts/**/*.cjs`, `next-env.d.ts`, `premises-notice-portal/**`
+  - Fix: Update `eslint.config.js` to exclude `scripts/**/*.js`, `scripts/**/*.cjs`, `scripts/**/*.mjs`, `next-env.d.ts`, `premises-notice-portal/**`, `src/app/**`, `src/lib/storage.ts`
 
 - [x] **Fix AdminSettings redeclaration** `[S]`
   - File: `src/pages/admin/Settings.tsx:14`

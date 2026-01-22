@@ -16,6 +16,13 @@ export default [
       "postcss.config.js",
       "vite.config.ts",
       "eslint.config.js",
+      "scripts/**/*.js",
+      "scripts/**/*.cjs",
+      "scripts/**/*.mjs",
+      "next-env.d.ts",
+      "premises-notice-portal/**",
+      "src/app/**",
+      "src/lib/storage.ts",
     ],
   },
   {

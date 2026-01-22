@@ -163,3 +163,18 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 15 - Fix ESLint config for scripts
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: eslint.config.js
+**What Happened**: Added ignores for files excluded from tsconfig.json that were causing ESLint parser errors:
+- `scripts/**/*.js`, `scripts/**/*.cjs`, `scripts/**/*.mjs` (dev utility scripts)
+- `next-env.d.ts` (Next.js declaration)
+- `premises-notice-portal/**` (separate Next.js project)
+- `src/app/**` (excluded from main tsconfig)
+- `src/lib/storage.ts` (excluded from main tsconfig)
+Result: 0 parsing errors. Lint passes with warnings (acceptable per PRD).
+**Learnings**: ESLint ignores must match tsconfig excludes when using `parserOptions.project`. Any file ESLint parses must be in the tsconfig's include scope.
+
+---
+
