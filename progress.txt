@@ -95,3 +95,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 8 - Fix Zod enum errorMap syntax
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/schema/gvol.ts
+**What Happened**: Changed Zod 4 enum error syntax from `errorMap: () => ({ message: "..." })` to `message: "..."`. Zod 4 simplified the API.
+**Learnings**: Zod 4 enum error messages: use `{ message: "..." }` instead of `{ errorMap: () => ({ message: "..." }) }`.
+
+---
+

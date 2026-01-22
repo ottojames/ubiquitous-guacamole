@@ -92,7 +92,7 @@ export const gvolNoticeSchema = z
     APPLICANT_ADDRESS: requiredString("Applicant address"),
     LICENCE_CATEGORY: requiredString("Licence category"),
     TRAFFIC_AREA: z.enum(TRAFFIC_AREAS, {
-      errorMap: () => ({ message: "Select a valid Traffic Area" }),
+      message: "Select a valid Traffic Area",
     }),
     OPERATING_CENTRE_ADDRESS: requiredString("Operating centre address"),
     NUMBER_OF_VEHICLES: digitsOnly("Number of vehicles"),

@@ -75,7 +75,7 @@ These errors are in the main publishing wizard - the core user flow.
 
 ### Phase 3: Schema & Type Fixes [HIGH]
 
-- [ ] **Fix Zod enum errorMap syntax** `[M]`
+- [x] **Fix Zod enum errorMap syntax** `[M]`
   - File: `src/next/publish/schema/gvol.ts:94`
   - Issue: Zod 4 changed enum errorMap API
   - Fix: Update to new syntax: `z.enum([...]).describe('...')` or use `z.enum([...], { message: '...' })`
