@@ -122,3 +122,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 11 - Fix activities undefined check
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester → Fixer → Tester
+**Files Changed**: src/pages/council/NoticeEditor.tsx
+**What Happened**: Changed `details.activities?.length > 0` to `(details.activities && details.activities.length > 0)`. Optional chaining alone doesn't work well with comparisons because the result can be `undefined > 0` which TypeScript still warns about.
+**Learnings**: For optional property comparisons, use explicit truthiness check: `(prop && prop.length > 0)` instead of `prop?.length > 0`.
+
+---
+

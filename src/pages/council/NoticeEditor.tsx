@@ -261,7 +261,7 @@ export default function NoticeEditor() {
         authority: details.councilName || prev.consultation.authority,
       },
       licensing: {
-        activities: details.activities.length > 0 ? details.activities : prev.licensing.activities
+        activities: (details.activities && details.activities.length > 0) ? details.activities : prev.licensing.activities
       },
       representation_deadline: details.representationDeadline || prev.representation_deadline,
     }));

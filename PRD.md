@@ -90,7 +90,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `NoticeData` not assignable to `Record<string, unknown>`
   - Fix: Add index signature to NoticeData or update the expected type
 
-- [ ] **Fix activities undefined check** `[S]`
+- [x] **Fix activities undefined check** `[S]`
   - File: `src/pages/council/NoticeEditor.tsx:264`
   - Issue: `'details.activities' is possibly 'undefined'`
   - Fix: Add optional chaining `details.activities?.` or nullish check
