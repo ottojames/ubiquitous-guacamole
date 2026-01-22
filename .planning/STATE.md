@@ -17,24 +17,25 @@
 
 ## Current Position
 
-**Phase:** Not Started (Roadmap Created)
-**Plan:** None active
-**Status:** Ready for Phase 1
+**Phase:** 1 of 8 (Council Template System)
+**Plan:** 1 of 4 complete
+**Status:** In progress
+**Last activity:** 2026-01-22 - Completed 01-01-PLAN.md
 
 ### Progress
 
 ```
-Phase 1 [                    ] 0%  Templates
-Phase 2 [                    ] 0%  Isolation
-Phase 3 [                    ] 0%  Publish Flow
-Phase 4 [                    ] 0%  Representations
-Phase 5 [                    ] 0%  Email
-Phase 6 [                    ] 0%  User Flows
-Phase 7 [                    ] 0%  Firm Portal
-Phase 8 [                    ] 0%  Polish
+Phase 1 [#####               ] 25%  Templates (1/4 plans)
+Phase 2 [                    ] 0%   Isolation
+Phase 3 [                    ] 0%   Publish Flow
+Phase 4 [                    ] 0%   Representations
+Phase 5 [                    ] 0%   Email
+Phase 6 [                    ] 0%   User Flows
+Phase 7 [                    ] 0%   Firm Portal
+Phase 8 [                    ] 0%   Polish
 ```
 
-**Overall:** 0/8 phases complete | 0/28 requirements done
+**Overall:** 0/8 phases complete | 1/28 requirements done
 
 ---
 
@@ -44,7 +45,7 @@ Phase 8 [                    ] 0%  Polish
 
 | Metric | Value |
 |--------|-------|
-| Tasks Completed | 0 |
+| Tasks Completed | 2 |
 | Tasks Blocked | 0 |
 | Bugs Found | 0 |
 | Bugs Fixed | 0 |
@@ -53,8 +54,8 @@ Phase 8 [                    ] 0%  Polish
 
 | Indicator | Status |
 |-----------|--------|
-| Tests Passing | Unknown |
-| Type Errors | Unknown |
+| Tests Passing | Yes (24 placeholder tests) |
+| Type Errors | Pre-existing (not from this plan) |
 | Console Errors | Unknown |
 
 ---
@@ -68,10 +69,12 @@ Phase 8 [                    ] 0%  Polish
 | 8 phases for comprehensive depth | Research suggests 8-12 phases; 8 covers all requirements without over-fragmentation | 2026-01-22 |
 | Templates before isolation | Can't verify isolation without data to isolate | 2026-01-22 |
 | Email after representations | Notifications depend on events (publication, representation) | 2026-01-22 |
+| TRO notices use AUTHORITY_NAME | TROs are issued by authorities, not applicants | 2026-01-22 |
+| Planning has 6 notice types | major, eia, listed, conservation, prow, departure | 2026-01-22 |
 
 ### Discovered Issues
 
-None yet - roadmap just created.
+None in plan 01-01.
 
 ### Technical Debt
 
@@ -93,20 +96,23 @@ None yet - roadmap just created.
 
 ### What Was Just Completed
 
-- Created REQUIREMENTS.md with 28 v1 requirements across 7 categories
-- Created ROADMAP.md with 8 phases and success criteria
-- Created STATE.md (this file)
+- Plan 01-01: Placeholder coverage and save validation
+  - Added licensing-premises-review and licensing-club-review to NOTICE_DEFINITIONS
+  - Created placeholder coverage test suite (24 tests)
+  - Implemented save-blocking when required placeholders missing
+  - Added visual feedback for disabled save state
 
 ### What Comes Next
 
-1. Run `/gsd:plan-phase 1` to create detailed plan for Templates phase
-2. Execute Template verification and fixes
-3. Progress through phases sequentially
+1. Execute Plan 01-02 (Live Preview)
+2. Execute Plan 01-03 (Complete Template CRUD)
+3. Execute Plan 01-04 (Template Rendering)
+4. Progress to Phase 2 (Department Isolation)
 
 ### Context to Preserve
 
 **Codebase Highlights:**
-- 32 notice types in `src/next/publish/config/noticeTypes.ts`
+- 34 notice types in `src/next/publish/config/noticeTypes.ts` (was 32, added 2 review types)
 - Department mapping in `src/next/publish/config/departmentNoticeTypes.ts`
 - Council portal pages in `src/pages/council/`
 - Firm portal pages in `src/pages/firm/`
@@ -115,6 +121,8 @@ None yet - roadmap just created.
 
 **Key Files:**
 - Templates: `src/pages/council/Templates.tsx`
+- Template Validation: `src/pages/council/TemplateValidationWarnings.tsx`
+- Placeholder Registry: `src/next/publish/config/placeholders.ts`
 - Publish Flow: `src/next/publish/flow/NewPublishFlow.tsx`
 - Representations: `src/pages/council/Representations.tsx`
 - Council Matcher: `server/services/councilMatcher.ts`
@@ -122,7 +130,7 @@ None yet - roadmap just created.
 
 ### Handoff Notes
 
-The platform has substantial infrastructure but is untested end-to-end. Most components exist; the work is verification, fixing, and connection rather than new development. Focus on proving existing code works before adding new features.
+Plan 01-01 complete. Placeholder coverage is verified (34/34 notice types). Template save validation now enforces required placeholders. Ready for Plan 01-02 (Live Preview).
 
 ---
 
@@ -136,7 +144,8 @@ The platform has substantial infrastructure but is untested end-to-end. Most com
 | Research Summary | `.planning/research/SUMMARY.md` | Domain knowledge |
 | Architecture | `.planning/codebase/ARCHITECTURE.md` | System structure |
 | Integrations | `.planning/codebase/INTEGRATIONS.md` | External services |
+| Plan 01-01 Summary | `.planning/phases/01-council-template-system/01-01-SUMMARY.md` | Placeholder coverage complete |
 
 ---
 
-*State initialized: 2026-01-22*
+*State updated: 2026-01-22*
