@@ -113,7 +113,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: Scripts outside tsconfig causing parser errors
   - Fix: Update `eslint.config.js` to exclude `scripts/**/*.js`, `scripts/**/*.cjs`, `next-env.d.ts`, `premises-notice-portal/**`
 
-- [ ] **Fix AdminSettings redeclaration** `[S]`
+- [x] **Fix AdminSettings redeclaration** `[S]`
   - File: `src/pages/admin/Settings.tsx:14`
   - Issue: `'AdminSettings' is already defined`
   - Fix: Rename one of the declarations or merge them

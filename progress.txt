@@ -149,3 +149,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 14 - Fix AdminSettings redeclaration
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/admin/Settings.tsx
+**What Happened**: Renamed `interface AdminSettings` to `interface AdminSettingsData` to avoid collision with the `function AdminSettings()` export. Both had the same name in the same scope.
+**Learnings**: When interface and function share a name, rename the interface (usually by adding a suffix like `Data`, `Type`, `Props`).
+
+---
+

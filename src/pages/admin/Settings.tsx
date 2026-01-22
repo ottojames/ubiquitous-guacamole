@@ -4,7 +4,7 @@ import { Settings as SettingsIcon, Key, Globe, Bell, Shield, Save, Loader2 } fro
 import { AlertModal } from "@/components/ui/AlertModal";
 import * as UI from "@/styles/ui";
 
-interface AdminSettings {
+interface AdminSettingsData {
   session_timeout_minutes: number;
   two_factor_enabled: boolean;
   require_ip_allowlist: boolean;
@@ -16,7 +16,7 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general");
 
   // Form state
-  const [settings, setSettings] = useState<AdminSettings>({
+  const [settings, setSettings] = useState<AdminSettingsData>({
     session_timeout_minutes: 120,
     two_factor_enabled: false,
     require_ip_allowlist: false,
@@ -25,7 +25,7 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [originalSettings, setOriginalSettings] = useState<AdminSettings | null>(null);
+  const [originalSettings, setOriginalSettings] = useState<AdminSettingsData | null>(null);
 
   // Alert modal state
   const [alertModal, setAlertModal] = useState<{
