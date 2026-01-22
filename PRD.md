@@ -46,7 +46,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `Property 'applicationDate' does not exist on type 'LegalDetails'`
   - Fix: Check if should be `applicationType` or add `applicationDate` to LegalDetails type
 
-- [ ] **Fix null assignment to string** `[S]`
+- [x] **Fix null assignment to string** `[S]`
   - File: `src/next/publish/flow/NewPublishFlow.tsx:1674-1675`
   - Issue: `Type 'string | null' is not assignable to type 'string'`
   - Fix: Add null coalescing `?? ''` or update the target type to accept null

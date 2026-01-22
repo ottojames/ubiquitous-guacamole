@@ -56,3 +56,12 @@
 
 ---
 
+## Iteration 3 - Fix null assignment to string
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/flow/NewPublishFlow.tsx
+**What Happened**: Added `?? ''` null coalescing to `councilId` and `departmentId` when passing to `publishNotice()`. The function expects `string` but the variables were `string | null`. Control flow ensures null never passes, but TypeScript needs the narrowing.
+**Learnings**: Use `?? ''` to narrow `string | null` to `string` when passing to functions expecting string.
+
+---
+

@@ -1671,8 +1671,8 @@ export default function NewPublishFlow() {
 
         const result = await publishNotice(
           {
-            target_council_id: councilId,
-            target_department_id: departmentId,
+            target_council_id: councilId ?? '',
+            target_department_id: departmentId ?? '',
             notice_data: noticeData,
             notice_type: definition?.id || "premises-licence",
             title: legalDetails.premisesName || "Licensing Application",
