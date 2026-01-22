@@ -85,7 +85,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `Property 'email' does not exist on type 'Applicant'`
   - Fix: Add `email` to Applicant type or access it from correct nested property
 
-- [ ] **Fix NoticeEditor type mismatch** `[S]`
+- [x] **Fix NoticeEditor type mismatch** `[S]`
   - File: `src/pages/council/NoticeEditor.tsx:107`
   - Issue: `NoticeData` not assignable to `Record<string, unknown>`
   - Fix: Add index signature to NoticeData or update the expected type

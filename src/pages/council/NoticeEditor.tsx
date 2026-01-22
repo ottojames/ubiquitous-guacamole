@@ -104,7 +104,7 @@ export default function NoticeEditor() {
   // Auto-save hook
   const { isSaving: isAutoSaving, lastSaved } = useAutoSave({
     draftId,
-    formData: noticeData,
+    formData: noticeData as unknown as Record<string, unknown>,
     noticeCategory: getNoticeCategory(noticeData.notice_type),
     noticeDefinitionId: noticeData.notice_type,
     draftName: noticeData.title || 'Untitled Draft',

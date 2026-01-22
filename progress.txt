@@ -113,3 +113,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 10 - Fix NoticeEditor type mismatch
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester → Fixer → Tester
+**Files Changed**: src/pages/council/NoticeEditor.tsx
+**What Happened**: Cast `noticeData` with `as unknown as Record<string, unknown>` to satisfy `useAutoSave` hook. Direct cast failed because TypeScript sees insufficient overlap between the types.
+**Learnings**: When casting between non-overlapping types, cast through `unknown` first: `x as unknown as TargetType`.
+
+---
+
