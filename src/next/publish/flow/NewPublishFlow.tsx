@@ -849,7 +849,7 @@ export default function NewPublishFlow() {
         console.log('[NewPublishFlow] templateNotice: validation SUCCESS');
         return builder.mapToNoticeBase(parseResult.data);
       } else {
-        console.log('[NewPublishFlow] templateNotice: validation FAILED, errors:', parseResult.error.errors);
+        console.log('[NewPublishFlow] templateNotice: validation FAILED, errors:', parseResult.error.issues);
         console.log('[NewPublishFlow] Draft data:', draftWithVariant);
 
         // Validation failed - this means required fields are missing
