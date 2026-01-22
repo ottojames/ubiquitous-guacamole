@@ -337,7 +337,7 @@ export default function SampleNotice() {
                         </label>
                         <input
                           type="text"
-                          value={testData[placeholder.value as keyof typeof testData] || ''}
+                          value={String(testData[placeholder.value as keyof typeof testData] ?? '')}
                           onChange={(e) => updateTestData(placeholder.value, e.target.value)}
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
                           placeholder={`Enter ${placeholder.label.toLowerCase()}...`}

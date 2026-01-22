@@ -131,3 +131,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 12 - Fix SampleNotice checkbox value
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/SampleNotice.tsx
+**What Happened**: Changed `testData[key] || ''` to `String(testData[key] ?? '')`. The testData object contains a boolean `HAS_MULTIPLE_AUTHORITIES`, which can't be assigned to input `value`. Wrapping in `String()` ensures all values become strings.
+**Learnings**: When dynamically accessing object properties for form inputs, use `String()` wrapper to handle boolean/mixed types.
+
+---
+

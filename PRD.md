@@ -97,7 +97,7 @@ These errors are in the main publishing wizard - the core user flow.
 
 ### Phase 4: Minor Type Fixes [MEDIUM]
 
-- [ ] **Fix SampleNotice checkbox value** `[S]`
+- [x] **Fix SampleNotice checkbox value** `[S]`
   - File: `src/pages/SampleNotice.tsx:340`
   - Issue: `Type 'true' is not assignable to type 'string | number | readonly string[]'`
   - Fix: Change `checked={true}` to `defaultChecked={true}` or use `value="true"`
