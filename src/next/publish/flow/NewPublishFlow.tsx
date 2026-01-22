@@ -197,12 +197,12 @@ export default function NewPublishFlow() {
       let base: string;
       if (pathname.startsWith('/f/')) {
         // Extract firm slug and build firm portal path
-        const firmMatch = pathname.match(/\/f\/([^\/]+)/);
+        const firmMatch = pathname.match(/\/f\/([^/]+)/);
         const firmSlug = firmMatch ? firmMatch[1] : '';
         base = `/f/${firmSlug}/publish/step-${target}`;
       } else if (pathname.startsWith('/c/')) {
         // Extract council/dept slug and build council portal path
-        const councilMatch = pathname.match(/\/c\/([^\/]+)\/([^\/]+)/);
+        const councilMatch = pathname.match(/\/c\/([^/]+)\/([^/]+)/);
         const orgSlug = councilMatch ? councilMatch[1] : '';
         const deptSlug = councilMatch ? councilMatch[2] : '';
         base = `/c/${orgSlug}/${deptSlug}/publish/step-${target}`;
@@ -282,13 +282,13 @@ export default function NewPublishFlow() {
         let slug: string | null = null;
 
         // First check if we're in a firm portal route
-        const firmMatch = pathname.match(/\/f\/([^\/]+)/);
+        const firmMatch = pathname.match(/\/f\/([^/]+)/);
         if (firmMatch) {
           slug = firmMatch[1];
         } else {
           // Fallback to referrer
           const referrer = document.referrer;
-          const referrerMatch = referrer.match(/\/f\/([^\/]+)/);
+          const referrerMatch = referrer.match(/\/f\/([^/]+)/);
           if (referrerMatch) {
             slug = referrerMatch[1];
           } else {

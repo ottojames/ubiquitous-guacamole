@@ -86,7 +86,7 @@ const contactPhoneSchema = z
   .min(7, 'Phone must be 7–20 characters')
   .max(20, 'Phone must be 7–20 characters')
   .superRefine((value, ctx) => {
-    const compact = value.replace(/[\s()\-]/g, '');
+    const compact = value.replace(/[\s()-]/g, '');
     if (!compact) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

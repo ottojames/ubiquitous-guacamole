@@ -49,7 +49,7 @@ export function extractDeadlineFromOcr(ocr: string): Date | null {
   if (!ocr) return null;
   const sample = ocr.split(/\r?\n/).slice(0, 200).join('\n');
 
-  const numericMatch = sample.match(/\b(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})(?:[, ]+(\d{1,2}:\d{2}))?\b/i);
+  const numericMatch = sample.match(/\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})(?:[, ]+(\d{1,2}:\d{2}))?\b/i);
   if (numericMatch) {
     const day = Number.parseInt(numericMatch[1] || '', 10);
     const month = Number.parseInt(numericMatch[2] || '', 10) - 1;

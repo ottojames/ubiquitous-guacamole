@@ -102,7 +102,7 @@ export default function TemplateTextEditor({
     if (editor && value) {
       editor.innerHTML = value;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {

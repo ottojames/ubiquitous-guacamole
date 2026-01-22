@@ -363,7 +363,7 @@ export default function AccountManagement() {
   const handleAction = async (action: string, itemId: string) => {
     try {
       switch (action) {
-        case 'suspend':
+        case 'suspend': {
           // Update organization status to suspended
           const { error: suspendError } = await supabase
             .from('organizations')
@@ -372,8 +372,9 @@ export default function AccountManagement() {
 
           if (suspendError) throw suspendError;
           break;
+        }
 
-        case 'activate':
+        case 'activate': {
           // Update organization status to active
           const { error: activateError } = await supabase
             .from('organizations')
@@ -382,13 +383,14 @@ export default function AccountManagement() {
 
           if (activateError) throw activateError;
           break;
+        }
 
         case 'delete':
           setConfirmModal({ isOpen: true, accountId: itemId });
           setShowActionMenu(null);
           return; // Don't refresh until confirmation
 
-        case 'reset_password':
+        case 'reset_password': {
           // Find the user to get their email
           const userToReset = accounts.find(acc => acc.id === itemId) as User | undefined;
           if (!userToReset?.email) {
@@ -426,14 +428,16 @@ export default function AccountManagement() {
             });
           }
           break;
+        }
 
-        case 'view':
+        case 'view': {
           // Find the item in the current accounts
           const item = accounts.find(acc => acc.id === itemId);
           if (item) {
             setDetailModal({ isOpen: true, item });
           }
           break;
+        }
       }
 
       fetchAccounts(); // Refresh data

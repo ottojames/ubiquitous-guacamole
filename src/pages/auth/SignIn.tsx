@@ -99,7 +99,7 @@ export default function SignIn() {
     // At least one number
     if (!/[0-9]/.test(pwd)) return false;
     // At least one special character
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) return false;
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) return false;
     return true;
   };
 
