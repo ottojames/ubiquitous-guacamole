@@ -18,14 +18,14 @@
 ## Current Position
 
 **Phase:** 1 of 8 (Council Template System)
-**Plan:** 2 of 4 complete
+**Plan:** 3 of 4 complete
 **Status:** In progress
-**Last activity:** 2026-01-22 - Completed 01-02-PLAN.md
+**Last activity:** 2026-01-22 - Completed 01-03-PLAN.md
 
 ### Progress
 
 ```
-Phase 1 [##########          ] 50%  Templates (2/4 plans)
+Phase 1 [###############     ] 75%  Templates (3/4 plans)
 Phase 2 [                    ] 0%   Isolation
 Phase 3 [                    ] 0%   Publish Flow
 Phase 4 [                    ] 0%   Representations
@@ -35,7 +35,7 @@ Phase 7 [                    ] 0%   Firm Portal
 Phase 8 [                    ] 0%   Polish
 ```
 
-**Overall:** 0/8 phases complete | 2/28 requirements done
+**Overall:** 0/8 phases complete | 3/28 requirements done
 
 ---
 
@@ -45,7 +45,7 @@ Phase 8 [                    ] 0%   Polish
 
 | Metric | Value |
 |--------|-------|
-| Tasks Completed | 4 |
+| Tasks Completed | 7 |
 | Tasks Blocked | 0 |
 | Bugs Found | 1 |
 | Bugs Fixed | 1 |
@@ -54,7 +54,7 @@ Phase 8 [                    ] 0%   Polish
 
 | Indicator | Status |
 |-----------|--------|
-| Tests Passing | Yes (24 placeholder tests) |
+| Tests Passing | Yes (24 placeholder tests + 31 renderer tests) |
 | Type Errors | Pre-existing (not from this plan) |
 | Console Errors | Unknown |
 
@@ -74,6 +74,9 @@ Phase 8 [                    ] 0%   Polish
 | Blue highlight for substituted placeholders | Provides clear visual feedback that content is dynamic | 2026-01-22 |
 | Amber warning for unknown placeholders | Alerts users to typos without blocking | 2026-01-22 |
 | localStorage for preview toggle | Preserves user preference across sessions | 2026-01-22 |
+| Keep unknown placeholders visible | Alerts users to typos or unsupported placeholders in rendered output | 2026-01-22 |
+| Store template metadata in extras | Provides audit trail without schema changes; stores template_id, name, original text | 2026-01-22 |
+| Real-time preview via useMemo | Updates immediately as users type without manual refresh | 2026-01-22 |
 
 ### Discovered Issues
 
@@ -101,18 +104,17 @@ Phase 8 [                    ] 0%   Polish
 
 ### What Was Just Completed
 
-- Plan 01-02: Live Preview Integration
-  - Created TemplatePreview component with placeholder substitution
-  - Added side-by-side layout to TemplateTextEditor
-  - Preview toggle with localStorage persistence
-  - Responsive layout (mobile/desktop)
-  - Fixed missing category colors (gambling, transport, planning, probate, tro)
+- Plan 01-03: Template Rendering Integration
+  - Created templateRenderer utility with placeholder-to-form-field mapping
+  - NoticeEditor now fetches and stores template_text from loaded templates
+  - Live preview section shows rendered template text as form fields change
+  - Template metadata (id, name, original text) stored in notice.extras for audit
+  - 31 unit tests covering all renderer functionality
 
 ### What Comes Next
 
-1. Execute Plan 01-03 (Template Validation)
-2. Execute Plan 01-04 (Template Testing)
-3. Complete Phase 1 and begin Phase 2 (Isolation)
+1. Execute Plan 01-04 (Template Testing)
+2. Complete Phase 1 and begin Phase 2 (Isolation)
 
 ### Context to Preserve
 
@@ -129,7 +131,9 @@ Phase 8 [                    ] 0%   Polish
 - Template Editor: `src/pages/council/TemplateTextEditor.tsx`
 - Template Preview: `src/pages/council/TemplatePreview.tsx`
 - Template Validation: `src/pages/council/TemplateValidationWarnings.tsx`
+- Template Renderer: `src/lib/templateRenderer.ts`
 - Placeholder Registry: `src/next/publish/config/placeholders.ts`
+- Notice Editor: `src/pages/council/NoticeEditor.tsx`
 - Publish Flow: `src/next/publish/flow/NewPublishFlow.tsx`
 - Representations: `src/pages/council/Representations.tsx`
 - Council Matcher: `server/services/councilMatcher.ts`
@@ -137,7 +141,7 @@ Phase 8 [                    ] 0%   Polish
 
 ### Handoff Notes
 
-Plan 01-02 complete. Template editor now has side-by-side live preview with placeholder substitution. Preview uses example values from placeholder registry to show council staff what their final notice will look like. Ready for Plan 01-03 (Template Validation).
+Plan 01-03 complete. Template text now renders into notice descriptions with placeholder substitution. NoticeEditor has live preview that updates as form fields change. Template metadata stored in extras for audit trail. Ready for Plan 01-04 (Template Testing) to verify end-to-end flows.
 
 ---
 
@@ -153,6 +157,7 @@ Plan 01-02 complete. Template editor now has side-by-side live preview with plac
 | Integrations | `.planning/codebase/INTEGRATIONS.md` | External services |
 | Plan 01-01 Summary | `.planning/phases/01-council-template-system/01-01-SUMMARY.md` | Placeholder coverage complete |
 | Plan 01-02 Summary | `.planning/phases/01-council-template-system/01-02-SUMMARY.md` | Live preview implementation |
+| Plan 01-03 Summary | `.planning/phases/01-council-template-system/01-03-SUMMARY.md` | Template rendering integration |
 
 ---
 
