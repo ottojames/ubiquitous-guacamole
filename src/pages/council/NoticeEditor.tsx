@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useOutletContext, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import UploadDropzone, { type UploadStatus } from '@/components/publish/UploadDropzone';
 import { extractLegalDetailsFromOcr, type LegalDetails } from '@/next/publish/flow/lib/legalDetails';
+import { renderTemplateText, hasPlaceholders, type NoticeFormData } from '@/lib/templateRenderer';
 
 interface Department {
   id: string;
@@ -44,8 +45,11 @@ export default function NoticeEditor() {
   const [error, setError] = useState<string | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(null);
-  const [templates, setTemplates] = useState<Array<{id: string, name: string, default_values: any}>>([]);
+  const [templates, setTemplates] = useState<Array<{id: string, name: string, default_values: any, template_text: string | null, notice_type: string}>>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [loadedTemplateText, setLoadedTemplateText] = useState<string>('');
+  const [loadedTemplateId, setLoadedTemplateId] = useState<string | null>(null);
+  const [loadedTemplateName, setLoadedTemplateName] = useState<string>('');
   const [requireApproval, setRequireApproval] = useState(false);
   const [showOcrModal, setShowOcrModal] = useState(false);
   const [ocrStatus, setOcrStatus] = useState<UploadStatus>('idle');
@@ -151,7 +155,7 @@ export default function NoticeEditor() {
     try {
       const { data, error } = await supabase
         .from('templates')
-        .select('id, name, default_values, notice_type')
+        .select('id, name, default_values, notice_type, template_text')
         .eq('department_id', department.id)
         .order('use_count', { ascending: false });
 
@@ -173,6 +177,11 @@ export default function NoticeEditor() {
 
       if (error) throw error;
       if (!data) return;
+
+      // Store template_text for rendering (Task 2 of Plan 01-03)
+      setLoadedTemplateText(data.template_text || '');
+      setLoadedTemplateId(data.id);
+      setLoadedTemplateName(data.name || '');
 
       // Apply template defaults
       applyTemplateDefaults(data.default_values, data.notice_type);
@@ -210,6 +219,11 @@ export default function NoticeEditor() {
 
     const template = templates.find(t => t.id === selectedTemplate);
     if (template) {
+      // Store template_text for rendering
+      setLoadedTemplateText(template.template_text || '');
+      setLoadedTemplateId(template.id);
+      setLoadedTemplateName(template.name || '');
+
       applyTemplateDefaults(template.default_values, template.notice_type);
     }
   };
