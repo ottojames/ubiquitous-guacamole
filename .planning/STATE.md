@@ -18,14 +18,14 @@
 ## Current Position
 
 **Phase:** 1 of 8 (Council Template System)
-**Plan:** 1 of 4 complete
+**Plan:** 2 of 4 complete
 **Status:** In progress
-**Last activity:** 2026-01-22 - Completed 01-01-PLAN.md
+**Last activity:** 2026-01-22 - Completed 01-02-PLAN.md
 
 ### Progress
 
 ```
-Phase 1 [#####               ] 25%  Templates (1/4 plans)
+Phase 1 [##########          ] 50%  Templates (2/4 plans)
 Phase 2 [                    ] 0%   Isolation
 Phase 3 [                    ] 0%   Publish Flow
 Phase 4 [                    ] 0%   Representations
@@ -35,7 +35,7 @@ Phase 7 [                    ] 0%   Firm Portal
 Phase 8 [                    ] 0%   Polish
 ```
 
-**Overall:** 0/8 phases complete | 1/28 requirements done
+**Overall:** 0/8 phases complete | 2/28 requirements done
 
 ---
 
@@ -45,10 +45,10 @@ Phase 8 [                    ] 0%   Polish
 
 | Metric | Value |
 |--------|-------|
-| Tasks Completed | 2 |
+| Tasks Completed | 4 |
 | Tasks Blocked | 0 |
-| Bugs Found | 0 |
-| Bugs Fixed | 0 |
+| Bugs Found | 1 |
+| Bugs Fixed | 1 |
 
 ### Quality Indicators
 
@@ -71,10 +71,15 @@ Phase 8 [                    ] 0%   Polish
 | Email after representations | Notifications depend on events (publication, representation) | 2026-01-22 |
 | TRO notices use AUTHORITY_NAME | TROs are issued by authorities, not applicants | 2026-01-22 |
 | Planning has 6 notice types | major, eia, listed, conservation, prow, departure | 2026-01-22 |
+| Blue highlight for substituted placeholders | Provides clear visual feedback that content is dynamic | 2026-01-22 |
+| Amber warning for unknown placeholders | Alerts users to typos without blocking | 2026-01-22 |
+| localStorage for preview toggle | Preserves user preference across sessions | 2026-01-22 |
 
 ### Discovered Issues
 
-None in plan 01-01.
+| Issue | Location | Status | Notes |
+|-------|----------|--------|-------|
+| Missing category colors | TemplateTextEditor.tsx | Fixed | Added gambling, transport, planning, probate, tro categories |
 
 ### Technical Debt
 
@@ -96,18 +101,18 @@ None in plan 01-01.
 
 ### What Was Just Completed
 
-- Plan 01-01: Placeholder coverage and save validation
-  - Added licensing-premises-review and licensing-club-review to NOTICE_DEFINITIONS
-  - Created placeholder coverage test suite (24 tests)
-  - Implemented save-blocking when required placeholders missing
-  - Added visual feedback for disabled save state
+- Plan 01-02: Live Preview Integration
+  - Created TemplatePreview component with placeholder substitution
+  - Added side-by-side layout to TemplateTextEditor
+  - Preview toggle with localStorage persistence
+  - Responsive layout (mobile/desktop)
+  - Fixed missing category colors (gambling, transport, planning, probate, tro)
 
 ### What Comes Next
 
-1. Execute Plan 01-02 (Live Preview)
-2. Execute Plan 01-03 (Complete Template CRUD)
-3. Execute Plan 01-04 (Template Rendering)
-4. Progress to Phase 2 (Department Isolation)
+1. Execute Plan 01-03 (Template Validation)
+2. Execute Plan 01-04 (Template Testing)
+3. Complete Phase 1 and begin Phase 2 (Isolation)
 
 ### Context to Preserve
 
@@ -121,6 +126,8 @@ None in plan 01-01.
 
 **Key Files:**
 - Templates: `src/pages/council/Templates.tsx`
+- Template Editor: `src/pages/council/TemplateTextEditor.tsx`
+- Template Preview: `src/pages/council/TemplatePreview.tsx`
 - Template Validation: `src/pages/council/TemplateValidationWarnings.tsx`
 - Placeholder Registry: `src/next/publish/config/placeholders.ts`
 - Publish Flow: `src/next/publish/flow/NewPublishFlow.tsx`
@@ -130,7 +137,7 @@ None in plan 01-01.
 
 ### Handoff Notes
 
-Plan 01-01 complete. Placeholder coverage is verified (34/34 notice types). Template save validation now enforces required placeholders. Ready for Plan 01-02 (Live Preview).
+Plan 01-02 complete. Template editor now has side-by-side live preview with placeholder substitution. Preview uses example values from placeholder registry to show council staff what their final notice will look like. Ready for Plan 01-03 (Template Validation).
 
 ---
 
@@ -145,6 +152,7 @@ Plan 01-01 complete. Placeholder coverage is verified (34/34 notice types). Temp
 | Architecture | `.planning/codebase/ARCHITECTURE.md` | System structure |
 | Integrations | `.planning/codebase/INTEGRATIONS.md` | External services |
 | Plan 01-01 Summary | `.planning/phases/01-council-template-system/01-01-SUMMARY.md` | Placeholder coverage complete |
+| Plan 01-02 Summary | `.planning/phases/01-council-template-system/01-02-SUMMARY.md` | Live preview implementation |
 
 ---
 
