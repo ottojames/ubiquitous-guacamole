@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import TemplateTextEditor from './TemplateTextEditor';
 import TemplateValidationWarnings from './TemplateValidationWarnings';
 import { getNoticeTypesForDepartment, type DepartmentType, ALL_NOTICE_TYPES } from '@/next/publish/config/departmentNoticeTypes';
+import { validateTemplatePlaceholders } from '@/next/publish/config/placeholders';
 
 interface Department {
   id: string;
@@ -59,9 +60,29 @@ export default function Templates() {
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [existingTemplate, setExistingTemplate] = useState<Template | null>(null);
 
+  // Track validation state for save blocking
+  const [validationState, setValidationState] = useState<{
+    isValid: boolean;
+    missingRequired: string[];
+  }>({ isValid: true, missingRequired: [] });
+
   useEffect(() => {
     loadTemplates();
   }, [department.id]);
+
+  // Update validation state when template text or notice type changes
+  useEffect(() => {
+    if (!formData.template_text || formData.template_text.trim().length === 0) {
+      setValidationState({ isValid: false, missingRequired: [] });
+      return;
+    }
+
+    const result = validateTemplatePlaceholders(formData.template_text, formData.notice_type);
+    setValidationState({
+      isValid: result.isValid,
+      missingRequired: result.missingRequired,
+    });
+  }, [formData.template_text, formData.notice_type]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -529,21 +550,58 @@ export default function Templates() {
             </div>
 
             {/* Sticky Footer */}
-            <div className="flex-shrink-0 flex items-center justify-end gap-3 px-8 py-6 border-t border-gray-200 bg-white rounded-b-3xl">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                disabled={saving}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : editingTemplate ? 'Update Template' : 'Create Template'}
-              </button>
+            <div className="flex-shrink-0 px-8 py-6 border-t border-gray-200 bg-white rounded-b-3xl">
+              {/* Save blocked message */}
+              {!validationState.isValid && formData.template_text.trim().length > 0 && (
+                <div className="flex items-center gap-2 mb-4 text-sm text-red-600">
+                  <svg
+                    className="w-4 h-4 flex-shrink-0"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>
+                    Add all required placeholders to save template
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <div className="relative group">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving || !validationState.isValid || !formData.template_text.trim()}
+                    className={`px-6 py-3 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed ${
+                      !validationState.isValid || !formData.template_text.trim()
+                        ? 'bg-gray-300 text-gray-500'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } disabled:opacity-70`}
+                  >
+                    {saving ? 'Saving...' : editingTemplate ? 'Update Template' : 'Create Template'}
+                  </button>
+                  {/* Tooltip for disabled state */}
+                  {(!validationState.isValid || !formData.template_text.trim()) && !saving && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      {!formData.template_text.trim()
+                        ? 'Template text is required'
+                        : `Missing ${validationState.missingRequired.length} required placeholder${validationState.missingRequired.length !== 1 ? 's' : ''}`}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -85,7 +85,7 @@ export default function TemplateValidationWarnings({
   if (missingRequired.length > 0) {
     return (
       <div
-        className={`bg-red-50 border border-red-200 rounded-xl p-4 ${className}`}
+        className={`bg-red-50 border-2 border-red-300 rounded-xl p-4 ${className}`}
       >
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
@@ -102,9 +102,14 @@ export default function TemplateValidationWarnings({
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-red-900 mb-2">
-              Missing Required Placeholders
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-red-900">
+                Missing Required Placeholders
+              </h3>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                Save blocked
+              </span>
+            </div>
             <p className="text-sm text-red-800 mb-3">
               Your template must include the following placeholders for legal
               compliance:
