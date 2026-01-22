@@ -102,7 +102,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `Type 'true' is not assignable to type 'string | number | readonly string[]'`
   - Fix: Change `checked={true}` to `defaultChecked={true}` or use `value="true"`
 
-- [ ] **Add swagger-ui-react types** `[S]`
+- [x] **Add swagger-ui-react types** `[S]`
   - File: `src/pages/ApiDocs.tsx:2`
   - Issue: Missing type declarations for swagger-ui-react
   - Fix: Run `npm i -D @types/swagger-ui-react` or add `declare module 'swagger-ui-react'`

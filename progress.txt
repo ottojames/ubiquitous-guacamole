@@ -140,3 +140,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 13 - Add swagger-ui-react types
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/vite-env.d.ts
+**What Happened**: Added module declaration for swagger-ui-react with SwaggerUIProps interface in vite-env.d.ts. This avoids installing additional packages while providing proper types.
+**Learnings**: For missing module types, add `declare module 'pkg-name'` to a .d.ts file (vite-env.d.ts works well) instead of installing packages.
+
+---
+
