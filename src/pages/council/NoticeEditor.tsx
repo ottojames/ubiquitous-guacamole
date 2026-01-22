@@ -50,6 +50,7 @@ export default function NoticeEditor() {
   const [loadedTemplateText, setLoadedTemplateText] = useState<string>('');
   const [loadedTemplateId, setLoadedTemplateId] = useState<string | null>(null);
   const [loadedTemplateName, setLoadedTemplateName] = useState<string>('');
+  const [showTemplatePreview, setShowTemplatePreview] = useState(true);
   const [requireApproval, setRequireApproval] = useState(false);
   const [showOcrModal, setShowOcrModal] = useState(false);
   const [ocrStatus, setOcrStatus] = useState<UploadStatus>('idle');
@@ -325,11 +326,37 @@ export default function NoticeEditor() {
         throw new Error('Not authenticated');
       }
 
+      // Render template text if available (Task 3 of Plan 01-03)
+      // The rendered template becomes the notice description
+      let renderedDescription = noticeData.description || null;
+      if (loadedTemplateText && hasPlaceholders(loadedTemplateText)) {
+        // Convert noticeData to NoticeFormData shape for renderer
+        const formDataForRenderer: NoticeFormData = {
+          title: noticeData.title,
+          notice_type: noticeData.notice_type,
+          premises: noticeData.premises,
+          applicant: noticeData.applicant,
+          consultation: noticeData.consultation,
+          licensing: noticeData.licensing,
+          representation_deadline: noticeData.representation_deadline,
+          expires_at: noticeData.expires_at,
+        };
+        renderedDescription = renderTemplateText(loadedTemplateText, formDataForRenderer);
+      }
+
+      // Build extras with template metadata for audit trail
+      const extras: Record<string, any> = {};
+      if (loadedTemplateId) {
+        extras.template_id = loadedTemplateId;
+        extras.template_name = loadedTemplateName;
+        extras.template_text_original = loadedTemplateText;
+      }
+
       const saveData = {
         title: noticeData.title,
         notice_type: noticeData.notice_type,
         status: newStatus || noticeData.status,
-        description: noticeData.description || null,
+        description: renderedDescription,
         premises: noticeData.premises,
         applicant: noticeData.applicant,
         consultation: noticeData.consultation,
@@ -338,7 +365,8 @@ export default function NoticeEditor() {
         expires_at: noticeData.expires_at || null,
         department_id: department.id,
         organization_id: department.organization.id,
-        created_by: session.user.id
+        created_by: session.user.id,
+        ...(Object.keys(extras).length > 0 && { extras }),
       };
 
       if (isEdit && noticeId) {
@@ -430,6 +458,26 @@ export default function NoticeEditor() {
 
   const canPublish = ['owner', 'org_admin', 'department_admin'].includes(userRole);
   const canEdit = ['owner', 'org_admin', 'department_admin', 'editor'].includes(userRole);
+
+  // Compute rendered preview text when template_text and form data are available
+  const renderedPreviewText = useMemo(() => {
+    if (!loadedTemplateText || !hasPlaceholders(loadedTemplateText)) {
+      return '';
+    }
+
+    const formDataForRenderer: NoticeFormData = {
+      title: noticeData.title,
+      notice_type: noticeData.notice_type,
+      premises: noticeData.premises,
+      applicant: noticeData.applicant,
+      consultation: noticeData.consultation,
+      licensing: noticeData.licensing,
+      representation_deadline: noticeData.representation_deadline,
+      expires_at: noticeData.expires_at,
+    };
+
+    return renderTemplateText(loadedTemplateText, formDataForRenderer);
+  }, [loadedTemplateText, noticeData]);
 
   // Format last saved time
   const formatLastSaved = (date: Date): string => {
@@ -925,6 +973,58 @@ export default function NoticeEditor() {
               </div>
             </div>
           </div>
+
+          {/* Template Preview Section - Only show when a template with template_text is loaded */}
+          {loadedTemplateText && renderedPreviewText && (
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-semibold text-gray-900">Notice Text Preview</h2>
+                  {loadedTemplateName && (
+                    <span className="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+                      Template: {loadedTemplateName}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTemplatePreview(!showTemplatePreview)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                >
+                  {showTemplatePreview ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                      Hide Preview
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Show Preview
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {showTemplatePreview && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                  <p className="text-xs text-gray-500 mb-3">
+                    This preview shows how your notice will appear with the form values substituted into the template.
+                  </p>
+                  <div
+                    className="prose prose-sm max-w-none text-gray-800 leading-relaxed"
+                    style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+                  >
+                    {renderedPreviewText}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
