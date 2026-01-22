@@ -83,3 +83,15 @@
 
 ---
 
+## Iteration 6+7 - Fix Council type mismatch and slug property
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/flow/components/UploadOcrPane.tsx
+**What Happened**: Fixed two related issues:
+1. councils.json has `{ name, email, address, aliases }` but Council type expects `{ id, name, email, address }`
+2. Code tried to access `c.slug` which doesn't exist
+Fix: Created local `JsonCouncil` type matching JSON structure, then construct proper Council object with generated id when needed.
+**Learnings**: Two different Council types exist in codebase - one from CouncilSelect.tsx (no id) and one from DynamicCouncilSelect.tsx (has id). councils.json matches neither exactly. When using JSON data, define a matching type locally.
+
+---
+

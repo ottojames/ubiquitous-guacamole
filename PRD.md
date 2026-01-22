@@ -63,12 +63,12 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `"variant"`, `"DPS_NAME"`, `"DPS_LICENSING_AUTHORITY"` not in PlaceholderKey type
   - Fix: Add these keys to the PlaceholderKey union type definition
 
-- [ ] **Fix Council type mismatch** `[S]`
+- [x] **Fix Council type mismatch** `[S]`
   - File: `src/next/publish/flow/components/UploadOcrPane.tsx:352`
   - Issue: `Property 'id' is missing in type` when casting to Council[]
   - Fix: Either add `id` to the objects or update the Council type
 
-- [ ] **Fix Council.slug property** `[S]`
+- [x] **Fix Council.slug property** `[S]`
   - File: `src/next/publish/flow/components/UploadOcrPane.tsx:361`
   - Issue: `Property 'slug' does not exist on type 'Council'`
   - Fix: Add `slug` to Council type or use a different property

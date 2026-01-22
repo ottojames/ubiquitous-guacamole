@@ -349,21 +349,27 @@ export default function UploadOcrPane({
 
                   // PART 3: Select Westminster council using onCouncilSelect (for council object reference)
                   if (onCouncilSelect) {
-                    const councilsList = councils as Council[];
+                    // councils.json has { name, email, address, aliases } - not the full Council type
+                    type JsonCouncil = { name: string; email: string; address?: string; aliases?: string[] };
+                    const councilsList = councils as JsonCouncil[];
                     console.log('[Load Sample Data] Looking for Westminster in councils:', councilsList.length, 'councils');
 
                     // Try multiple ways to find Westminster
-                    let westminster = councilsList.find(c => c.name === "Westminster City Council");
-                    if (!westminster) {
-                      westminster = councilsList.find(c => c.name.toLowerCase().includes("westminster"));
-                    }
-                    if (!westminster) {
-                      westminster = councilsList.find(c => c.slug === "westminster");
+                    let westminsterJson = councilsList.find(c => c.name === "Westminster City Council");
+                    if (!westminsterJson) {
+                      westminsterJson = councilsList.find(c => c.name.toLowerCase().includes("westminster"));
                     }
 
-                    console.log('[Load Sample Data] Found Westminster council:', westminster);
+                    console.log('[Load Sample Data] Found Westminster council:', westminsterJson);
 
-                    if (westminster) {
+                    if (westminsterJson) {
+                      // Convert to Council type by adding a generated id
+                      const westminster: Council = {
+                        id: `json-${westminsterJson.name.toLowerCase().replace(/\s+/g, '-')}`,
+                        name: westminsterJson.name,
+                        email: westminsterJson.email,
+                        address: westminsterJson.address || '',
+                      };
                       console.log('[Load Sample Data] Calling onCouncilSelect with:', westminster);
                       onCouncilSelect(westminster);
 
