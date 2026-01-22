@@ -79,7 +79,10 @@ export type PlaceholderKey =
   | "OBJECTION_DEADLINE"
   | "OBJECTION_METHOD"
   | "OBJECTION_ADDRESS"
-  | "INSPECTION_HOURS";
+  | "INSPECTION_HOURS"
+  | "variant"
+  | "DPS_NAME"
+  | "DPS_LICENSING_AUTHORITY";
 
 export type FieldType = "text" | "textarea" | "email" | "date" | "number" | "tel" | "url" | "select";
 

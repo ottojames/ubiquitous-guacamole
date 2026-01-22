@@ -74,3 +74,12 @@
 
 ---
 
+## Iteration 5 - Add missing PlaceholderKeys
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/config/formBlueprints.ts
+**What Happened**: Added `"variant"`, `"DPS_NAME"`, `"DPS_LICENSING_AUTHORITY"` to the PlaceholderKey union type. These keys are used in sample data population in UploadOcrPane.tsx.
+**Learnings**: PlaceholderKey type lives in `src/next/publish/config/formBlueprints.ts`. When adding new form fields, check this union type.
+
+---
+

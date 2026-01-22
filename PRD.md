@@ -58,7 +58,7 @@ These errors are in the main publishing wizard - the core user flow.
 
 ### Phase 2: UploadOcrPane Component Fixes [HIGH]
 
-- [ ] **Add missing PlaceholderKeys** `[S]`
+- [x] **Add missing PlaceholderKeys** `[S]`
   - File: `src/next/publish/flow/components/UploadOcrPane.tsx:280,302-303`
   - Issue: `"variant"`, `"DPS_NAME"`, `"DPS_LICENSING_AUTHORITY"` not in PlaceholderKey type
   - Fix: Add these keys to the PlaceholderKey union type definition
