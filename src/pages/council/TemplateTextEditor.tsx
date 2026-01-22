@@ -7,6 +7,7 @@
  * - Placeholder insertion dropdown
  * - Grouped placeholders (Required/Optional)
  * - Character count
+ * - Side-by-side live preview with placeholder substitution
  * - Beautiful UI matching existing design system
  */
 
@@ -16,6 +17,7 @@ import {
   type PlaceholderDefinition,
   formatCategoryName,
 } from '@/next/publish/config/placeholders';
+import TemplatePreview from './TemplatePreview';
 
 interface TemplateTextEditorProps {
   /** Current template text value */
@@ -31,6 +33,9 @@ interface TemplateTextEditorProps {
   className?: string;
 }
 
+/** localStorage key for preview visibility preference */
+const PREVIEW_VISIBLE_KEY = 'templateEditor.showPreview';
+
 export default function TemplateTextEditor({
   value,
   onChange,
@@ -39,6 +44,11 @@ export default function TemplateTextEditor({
 }: TemplateTextEditorProps) {
   const [showPlaceholderMenu, setShowPlaceholderMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showPreview, setShowPreview] = useState(() => {
+    // Initialize from localStorage, default to true
+    const stored = localStorage.getItem(PREVIEW_VISIBLE_KEY);
+    return stored !== null ? stored === 'true' : true;
+  });
   const editorRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   // Track if the change originated from user input to avoid resetting cursor
@@ -49,6 +59,11 @@ export default function TemplateTextEditor({
   const placeholders = getPlaceholdersForNoticeType(noticeType);
   const requiredPlaceholders = placeholders.filter(p => p.required);
   const optionalPlaceholders = placeholders.filter(p => !p.required);
+
+  // Persist preview visibility preference
+  useEffect(() => {
+    localStorage.setItem(PREVIEW_VISIBLE_KEY, String(showPreview));
+  }, [showPreview]);
 
   // Filter placeholders by search query
   const filterPlaceholders = (placeholderList: PlaceholderDefinition[]) => {
@@ -166,14 +181,20 @@ export default function TemplateTextEditor({
    * Render a single placeholder option
    */
   const renderPlaceholderOption = (placeholder: PlaceholderDefinition) => {
-    const categoryColor = {
+    const categoryColorMap: Record<string, string> = {
       applicant: 'bg-blue-50 text-blue-700 border-blue-200',
       premises: 'bg-purple-50 text-purple-700 border-purple-200',
       licensing: 'bg-orange-50 text-orange-700 border-orange-200',
       consultation: 'bg-green-50 text-green-700 border-green-200',
       location: 'bg-teal-50 text-teal-700 border-teal-200',
+      gambling: 'bg-red-50 text-red-700 border-red-200',
+      transport: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      planning: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      probate: 'bg-slate-50 text-slate-700 border-slate-200',
+      tro: 'bg-amber-50 text-amber-700 border-amber-200',
       other: 'bg-gray-50 text-gray-700 border-gray-200',
-    }[placeholder.category];
+    };
+    const categoryColor = categoryColorMap[placeholder.category] || categoryColorMap.other;
 
     return (
       <button
@@ -229,14 +250,43 @@ export default function TemplateTextEditor({
           white-space: pre-wrap;
         }
       `}</style>
+
+      {/* Header row with label, word count, and preview toggle */}
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-gray-700">
           Template Text *
         </label>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <span className="text-xs text-gray-500">
             {wordCount} words, {characterCount} characters
           </span>
+          {/* Preview toggle */}
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              showPreview
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              {showPreview ? (
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              ) : (
+                <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              )}
+            </svg>
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </button>
         </div>
       </div>
 
@@ -396,25 +446,33 @@ export default function TemplateTextEditor({
         )}
       </div>
 
-      {/* Template text area - contentEditable for rich text support */}
+      {/* Side-by-side editor and preview container */}
       <div
-        ref={editorRef}
-        contentEditable
-        onInput={e => {
-          const target = e.target as HTMLDivElement;
-          // Mark as user input to prevent cursor reset
-          isUserInputRef.current = true;
-          onChange(target.innerHTML);
-        }}
-        onBlur={e => {
-          const target = e.target as HTMLDivElement;
-          // Mark as user input to prevent cursor reset
-          isUserInputRef.current = true;
-          onChange(target.innerHTML);
-        }}
-        className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm leading-relaxed overflow-y-auto"
-        style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
-        data-placeholder={!value ? `Write your notice template here...
+        className={`flex flex-col ${showPreview ? 'lg:flex-row' : ''} gap-4`}
+      >
+        {/* Editor panel */}
+        <div className={`flex-1 ${showPreview ? 'lg:w-1/2' : 'w-full'}`}>
+          {/* Template text area - contentEditable for rich text support */}
+          <div
+            ref={editorRef}
+            contentEditable
+            onInput={e => {
+              const target = e.target as HTMLDivElement;
+              // Mark as user input to prevent cursor reset
+              isUserInputRef.current = true;
+              onChange(target.innerHTML);
+            }}
+            onBlur={e => {
+              const target = e.target as HTMLDivElement;
+              // Mark as user input to prevent cursor reset
+              isUserInputRef.current = true;
+              onChange(target.innerHTML);
+            }}
+            className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm leading-relaxed overflow-y-auto"
+            style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
+            data-placeholder={
+              !value
+                ? `Write your notice template here...
 
 Example:
 LICENSING ACT 2003
@@ -424,8 +482,23 @@ Notice is hereby given that {{APPLICANT_NAME}} has applied to {{AUTHORITY_NAME}}
 
 Licensable activities applied for: {{LICENSABLE_ACTIVITIES}}.
 
-Any representations must be made in writing by {{DEADLINE_DATE}} to {{REPRESENTATION_ADDRESS}}.` : undefined}
-      />
+Any representations must be made in writing by {{DEADLINE_DATE}} to {{REPRESENTATION_ADDRESS}}.`
+                : undefined
+            }
+          />
+        </div>
+
+        {/* Preview panel - shown when showPreview is true */}
+        {showPreview && (
+          <div className="flex-1 lg:w-1/2 min-h-[500px]">
+            <TemplatePreview
+              templateText={value}
+              noticeType={noticeType}
+              className="h-full border border-gray-200 rounded-xl shadow-sm"
+            />
+          </div>
+        )}
+      </div>
 
       {/* Footer info */}
       <div className="flex items-center justify-between text-sm text-gray-600">
