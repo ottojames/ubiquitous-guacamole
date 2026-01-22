@@ -15,11 +15,19 @@ Transform the partially-built civic notices platform into a demo-ready state by 
 
 ## Phase 1: Council Template System
 
-**Goal:** Councils can create and use templates for all 30+ notice types
+**Goal:** Councils can create and use templates for all 30+ notice types with validated placeholders, side-by-side preview, and rendered output in notices
 
 **Dependencies:** None (foundation phase)
 
 **Requirements:** TMPL-01, TMPL-02, TMPL-03, TMPL-04
+
+**Plans:** 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Audit placeholder coverage, block save on missing required
+- [ ] 01-02-PLAN.md — Add side-by-side live preview to template editor
+- [ ] 01-03-PLAN.md — Wire template text rendering into notice creation
+- [ ] 01-04-PLAN.md — E2E verification checkpoint
 
 **Success Criteria:**
 
@@ -208,7 +216,7 @@ Transform the partially-built civic notices platform into a demo-ready state by 
 
 | Phase | Status | Plans | Completed |
 |-------|--------|-------|-----------|
-| 1 - Templates | Not Started | 0 | 0 |
+| 1 - Templates | Planned | 4 | 0 |
 | 2 - Isolation | Not Started | 0 | 0 |
 | 3 - Publish Flow | Not Started | 0 | 0 |
 | 4 - Representations | Not Started | 0 | 0 |
@@ -229,7 +237,7 @@ Transform the partially-built civic notices platform into a demo-ready state by 
 
 3. **Publish flow third:** Core product functionality. Publishers are the revenue source; their flow must work.
 
-4. **Representations fourth:** Completes the civic participation loop. Notice → Public → Council.
+4. **Representations fourth:** Completes the civic participation loop. Notice -> Public -> Council.
 
 5. **Email fifth:** Notifications tie the system together. Users need feedback that their actions worked.
 
@@ -242,4 +250,5 @@ Transform the partially-built civic notices platform into a demo-ready state by 
 ---
 
 *Roadmap created: 2026-01-22*
-*Next step: `/gsd:plan-phase 1` to create detailed plan for Templates phase*
+*Phase 1 planned: 2026-01-22*
+*Next step: `/gsd:execute-phase 1` to execute Templates phase*
