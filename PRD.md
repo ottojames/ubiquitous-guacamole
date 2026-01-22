@@ -51,7 +51,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `Type 'string | null' is not assignable to type 'string'`
   - Fix: Add null coalescing `?? ''` or update the target type to accept null
 
-- [ ] **Fix onDetailChange type incompatibility** `[S]`
+- [x] **Fix onDetailChange type incompatibility** `[S]`
   - File: `src/next/publish/flow/NewPublishFlow.tsx:1862`
   - Issue: `Type '(key: keyof LegalDetails, value: string) => void'` not assignable
   - Fix: Either widen the type in UploadOcrPaneProps or narrow the callback

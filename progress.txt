@@ -65,3 +65,12 @@
 
 ---
 
+## Iteration 4 - Fix onDetailChange type incompatibility
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/flow/NewPublishFlow.tsx
+**What Happened**: Changed `handleDetailChange` type from `(key: keyof LegalDetails, value: string)` to `(key: string, value: string)`. The UploadOcrPaneProps expects `string` for flexibility, and `keyof LegalDetails` is narrower.
+**Learnings**: When a callback is passed to a component that expects a wider type, widen the callback's parameter type to match.
+
+---
+

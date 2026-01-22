@@ -576,7 +576,7 @@ export default function NewPublishFlow() {
     setTemplateDraft((prev) => ({ ...(prev ?? {}), ocrText: text }));
   }, []);
 
-  const handleDetailChange = React.useCallback((key: keyof LegalDetails, value: string) => {
+  const handleDetailChange = React.useCallback((key: string, value: string) => {
     setLegalDetails((prev) => ({ ...prev, [key]: value }));
     setLegalMeta((prev) => {
       let metaKey: keyof LegalMetaMap | null = null;
