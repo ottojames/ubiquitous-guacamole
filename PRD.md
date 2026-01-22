@@ -80,7 +80,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: Zod 4 changed enum errorMap API
   - Fix: Update to new syntax: `z.enum([...]).describe('...')` or use `z.enum([...], { message: '...' })`
 
-- [ ] **Fix Applicant.email property** `[S]`
+- [x] **Fix Applicant.email property** `[S]`
   - File: `src/next/publish/flow/steps/PaymentStep.tsx:126`
   - Issue: `Property 'email' does not exist on type 'Applicant'`
   - Fix: Add `email` to Applicant type or access it from correct nested property

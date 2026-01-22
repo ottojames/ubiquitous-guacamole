@@ -123,7 +123,7 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
       await createCheckoutSession({
         noticeId: notice.id || crypto.randomUUID(),
         noticeType: definition.label,
-        applicantEmail: notice.applicant.email,
+        applicantEmail: notice.applicant.contactEmail,
       });
     } else {
       onSubmit();

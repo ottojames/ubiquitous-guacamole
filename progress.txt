@@ -104,3 +104,12 @@ Fix: Created local `JsonCouncil` type matching JSON structure, then construct pr
 
 ---
 
+## Iteration 9 - Fix Applicant.email property
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/flow/steps/PaymentStep.tsx
+**What Happened**: Changed `notice.applicant.email` to `notice.applicant.contactEmail`. The Applicant type has `contactEmail`, not `email`.
+**Learnings**: Applicant type uses `contactEmail` not `email`. Check type definitions in `src/types/notice.ts`.
+
+---
+
