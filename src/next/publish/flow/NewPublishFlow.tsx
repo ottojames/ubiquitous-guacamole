@@ -1579,7 +1579,7 @@ export default function NewPublishFlow() {
           APPLICANT_ADDRESS: "", // TODO: Add if available
           PREMISES_NAME: legalDetails.premisesName || "",
           PREMISES_ADDRESS: fullAddress || "",
-          APPLICATION_DATE: legalDetails.applicationDate || new Date().toISOString().split('T')[0],
+          APPLICATION_DATE: new Date().toISOString().split('T')[0],
           DEADLINE_DATE: legalDetails.representationDeadline || "",
           PUBLICATION_DATE: new Date().toISOString().split('T')[0],
           LICENSABLE_ACTIVITIES: legalDetails.activities?.join(', ') || "Not specified",

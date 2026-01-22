@@ -47,3 +47,12 @@
 
 ---
 
+## Iteration 2 - Fix LegalDetails.applicationDate typo
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/next/publish/flow/NewPublishFlow.tsx
+**What Happened**: Removed reference to non-existent `legalDetails.applicationDate` property. The `LegalDetails` type doesn't have this property - just uses current date directly as the fallback was already provided.
+**Learnings**: When a property doesn't exist on a type, check if removing the reference is simpler than adding the property if the fallback already provides the value.
+
+---
+

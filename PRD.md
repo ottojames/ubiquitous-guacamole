@@ -41,7 +41,7 @@ These errors are in the main publishing wizard - the core user flow.
   - Issue: `Property 'errors' does not exist on type 'ZodError<unknown>'`
   - Fix: Use `error.issues` instead of `error.errors` (Zod 4 API change)
 
-- [ ] **Fix LegalDetails.applicationDate typo** `[S]`
+- [x] **Fix LegalDetails.applicationDate typo** `[S]`
   - File: `src/next/publish/flow/NewPublishFlow.tsx:1582`
   - Issue: `Property 'applicationDate' does not exist on type 'LegalDetails'`
   - Fix: Check if should be `applicationType` or add `applicationDate` to LegalDetails type
