@@ -580,3 +580,34 @@ Additional documentation:
 
 ---
 
+## Iteration 32 - Research postcode → council lookup methods
+**Status**: PASS
+**Agent Flow**: Research (WebSearch, WebFetch)
+**Files Changed**: PRD.md
+**What Happened**: Researched and documented comprehensive postcode → council lookup methods:
+
+**Options Evaluated:**
+1. **Postcodes.io** (Recommended): Free, no auth, no rate limits, returns admin_district + admin_county + GSS codes
+2. **GOV.UK Local Authorities API**: Free but undocumented, unversioned, rate limited, "may change without notice"
+3. **MapIt**: £22/mo (free for non-profit), requires API key, tiered rate limits
+4. **ONS NSPL Dataset**: Free download, offline use, ~300MB quarterly CSV
+
+**Key Findings:**
+- Postcodes.io is backed by ONS NSPL data, updated quarterly
+- Two-tier areas return `admin_district` (e.g., "Guildford") + `admin_county` (e.g., "Surrey")
+- Unitary areas return `admin_district` only, `admin_county` is null
+- ~1.2% of UK addresses (387,000) are in different LA than postcode centroid - unavoidable limitation
+
+**Implementation Recommendation:**
+- Phase 1 (MVP): Use Postcodes.io API directly
+- Phase 2 (Scale): Self-host NSPL dataset in PostgreSQL
+
+**Learnings**:
+- Postcodes.io is the clear winner for free postcode → council lookup
+- GOV.UK API is not intended for third-party production use
+- MapIt pricing starts at £22/mo - only worth it if you need their additional features
+- For two-tier routing, must check both `admin_district` and `admin_county` fields
+- GSS codes (E09000033 format) are consistent across all services
+
+---
+
