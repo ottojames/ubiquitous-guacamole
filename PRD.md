@@ -892,7 +892,7 @@ Declining in availability but still offered:
 
 - [x] Update `/src/lib/councilLookup.ts` to use the researched postcode API (likely postcodes.io). Replace the rough heuristic with real lookup.
 - [x] Add proper error handling for postcode lookup failures.
-- [ ] Create `/src/lib/councilLookup.test.ts` with tests for the new lookup function using real postcodes.
+- [x] Create `/src/lib/councilLookup.test.ts` with tests for the new lookup function using real postcodes.
 - [ ] Run `npm run typecheck` to verify implementation.
 
 ## Phase 2: Council Data Structure
