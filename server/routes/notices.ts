@@ -562,6 +562,50 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       }
     }
 
+    // If still no organization_id and we have a postcode, try to find the local council
+    if (!resolvedOrganizationId && postcode) {
+      try {
+        console.log('[notice-submit] Looking up council from postcode area:', postcode);
+        // Get admin district from postcodes.io
+        const postcodeResponse = await fetch(`https://api.postcodes.io/postcodes/${postcode}`);
+        if (postcodeResponse.ok) {
+          const postcodeData = await postcodeResponse.json();
+          const adminDistrict = postcodeData.result?.admin_district;
+          if (adminDistrict) {
+            console.log('[notice-submit] Admin district:', adminDistrict);
+            // Look up the council/organization by name (fuzzy match)
+            const { data: orgData } = await client
+              .from('organizations')
+              .select('id, name')
+              .or(`name.ilike.%${adminDistrict}%,name.ilike.%${adminDistrict.replace(/ /g, '-')}%`)
+              .limit(1)
+              .maybeSingle();
+
+            if (orgData?.id) {
+              resolvedOrganizationId = orgData.id;
+              console.log('[notice-submit] Resolved organization from postcode:', orgData.name);
+            } else {
+              // Try councils table as fallback
+              const { data: councilData } = await client
+                .from('councils')
+                .select('id, name')
+                .or(`name.ilike.%${adminDistrict}%,name.ilike.%${adminDistrict.replace(/ /g, '-')}%`)
+                .limit(1)
+                .maybeSingle();
+
+              if (councilData?.id) {
+                // Use council ID as organization_id (they may be the same in some setups)
+                console.log('[notice-submit] Found council but not org:', councilData.name);
+                // Note: council_id and organization_id are separate - this is informational only
+              }
+            }
+          }
+        }
+      } catch (lookupErr) {
+        console.warn('[notice-submit] Council lookup from postcode failed:', lookupErr);
+      }
+    }
+
     // Generate notice text using custom template if available
     let generatedDescription = payload.description || null;
     if (resolvedDepartmentId && payload.notice_type && !generatedDescription) {
@@ -579,6 +623,28 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
 
         if (templateData?.template_text) {
           console.log('[notice-submit] Using custom template:', templateData.name);
+
+          // Debug: Log incoming tokens from client
+          console.log('[notice-submit] NATURE_OF_VARIATION debug - incoming tokens:', {
+            fromExtrasTokens: payload.extras?.tokens?.NATURE_OF_VARIATION,
+            licensableActivities: payload.extras?.tokens?.LICENSABLE_ACTIVITIES,
+            activitySchedule: payload.extras?.tokens?.ACTIVITY_SCHEDULE,
+          });
+
+          // Helper to check if a value looks like a placeholder that shouldn't be saved
+          const isPlaceholderValue = (val: unknown): boolean => {
+            if (typeof val !== 'string') return true;
+            const trimmed = val.trim();
+            if (!trimmed) return true;
+            if (trimmed.startsWith('[') && trimmed.endsWith(']')) return true;
+            if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) return true;
+            if (trimmed.toLowerCase().includes('placeholder')) return true;
+            if (trimmed.toLowerCase().includes('missing:')) return true;
+            if (trimmed.toLowerCase().includes('select activities')) return true;
+            if (trimmed.toLowerCase().includes('auto-generate')) return true;
+            return false;
+          };
+
           // Generate tokens from payload
           const tokens: Record<string, string> = {
             APPLICANT_NAME: payload.applicant?.name || '',
@@ -595,10 +661,50 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
             ...(payload.extras?.tokens || {}), // Include any additional tokens from form
           };
 
+          // Server-side fix: Ensure NATURE_OF_VARIATION has a valid value for variations
+          if (payload.notice_type?.includes('variation')) {
+            const currentNov = tokens.NATURE_OF_VARIATION;
+            if (isPlaceholderValue(currentNov)) {
+              const activities = typeof tokens.LICENSABLE_ACTIVITIES === 'string'
+                ? tokens.LICENSABLE_ACTIVITIES.trim()
+                : '';
+              const schedule = typeof tokens.ACTIVITY_SCHEDULE === 'string'
+                ? tokens.ACTIVITY_SCHEDULE.trim()
+                : '';
+
+              if (activities && !isPlaceholderValue(activities)) {
+                tokens.NATURE_OF_VARIATION = `To vary the licence to authorise: ${activities}`;
+                console.log('[notice-submit] Server-side fix: Generated NATURE_OF_VARIATION from activities');
+              } else if (schedule && !isPlaceholderValue(schedule)) {
+                tokens.NATURE_OF_VARIATION = `To vary the conditions of the premises licence to permit the following: ${schedule.split('\n')[0]}`;
+                console.log('[notice-submit] Server-side fix: Generated NATURE_OF_VARIATION from schedule');
+              } else {
+                tokens.NATURE_OF_VARIATION = 'Vary the conditions of the premises licence as described in the application';
+                console.log('[notice-submit] Server-side fix: Using default NATURE_OF_VARIATION');
+              }
+            }
+          }
+
+          // Debug: Log final token value after merge
+          console.log('[notice-submit] Final NATURE_OF_VARIATION token:', tokens.NATURE_OF_VARIATION || '(empty)');
+
+          // Alias NATURE_OF_VARIATION -> VARIATION_DESCRIPTION for templates that use the alternative token
+          // This mirrors the frontend tokenizer behavior (see src/next/publish/templates/tokenizer.ts:165)
+          if (tokens.NATURE_OF_VARIATION && !tokens.VARIATION_DESCRIPTION) {
+            tokens.VARIATION_DESCRIPTION = tokens.NATURE_OF_VARIATION;
+            console.log('[notice-submit] Added VARIATION_DESCRIPTION alias:', tokens.VARIATION_DESCRIPTION);
+          }
+
           // Replace {{TOKEN}} placeholders with values
+          // Note: Empty strings are valid values and should replace the placeholder
+          // Only keep the raw {{TOKEN}} if the token is completely undefined
           generatedDescription = templateData.template_text.replace(
             /\{\{([A-Z_]+)\}\}/g,
-            (match: string, token: string) => tokens[token] || match
+            (match: string, token: string) => {
+              const value = tokens[token];
+              // Use value if it exists (including empty string), otherwise keep placeholder
+              return value !== undefined ? value : match;
+            }
           );
           console.log('[notice-submit] Generated description from template');
         }
