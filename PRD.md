@@ -29,8 +29,8 @@
 
 ### Council Portal UI/UX Review
 
-- [ ] Review the overall council portal UI/UX and identify any areas that look "boring" or could be improved - focus on the Team tab, Dashboard, and navigation
-- [ ] Ensure all interactive elements (buttons, links, cards) have proper hover states and visual feedback
+- [x] Review the overall council portal UI/UX and identify any areas that look "boring" or could be improved - focus on the Team tab, Dashboard, and navigation
+- [x] Ensure all interactive elements (buttons, links, cards) have proper hover states and visual feedback
 
 ---
 

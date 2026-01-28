@@ -488,3 +488,20 @@ New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log
 
 ---
 
+## Iteration 29 - Review council portal UI/UX
+**Status**: PASS (Verification Tasks)
+**Agent Flow**: Analyst → Verification
+**Files Changed**: None (review only)
+**What Happened**: Reviewed UI/UX and hover states across council portal:
+1. **Dashboard**: Has stat cards with `hover:shadow-xl hover:scale-[1.02]`, priority items, recent notices list
+2. **Team Tab**: Has clean member cards with `hover:shadow-md`, invite form with button transitions
+3. **Navigation**: Has icons, active states, `hover:bg-gray-100` effects
+4. **AuditLog**: Uses `hover:bg-gray-50` on entries
+5. All interactive elements (buttons, links, cards) have proper hover states and transitions
+**Learnings**:
+- Council portal already follows good UI patterns
+- Consistent use of Tailwind transitions: `transition-colors`, `transition-all`
+- Card hover pattern: `hover:shadow-xl hover:scale-[1.02]` provides subtle feedback
+
+---
+
