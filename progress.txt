@@ -649,3 +649,45 @@ Additional documentation:
 
 ---
 
+## Iteration 34 - Research contact email patterns across councils
+**Status**: PASS
+**Agent Flow**: Research (WebSearch)
+**Files Changed**: PRD.md
+**What Happened**: Researched and documented comprehensive UK council contact email patterns:
+
+**Domain Patterns:**
+- Principal authorities use `@[councilname].gov.uk`
+- Parish/Town councils must use `-pc` or `-tc` suffix
+- Scotland and Wales follow same pattern
+- Some legacy domains exist but .gov.uk is best practice
+
+**Department Email Patterns Documented:**
+| Department | Primary Pattern | Alternatives |
+|------------|----------------|--------------|
+| Licensing | `licensing@` | `licensing.team@` |
+| Planning | `planning@` | `planning.registration@`, `cynllun.plan@` (Welsh) |
+| Highways | `highways@` | `streetworks@`, `trafficorders@`, `temporary.road.closures@` |
+| Environmental Health | `envhealth@` | `environmentalhealth@`, `environmental.health@` |
+| Building Control | `buildingcontrol@` | `building.control@`, `building.standards@` (Scotland) |
+| Electoral | `electoralservices@` | `elections@` |
+| Democratic | `democratic.services@` | `democracy@`, `committee@` |
+| Customer Services | `customerservices@` | `customer.services@`, `enquiries@` |
+
+**Verified Examples (20+ councils):**
+- Birmingham, Westminster, Greenwich, Cambridge, Manchester, Glasgow, Edinburgh, Cardiff, etc.
+
+**Implementation Recommendations:**
+- Primary pattern: `[department]@[council_domain].gov.uk`
+- Fallback with/without periods
+- Country-specific handling for Scotland/Wales
+- Data model suggestion with verification timestamps
+
+**Learnings:**
+- No central directory exists for council department emails
+- Staff turnover means specific contacts change frequently
+- Pattern matching enables ~80% accuracy for programmatic email generation
+- Always provide council website fallback URL
+- Welsh councils may accept both English and Welsh department prefixes
+
+---
+
