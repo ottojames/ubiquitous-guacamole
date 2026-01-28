@@ -378,3 +378,21 @@ The component already had `department` from `useOutletContext` - just needed to 
 
 ---
 
+## Session 5 Summary - Council Portal UX Fixes Complete
+
+**PRD**: Council Portal UX Fixes (28 January 2026)
+**Total Tasks**: 11
+**Completed**: 11 (100%)
+
+### Commits Made:
+1. `775aca14` - fix: wire Analytics.tsx to query real notice data from Supabase
+2. `0e58eb2b` - fix: remove Drafts navigation item from council portal
+3. `3ad2d441` - fix: improve Audit Log UX with human-readable formatting
+4. `0adb6e32` - fix: use AddressLookup component for Settings authority address
+
+### Final Verification:
+- `npm run typecheck` - 0 errors ✅
+- `npm run lint` - 0 errors, 19 warnings (acceptable) ✅
+
+---
+

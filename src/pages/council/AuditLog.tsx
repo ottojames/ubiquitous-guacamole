@@ -200,17 +200,9 @@ export default function AuditLog() {
     return details;
   };
 
-  useEffect(() => {
-    loadAuditLogs();
-  }, [department.id]);
-
-  useEffect(() => {
-    filterLogs();
-  }, [logs, filterAction, filterTable, searchQuery, startDate, endDate]);
-
   // P1-007: Load from unified_audit_logs view which combines both audit tables
   // Fallback to audit_logs if view doesn't exist yet
-  const loadAuditLogs = async () => {
+  const loadAuditLogs = useCallback(async () => {
     try {
       // Try unified view first
       let { data, error } = await supabase
@@ -246,7 +238,15 @@ export default function AuditLog() {
       console.error('Failed to load audit logs:', err);
       setLoading(false);
     }
-  };
+  }, [department.id, department.organization.id, loadPremisesNames]);
+
+  useEffect(() => {
+    loadAuditLogs();
+  }, [loadAuditLogs]);
+
+  useEffect(() => {
+    filterLogs();
+  }, [logs, filterAction, filterTable, searchQuery, startDate, endDate]);
 
   const filterLogs = () => {
     let filtered = logs;
