@@ -11,7 +11,7 @@
 - [x] Research and document the official UK council directory sources (GOV.UK, LGA, etc.) — find the authoritative list
 - [x] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
 - [x] Research common council department structures — which departments handle which notice types
-- [ ] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
+- [x] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
 - [ ] Research submission methods councils accept (email, web forms, portals, post)
 
 ---
@@ -488,8 +488,224 @@ However, statutory requirements for newspaper publication remain for most notice
 - [South Lanarkshire - Planning and Regulatory Services](https://www.southlanarkshire.gov.uk/info/200171/council_departments/589/community_and_enterprise_resources/3)
 - [Dudley Council - Public notices](https://www.dudley.gov.uk/council-community/public-notices/)
 
-### Contact Patterns
-*Document findings:*
+### Contact Email Patterns
+
+#### Overview
+
+UK councils follow predictable email patterns based on department function and domain naming. This research documents the common patterns to enable programmatic email generation for notice submission.
+
+#### Domain Name Patterns
+
+**Principal Authorities (Counties, Districts, Unitaries, Metro Boroughs):**
+
+| Country | Domain Pattern | Examples |
+|---------|---------------|----------|
+| England | `@[councilname].gov.uk` | @westminster.gov.uk, @surrey.gov.uk, @birmingham.gov.uk |
+| Scotland | `@[councilname].gov.uk` | @glasgow.gov.uk, @edinburgh.gov.uk, @aberdeencity.gov.uk |
+| Wales | `@[councilname].gov.uk` | @cardiff.gov.uk, @swansea.gov.uk, @ceredigion.gov.uk |
+| Northern Ireland | `@[councilname].gov.uk` | @belfastcity.gov.uk, @derrystrabane.com |
+
+**Parish/Town Councils:**
+- Must use `-pc` or `-tc` suffix: `@yourtown-tc.gov.uk`, `@yourparish-pc.gov.uk`
+- Role-based emails required: `clerk@yourparishcouncil.gov.uk`
+
+**Note:** Some councils use legacy domains (e.g., @derrystrabane.com) but .gov.uk is now best practice as of March 2025.
+
+#### Department Email Patterns by Function
+
+**1. Licensing Department**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `licensing@` | **Most common** | licensing@cambridge.gov.uk, licensing@birmingham.gov.uk, licensing@royalgreenwich.gov.uk |
+| `licensing.team@` | Less common | licensing.team@[council].gov.uk |
+| Combined service | Shared services | FSS_AR@lambeth.gov.uk (specific functions) |
+
+**Verified Examples:**
+- Birmingham: licensing@birmingham.gov.uk
+- Royal Borough of Greenwich: licensing@royalgreenwich.gov.uk
+- Cambridge: licensing@cambridge.gov.uk
+- Lambeth: licensing.team@lambeth.gov.uk
+
+**2. Planning Department**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `planning@` | **Most common** | planning@cheshireeast.gov.uk, planning@carmarthenshire.gov.uk |
+| `planning.registration@` | For applications | planning.registration@birmingham.gov.uk |
+| `planningappeals@` | For appeals | planningappeals@westnorthants.gov.uk |
+| `development.control@` | Alternative name | development.control@[council].gov.uk |
+| `cynllun.plan@` | Welsh bilingual | cynllun.plan@conwy.gov.uk |
+
+**Verified Examples:**
+- Birmingham: planning.registration@birmingham.gov.uk
+- Cheshire East: planning@cheshireeast.gov.uk
+- Glasgow: onlineplanning@glasgow.gov.uk
+- Edinburgh: planningandbuildingstandards.support@edinburgh.gov.uk
+- Conwy (Welsh): cynllun.plan@conwy.gov.uk
+
+**3. Highways Department**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `highways@` | **Most common** | Highways@bathnes.gov.uk |
+| `streetworks@` | For road works | streetworks@[council].gov.uk |
+| `temporary.road.closures@` | For TROs | temporary.road.closures@hants.gov.uk |
+| `trafficorders@` | For TROs | trafficorders@[council].gov.uk |
+| `parking@` | Parking-specific | parking@bristol.gov.uk, parking@n-somerset.gov.uk |
+
+**Verified Examples:**
+- Bath & NE Somerset: Highways@bathnes.gov.uk
+- Hampshire: temporary.road.closures@hants.gov.uk
+- Bristol: parking@bristol.gov.uk
+
+**4. Environmental Health Department**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `envhealth@` | Common short form | envhealth@huntingdonshire.gov.uk, envhealth@argyll-bute.gov.uk |
+| `environmentalhealth@` | Full form | environmentalhealth@cannockchasedc.gov.uk |
+| `environmental.health@` | With period | environmental.health@[council].gov.uk |
+| `foodsafety@` | Food-specific | foodsafety@[council].gov.uk |
+
+**Verified Examples:**
+- Huntingdonshire: envhealth@huntingdonshire.gov.uk
+- Argyll & Bute: envhealth@argyll-bute.gov.uk
+- Cannock Chase: environmentalhealth@cannockchasedc.gov.uk
+
+**5. Building Control Department**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `buildingcontrol@` | **Most common** | buildingcontrol@lambeth.gov.uk, buildingcontrol@hackney.gov.uk |
+| `building.control@` | With period | building.control@manchester.gov.uk, building.control@kirklees.gov.uk |
+| `building.standards@` | Scotland | building.standards@glasgow.gov.uk |
+
+**Verified Examples:**
+- Lambeth: buildingcontrol@lambeth.gov.uk
+- Hackney: buildingcontrol@hackney.gov.uk
+- Manchester: building.control@manchester.gov.uk
+- Kirklees: building.control@kirklees.gov.uk
+- Glasgow: building.standards@glasgow.gov.uk
+
+**6. Electoral Services**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `electoralservices@` | **Most common** | electoralservices@westminster.gov.uk, electoralservices@hillingdon.gov.uk |
+| `elections@` | Shorter form | elections@shropshire.gov.uk |
+| `electoral.services@` | With period | electoral.services@[council].gov.uk |
+
+**Verified Examples:**
+- Westminster: electoralservices@westminster.gov.uk
+- Hillingdon: electoralservices@hillingdon.gov.uk
+- Shropshire: elections@shropshire.gov.uk
+
+**7. Democratic/Legal Services**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `democracy@` | Committee services | democracy@shropshire.gov.uk |
+| `democratic.services@` | Full form | democratic.services@huntingdonshire.gov.uk |
+| `legal.services@` | Legal team | Legal.services@brighton-hove.gov.uk |
+| `committee@` | Committee support | committee@[council].gov.uk |
+
+**Verified Examples:**
+- Shropshire: democracy@shropshire.gov.uk
+- Huntingdonshire: democratic.services@huntingdonshire.gov.uk
+- Brighton & Hove: Legal.services@brighton-hove.gov.uk
+
+**8. General/Customer Services**
+
+| Pattern | Prevalence | Examples |
+|---------|-----------|----------|
+| `customerservices@` | **Most common** | customerservices@wiltshire.gov.uk, customerservices@bedford.gov.uk |
+| `customer.services@` | With period | customer.services@nwleicestershire.gov.uk, customer.services@suffolk.gov.uk |
+| `enquiries@` | General enquiries | enquiries@[council].gov.uk |
+
+**Verified Examples:**
+- Wiltshire: customerservices@wiltshire.gov.uk
+- Bedford: customerservices@bedford.gov.uk
+- Suffolk: customer.services@suffolk.gov.uk
+- Bristol: customer.services@bristol.gov.uk
+- Dundee: customerservices@dundeecity.gov.uk
+
+#### Email Pattern Summary Table
+
+| Department | Primary Pattern | Alternative Patterns |
+|------------|----------------|---------------------|
+| Licensing | `licensing@` | `licensing.team@` |
+| Planning | `planning@` | `planning.registration@`, `planningappeals@`, `cynllun.plan@` (Wales) |
+| Highways | `highways@` | `streetworks@`, `trafficorders@`, `temporary.road.closures@` |
+| Environmental Health | `envhealth@` | `environmentalhealth@`, `environmental.health@` |
+| Building Control | `buildingcontrol@` | `building.control@`, `building.standards@` (Scotland) |
+| Electoral | `electoralservices@` | `elections@` |
+| Democratic | `democratic.services@` | `democracy@`, `committee@` |
+| Customer Services | `customerservices@` | `customer.services@`, `enquiries@` |
+
+#### Implementation Recommendations for Civic Notices
+
+**Pattern Matching Strategy:**
+
+1. **Primary email construction**: `[department]@[council_domain].gov.uk`
+   - Start with most common pattern for each department type
+
+2. **Fallback patterns**: Try variations with/without periods:
+   - `licensing@` → `licensing.team@`
+   - `buildingcontrol@` → `building.control@`
+
+3. **Country-specific handling**:
+   - Scotland: Building control uses `building.standards@`
+   - Wales: Consider bilingual patterns (e.g., `cynllun.plan@`)
+
+4. **Verification approach**:
+   - Store verified emails in database with last_verified timestamp
+   - Fall back to `customerservices@` or generic contact when unsure
+   - Link to council website contact page as ultimate fallback
+
+**Data Model Suggestion:**
+
+```typescript
+interface CouncilContact {
+  council_id: string;          // GSS code
+  department: DepartmentType;
+  email: string;
+  verified_at: Date | null;
+  source: 'manual' | 'scraped' | 'generated';
+  fallback_url: string;        // Council contact page URL
+}
+
+type DepartmentType =
+  | 'licensing'
+  | 'planning'
+  | 'highways'
+  | 'environmental_health'
+  | 'building_control'
+  | 'electoral'
+  | 'democratic'
+  | 'customer_services';
+```
+
+#### Limitations
+
+1. **No central directory**: No authoritative central source for council department emails exists
+2. **Frequent changes**: Staff turnover means specific contact emails change regularly
+3. **Shared services**: Some regions share services across multiple councils
+4. **Naming variations**: Same function has different department names across councils
+5. **Welsh bilingual**: Welsh councils may accept both English and Welsh prefixes
+
+#### Sources
+
+- [Birmingham Licensing Contact](https://www.birmingham.gov.uk/info/20081/licensing/213/contact_the_licensing_team)
+- [Royal Borough of Greenwich Licensing](https://www.royalgreenwich.gov.uk/info/200160/contact_us/2003/contact_licensing)
+- [Lambeth Building Control](https://www.lambeth.gov.uk/about-council/contact-us/contact-details/building-control)
+- [Manchester Building Control](https://www.manchester.gov.uk/info/200011/building_control/1838/contact_building_control)
+- [Westminster Electoral Services](https://www.westminster.gov.uk/about-council/democracy/elections-referendums-and-how-vote/register-vote/contact-electoral-services)
+- [Huntingdonshire Environmental Health](https://www.huntingdonshire.gov.uk/environmental-issues/contact-us-environmental-health/)
+- [Shropshire Legal & Democratic Services](https://next.shropshire.gov.uk/legal-and-democratic-services/about-us/)
+- [GOV.UK List of .gov.uk domain names](https://www.gov.uk/government/publications/list-of-gov-uk-domain-names)
+- [Scottish Council Building Standards](https://www.gov.scot/publications/building-standards-contact-information/)
+- [Welsh Local Planning Authorities](https://www.gov.wales/find-your-local-planning-authority)
 
 ### Submission Methods
 *Document findings:*
