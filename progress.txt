@@ -691,3 +691,67 @@ Additional documentation:
 
 ---
 
+## Iteration 35 - Research submission methods councils accept
+**Status**: PASS
+**Agent Flow**: Research (WebSearch, WebFetch)
+**Files Changed**: PRD.md
+**What Happened**: Researched and documented comprehensive UK council submission methods:
+
+**Submission Channels Documented:**
+1. **Online Portals**: Planning Portal, GOV.UK Forms, Council self-service (Granicus/govService, Abavus)
+2. **Email**: Universal fallback, PDF attachments, may require phone payment
+3. **Postal/Paper**: Still accepted but discouraged; 2025 admin surcharges emerging (Lambeth, Derby)
+4. **In-Person**: Declining, appointment-based, limited hours
+
+**Key Findings:**
+- No single national submission portal exists
+- Edinburgh is digital-only; Three Rivers is multi-channel equal treatment
+- Paper surcharges starting 2025 to push digital adoption
+- Email remains universal fallback across all councils
+- Statutory newspaper publication still legally required for most public notices
+- Public Notice Portal aggregates from newspapers, doesn't accept direct submissions
+
+**Platform Landscape:**
+- Granicus/govService: ~1/3 of UK councils
+- GOV.UK Pay: Free, PCI DSS compliant, recommended
+- GOV.UK One Login: Expanding to councils 2025-2027
+
+**Recommendations for Civic Notices:**
+- Phase 1: Email + Planning Portal integration
+- Phase 2: Newspaper partnerships for publication
+- Phase 3: Granicus API + council white-label
+
+**Learnings:**
+- Application submission (to council) and notice publication (newspaper) are separate workflows
+- Most councils prefer online but none require it exclusively except Edinburgh
+- TRO reform pending to digitalise publication requirements
+- Public Notice Portal is aggregation-only, not a submission platform
+
+---
+
+## Council Landscape Research - COMPLETE
+
+**PRD**: Instance 2 - Council Landscape Research
+**Total Tasks**: 6
+**Completed**: 6 (100%)
+
+### All Research Tasks:
+1. ✅ UK council types and counts (382 total, 317 England, 32 Scotland, 22 Wales, 11 NI)
+2. ✅ Directory sources (ONS Geoportal, mySociety, LGA/COSLA/WLGA/NILGA)
+3. ✅ Postcode lookup (Postcodes.io recommended - free, no auth, comprehensive)
+4. ✅ Department structures (Licensing, Planning, Highways, etc. with two-tier routing)
+5. ✅ Contact email patterns (licensing@, planning@, highways@, etc.)
+6. ✅ Submission methods (Online, Email, Post, In-Person with digital maturity spectrum)
+
+### Commits Made:
+- `f551d89f` - docs: update progress.txt with iteration 34 summary
+- `5b937963` - research: complete council contact email patterns documentation
+- `368fcc0a` - docs: update progress.txt with iteration 33 summary
+- `9c0ee8bb` - research: complete council department structures documentation
+- `9626c32b` - docs: update progress.txt with iteration 32 summary
+- `46139801` - research: complete council submission methods documentation
+
+All 6 research tasks complete. PRD.md fully documented and ready for merge to main.
+
+---
+
