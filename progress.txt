@@ -755,3 +755,33 @@ All 6 research tasks complete. PRD.md fully documented and ready for merge to ma
 
 ---
 
+## Session 8 - 2026-01-28 (Phase 1: Implement Postcode Lookup)
+
+### Initial State
+New tasks in PRD.md for Phase 1 implementation after research completion.
+
+---
+
+## Iteration 36 - Update councilLookup.ts with postcodes.io API
+**Status**: PASS
+**Agent Flow**: Direct implementation
+**Files Changed**: src/lib/councilLookup.ts, PRD.md
+**What Happened**: Implemented postcodes.io API lookup:
+1. Added `lookupCouncilByPostcodeAsync()` - new async function that calls postcodes.io API
+2. Returns extended result with: districtCode, countyCode, countyName, isTwoTier flag
+3. Kept existing `lookupCouncilByPostcode()` synchronous for backward compatibility
+4. Added `findMatchingAuthorityPack()` helper to match API results to local authority packs
+5. Added TypeScript interfaces: `PostcodeApiResult`, `CouncilLookupResult`, `CouncilLookupResultExtended`
+
+**Key Design Decisions:**
+- Backward compatibility: Existing sync function unchanged, new async function added
+- Two-tier handling: `isTwoTier` boolean + `countyName`/`countyCode` for routing decisions
+- GSS codes: Exposes `districtCode` and `countyCode` for database matching
+
+**Learnings**:
+- When making a sync function async, provide both versions to avoid breaking existing consumers
+- Postcodes.io returns `admin_county: null` for unitary authorities - use this to detect two-tier
+- TypeScript interfaces help document the API response structure
+
+---
+
