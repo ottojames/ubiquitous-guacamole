@@ -1,51 +1,71 @@
-# Council Portal - Team, Audit Log & Analytics Fixes
+# Instance 3: Specific Council Research
 
-**Date:** 28 January 2026
-**Priority:** HIGH - User-facing issues affecting council officers
+**Focus:** Research individual priority councils — departments, contacts, methods
+**Output:** Create `/councils/*.json` files for each council researched
 
 ---
 
 ## Tasks
 
-### Team Tab - Functionality & Domain Validation
+### Major Cities
+- [x] Research Westminster City Council — all departments handling public notices, contact emails, submission methods. Create `/councils/westminster.json`
+- [ ] Research Birmingham City Council — all departments, contacts, methods. Create `/councils/birmingham.json`
+- [ ] Research Manchester City Council — all departments, contacts, methods. Create `/councils/manchester.json`
+- [ ] Research Leeds City Council — all departments, contacts, methods. Create `/councils/leeds.json`
+- [ ] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
 
-- [x] In `src/pages/council/Team.tsx`, verify the invite flow works end-to-end by checking the API endpoint at `/api/departments/:id/team/invite` exists and returns proper responses
-- [x] In `src/pages/council/Team.tsx`, add domain validation for invites - extract the council's domain from the organization settings (e.g., `westminster.gov.uk`) and only allow invitations to emails ending with that domain
-- [x] In `src/pages/council/Team.tsx`, display a clear error message when someone tries to invite an email that doesn't match the council's domain (e.g., "Invitations can only be sent to @westminster.gov.uk addresses")
-- [x] In `src/pages/council/Team.tsx`, show actual user email addresses instead of truncated user IDs in the team members list (query user emails from the API or database)
-
-### Audit Log - Immediate Visibility Improvements
-
-- [x] In `src/pages/council/AuditLog.tsx`, show the exact timestamp (e.g., "28 Jan 2026, 14:32") alongside the relative time ("2 hours ago") - display both so users can see the precise time at a glance
-- [x] In `src/pages/council/AuditLog.tsx`, make the notice/premises name immediately visible in the main row (not hidden in "View Details") - display prominently as the first piece of information
-- [x] In `src/pages/council/AuditLog.tsx`, make the user name immediately visible in the main row with clear formatting (not requiring expansion to see who did what)
-- [x] In `src/pages/council/AuditLog.tsx`, restructure each audit entry to show: [User Name] • [Notice/Premises] • [Action] • [Time] all on the main visible row, with any additional notes/comments shown below in subtle gray text
-
-### Analytics Tab - Remove Unused Sections
-
-- [x] In `src/pages/council/Analytics.tsx`, remove the "Cost Savings Calculator" section entirely from the Overview tab (lines ~442-494) - it's not useful for councils
-- [x] In `src/pages/council/Analytics.tsx`, remove the "Compliance" tab from the tabs array and its corresponding content section (the compliance tab just shows placeholder sample data)
-- [x] In `src/pages/council/Analytics.tsx`, fix the Audit Log tab in Analytics - it shows "Complete Audit Log" header but no actual entries; either wire it to show real audit data or link to the dedicated Audit Log page instead
-
-### Council Portal UI/UX Review
-
-- [x] Review the overall council portal UI/UX and identify any areas that look "boring" or could be improved - focus on the Team tab, Dashboard, and navigation
-- [x] Ensure all interactive elements (buttons, links, cards) have proper hover states and visual feedback
+### London Boroughs
+- [ ] Research Camden Council — departments, contacts, methods. Create `/councils/camden.json`
+- [ ] Research Islington Council — departments, contacts, methods. Create `/councils/islington.json`
+- [ ] Research Tower Hamlets Council — departments, contacts, methods. Create `/councils/tower-hamlets.json`
+- [ ] Research Hackney Council — departments, contacts, methods. Create `/councils/hackney.json`
+- [ ] Research Southwark Council — departments, contacts, methods. Create `/councils/southwark.json`
 
 ---
 
-## Verification Checklist
+## Council JSON Format
 
-After all tasks complete, run:
+Create each council file in `/councils/` with this structure:
 
-```bash
-npm run typecheck   # Should pass with 0 errors
-npm run lint        # Should pass (warnings OK)
+```json
+{
+  "name": "Council Name",
+  "type": "London Borough|Metropolitan|etc",
+  "region": "Region",
+  "website": "https://...",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": ["premises-licence", "alcohol-variation"],
+      "email": "licensing@council.gov.uk",
+      "phone": "phone number",
+      "submissionMethod": "email|web-form|portal",
+      "webForm": "url or null",
+      "notes": ""
+    }
+  ],
+  "verified": false,
+  "lastUpdated": "2026-01-28"
+}
 ```
 
-Then verify in browser:
-- Team tab shows real email addresses, not truncated user IDs
-- Inviting an email with wrong domain shows clear error
-- Audit log entries show user, notice, action, and exact time all at a glance
-- Analytics has no Cost Savings or Compliance sections
-- Analytics Audit tab either shows real data or redirects appropriately
+---
+
+## Councils Researched
+
+*Track progress:*
+
+### Westminster City Council
+- **Type**: London Borough
+- **Website**: https://www.westminster.gov.uk
+- **File**: `/councils/westminster.json`
+- **Departments Researched**: 6 (Licensing, Street Trading, Planning, Building Control, Highways, Health & Safety)
+- **Key Findings**:
+  - Largest licensing authority in the UK (9,000+ applications/year, 14+ staff)
+  - Licensing email: licensing@westminster.gov.uk
+  - Planning via national Planning Portal (no direct council email)
+  - Building Control: DistrictSurveyors@westminster.gov.uk
+  - Health & Safety: healthandsafety@westminster.gov.uk
+  - Highways: Phone only (020 7641 2000), TMO portal available
+  - Street Trading: streettradinglicensing@westminster.gov.uk
+

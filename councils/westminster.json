@@ -1,0 +1,132 @@
+{
+  "name": "Westminster City Council",
+  "type": "London Borough",
+  "region": "Greater London",
+  "website": "https://www.westminster.gov.uk",
+  "address": {
+    "line1": "Westminster City Hall",
+    "line2": "64 Victoria Street",
+    "city": "London",
+    "postcode": "SW1E 6QP"
+  },
+  "mainPhone": "020 7641 6000",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence"
+      ],
+      "email": "licensing@westminster.gov.uk",
+      "phone": "020 7641 6500",
+      "address": {
+        "line1": "Licensing Team",
+        "line2": "15th Floor, Westminster City Hall",
+        "line3": "64 Victoria Street",
+        "city": "London",
+        "postcode": "SW1E 6QP"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://licensing.westminster.gov.uk/sf/control/login",
+      "publicRegister": "https://licensing.westminster.gov.uk/sf/control/publicregister",
+      "notes": "Largest licensing authority in the UK. Processes over 9,000 licence applications per year. Weekly 'Licensing News' bulletin available via email. Contact licensing@westminster.gov.uk to subscribe."
+    },
+    {
+      "name": "Street Trading",
+      "handles": [
+        "street-trading-licence",
+        "market-pitch"
+      ],
+      "email": "streettradinglicensing@westminster.gov.uk",
+      "phone": "020 7641 7010",
+      "alternativePhone": "07866 019686",
+      "address": {
+        "line1": "Street Trading Licensing",
+        "line2": "15th Floor, Westminster City Hall",
+        "line3": "64 Victoria Street",
+        "city": "London",
+        "postcode": "SW1E 6QP"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Same phone number (020 7641 7010) used for booking casual trading pitches."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": null,
+      "phone": "020 7641 6000",
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://www.westminster.gov.uk/planning-building-and-environmental-regulations/find-appeal-or-comment-planning-application/search-and-comment-planning-applications",
+      "notes": "Applications submitted via the national Planning Portal. Paper applications accepted by post but take longer to process. Online search and comment system available for public consultation."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation"
+      ],
+      "email": "DistrictSurveyors@westminster.gov.uk",
+      "phone": "020 7641 6500",
+      "submissionMethod": "portal",
+      "webForm": "https://www.westminster.gov.uk/planning-building-control-and-environmental-regulations/building-control/building-control-applications",
+      "notes": "Online application system for full plans, building notice, and regularisation applications. Out of hours working approval also available."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "crane-licence",
+        "streetworks-permit"
+      ],
+      "email": null,
+      "phone": "020 7641 2000",
+      "submissionMethod": "portal",
+      "webForm": "https://www.westminstertransportationservices.co.uk/tmo/",
+      "notes": "Traffic Management Orders (TMOs) searchable online by street name or ward. Permit scheme introduced January 2010 - all highway works require permits. Major works require 3 month advance notice. Notice periods: 2 hours for emergency works to 28 days for planned works."
+    },
+    {
+      "name": "Health and Safety",
+      "handles": [
+        "food-safety",
+        "health-safety-inspection",
+        "statutory-nuisance"
+      ],
+      "email": "healthandsafety@westminster.gov.uk",
+      "phone": "020 7641 6000",
+      "address": {
+        "line1": "Public Protection and Licensing",
+        "line2": "64 Victoria Street",
+        "city": "London",
+        "postcode": "SW1E 6QP"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://webforms.westminster.gov.uk/report-smoke-and-odours",
+      "notes": "Covers offices, leisure venues, food shops, supermarkets, restaurants, pubs, hotels, and places of worship. Also handles lifts, boilers, pressure vessels, and recreational water sampling."
+    }
+  ],
+  "additionalResources": {
+    "licensingPublicRegister": "https://licensing.westminster.gov.uk/sf/control/publicregister",
+    "planningApplicationSearch": "https://www.westminster.gov.uk/planning-building-and-environmental-regulations/find-appeal-or-comment-planning-application/search-and-comment-planning-applications",
+    "trafficManagementOrders": "https://www.westminstertransportationservices.co.uk/tmo/",
+    "reportIssues": "https://webforms.westminster.gov.uk"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Westminster City Council website and public search results. Largest licensing authority in the UK with 14+ staff processing 9,000+ applications annually. Planning applications handled via national Planning Portal rather than council-specific system."
+}
