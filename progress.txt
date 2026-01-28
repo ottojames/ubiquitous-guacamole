@@ -505,3 +505,77 @@ New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log
 
 ---
 
+## Session 7 - 2026-01-28 (Council Research - Instance 3)
+
+### Initial State
+New PRD.md for council-specific research. Instance 3 focuses on researching individual councils and creating JSON files in /councils/.
+
+---
+
+## Iteration 1 - Research Westminster City Council
+**Status**: PASS
+**Task Type**: Research
+**Files Created**: councils/westminster.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Westminster City Council via web search and website fetches:
+1. **Licensing**: licensing@westminster.gov.uk, phone 020 7641 6500, portal at licensing.westminster.gov.uk
+   - UK's largest licensing authority (9,000+ applications/year)
+   - Handles premises licences, gambling, entertainment, late night refreshment
+2. **Street Trading**: streettradinglicensing@westminster.gov.uk, phone 020 7641 7010
+   - Handles market pitches and street trading licences
+3. **Planning**: No direct email, uses national Planning Portal (planningportal.co.uk)
+   - Search and comment system available online
+4. **Building Control**: DistrictSurveyors@westminster.gov.uk, phone 020 7641 6500
+   - Online application system for full plans, building notice, regularisation
+5. **Highways**: No email found, phone 020 7641 2000
+   - TMO portal at westminstertransportationservices.co.uk
+   - Permit scheme since Jan 2010
+6. **Health & Safety**: healthandsafety@westminster.gov.uk, phone 020 7641 6000
+   - Covers food safety, statutory nuisance
+**Learnings**:
+- Westminster uses Idox platform for licensing (licensing.westminster.gov.uk)
+- Planning applications go through national portal, not council-specific
+- Some departments (Highways) only have phone contact, no email
+- Council address: 64 Victoria Street, London SW1E 6QP
+
+---
+
+
+## Iteration 2 - Research Birmingham City Council
+**Status**: PASS
+**Task Type**: Research
+**Files Created**: councils/birmingham.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Birmingham City Council via web search:
+1. **Licensing**: licensing@birmingham.gov.uk, phone 0121 303 6007
+   - Handles premises licences (Licensing Act 2003), gambling (Gambling Act 2005), taxi/private hire
+   - Address: Licensing Department, Civic Centre, Birmingham B1 2AP
+   - Office hours: Mon-Thu 9am-5pm, Fri 9am-4:30pm
+2. **Street Trading/Markets**: marketstalls@birmingham.gov.uk, phone 0121 303 0208
+   - Bull Ring Markets (Open Market, Rag Market, Indoor Market)
+   - Food vendors need hygiene rating 4 or 5
+3. **Planning**: planning.registration@birmingham.gov.uk, phone 0121 303 1115
+   - Uses national Planning Portal for submissions
+   - Local search via eplanning.birmingham.gov.uk
+   - Additional emails: land.charges@, land.property@
+4. **Building Control**: building.consultancy@acivico.co.uk
+   - Outsourced to Acivico (wholly-owned council company)
+   - Currently experiencing substantial delays due to staff shortages
+   - Forms at acivicogroup.co.uk/application-forms/
+5. **Highways/Transport**: transport.projects@birmingham.gov.uk
+   - TRO documents viewable at 1 Lancaster Circus Queensway, B4 7DQ
+   - Section 278: privatedevelopments@birmingham.gov.uk
+   - Consultations at birminghambeheard.org.uk
+6. **Environmental Health**: No email, phone 0121 303 6007
+   - Online forms at birmingham.gov.uk/env-health-contact
+   - pollution.team@birmingham.gov.uk for noise from entertainment
+7. **Property Licensing**: pl@birmingham.gov.uk
+   - HMO licensing portal at birmingham.metastreet.co.uk
+**Learnings**:
+- Birmingham is the largest UK local authority (1M+ citizens)
+- Building control outsourced to Acivico (separate email domains)
+- Multiple email domains: @birmingham.gov.uk, @acivico.co.uk, @acivicogroup.co.uk
+- Council address: Council House, Victoria Square, Birmingham B1 1BB
+- Main phone: 0121 303 1111
+
+---

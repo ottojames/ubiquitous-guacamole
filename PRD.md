@@ -9,7 +9,7 @@
 
 ### Major Cities
 - [x] Research Westminster City Council — all departments handling public notices, contact emails, submission methods. Create `/councils/westminster.json`
-- [ ] Research Birmingham City Council — all departments, contacts, methods. Create `/councils/birmingham.json`
+- [x] Research Birmingham City Council — all departments, contacts, methods. Create `/councils/birmingham.json`
 - [ ] Research Manchester City Council — all departments, contacts, methods. Create `/councils/manchester.json`
 - [ ] Research Leeds City Council — all departments, contacts, methods. Create `/councils/leeds.json`
 - [ ] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
@@ -68,4 +68,20 @@ Create each council file in `/councils/` with this structure:
   - Health & Safety: healthandsafety@westminster.gov.uk
   - Highways: Phone only (020 7641 2000), TMO portal available
   - Street Trading: streettradinglicensing@westminster.gov.uk
+
+### Birmingham City Council
+- **Type**: Metropolitan Borough
+- **Website**: https://www.birmingham.gov.uk
+- **File**: `/councils/birmingham.json`
+- **Departments Researched**: 7 (Licensing, Street Trading/Markets, Planning, Building Control, Highways/Transport, Environmental Health, Property Licensing)
+- **Key Findings**:
+  - Largest local authority in the UK (1 million+ citizens)
+  - Licensing email: licensing@birmingham.gov.uk (handles premises, gambling, taxi/private hire)
+  - Planning via national Planning Portal, local search at eplanning.birmingham.gov.uk
+  - Building Control outsourced to Acivico: building.consultancy@acivico.co.uk (experiencing delays)
+  - Highways/TRO: transport.projects@birmingham.gov.uk
+  - Street Trading/Markets: marketstalls@birmingham.gov.uk
+  - Property Licensing (HMO): pl@birmingham.gov.uk
+  - Environmental Health: No email, online forms at birmingham.gov.uk/env-health-contact
+  - Public consultations (TROs) at birminghambeheard.org.uk
 
