@@ -240,15 +240,7 @@ export default function AuditLog() {
     }
   }, [department.id, department.organization.id, loadPremisesNames]);
 
-  useEffect(() => {
-    loadAuditLogs();
-  }, [loadAuditLogs]);
-
-  useEffect(() => {
-    filterLogs();
-  }, [logs, filterAction, filterTable, searchQuery, startDate, endDate]);
-
-  const filterLogs = () => {
+  const filterLogs = useCallback(() => {
     let filtered = logs;
 
     // Filter by action category
@@ -288,7 +280,15 @@ export default function AuditLog() {
 
     setFilteredLogs(filtered);
     setPage(1); // Reset to first page when filters change
-  };
+  }, [logs, filterAction, filterTable, searchQuery, startDate, endDate]);
+
+  useEffect(() => {
+    loadAuditLogs();
+  }, [loadAuditLogs]);
+
+  useEffect(() => {
+    filterLogs();
+  }, [filterLogs]);
 
   const handleExportCSV = () => {
     try {
