@@ -15,7 +15,7 @@
 - [x] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
 
 ### London Boroughs
-- [ ] Research Camden Council — departments, contacts, methods. Create `/councils/camden.json`
+- [x] Research Camden Council — departments, contacts, methods. Create `/councils/camden.json`
 - [ ] Research Islington Council — departments, contacts, methods. Create `/councils/islington.json`
 - [ ] Research Tower Hamlets Council — departments, contacts, methods. Create `/councils/tower-hamlets.json`
 - [ ] Research Hackney Council — departments, contacts, methods. Create `/councils/hackney.json`
@@ -144,3 +144,43 @@ Create each council file in `/councils/` with this structure:
   - All departments based at Cunard Building, Water Street, L3 1AH
   - Main phone: 0151 233 3000
 
+### London Borough of Camden
+- **Type**: London Borough
+- **Website**: https://www.camden.gov.uk
+- **File**: `/councils/camden.json`
+- **Departments Researched**: 8 (Licensing, Street Trading, Planning, Building Control, Highways, Environmental Health, HMO Licensing, Trading Standards)
+- **Key Findings**:
+  - Licensing email: licensing@camden.gov.uk, phone 020 7974 4444
+  - Enforcement phone: 020 7974 6767
+  - Handles Licensing Act 2003 and Gambling Act 2005 applications
+  - Pre-application advice fees: Small £153, Medium £275.40, Large £581.40
+  - Statement of Licensing Policy 2025-2030 in effect until 30 January 2027
+  - Street Trading: marketsteam@camden.gov.uk, applications to marketapplications@camden.gov.uk
+  - Operates 8 council-run markets and 48 trading sites (excludes Camden Lock private markets)
+  - Planning: phone 020 7974 5613, uses national Planning Portal
+  - Development Management at Camden Town Hall Extension, Argyle Street WC1H 8EQ
+  - Building Control: building.control@camden.gov.uk, phone 020 7974 2387, Head: Nasser Rad
+  - Highways: No email, multiple phone numbers by function (parking, road safety, signage, bus priority)
+  - Environmental Health: noiseteam@camden.gov.uk for noise complaints
+  - HMO Licensing: hmolicensing@camden.gov.uk, phone 020 7974 5969
+  - Borough-wide additional HMO scheme started Dec 2025, runs to Dec 2030
+  - HMO fee: £1,531 (£100 discount for accredited landlords)
+  - Trading Standards: Via Citizens Advice Consumer Service (0808 223 1133)
+  - Taxi/private hire licensing handled by Transport for London (not Camden)
+  - Council address: 5 Pancras Square, Kings Cross, London N1C 4AG
+  - Main phone: 020 7974 4444
+
+---
+
+## Phase 1: Wire Council Data (After Research)
+
+- [ ] Create `/src/data/councils/index.ts` that imports all council JSON files and exports them as a typed object.
+- [ ] Create a `getCouncilById(id: string)` function that returns council data.
+- [ ] Create a `getCouncilDepartment(councilId: string, noticeType: string)` function that returns the right department contact.
+- [ ] Run `npm run typecheck` to verify all council data types.
+
+## Phase 2: Notification System
+
+- [ ] Create `/src/lib/councilNotification.ts` with a function to generate notification emails for councils.
+- [ ] Create email template that includes notice details and link to view on Civic Notices.
+- [ ] Wire notification to use real council department emails from the JSON files.

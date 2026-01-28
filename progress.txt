@@ -625,6 +625,54 @@ New PRD.md for council-specific research. Instance 3 focuses on researching indi
 
 ---
 
+## Iteration 5 - Research Liverpool City Council
+**Status**: PASS
+**Task Type**: Research
+**Files Created**: councils/liverpool.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Liverpool City Council via web search and website fetches:
+1. **Licensing**: licensingact2003@liverpool.gov.uk, phone 0151 233 3015
+   - Uses LALPAC system for all licensing applications and register searches
+   - Handles Licensing Act 2003 and Gambling Act 2005 premises
+   - Address: Cunard Building, Water Street, L3 1AH
+2. **Taxi/Private Hire**: Portal only, phone 0151 233 3015
+   - No longer accepts email submissions - documents will not be processed
+   - All applications via online licensing portal
+3. **HMO/Selective Licensing**: privatesector.housing@liverpool.gov.uk
+   - Selective Licensing Scheme (2022-2027) covers 16 wards
+   - Approximately 80% of private rentals in Liverpool (45,000 of 55,000)
+   - Fee: £550 per property (discounts available)
+4. **Street Trading**: Currently not granting new licences
+   - Only accepting applications for Waterloo Place
+   - Three consent types: Daily (£66.24+), Long-term (£892.09), Football ground
+5. **Planning**: planning@liverpool.gov.uk, phone 0151 233 3021
+   - Area-specific emails: planning.dccitycentre@, planning.dcnorth@, planning.dcsouth@
+   - Uses national Planning Portal
+6. **Building Control**: planningandbuildingcontrol@liverpool.gov.uk, phone 0151 233 3021
+   - Part of Merseyside LABC partnership
+   - Building Control partner scheme for frequent applicants
+7. **Highways/TRO**: phone 0151 233 3001
+   - TTRO requires confirmed start date and PAA number
+   - TROs viewable at Traffic Penalty Tribunal database
+8. **Environmental Health**: Environmental.Health@liverpool.gov.uk
+   - Also responsible authority for licensing consultations
+9. **Responsible Authorities**:
+   - Police: licensing.unit@merseyside.pnn.police.uk (Rose Hill, Cazneau Street)
+   - Fire: ProtectionLicencesLiverpool@merseyfire.gov.uk (Bootle HQ)
+   - Safeguarding: Tracy.Moore@liverpool.gov.uk
+**Learnings**:
+- Liverpool uses LALPAC system (different from Idox used by some other councils)
+- All council departments based at Cunard Building, Water Street
+- Taxi licensing has stopped accepting email submissions - portal only
+- Street trading licences currently restricted - not granting new ones
+- Selective Licensing covers majority of city (16 wards, 80% of rentals)
+- Main phone: 0151 233 3000
+- Licensing: 0151 233 3015
+- Planning/Building Control: 0151 233 3021
+- Highways: 0151 233 3001
+
+---
+
 ## Iteration 4 - Research Leeds City Council
 **Status**: PASS
 **Task Type**: Research
