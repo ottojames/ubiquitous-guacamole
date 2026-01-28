@@ -505,3 +505,37 @@ New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log
 
 ---
 
+## Session 7 - 2026-01-28 (Council Landscape Research)
+
+### Initial State
+New PRD.md for Instance 2: Council Landscape Research - 6 research tasks.
+
+---
+
+## Iteration 30 - Research UK council types and counts
+**Status**: PASS
+**Agent Flow**: Research (WebSearch)
+**Files Changed**: PRD.md
+**What Happened**: Researched and documented complete UK council structure:
+- **Total: 382 UK local authorities**
+- England: 317 (21 county, 164 district, 62 unitary, 36 metropolitan, 32 London boroughs, 2 sui generis)
+- Scotland: 32 unitary councils
+- Wales: 22 unitary (11 county, 11 county borough)
+- Northern Ireland: 11 councils
+
+Additional documentation:
+- Two-tier vs single-tier system explanation
+- The 6 metropolitan counties with all 36 boroughs listed
+- Complete Scotland council list (32)
+- Upcoming 2025-2028 restructuring (abolition of two-tier areas)
+- Sources from House of Commons Library, GOV.UK, Wikipedia, LGiU
+
+**Learnings**:
+- England has complex mix of two-tier (county+district) and single-tier (unitary/metro/London)
+- Scotland and Wales are fully unitary since 1996
+- Major restructuring planned: all two-tier areas becoming unitaries by 2027-28
+- Metropolitan boroughs ARE unitary authorities (county councils abolished 1986)
+- For public notices: two-tier areas need routing to correct tier (planning→district, highways→county)
+
+---
+

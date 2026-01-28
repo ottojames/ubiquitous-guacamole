@@ -8,7 +8,7 @@
 ## Tasks
 
 - [x] Research total number of UK councils and council types (County, District, Unitary, Metropolitan, London Borough, Welsh, Scottish). Create a complete table with counts and examples
-- [ ] Research and document the official UK council directory sources (GOV.UK, LGA, etc.) — find the authoritative list
+- [x] Research and document the official UK council directory sources (GOV.UK, LGA, etc.) — find the authoritative list
 - [ ] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
 - [ ] Research common council department structures — which departments handle which notice types
 - [ ] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
@@ -101,7 +101,71 @@ This means the current structure of 21 county councils + 164 districts will be r
 - [LGiU - Local government facts and figures: England](https://lgiu.org/local-government-facts-and-figures-england/)
 
 ### Directory Sources
-*Document authoritative sources:*
+
+**Authoritative UK Council Directory Sources:**
+
+#### 1. Official Government Sources (Recommended for Production)
+
+| Source | URL | Data Format | Coverage | Update Frequency | Notes |
+|--------|-----|-------------|----------|------------------|-------|
+| **ONS Geoportal** | [geoportal.statistics.gov.uk](https://geoportal.statistics.gov.uk/datasets/ons::local-authority-districts-april-2025-names-and-codes-in-the-uk/about) | CSV, GeoJSON, API | All UK | Annual (April) | **Primary source for GSS codes**. Official statistical geography. Current: April 2025 dataset |
+| **data.gov.uk** | [data.gov.uk LAD dataset](https://www.data.gov.uk/dataset/b2c91962-58e7-40f1-ad56-7aa2473a93fd/local-authority-districts-april-2025-names-and-codes-in-the-uk-v21) | CSV, JSON | All UK | Annual | Mirror of ONS data with API access |
+| **GOV.UK Find Local Council** | [gov.uk/find-local-council](https://www.gov.uk/find-local-council) | Web/API | All UK | Real-time | User-facing service. Has undocumented API. Not versioned, may change |
+| **Planning Data** | [planning.data.gov.uk](https://www.planning.data.gov.uk/dataset/local-authority-district) | CSV, JSON, GeoJSON | England | Ongoing | Focus on planning authorities. Experimental API available |
+| **MHCLG Open Data** | [opendatacommunities.org](https://opendatacommunities.org/data/local-authorities) | CSV, API | England | Varies | **Warning: Shutting down March 2025** - only EPC and IMD tools will remain |
+
+#### 2. Membership Bodies (Good for Contact Info)
+
+| Source | URL | Coverage | Notes |
+|--------|-----|----------|-------|
+| **LGA (Local Government Association)** | [local.gov.uk](https://www.local.gov.uk/our-support/guidance-and-resources/communications-support/digital-councils/social-media/go-further/a-z-councils-online) | England + Wales (339 councils) | A-Z councils online. Cross-party membership body. Good for policy/contact |
+| **COSLA** | [cosla.gov.uk/councils](https://www.cosla.gov.uk/councils) | Scotland (32 councils) | All 32 Scottish councils are members. Convention of Scottish Local Authorities |
+| **WLGA** | [wlga.gov.uk/welsh-local-authority-links](https://www.wlga.gov.uk/welsh-local-authority-links) | Wales (22 councils) | Welsh Local Government Association. Links to all Welsh council websites |
+| **NILGA** | [nilga.org/about/councils-in-northern-ireland](https://www.nilga.org/about/councils-in-northern-ireland) | Northern Ireland (11 councils) | Northern Ireland Local Government Association |
+
+#### 3. Community-Maintained Datasets (Best for Development)
+
+| Source | URL | Data Format | Notes |
+|--------|-----|-------------|-------|
+| **mySociety UK LA Names & Codes** | [github.com/mysociety/uk_local_authority_names_and_codes](https://github.com/mysociety/uk_local_authority_names_and_codes) | CSV, SQLite | **Highly recommended**. Maps between GSS codes, names, official register codes. Includes historical and future councils. Regular updates |
+| **mySociety Download Page** | [pages.mysociety.org/uk_local_authority_names_and_codes](https://pages.mysociety.org/uk_local_authority_names_and_codes/) | Multiple | Versioned datapackages. Includes lookup tables between coding schemes |
+| **MapIt** | [mapit.mysociety.org](https://mapit.mysociety.org/) | API (JSON) | Postcode → council lookup. Used by GOV.UK. Rate-limited for free tier |
+
+#### 4. Government Registers & APIs
+
+| Source | URL | Notes |
+|--------|-----|-------|
+| **GOV.UK Local Authorities API** | [docs.publishing.service.gov.uk](https://docs.publishing.service.gov.uk/repos/frontend/local-authorities-api.html) | Postcode lookup → council. Returns smallest authority (district in two-tier). Not versioned, may change |
+| **GOV.UK Local Links Manager** | [docs.publishing.service.gov.uk](https://docs.publishing.service.gov.uk/repos/local-links-manager/example-api-output.html) | Returns council details + county council for two-tier areas |
+| **ONS Names & Codes API** | [ons.gov.uk](https://www.ons.gov.uk/methodology/geography/geographicalproducts/namescodesandlookups/namesandcodeslistings) | Official administrative geography codes |
+
+#### Recommended Approach for Civic Notices
+
+**For Council Master Data:**
+1. Use **ONS Geoportal April 2025** dataset as canonical source for council names and GSS codes
+2. Supplement with **mySociety dataset** for name variations and historical mappings
+3. Store locally, update annually when ONS publishes new version
+
+**For Postcode Lookup:**
+- See next section (Postcode Lookup Method)
+
+**For Contact Information:**
+- LGA/COSLA/WLGA/NILGA websites for official council URLs
+- Individual council websites for department contacts (no authoritative central source exists)
+
+#### Code Format Notes
+
+**GSS Code Format:** `E0NNNNNNN` (9 characters)
+- E06 = Unitary Authority
+- E07 = District
+- E08 = Metropolitan Borough
+- E09 = London Borough
+- E10 = County Council
+- S12 = Scottish Council
+- W06 = Welsh Unitary
+- N09 = NI District
+
+**Old ONS Code Format:** `ANNNNNNNN` (deprecated but still referenced in some datasets)
 
 ### Postcode Lookup Method
 *Document best API/method:*
