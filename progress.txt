@@ -539,3 +539,44 @@ Additional documentation:
 
 ---
 
+## Iteration 31 - Research UK council directory sources
+**Status**: PASS
+**Agent Flow**: Research (WebSearch)
+**Files Changed**: PRD.md
+**What Happened**: Researched and documented authoritative UK council directory sources:
+
+**Official Government Sources:**
+- ONS Geoportal: Primary source for GSS codes, April 2025 dataset available
+- data.gov.uk: Mirror of ONS data with API access
+- GOV.UK Find Local Council: User-facing service with undocumented API
+- Planning Data (planning.data.gov.uk): England focus, experimental API
+- MHCLG Open Data: **Warning - shutting down March 2025**
+
+**Membership Bodies:**
+- LGA (local.gov.uk): England + Wales, 339 councils
+- COSLA (cosla.gov.uk): Scotland, 32 councils
+- WLGA (wlga.gov.uk): Wales, 22 councils
+- NILGA (nilga.org): Northern Ireland, 11 councils
+
+**Community Datasets:**
+- mySociety uk_local_authority_names_and_codes: Highly recommended for development
+- MapIt: Postcode → council lookup API
+
+**Recommended Approach:**
+1. Use ONS Geoportal April 2025 as canonical source for names/codes
+2. Supplement with mySociety dataset for name variations
+3. Store locally, update annually
+
+**GSS Code Format Documented:**
+- E06 = Unitary, E07 = District, E08 = Metro, E09 = London
+- E10 = County, S12 = Scottish, W06 = Welsh, N09 = NI
+
+**Learnings**:
+- ONS Geoportal is the authoritative source for GSS codes (statistical geography)
+- mySociety dataset is best for development (maps between coding schemes)
+- MHCLG Open Data Communities shutting down March 2025 - avoid dependency
+- GOV.UK Local Authorities API exists but is undocumented and unversioned
+- No central source for council contact info - must scrape individual council websites
+
+---
+
