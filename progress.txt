@@ -396,3 +396,59 @@ The component already had `department` from `useOutletContext` - just needed to 
 
 ---
 
+## Session 6 - 2026-01-28 (Council Portal - Team, Audit Log & Analytics Fixes)
+
+### Initial State
+New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log, and Analytics sections.
+
+---
+
+## Iteration 24 - Verify invite API endpoint exists
+**Status**: PASS (Verification Task)
+**Agent Flow**: Analyst → Architect
+**Files Changed**: None (verification only)
+**What Happened**: Verified that the invite API endpoint exists and works:
+- API endpoint at `server/routes/team.ts` lines 107-282
+- Route: `POST /api/departments/:deptId/team/invite`
+- Mounted correctly in `server/index.ts`
+- Handles: input validation, role validation, existing user check, new user invitation with token, email sending
+- Returns proper responses: 201 success, 400/409/500 errors
+- Frontend correctly calls this endpoint from Team.tsx line 134
+**Learnings**: This was a verification task, not an implementation task. The API already existed and was working correctly.
+
+---
+
+## Iteration 25 - Add domain validation for team invites
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/Team.tsx
+**What Happened**: Added email domain validation for team invites:
+1. Added `allowedDomain` state to store the organization's domain
+2. Added `loadOrganizationDomain` function that fetches `domain` from `organizations` table
+3. Added `validateEmailDomain` function that checks if email domain matches org domain
+4. Added validation call in `handleInvite` before sending invite
+5. Added validation in bulk CSV import loop
+6. Error message uses format: "Invitations can only be sent to @{domain} addresses"
+**Learnings**:
+- Organization domain is stored in `organizations.domain` column
+- Domain validation should be applied both to single invites and bulk imports
+- Validation happens client-side before API call for better UX
+
+---
+
+## Iteration 26 - Show user email addresses in team list
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/Team.tsx
+**What Happened**: Changed team members list to show actual email addresses:
+1. Changed `loadTeamMembers` from direct Supabase query to API call at `/api/departments/:id/team`
+2. The API uses service role to fetch emails from `auth.admin.listUsers()`
+3. Mapped API response to include `user_email` field
+4. Updated display to show `member.user_email` with fallback to truncated user ID
+**Learnings**:
+- The team API endpoint already existed and fetches emails via admin client
+- Frontend was just not using the API - was doing direct Supabase queries
+- Always prefer API endpoints that have service role access for admin data
+
+---
+

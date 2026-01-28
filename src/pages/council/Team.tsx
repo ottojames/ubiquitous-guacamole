@@ -62,24 +62,41 @@ export default function Team() {
     errors: string[];
   } | null>(null);
 
+  // Organization domain for email validation
+  const [allowedDomain, setAllowedDomain] = useState<string | null>(null);
+
   const loadTeamMembers = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('department_memberships')
-        .select(`
-          user_id,
-          role,
-          joined_at,
-          last_accessed_at
-        `)
-        .eq('department_id', department.id)
-        .order('joined_at', { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-      if (error) throw error;
+      // Use the API endpoint which fetches user emails via service role
+      const response = await fetch(`/api/departments/${department.id}/team`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
 
-      // Get user emails from auth.users (requires service role in production)
-      // For now, we'll show user IDs
-      setMembers(data || []);
+      if (response.ok) {
+        const data = await response.json();
+        // Map API response to TeamMember format
+        const teamMembers = (data.team_members || []).map((m: {
+          user_id: string;
+          email: string | null;
+          role: string;
+          joined_at: string;
+          last_accessed_at: string | null;
+        }) => ({
+          user_id: m.user_id,
+          role: m.role,
+          joined_at: m.joined_at,
+          last_accessed_at: m.last_accessed_at,
+          user_email: m.email || undefined
+        }));
+        setMembers(teamMembers);
+      } else {
+        console.error('Failed to load team members:', response.statusText);
+      }
     } catch (err) {
       console.error('Failed to load team members:', err);
     }
@@ -105,14 +122,52 @@ export default function Team() {
     }
   }, [department.id]);
 
+  // Load organization domain for email validation
+  const loadOrganizationDomain = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('domain')
+        .eq('id', department.organization.id)
+        .single();
+
+      if (error) throw error;
+      if (data?.domain) {
+        setAllowedDomain(data.domain);
+      }
+    } catch (err) {
+      console.error('Failed to load organization domain:', err);
+    }
+  }, [department.organization.id]);
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([loadTeamMembers(), loadPendingInvitations()]);
+      await Promise.all([loadTeamMembers(), loadPendingInvitations(), loadOrganizationDomain()]);
       setLoading(false);
     };
     loadData();
-  }, [loadTeamMembers, loadPendingInvitations]);
+  }, [loadTeamMembers, loadPendingInvitations, loadOrganizationDomain]);
+
+  // Validate email domain against organization's allowed domain
+  const validateEmailDomain = (email: string): { valid: boolean; message?: string } => {
+    if (!allowedDomain) {
+      // If no domain is set, allow any email
+      return { valid: true };
+    }
+
+    const emailDomain = email.split('@')[1]?.toLowerCase();
+    const normalizedAllowedDomain = allowedDomain.toLowerCase();
+
+    if (!emailDomain || emailDomain !== normalizedAllowedDomain) {
+      return {
+        valid: false,
+        message: `Invitations can only be sent to @${allowedDomain} addresses`
+      };
+    }
+
+    return { valid: true };
+  };
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +178,12 @@ export default function Team() {
     try {
       if (!inviteEmail) {
         throw new Error('Email is required');
+      }
+
+      // Validate email domain against organization's allowed domain
+      const domainValidation = validateEmailDomain(inviteEmail);
+      if (!domainValidation.valid) {
+        throw new Error(domainValidation.message);
       }
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -298,6 +359,14 @@ export default function Team() {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(email)) {
             results.errors.push(`Row ${i}: Invalid email format: ${email}`);
+            results.failed++;
+            continue;
+          }
+
+          // Validate email domain
+          const domainValidation = validateEmailDomain(email);
+          if (!domainValidation.valid) {
+            results.errors.push(`Row ${i}: ${domainValidation.message}`);
             results.failed++;
             continue;
           }
@@ -559,7 +628,7 @@ export default function Team() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        User {member.user_id.slice(0, 8)}...
+                        {member.user_email || `User ${member.user_id.slice(0, 8)}...`}
                       </p>
                       <p className="text-sm text-gray-600">
                         Joined {formatDate(member.joined_at)} • Last active {formatDate(member.last_accessed_at)}

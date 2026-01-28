@@ -1,4 +1,4 @@
-# Council Portal UX Fixes
+# Council Portal - Team, Audit Log & Analytics Fixes
 
 **Date:** 28 January 2026
 **Priority:** HIGH - User-facing issues affecting council officers
@@ -7,29 +7,30 @@
 
 ## Tasks
 
-### Analytics Page - Wire in real data
+### Team Tab - Functionality & Domain Validation
 
-- [x] In `src/pages/council/Analytics.tsx`, get `department` from `useOutletContext` and query notices table filtered by `department.id` to show real total count (should show 11 for Sampleton)
-- [x] In `src/pages/council/Analytics.tsx`, calculate and display real "Published" count from notices where `status = 'published'` and `department_id` matches
-- [x] In `src/pages/council/Analytics.tsx`, calculate and display real representations count by joining representations with notices for this department
+- [x] In `src/pages/council/Team.tsx`, verify the invite flow works end-to-end by checking the API endpoint at `/api/departments/:id/team/invite` exists and returns proper responses
+- [x] In `src/pages/council/Team.tsx`, add domain validation for invites - extract the council's domain from the organization settings (e.g., `westminster.gov.uk`) and only allow invitations to emails ending with that domain
+- [x] In `src/pages/council/Team.tsx`, display a clear error message when someone tries to invite an email that doesn't match the council's domain (e.g., "Invitations can only be sent to @westminster.gov.uk addresses")
+- [x] In `src/pages/council/Team.tsx`, show actual user email addresses instead of truncated user IDs in the team members list (query user emails from the API or database)
 
-### Remove Drafts Tab
+### Audit Log - Immediate Visibility Improvements
 
-- [x] In `src/pages/council/CouncilLayout.tsx`, remove the "Drafts" navigation item from the sidebar menu (councils receive notices, they don't create them)
+- [ ] In `src/pages/council/AuditLog.tsx`, show the exact timestamp (e.g., "28 Jan 2026, 14:32") alongside the relative time ("2 hours ago") - display both so users can see the precise time at a glance
+- [ ] In `src/pages/council/AuditLog.tsx`, make the notice/premises name immediately visible in the main row (not hidden in "View Details") - display prominently as the first piece of information
+- [ ] In `src/pages/council/AuditLog.tsx`, make the user name immediately visible in the main row with clear formatting (not requiring expansion to see who did what)
+- [ ] In `src/pages/council/AuditLog.tsx`, restructure each audit entry to show: [User Name] • [Notice/Premises] • [Action] • [Time] all on the main visible row, with any additional notes/comments shown below in subtle gray text
 
-### Audit Log UX Improvements
+### Analytics Tab - Remove Unused Sections
 
-- [x] In `src/pages/council/AuditLog.tsx`, when `resource_type` is 'representation' or 'notice', look up the premises name from the resource_id and display it instead of just showing the truncated ID
-- [x] In `src/pages/council/AuditLog.tsx`, display the staff member name from `user_email` field instead of showing "System" - format as just the name part before @ if no display name available
-- [x] In `src/pages/council/AuditLog.tsx`, format timestamps as relative time using date-fns formatDistanceToNow (e.g., "2 hours ago") for recent entries, and friendly format for older ones
-- [x] In `src/pages/council/AuditLog.tsx`, transform action codes to plain English: `representation_note_added` → "Added internal note", `notice.created` → "Notice submitted", `notice.published` → "Notice published", `notice.status_changed` → "Status changed"
-- [x] In `src/pages/council/AuditLog.tsx`, show comment/note preview inline from `metadata.comment_preview` if available, displayed below the action in a subtle gray text
-- [x] In `src/pages/council/AuditLog.tsx`, simplify the "View Details" expanded view to show human-readable formatted info instead of raw JSON - show key fields like premises name, action taken, user, and any notes
+- [ ] In `src/pages/council/Analytics.tsx`, remove the "Cost Savings Calculator" section entirely from the Overview tab (lines ~442-494) - it's not useful for councils
+- [ ] In `src/pages/council/Analytics.tsx`, remove the "Compliance" tab from the tabs array and its corresponding content section (the compliance tab just shows placeholder sample data)
+- [ ] In `src/pages/council/Analytics.tsx`, fix the Audit Log tab in Analytics - it shows "Complete Audit Log" header but no actual entries; either wire it to show real audit data or link to the dedicated Audit Log page instead
 
-### Settings Authority Address
+### Council Portal UI/UX Review
 
-- [x] In `src/pages/council/Settings.tsx`, replace the plain text authority address input with the AddressLookup component from `@/components/AddressLookup` for proper UK address lookup
-- [x] In `src/pages/council/Settings.tsx`, ensure the authority address value is properly saved to the `council_settings` table when the form is submitted
+- [ ] Review the overall council portal UI/UX and identify any areas that look "boring" or could be improved - focus on the Team tab, Dashboard, and navigation
+- [ ] Ensure all interactive elements (buttons, links, cards) have proper hover states and visual feedback
 
 ---
 
@@ -43,7 +44,8 @@ npm run lint        # Should pass (warnings OK)
 ```
 
 Then verify in browser:
-- Analytics shows real notice counts (11 for Sampleton)
-- Drafts tab is removed from council navigation
-- Audit log shows premises name, staff name, friendly time, plain English actions
-- Settings authority address uses address lookup component
+- Team tab shows real email addresses, not truncated user IDs
+- Inviting an email with wrong domain shows clear error
+- Audit log entries show user, notice, action, and exact time all at a glance
+- Analytics has no Cost Savings or Compliance sections
+- Analytics Audit tab either shows real data or redirects appropriately
