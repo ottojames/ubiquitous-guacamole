@@ -611,3 +611,41 @@ Additional documentation:
 
 ---
 
+## Iteration 33 - Research council department structures
+**Status**: PASS
+**Agent Flow**: Research (WebSearch)
+**Files Changed**: PRD.md
+**What Happened**: Researched and documented comprehensive UK council department structures:
+
+**Key Departments Documented:**
+1. **Licensing Department** (District/Unitary): Premises licences, gambling, taxis
+2. **Planning Department** (District/Unitary): Applications, listed buildings, TPOs
+3. **Highways Department** (County in two-tier): TROs, road closures, parking
+4. **Environmental Health** (District/Unitary): Contaminated land, nuisances
+5. **Building Control** (District/Unitary): Demolition, dangerous structures
+6. **Electoral Services** (All tiers): Elections, boundaries
+7. **Legal/Democratic Services** (All tiers): Path orders, CPOs, PSPOs
+
+**Organisational Structure:**
+- Councils typically organised into 4 directorates: Place, Communities, Resources, People
+- Licensing usually under Communities/Regulatory Services
+- Planning/Highways usually under Place
+- Functions vary in name but have consistent responsibilities
+
+**Two-Tier Responsibility Split:**
+- District: Licensing, Planning (general), Environmental Health, Building Control
+- County: Highways, Planning (minerals/waste), Education, Social Care
+
+**Critical for Civic Notices:**
+- Must route to correct tier in two-tier areas
+- Postcode lookup returns district; check `admin_county` for highways routing
+- Shared services exist (e.g., Worcestershire Regulatory Services covers 6 districts)
+
+**Learnings**:
+- Same function has different names across councils (Licensing vs Public Protection)
+- Newspaper publication still required for most statutory notices despite digital transformation
+- Two-tier routing is critical for notice delivery accuracy
+- Building Control notices mostly direct service (not newspaper)
+
+---
+
