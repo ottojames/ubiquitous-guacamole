@@ -1,0 +1,302 @@
+{
+  "name": "Liverpool City Council",
+  "type": "Metropolitan Borough",
+  "region": "Merseyside",
+  "website": "https://www.liverpool.gov.uk",
+  "address": {
+    "line1": "Cunard Building",
+    "line2": "Water Street",
+    "city": "Liverpool",
+    "postcode": "L3 1AH"
+  },
+  "mainPhone": "0151 233 3000",
+  "departments": [
+    {
+      "name": "Licensing and Regulatory Services",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "personal-licence",
+        "temporary-event-notice"
+      ],
+      "email": "licensingact2003@liverpool.gov.uk",
+      "phone": "0151 233 3015",
+      "address": {
+        "line1": "Licensing and Regulatory Services",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://licensing.liverpool.gov.uk/PAforLalpacLIVE/1/WcaHome",
+      "publicRegister": "https://licensing.liverpool.gov.uk/PAforLalpacLIVE/1/LicensingActPremises/Search",
+      "notes": "Handles Licensing Act 2003 (alcohol, entertainment, late night refreshment) and Gambling Act 2005 premises. Uses LALPAC system for online applications and register searches. Blue notice must be displayed at premises and notice published in local newspaper. Objection period is 28 days. Text Relay calls welcomed."
+    },
+    {
+      "name": "Taxi and Private Hire Licensing",
+      "handles": [
+        "hackney-carriage-licence",
+        "private-hire-driver",
+        "private-hire-vehicle",
+        "private-hire-operator"
+      ],
+      "email": null,
+      "phone": "0151 233 3015",
+      "address": {
+        "line1": "Licensing and Regulatory Services",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://licensing.liverpool.gov.uk/PAforLalpacLIVE/1/WcaHome",
+      "notes": "No longer accepts document submissions by email - documents will not be processed. All applications must be submitted through the online licensing portal. Twitter/X: @lcc_licensing for updates."
+    },
+    {
+      "name": "Property Licensing (HMO)",
+      "handles": [
+        "hmo-licence",
+        "mandatory-hmo",
+        "additional-hmo"
+      ],
+      "email": "privatesector.housing@liverpool.gov.uk",
+      "phone": "0151 233 3000",
+      "address": {
+        "line1": "Private Sector Housing",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://liverpool.gov.uk/business/licences-and-permits/landlord-licensing/houses-in-multiple-occupancy/apply-for-an-hmo-licence/",
+      "publicRegister": "https://liverpool.gov.uk/business/licences-and-permits/landlord-licensing/register-licensed-properties/",
+      "notes": "HMO licensing mandatory for properties with 5+ persons forming 2+ households sharing amenities. Uses LAR (Licensing and Regulations) portal for applications and register searches. Must email privatesector.housing@liverpool.gov.uk to report any changes in licence holder circumstances. Flats in purpose-built blocks with 3+ self-contained units may not need HMO licence - contact to confirm."
+    },
+    {
+      "name": "Selective Licensing",
+      "handles": [
+        "selective-licence"
+      ],
+      "email": "privatesector.housing@liverpool.gov.uk",
+      "phone": "0151 233 3000",
+      "address": {
+        "line1": "Private Sector Housing",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://liverpool.gov.uk/business/licences-and-permits/landlord-licensing/selective-licensing-scheme/apply-for-a-selective-licence/",
+      "notes": "Selective Licensing Scheme runs from 1 April 2022 to 31 March 2027. Covers 16 wards: Anfield, Central, County, Everton, Fazakerley, Greenbank, Kensington, Kirkdale, Old Swan, Picton, Princes Park, Riverside, St Michael's, Tuebrook & Stoneycroft, Warbreck, Wavertree. Covers approximately 80% of privately rented homes in Liverpool (45,000 of 55,000). Full licence fee: £550 per property (discounts available). Social housing and HMOs already licensed are exempt."
+    },
+    {
+      "name": "Street Trading",
+      "handles": [
+        "street-trading-licence",
+        "street-trading-consent"
+      ],
+      "email": null,
+      "phone": "0151 233 3015",
+      "address": {
+        "line1": "Licensing and Regulatory Services",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://liverpool.gov.uk/business/licences-and-permits/street-trading-licences/street-trader-licence/",
+      "notes": "Council not currently granting new licences. Three consent types available: Daily (up to 5 days), Long-term (up to 12 months), Football ground (match days at Anfield/Goodison Park). Daily consent: £66.24 initial + £20.14/day. Long-term static: £892.09 (grant), £348.69 (renewal). Non-refundable application fee: £70. Currently accepting applications for Waterloo Place only."
+    },
+    {
+      "name": "Markets",
+      "handles": [
+        "market-stall",
+        "market-rights-licence"
+      ],
+      "email": null,
+      "phone": "0151 233 3000",
+      "address": {
+        "line1": "Liverpool Markets",
+        "line2": "Liverpool City Council Office",
+        "line3": "Liverpool Food Hub, Electric Avenue",
+        "city": "Liverpool",
+        "postcode": "L3"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://liverpool.gov.uk/markets",
+      "notes": "For market stall applications, download paper form and return to Liverpool Food Hub. Market operators running temporary markets/events/festivals with 5+ stalls/retail units must apply for Market Rights Licence. Includes indoor markets, casual markets, and farmers markets."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": "planning@liverpool.gov.uk",
+      "phone": "0151 233 3021",
+      "address": {
+        "line1": "Planning",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://liverpool.gov.uk/planning-and-building-control/search-and-track-planning-applications/search-for-planning-applications/",
+      "notes": "Applications submitted via national Planning Portal. Use planning@liverpool.gov.uk for help locating decision notices. For BACS payments: planningandbuildingcontrol@liverpool.gov.uk. Area-specific contacts: planning.dccitycentre@liverpool.gov.uk, planning.dcnorth@liverpool.gov.uk, planning.dcsouth@liverpool.gov.uk. Online contact speeds up process. Text Relay calls welcomed."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation",
+        "dangerous-structures"
+      ],
+      "email": "planningandbuildingcontrol@liverpool.gov.uk",
+      "phone": "0151 233 3021",
+      "address": {
+        "line1": "Building Control",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://liverpool.gov.uk/planning-and-building-control/building-control/",
+      "notes": "Building Control partner scheme available for frequent applicants. Handles building control reversion if private approved inspector cannot continue. Report dangerous buildings/structures through same contact. Text Relay calls welcomed. LABC member - part of Merseyside LABC partnership."
+    },
+    {
+      "name": "Highways (Traffic Orders)",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure"
+      ],
+      "email": null,
+      "phone": "0151 233 3001",
+      "address": {
+        "line1": "Transportation, Regeneration",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://apps.liverpool.gov.uk/lccforms/forms/highways-temporary-traffic-regulation-order",
+      "publicRegister": "https://tro.trafficpenaltytribunal.gov.uk/authority_tro/?authority=Liverpool",
+      "notes": "TTRO application requires confirmed start date with council and issued PAA number. Liverpool is Local Highway Authority for all public roads, footways and footpaths. If TTRO affects pay and display bays, must contact Parking Services for revenue reimbursement. Council can take action against unlicensed structures/activities on highway."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "noise-complaint",
+        "health-safety-inspection",
+        "statutory-nuisance",
+        "food-hygiene-registration"
+      ],
+      "email": "Environmental.Health@liverpool.gov.uk",
+      "phone": "0151 233 3000",
+      "address": {
+        "line1": "Environmental Health",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://liverpool.gov.uk/business/environmental-health/",
+      "notes": "Investigates health and safety complaints about workplaces including reportable accidents, dangerous occurrences and diseases. Only investigates food safety matters presenting significant risk to public health (rats, mice, cockroaches, poor food handling). All food businesses must register with council. Also responsible authority for licensing consultations."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "trading-standards-complaint",
+        "consumer-protection"
+      ],
+      "email": null,
+      "phone": "0151 233 3000",
+      "address": {
+        "line1": "Trading Standards",
+        "line2": "Cunard Building",
+        "line3": "Water Street",
+        "city": "Liverpool",
+        "postcode": "L3 1AH"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://liverpool.gov.uk/business/trading-standards/report-a-trading-standards-issue/",
+      "notes": "Handles trading and consumer advice. Also responsible authority for licensing consultations."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "Merseyside Police Licensing Unit",
+      "email": "licensing.unit@merseyside.pnn.police.uk",
+      "address": "Liverpool Licensing Unit, Rose Hill, 15 Cazneau Street, Liverpool L3 3AN"
+    },
+    "fire": {
+      "name": "Merseyside Fire and Rescue Service",
+      "email": "ProtectionLicencesLiverpool@merseyfire.gov.uk",
+      "address": "MF&RS Headquarters, Bridle Road, Bootle, Merseyside L30 4YD"
+    },
+    "safeguarding": {
+      "name": "Liverpool Safeguarding Children Board",
+      "email": "Tracy.Moore@liverpool.gov.uk",
+      "address": "Liverpool City Council, Cunard Building, Water Street, Liverpool L3 1AH"
+    },
+    "publicHealth": {
+      "name": "Liverpool City Council Public Health",
+      "address": "Liverpool City Council, Cunard Building, Water Street, Liverpool L3 1AH"
+    },
+    "tradingStandards": {
+      "name": "Liverpool City Council Trading Standards",
+      "address": "Liverpool City Council, Cunard Building, Water Street, Liverpool L3 1AH"
+    },
+    "homeOffice": {
+      "name": "Home Office Immigration Enforcement",
+      "address": "Alcohol Licensing Team, Lunar House, 40 Wellesley Road, Croydon CR9 2BY",
+      "notes": "New premises licence applications only"
+    },
+    "gamblingCommission": {
+      "name": "Gambling Commission",
+      "email": "info@gamblingcommission.gov.uk",
+      "phone": "0121 230 6666",
+      "address": "Victoria Square House, Victoria Square, Birmingham B2 4BP"
+    },
+    "hmrc": {
+      "name": "HMRC National Registration Unit",
+      "email": "nrubetting&gaming@hmrc.gsi.gov.uk",
+      "phone": "0141 555 3633",
+      "address": "Portcullis House, 21 India Street, Glasgow G2 4PZ",
+      "notes": "For gambling premises licensing"
+    }
+  },
+  "additionalResources": {
+    "licensingPortal": "https://licensing.liverpool.gov.uk/PAforLalpacLIVE/1/WcaHome",
+    "licensingActRegister": "https://licensing.liverpool.gov.uk/PAforLalpacLIVE/1/LicensingActPremises/Search",
+    "gamblingRegister": "https://licensing.liverpool.gov.uk/PAforLalpacLIVE/1/GamblingRegister/Search",
+    "planningApplicationSearch": "https://liverpool.gov.uk/planning-and-building-control/search-and-track-planning-applications/",
+    "trafficRegulationOrders": "https://tro.trafficpenaltytribunal.gov.uk/authority_tro/?authority=Liverpool",
+    "landlordLicensingRegister": "https://liverpool.gov.uk/business/licences-and-permits/landlord-licensing/register-licensed-properties/",
+    "foodHygieneRatings": "https://ratings.food.gov.uk/authority-search/liverpool",
+    "marketsInformation": "https://liverpool.gov.uk/markets"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Liverpool City Council website and web searches. All council departments based at Cunard Building, Water Street. Uses LALPAC system for licensing applications and registers. Selective Licensing Scheme (2022-2027) covers 16 wards - approximately 80% of private rentals. Street trading licences currently restricted - not granting new licences, only accepting Waterloo Place applications. Taxi licensing no longer accepts email submissions - all applications via portal. Building Control part of Merseyside LABC partnership. Merseyside Police (Rose Hill, Cazneau Street) and Fire Service (Bootle HQ) are key responsible authorities. Main switchboard: 0151 233 3000. Planning/Building Control: 0151 233 3021. Licensing: 0151 233 3015. Highways: 0151 233 3001."
+}

@@ -624,3 +624,58 @@ New PRD.md for council-specific research. Instance 3 focuses on researching indi
 - Main phone: 0161 234 5000
 
 ---
+
+## Iteration 4 - Research Leeds City Council
+**Status**: PASS
+**Task Type**: Research
+**Files Created**: councils/leeds.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Leeds City Council via web search and website fetches:
+1. **Entertainment Licensing**: entertainment.licensing@leeds.gov.uk, phone 0113 378 5029
+   - Handles Licensing Act 2003 and Gambling Act 2005 premises
+   - Address: Civic Hall, Leeds LS1 1UR
+   - 10 working day notice display, 28 day objection period
+2. **Taxi/Private Hire**: taxiprivatehire.licensing@leeds.gov.uk, phone 0113 378 1570
+   - Drop-in 9am-12pm, appointments 1pm-3pm
+   - Staff training every third Tuesday until 10am
+3. **HMO Licensing**: hmo.team@leeds.gov.uk, phone 0113 535 1369
+   - Address: Knowsthorpe Gate, Leeds LS9 0NP
+4. **Selective Licensing**: ESWSelective.licensing@leeds.gov.uk, phone 0113 535 1369
+   - Scheme starts 9 Feb 2026 to 8 Feb 2031
+   - Covers parts of 6 wards (Armley, Beeston & Holbeck, etc.)
+   - Penalty: unlimited fine or civil penalty up to £30,000
+5. **Markets/Street Trading**: markets@leeds.gov.uk, phone 0113 378 1950
+   - Events: market.events@leeds.gov.uk
+   - City centre pitches have waiting list
+6. **Street Cafe**: streetcafes@leeds.gov.uk
+   - £500 annual fee, valid until 31 March
+7. **Planning**: phone 0113 222 4409
+   - Uses national Planning Portal (no direct email)
+   - Address: Merrion House, Leeds LS2 8BB
+8. **Building Control**: building.control@leeds.gov.uk, phone 0113 378 6006
+   - Address: 9th Floor Merrion House, Leeds LS2 8BB
+   - Experiencing delays due to staff shortages
+9. **Highways/TRO**: legal.development@leeds.gov.uk
+   - TraffWeb system at leeds.traffweb.app
+   - Public consultations available online
+10. **Environmental Health**: env.health@leeds.gov.uk, phone 0113 378 5959
+    - Address: Seacroft Ring Road Depot, Leeds LS14 1NZ
+    - Out of hours noise: 0113 376 0337 (5pm-3:30am)
+11. **Child Performance**: via web form
+12. **Animal Welfare**: via web form
+**Responsible Authorities**:
+- West Yorkshire Police: Ca.licensing@westyorkshire.pnn.police.uk, Elland Road
+- West Yorkshire Fire: fire.safety@westyorksfire.gov.uk, Birkenshaw
+- Safeguarding: LSCP.info@leeds.gov.uk
+- Trading Standards: West Yorkshire Joint Services
+**Learnings**:
+- Leeds separates Entertainment Licensing from Taxi/Private Hire (different emails/phones)
+- Selective Licensing scheme starting Feb 2026 is newer than Manchester's
+- Building control staff shortages pattern continues (like Birmingham, Manchester)
+- TraffWeb system for Traffic Orders is unique to Leeds
+- Environmental Health has direct email (unlike Manchester)
+- Council uses Merrion House for multiple departments (Building Control, Planning, Safeguarding)
+- Council address: Civic Hall, Calverley Street, Leeds LS1 1UR
+- Main phone: 0113 222 4444
+
+---

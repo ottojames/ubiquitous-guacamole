@@ -12,7 +12,7 @@
 - [x] Research Birmingham City Council — all departments, contacts, methods. Create `/councils/birmingham.json`
 - [x] Research Manchester City Council — all departments, contacts, methods. Create `/councils/manchester.json`
 - [x] Research Leeds City Council — all departments, contacts, methods. Create `/councils/leeds.json`
-- [ ] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
+- [x] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
 
 ### London Boroughs
 - [ ] Research Camden Council — departments, contacts, methods. Create `/councils/camden.json`
@@ -123,4 +123,24 @@ Create each council file in `/councils/` with this structure:
   - Responsible authorities: West Yorkshire Police (Elland Road), West Yorkshire Fire (Birkenshaw)
   - Council address: Civic Hall, Calverley Street, Leeds LS1 1UR
   - Main phone: 0113 222 4444
+
+### Liverpool City Council
+- **Type**: Metropolitan Borough
+- **Website**: https://www.liverpool.gov.uk
+- **File**: `/councils/liverpool.json`
+- **Departments Researched**: 11 (Licensing, Taxi/Private Hire, HMO Licensing, Selective Licensing, Street Trading, Markets, Planning, Building Control, Highways, Environmental Health, Trading Standards)
+- **Key Findings**:
+  - Licensing email: licensingact2003@liverpool.gov.uk, phone 0151 233 3015
+  - Uses LALPAC system for all licensing applications and registers
+  - Taxi Licensing: No email (portal only), phone 0151 233 3015 - no longer accepts email submissions
+  - HMO/Selective Licensing: privatesector.housing@liverpool.gov.uk
+  - Selective Licensing Scheme (2022-2027) covers 16 wards - ~80% of private rentals (45,000 properties)
+  - Street Trading: Currently not granting new licences, only Waterloo Place applications accepted
+  - Planning: planning@liverpool.gov.uk, phone 0151 233 3021, area-specific emails available
+  - Building Control: planningandbuildingcontrol@liverpool.gov.uk, phone 0151 233 3021
+  - Highways/TRO: phone 0151 233 3001, TTRO requires PAA number
+  - Environmental Health: Environmental.Health@liverpool.gov.uk
+  - Responsible authorities: Merseyside Police (Rose Hill, Cazneau Street), Merseyside Fire (Bootle HQ)
+  - All departments based at Cunard Building, Water Street, L3 1AH
+  - Main phone: 0151 233 3000
 
