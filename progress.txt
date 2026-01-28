@@ -470,3 +470,21 @@ New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log
 
 ---
 
+## Iteration 28 - Clean up Analytics page
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/Analytics.tsx
+**What Happened**: Cleaned up Analytics page by removing unused sections:
+1. Removed "Cost Savings Calculator" section from Overview tab (hardcoded projections)
+2. Removed "Compliance" tab from tabs array (sample data only)
+3. Removed compliance tab content section entirely
+4. Replaced Audit Log tab content with a link to the dedicated Audit Log page
+5. Removed unused auditLog from AnalyticsData interface
+6. Removed unused audit log API fetch
+**Learnings**:
+- Remove sections that only show sample/placeholder data - they're confusing
+- Link to dedicated pages instead of duplicating functionality
+- Clean up unused types and API calls when removing features
+
+---
+

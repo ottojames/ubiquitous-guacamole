@@ -23,9 +23,9 @@
 
 ### Analytics Tab - Remove Unused Sections
 
-- [ ] In `src/pages/council/Analytics.tsx`, remove the "Cost Savings Calculator" section entirely from the Overview tab (lines ~442-494) - it's not useful for councils
-- [ ] In `src/pages/council/Analytics.tsx`, remove the "Compliance" tab from the tabs array and its corresponding content section (the compliance tab just shows placeholder sample data)
-- [ ] In `src/pages/council/Analytics.tsx`, fix the Audit Log tab in Analytics - it shows "Complete Audit Log" header but no actual entries; either wire it to show real audit data or link to the dedicated Audit Log page instead
+- [x] In `src/pages/council/Analytics.tsx`, remove the "Cost Savings Calculator" section entirely from the Overview tab (lines ~442-494) - it's not useful for councils
+- [x] In `src/pages/council/Analytics.tsx`, remove the "Compliance" tab from the tabs array and its corresponding content section (the compliance tab just shows placeholder sample data)
+- [x] In `src/pages/council/Analytics.tsx`, fix the Audit Log tab in Analytics - it shows "Complete Audit Log" header but no actual entries; either wire it to show real audit data or link to the dedicated Audit Log page instead
 
 ### Council Portal UI/UX Review
 

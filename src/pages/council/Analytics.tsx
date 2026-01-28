@@ -34,16 +34,9 @@ interface AnalyticsData {
     avgApprovalTime: number;
     trend: string;
   }[];
-  auditLog: {
-    timestamp: string;
-    user: string;
-    action: string;
-    details: string;
-    status: 'success' | 'warning' | 'error';
-  }[];
 }
 
-type TabType = 'overview' | 'departments' | 'compliance' | 'trends' | 'audit';
+type TabType = 'overview' | 'departments' | 'trends' | 'audit';
 
 // Data source indicator component
 function DataSourceBadge({ type }: { type: 'live' | 'projected' | 'sample' }) {
@@ -144,18 +137,15 @@ export default function Analytics() {
       // Fetch additional data from API endpoints (trends, departments, audit log)
       const [
         trendsResponse,
-        departmentsResponse,
-        auditLogResponse
+        departmentsResponse
       ] = await Promise.all([
         fetch(`/api/analytics/council/${department.organization.id}/monthly-trends?months=12`),
-        fetch(`/api/analytics/council/${department.organization.id}/department-comparison`),
-        fetch(`/api/analytics/audit-log?organizationId=${department.organization.id}&limit=10`)
+        fetch(`/api/analytics/council/${department.organization.id}/department-comparison`)
       ]);
 
-      const [trends, departments, auditLog] = await Promise.all([
+      const [trends, departments] = await Promise.all([
         trendsResponse.ok ? trendsResponse.json() : { trends: [] },
-        departmentsResponse.ok ? departmentsResponse.json() : { departments: [] },
-        auditLogResponse.ok ? auditLogResponse.json() : { actions: [] }
+        departmentsResponse.ok ? departmentsResponse.json() : { departments: [] }
       ]);
 
       const totalCount = totalNotices || 0;
@@ -179,13 +169,6 @@ export default function Analytics() {
           { status: 'Rejected', count: Math.floor(repsCount * 0.1) },
         ],
         departments: departments.departments || [],
-        auditLog: auditLog.actions?.map((action: any) => ({
-          timestamp: new Date(action.created_at).toLocaleString('en-GB'),
-          user: action.actor_email || 'System',
-          action: action.action_type?.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'Unknown Action',
-          details: action.metadata?.details || JSON.stringify(action.metadata || {}),
-          status: 'success' as const,
-        })) || [],
       };
 
       setAnalytics(analyticsData);
@@ -290,7 +273,6 @@ export default function Analytics() {
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { id: 'departments' as TabType, label: 'Departments', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-    { id: 'compliance' as TabType, label: 'Compliance', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0121 12c0 5.523-4.477 10-10 10S1 17.523 1 12 5.477 2 11 2c1.821 0 3.527.479 5.007 1.316' },
     { id: 'trends' as TabType, label: 'Trends & Patterns', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
     { id: 'audit' as TabType, label: 'Audit Log', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
   ];
@@ -439,60 +421,6 @@ export default function Analytics() {
               </div>
             </div>
 
-            {/* Cost Savings */}
-            <div className="bg-gradient-to-br from-emerald-50 to-slate-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 border border-emerald-200">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-2xl font-bold text-slate-900">Cost Savings Calculator</h2>
-                    <DataSourceBadge type="projected" />
-                  </div>
-                  <p className="text-sm text-slate-600">Platform savings vs. traditional newspaper publication</p>
-                </div>
-                <svg className="w-16 h-16 text-emerald-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                  <p className="text-sm font-bold text-slate-600 mb-2">Traditional Cost</p>
-                  <p className="text-4xl font-bold text-slate-900">£280</p>
-                  <p className="text-xs text-slate-600 mt-2">per notice (newspaper classified ad)</p>
-                </div>
-                <div className="bg-white rounded-2xl p-6 border border-emerald-200">
-                  <p className="text-sm font-bold text-emerald-600 mb-2">Platform Cost</p>
-                  <p className="text-4xl font-bold text-emerald-600">£50</p>
-                  <p className="text-xs text-slate-600 mt-2">per notice (digital publication)</p>
-                </div>
-                <div className="bg-white rounded-2xl p-6 border border-emerald-200">
-                  <p className="text-sm font-bold text-emerald-700 mb-2">You Save</p>
-                  <p className="text-4xl font-bold text-emerald-700">£230</p>
-                  <p className="text-xs text-emerald-700 font-bold mt-2">82% cost reduction</p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 border border-emerald-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-lg font-bold text-slate-900 mb-2">Quarterly Savings</p>
-                    <p className="text-sm text-slate-600">{analytics.publishedNotices} published notices × £230 saved per notice</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-5xl font-bold text-emerald-600">
-                      £{(analytics.publishedNotices * 230).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-sm text-emerald-700 font-semibold mt-2">saved this quarter</p>
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-emerald-200 mt-4">
-                  <p className="text-xs text-slate-600">
-                    <strong>These savings flow directly to public services.</strong> Cost reductions can be reinvested into frontline regulatory staff, improved digital infrastructure, and enhanced public consultation capabilities.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* User Engagement */}
             <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 border border-slate-200">
               <div className="flex items-start justify-between mb-6">
@@ -638,114 +566,6 @@ export default function Analytics() {
           </div>
         )}
 
-        {activeTab === 'compliance' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8 border border-blue-200">
-              <div className="flex items-start justify-between mb-8">
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <h2 className="text-3xl font-bold text-slate-900">Statutory Compliance Dashboard</h2>
-                    <DataSourceBadge type="sample" />
-                  </div>
-                  <p className="text-sm text-slate-600">Deadline adherence and regulatory performance monitoring</p>
-                </div>
-                <svg className="w-20 h-20 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0121 12c0 5.523-4.477 10-10 10S1 17.523 1 12 5.477 2 11 2c1.821 0 3.527.479 5.007 1.316" />
-                </svg>
-              </div>
-
-              <div className="bg-white rounded-3xl p-10 mb-8 border border-blue-200">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-bold text-slate-700">Statutory Deadline Adherence Rate</span>
-                  <span className="text-6xl font-bold text-blue-600">98.5%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-6 mb-4">
-                  <div className="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-4" style={{ width: '98.5%' }}>
-                    <span className="text-xs font-bold text-white">98.5%</span>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-600">
-                  The vast majority of notices are published and consulted upon within legal timescales required by statute.
-                  This demonstrates strong regulatory compliance and process adherence.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-8">
-                <div className="bg-white rounded-3xl p-8 border border-emerald-200">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center">
-                      <svg className="w-8 h-8 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-600">On Time</p>
-                      <p className="text-xs text-slate-500">Published within statutory deadlines</p>
-                    </div>
-                  </div>
-                  <p className="text-6xl font-bold text-emerald-600 mb-4">{analytics.publishedNotices - 2}</p>
-                  <p className="text-sm text-slate-600">notices met all statutory timescales</p>
-                </div>
-
-                <div className="bg-white rounded-3xl p-8 border border-rose-200">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-16 h-16 bg-rose-600 rounded-2xl flex items-center justify-center animate-pulse">
-                      <svg className="w-8 h-8 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-600">Overdue</p>
-                      <p className="text-xs text-slate-500">Requires immediate attention</p>
-                    </div>
-                  </div>
-                  <p className="text-6xl font-bold text-rose-600 mb-4">2</p>
-                  <p className="text-sm text-rose-700 font-bold">notices flagged for immediate review</p>
-                </div>
-              </div>
-
-              <div className="mt-8 bg-white rounded-3xl p-8 border border-slate-200">
-                <h3 className="text-xl font-bold text-slate-900 mb-6">Compliance Requirements</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Licensing Act 2003 - 28 Day Consultation</p>
-                      <p className="text-sm text-slate-600">All premises licence applications meet statutory 28-day representation period</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Town & Country Planning Act 1990</p>
-                      <p className="text-sm text-slate-600">Planning applications published with required notice periods and consultation windows</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Road Traffic Regulation Act 1984</p>
-                      <p className="text-sm text-slate-600">Traffic orders meet required publication and objection period timescales</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {activeTab === 'trends' && (
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
@@ -843,88 +663,25 @@ export default function Analytics() {
         {activeTab === 'audit' && (
           <div className="space-y-6">
             <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-8">
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-3">
-                  <h2 className="text-3xl font-bold text-slate-900">Complete Audit Log</h2>
-                  <DataSourceBadge type="live" />
-                </div>
-                <p className="text-sm text-slate-600">
-                  Every action taken by officers, every status change, every deadline met or missed.
-                  This level of transparency is essential for local government accountability.
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl p-6 mb-8 border border-blue-200">
-                <div className="flex items-center gap-4">
-                  <svg className="w-12 h-12 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0121 12c0 5.523-4.477 10-10 10S1 17.523 1 12 5.477 2 11 2c1.821 0 3.527.479 5.007 1.316" />
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <div>
-                    <p className="font-bold text-slate-900 mb-1">Full Audit Trail Available</p>
-                    <p className="text-sm text-slate-600">
-                      Complete transparency log showing all system activity. Suitable for FOI requests, regulatory inspections, and internal governance reviews.
-                    </p>
-                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                {analytics.auditLog.map((entry, index) => (
-                  <div key={index} className={`flex items-start gap-4 p-6 rounded-2xl border ${
-                    entry.status === 'success' ? 'bg-white border-slate-200' :
-                    entry.status === 'warning' ? 'bg-amber-50 border-amber-200' :
-                    'bg-rose-50 border-rose-200'
-                  }`}>
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-                      entry.status === 'success' ? 'bg-emerald-100' :
-                      entry.status === 'warning' ? 'bg-amber-100' :
-                      'bg-rose-100'
-                    }`}>
-                      <svg className={`w-6 h-6 ${
-                        entry.status === 'success' ? 'text-emerald-600' :
-                        entry.status === 'warning' ? 'text-amber-600' :
-                        'text-rose-600'
-                      }`} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                        {entry.status === 'success' && <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                        {entry.status === 'warning' && <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />}
-                        {entry.status === 'error' && <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-slate-900">{entry.user}</span>
-                        <span className="text-xs text-slate-500 font-mono">{entry.timestamp}</span>
-                      </div>
-                      <p className="text-sm mb-1">
-                        <span className={`font-semibold ${
-                          entry.status === 'success' ? 'text-emerald-600' :
-                          entry.status === 'warning' ? 'text-amber-600' :
-                          'text-rose-600'
-                        }`}>
-                          {entry.action}
-                        </span>
-                      </p>
-                      <p className="text-sm text-slate-700">{entry.details}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-slate-200">
-                <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl p-6 border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-slate-900 mb-2">Accountability & Transparency</p>
-                      <p className="text-sm text-slate-600">
-                        This audit log provides complete visibility into regulatory processes. Every submission, approval, publication, and deadline is tracked and timestamped.
-                        This supports FOI compliance, regulatory inspections, and elected member scrutiny.
-                      </p>
-                    </div>
-                    <svg className="w-16 h-16 text-blue-600 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                </div>
+                <h2 className="text-2xl font-bold text-slate-900 mb-3">Complete Audit Log</h2>
+                <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                  View the full audit trail with advanced filtering, search, and export capabilities in the dedicated Audit Log section.
+                </p>
+                <a
+                  href={`/council/${orgSlug}/${deptSlug}/audit-log`}
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+                >
+                  <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Go to Audit Log
+                </a>
               </div>
             </div>
           </div>
