@@ -10,7 +10,7 @@
 ### Major Cities
 - [x] Research Westminster City Council — all departments handling public notices, contact emails, submission methods. Create `/councils/westminster.json`
 - [x] Research Birmingham City Council — all departments, contacts, methods. Create `/councils/birmingham.json`
-- [ ] Research Manchester City Council — all departments, contacts, methods. Create `/councils/manchester.json`
+- [x] Research Manchester City Council — all departments, contacts, methods. Create `/councils/manchester.json`
 - [ ] Research Leeds City Council — all departments, contacts, methods. Create `/councils/leeds.json`
 - [ ] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
 
@@ -84,4 +84,22 @@ Create each council file in `/councils/` with this structure:
   - Property Licensing (HMO): pl@birmingham.gov.uk
   - Environmental Health: No email, online forms at birmingham.gov.uk/env-health-contact
   - Public consultations (TROs) at birminghambeheard.org.uk
+
+### Manchester City Council
+- **Type**: Metropolitan Borough
+- **Website**: https://www.manchester.gov.uk
+- **File**: `/councils/manchester.json`
+- **Departments Researched**: 9 (Licensing, Street Trading, Planning, Building Control, Highways, Environmental Health, Public Protection, Trading Standards, Property Licensing)
+- **Key Findings**:
+  - Licensing email: premises.licensing@manchester.gov.uk (handles Licensing Act 2003 and Gambling Act 2005)
+  - Licensing phone (also out of hours after 8pm): 0161 234 5004
+  - Planning: planning@manchester.gov.uk, phone 0161 234 4516
+  - Building Control: building.control@manchester.gov.uk (experiencing delays due to staff shortages)
+  - Highways/TRO: highwaynetworkmanagement@manchester.gov.uk
+  - Trading Standards: trading_standards@manchester.gov.uk
+  - Property Licensing (HMO): hmolicensingenquiry@manchester.gov.uk
+  - Environmental Health: No email, online forms only (contact form at manchester.gov.uk/xfp/form/1882)
+  - Selective Licensing Scheme 3 covers parts of 6 wards (May 2025-May 2030)
+  - Council address: Town Hall, Albert Square, Manchester M60 2LA
+  - Main phone: 0161 234 5000
 
