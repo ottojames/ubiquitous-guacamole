@@ -28,8 +28,8 @@
 
 ### Settings Authority Address
 
-- [ ] In `src/pages/council/Settings.tsx`, replace the plain text authority address input with the AddressLookup component from `@/components/AddressLookup` for proper UK address lookup
-- [ ] In `src/pages/council/Settings.tsx`, ensure the authority address value is properly saved to the `council_settings` table when the form is submitted
+- [x] In `src/pages/council/Settings.tsx`, replace the plain text authority address input with the AddressLookup component from `@/components/AddressLookup` for proper UK address lookup
+- [x] In `src/pages/council/Settings.tsx`, ensure the authority address value is properly saved to the `council_settings` table when the form is submitted
 
 ---
 

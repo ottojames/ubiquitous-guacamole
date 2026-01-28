@@ -360,3 +360,21 @@ The component already had `department` from `useOutletContext` - just needed to 
 
 ---
 
+## Iteration 23 - Settings AddressLookup component
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/Settings.tsx
+**What Happened**:
+1. Replaced plain textarea with AddressLookup component from `@/components/AddressLookup`
+2. Added `formatAddressForStorage` helper to convert `AddressResult` to single string
+3. Added `handleAddressResolved` callback to update `councilSettings.authority_address`
+4. Display selected address below the search input for visibility
+5. The save mechanism already handles `authority_address` via the existing `councilSettings` upsert
+
+**Learnings**:
+- AddressLookup component uses `mockProvider` for dev, can switch to `getAddressProvider(apiKey)` for production
+- `AddressResult` has `line1`, `line2`, `line3`, `town`, `county`, `postcode` - format into single string for storage
+- The `onResolved` callback receives the full address after user selection
+
+---
+

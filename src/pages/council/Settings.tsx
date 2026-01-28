@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
 import { Building2, Bell, CreditCard, FileText, Users, HelpCircle, CheckCircle } from 'lucide-react';
 import { toast, useToastController } from '@/lib/ui/toast';
+import AddressLookup, { mockProvider, type AddressResult } from '@/components/AddressLookup';
 
 interface Department {
   id: string;
@@ -300,6 +301,25 @@ export default function Settings() {
   // Check if user has permission to update settings using RBAC system
   const canManageSettings = hasPermission(PERMISSIONS.SETTINGS_UPDATE);
 
+  // Format address result into a single string for storage
+  const formatAddressForStorage = (address: AddressResult): string => {
+    const parts = [
+      address.line1,
+      address.line2,
+      address.line3,
+      address.town,
+      address.county,
+      address.postcode
+    ].filter(Boolean);
+    return parts.join(', ');
+  };
+
+  // Handle address selection from AddressLookup
+  const handleAddressResolved = (address: AddressResult) => {
+    const formattedAddress = formatAddressForStorage(address);
+    setCouncilSettings(prev => ({ ...prev, authority_address: formattedAddress }));
+  };
+
   const noticeTypes = [
     { value: 'premises-licence', label: 'Premises Licence' },
     { value: 'variation', label: 'Variation' },
@@ -439,14 +459,21 @@ export default function Settings() {
             <label className={labelClass}>
               Authority Address <span className="text-rose-500">*</span>
             </label>
-            <textarea
-              value={councilSettings.authority_address}
-              onChange={(e) => setCouncilSettings({ ...councilSettings, authority_address: e.target.value })}
-              className={`${inputClass} resize-y`}
-              rows={3}
-              placeholder="e.g., 64 Victoria Street, London SW1E 6QP"
-              required
+            <AddressLookup
+              provider={mockProvider}
+              placeholder="Search for address or postcode..."
+              onResolved={handleAddressResolved}
+              className="mb-2"
             />
+            {councilSettings.authority_address && (
+              <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <p className="text-sm text-slate-600 font-medium mb-1">Selected address:</p>
+                <p className="text-sm text-slate-900">{councilSettings.authority_address}</p>
+              </div>
+            )}
+            <p className="text-sm text-slate-500 mt-2">
+              Start typing to search UK addresses
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
