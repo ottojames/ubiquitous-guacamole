@@ -332,3 +332,12 @@ The component already had `department` from `useOutletContext` - just needed to 
 
 ---
 
+## Iteration 21 - Remove Drafts navigation item
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/CouncilLayout.tsx
+**What Happened**: Removed the Drafts navigation item from the `allNavItems` array. Councils receive notices from applicants via the publish flow - they don't create drafts themselves.
+**Learnings**: Navigation items are defined in `allNavItems` array in CouncilLayout.tsx line ~252-264.
+
+---
+

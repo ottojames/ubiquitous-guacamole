@@ -15,7 +15,7 @@
 
 ### Remove Drafts Tab
 
-- [ ] In `src/pages/council/CouncilLayout.tsx`, remove the "Drafts" navigation item from the sidebar menu (councils receive notices, they don't create them)
+- [x] In `src/pages/council/CouncilLayout.tsx`, remove the "Drafts" navigation item from the sidebar menu (councils receive notices, they don't create them)
 
 ### Audit Log UX Improvements
 
