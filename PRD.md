@@ -891,7 +891,7 @@ Declining in availability but still offered:
 ## Phase 1: Implement Postcode Lookup (After Research)
 
 - [x] Update `/src/lib/councilLookup.ts` to use the researched postcode API (likely postcodes.io). Replace the rough heuristic with real lookup.
-- [ ] Add proper error handling for postcode lookup failures.
+- [x] Add proper error handling for postcode lookup failures.
 - [ ] Create `/src/lib/councilLookup.test.ts` with tests for the new lookup function using real postcodes.
 - [ ] Run `npm run typecheck` to verify implementation.
 
