@@ -20,19 +20,26 @@ import { toast, useToastController } from '@/lib/ui/toast';
 import Footer from '@/components/Footer';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { NAV_LINKS } from '@/config/navigation';
 
 // -------- analytics stub (intentional - replace with actual analytics service) --------
 function track(event: string, payload: Record<string, unknown> = {}) {
   console.log("[analytics]", event, payload);
 }
 
-// Navigation links (shared constant)
-const NAV_LINKS = [
-  { href: "/notices", label: "Find notices" },
-  { href: "#for-councils", label: "For councils" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/email-alerts", label: "Email alerts" },
-] as const;
+// Handle anchor link clicks with smooth scrolling
+function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
+  // Check if this is a hash link (e.g., /#for-councils or #publish)
+  const hashMatch = href.match(/#([\w-]+)$/);
+  if (hashMatch) {
+    e.preventDefault();
+    const elementId = hashMatch[1];
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+}
 
 // Testimonials (generic - no specific council endorsements implied)
 const testimonials = [
@@ -96,6 +103,22 @@ export default function Home() {
     const fn = () => setActiveHash(window.location.hash || "");
     window.addEventListener("hashchange", fn);
     return () => window.removeEventListener("hashchange", fn);
+  }, []);
+
+  // Handle hash scroll on initial mount (for navigation from other pages like /#for-councils)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      // Small delay to ensure DOM is ready after navigation
+      const timeoutId = setTimeout(() => {
+        const elementId = hash.slice(1); // Remove the # prefix
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
   }, []);
 
   // Close mobile menu when clicking outside
@@ -224,8 +247,11 @@ export default function Home() {
 
       {/* -------- HEADER: sticky, compact-on-scroll, one primary CTA -------- */}
       <header
-        className={`sticky top-0 z-50 border-b border-white/10 backdrop-blur-lg ${compactNav ? "bg-white/80" : "bg-white/80"}`}
-        style={{ height: "var(--headerH)" }}
+        className="sticky top-0 z-50 border-b border-white/10"
+        style={{
+          height: "var(--headerH)",
+          background: 'linear-gradient(112deg, #d5dde8 0%, #e8ecf4 50%, #f4f6f9 100%)',
+        }}
       >
         <div className={`${UI.container} h-full`}>
           <div className="h-full flex items-center justify-between">
@@ -239,6 +265,7 @@ export default function Home() {
                   <a
                     key={link.href}
                     href={link.href}
+                    onClick={(e) => handleAnchorClick(e, link.href)}
                     data-active={activeHash === link.href}
                     className="text-sm text-slate-600 transition hover:text-slate-900 data-[active=true]:text-slate-900"
                   >
@@ -301,7 +328,10 @@ export default function Home() {
                   <a
                     key={link.href}
                     href={link.href}
-                    onClick={() => setMobileOpen(false)}
+                    onClick={(e) => {
+                      handleAnchorClick(e, link.href);
+                      setMobileOpen(false);
+                    }}
                     className="text-base text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded px-1 py-1"
                   >
                     {link.label}
@@ -337,7 +367,7 @@ export default function Home() {
           className="absolute inset-x-0 bottom-0 pointer-events-none"
           style={{
             height: '400px',
-            background: 'linear-gradient(to bottom, rgba(247, 248, 252, 0) 0%, rgba(247, 248, 252, 0.5) 40%, rgba(247, 248, 252, 0.9) 70%, #F7F8FC 100%)'
+            background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.5) 40%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
           }}
           aria-hidden="true"
         />
@@ -382,6 +412,7 @@ export default function Home() {
                       onSubmit={handleAddressSubmit}
                       onFreeText={handleFreeText}
                       testIdPrefix="home"
+                      showGeolocation
                     />
 
                     {addressInlineError && (
@@ -428,7 +459,7 @@ export default function Home() {
                 <ArrowRight className="h-6 w-6" />
               </a>
               <a
-                href="#publish"
+                href="/publish/step-1"
                 className={`${UI.btnSecondary} px-6 py-3 text-sm`}
               >
                 Publish a notice
@@ -824,7 +855,7 @@ export default function Home() {
                   title: "Digital submission",
                   blurb: "Upload PDFs, bulk import from Excel, or connect your case management system via API. Smart validation catches errors before publication.",
                   Icon: Upload,
-                  link: { href: "/api-info", label: "View API docs" },
+                  link: { href: "/api-docs", label: "View API docs" },
                 },
                 {
                   title: "Instant publication",

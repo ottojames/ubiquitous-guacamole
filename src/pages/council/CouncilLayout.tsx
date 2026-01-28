@@ -195,6 +195,16 @@ export default function CouncilLayout() {
 
       const role = orgMembership?.role || membership?.role || 'viewer';
 
+      console.log('[CouncilLayout] Setting department:', {
+        id: fullDeptData.id,
+        name: fullDeptData.name,
+        slug: fullDeptData.slug,
+        type: fullDeptData.type,
+        organizationId: fullDeptData.organization?.id,
+        organizationName: fullDeptData.organization?.name,
+        role
+      });
+
       setDepartment(fullDeptData as Department);
       setUserRole(role);
 

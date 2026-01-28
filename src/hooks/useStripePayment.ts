@@ -42,20 +42,17 @@ export function useStripePayment() {
         throw new Error(errorData.error || 'Failed to create payment session');
       }
 
-      const { sessionId } = await response.json();
+      const { sessionId, url } = await response.json();
 
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe not initialized');
-      }
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId,
-      });
-
-      if (stripeError) {
-        throw stripeError;
+      // Redirect to Stripe Checkout using the URL returned from the session
+      // Note: redirectToCheckout was deprecated in Stripe.js v8+
+      if (url) {
+        window.location.href = url;
+      } else if (sessionId) {
+        // Fallback: construct checkout URL from session ID
+        window.location.href = `https://checkout.stripe.com/c/pay/${sessionId}`;
+      } else {
+        throw new Error('No checkout URL or session ID returned');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Payment failed';

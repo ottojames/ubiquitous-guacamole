@@ -59,14 +59,30 @@ export default function AuditLog() {
     filterLogs();
   }, [logs, filterAction, filterTable, searchQuery, startDate, endDate]);
 
+  // P1-007: Load from unified_audit_logs view which combines both audit tables
+  // Fallback to audit_logs if view doesn't exist yet
   const loadAuditLogs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('audit_logs')
+      // Try unified view first
+      let { data, error } = await supabase
+        .from('unified_audit_logs')
         .select('*')
-        .eq('department_id', department.id)
+        .or(`department_id.eq.${department.id},organization_id.eq.${department.organization.id}`)
         .order('created_at', { ascending: false })
-        .limit(500); // Get last 500 entries
+        .limit(500);
+
+      // Fallback to audit_logs if unified view doesn't exist
+      if (error?.code === '42P01') {
+        // Query by department_id OR organization_id to catch entries where department_id is NULL
+        const result = await supabase
+          .from('audit_logs')
+          .select('*')
+          .or(`department_id.eq.${department.id},organization_id.eq.${department.organization.id}`)
+          .order('created_at', { ascending: false })
+          .limit(500);
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
 
@@ -236,7 +252,8 @@ export default function AuditLog() {
     });
   };
 
-  const canViewAudit = ['owner', 'org_admin', 'department_admin'].includes(userRole);
+  // P0-002: All staff can view audit logs (compliance requirement)
+  const canViewAudit = userRole !== null;
 
   if (!canViewAudit) {
     return (

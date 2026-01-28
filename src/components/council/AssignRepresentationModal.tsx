@@ -62,7 +62,12 @@ export default function AssignRepresentationModal({
         .eq('status', 'active');
 
       if (error) throw error;
-      setTeamMembers(data || []);
+      // Transform the nested user array from Supabase to a single object
+      const transformed = (data || []).map(row => ({
+        ...row,
+        user: Array.isArray(row.user) ? row.user[0] : row.user
+      })).filter(row => row.user) as TeamMember[];
+      setTeamMembers(transformed);
 
       // Pre-select current assignee if exists
       if (currentAssignee && data) {

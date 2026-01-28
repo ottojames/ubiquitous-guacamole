@@ -96,19 +96,9 @@ export default function Pricing() {
 
       <main>
         {/* Hero - matches Home page structure exactly */}
-        <section className="relative overflow-hidden pb-48 pt-20 md:pb-56 md:pt-32 lg:pb-64">
+        <section className="relative overflow-hidden pb-32 pt-20 md:pb-40 md:pt-32 lg:pb-48">
           <div className="absolute -right-16 -top-16 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl" />
           <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-300/10 blur-3xl" />
-
-          {/* Vertical gradient fade - extended height to cover page gradient edge */}
-          <div
-            className="absolute inset-x-0 bottom-0 pointer-events-none"
-            style={{
-              height: '550px',
-              background: 'linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.4) 30%, rgba(248, 250, 252, 0.7) 50%, rgba(248, 250, 252, 0.9) 70%, #F8FAFC 100%)'
-            }}
-            aria-hidden="true"
-          />
 
         <div className={`${UI.container} relative z-10`}>
           <div className="mx-auto max-w-3xl text-center">
@@ -165,8 +155,8 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* CTA Buttons - extra margin to push below page gradient edge (860px) */}
-          <div className="mt-32 md:mt-40 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          {/* CTA Buttons */}
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
               href="/publish"
               className={`${UI.btnPrimary} inline-flex items-center gap-3 px-10 py-5 text-lg shadow-[0_8px_24px_rgba(37,99,235,0.45)] hover:shadow-[0_12px_32px_rgba(37,99,235,0.55)]`}
@@ -174,12 +164,18 @@ export default function Pricing() {
               Publish your first notice
               <ArrowRight className="h-6 w-6" />
             </a>
-            <a
-              href="#pricing-plans"
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('pricing-plans');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
               className={`${UI.btnSecondary} px-6 py-3 text-sm`}
             >
               Compare plans
-            </a>
+            </button>
           </div>
 
           <p className="mt-8 text-sm text-slate-500 text-center">
@@ -188,8 +184,8 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Old Way vs New Way - transparent start to blend with page gradient */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-transparent via-white/80 to-white">
+      {/* Old Way vs New Way */}
+      <section className="py-16 md:py-24">
         <div className={UI.container}>
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -232,7 +228,7 @@ export default function Pricing() {
                 With CivicNotices
               </div>
               <h3 className="mb-3 text-2xl font-bold text-slate-900">
-                From £50 per notice. Councils £19.99. • Instant publication • Full audit trail
+                £50 per notice • Free portal for councils • Instant publication
               </h3>
               <p className="text-slate-700">
                 Digital-first, compliant with upcoming regulations, and built for the modern public sector
@@ -243,7 +239,7 @@ export default function Pricing() {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16 md:py-24 bg-slate-50">
+      <section id="pricing-plans" className="scroll-mt-[var(--headerH)] py-16 md:py-24 bg-slate-50">
         <div className={UI.container}>
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -284,7 +280,7 @@ export default function Pricing() {
             {/* Firms Card - Highlighted */}
             <div className={`${UI.card} relative flex flex-col p-8 ring-2 ring-blue-600 shadow-xl`}>
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="rounded-full bg-blue-600 px-4 py-1 text-sm font-semibold text-white">
+                <span className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-1.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30">
                   Most Popular
                 </span>
               </div>
@@ -314,10 +310,10 @@ export default function Pricing() {
             </div>
 
             {/* Councils Card */}
-            <div className={`${UI.card} relative flex flex-col p-8 ring-2 ring-emerald-500`}>
+            <div className={`${UI.card} relative flex flex-col p-8 ring-1 ring-slate-200`}>
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="rounded-full bg-emerald-600 px-4 py-1 text-sm font-semibold text-white">
-                  £0 Portal Access
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-sm font-semibold text-emerald-700">
+                  Free Portal
                 </span>
               </div>
               <div className="mb-6">
@@ -437,22 +433,22 @@ export default function Pricing() {
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap">
                 <a
                   href="/publish"
-                  className={`${UI.btnPrimaryInverse} gap-2 px-8 py-4`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-700 shadow-lg transition-all duration-200 hover:bg-blue-50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-blue-600"
                 >
                   Publish a Notice - £50
                   <ArrowRight className="h-5 w-5" />
                 </a>
                 <a
                   href="/sign-up?plan=firm"
-                  className={`${UI.btnSecondaryInverse} gap-2 px-8 py-4`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur transition-all duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-blue-600"
                 >
                   Register as a Firm
                 </a>
                 <a
                   href="/sign-up?plan=council"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-500/20 px-8 py-4 font-semibold text-white backdrop-blur transition-all duration-200 hover:bg-emerald-500/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2 focus:ring-offset-blue-600"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur transition-all duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-blue-600"
                 >
-                  Get Free Portal Access
+                  Free Council Portal
                 </a>
               </div>
               <p className="mt-6 text-sm text-blue-200">

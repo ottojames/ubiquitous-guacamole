@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Mail, Lock, AlertCircle, Eye, EyeOff, Loader2, Building2, Briefcase, ArrowLeft } from "lucide-react";
 import * as UI from "@/styles/ui";
 import { supabase } from "@/lib/supabase";
@@ -58,7 +59,7 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       if (membershipError || !membership) {
         console.error('[Login] No council membership found, signing out');
         await supabase.auth.signOut();
-        window.location.href = '/login?error=no_council_access';
+        window.location.href = '/login/council?error=no_council_access';
         return;
       }
 
@@ -77,7 +78,7 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       if (deptError || !department) {
         console.error('[Login] Department not found, signing out');
         await supabase.auth.signOut();
-        window.location.href = '/login?error=department_not_found';
+        window.location.href = '/login/council?error=department_not_found';
         return;
       }
 
@@ -96,7 +97,7 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       if (orgError || !organization || organization.type !== 'council') {
         console.error('[Login] Not a council org, signing out');
         await supabase.auth.signOut();
-        window.location.href = '/login?error=not_council_account';
+        window.location.href = '/login/council?error=not_council_account';
         return;
       }
 
@@ -121,7 +122,7 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       if (membershipError || !memberships || memberships.length === 0) {
         console.error('[Login] No memberships found, signing out');
         await supabase.auth.signOut();
-        window.location.href = '/login?error=no_firm_access';
+        window.location.href = '/login/professional?error=no_firm_access';
         return;
       }
 
@@ -148,7 +149,7 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
       if (!firmOrg) {
         console.error('[Login] No firm org found, signing out');
         await supabase.auth.signOut();
-        window.location.href = '/login?error=not_firm_account';
+        window.location.href = '/login/professional?error=not_firm_account';
         return;
       }
 
@@ -172,7 +173,18 @@ async function performRedirect(userId: string, portalType: PortalType): Promise<
 }
 
 export default function Login() {
-  const [portalType, setPortalType] = useState<PortalType>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Derive portal type from URL path
+  const getPortalTypeFromPath = (): PortalType => {
+    if (location.pathname === '/login/council') return 'council';
+    if (location.pathname === '/login/professional') return 'professional';
+    return null;
+  };
+
+  const portalType = getPortalTypeFromPath();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -188,9 +200,18 @@ export default function Login() {
     if (errorCode && ERROR_MESSAGES[errorCode]) {
       setError(ERROR_MESSAGES[errorCode]);
       // Clear the error from URL without reloading
-      window.history.replaceState({}, '', '/login');
+      window.history.replaceState({}, '', location.pathname);
     }
-  }, []);
+  }, [location.pathname]);
+
+  // Reset form state when navigating between portal types
+  useEffect(() => {
+    setError(null);
+    setEmail("");
+    setPassword("");
+    setLoading(false);
+    redirectInProgress.current = false;
+  }, [location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,7 +325,7 @@ export default function Login() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Council Portal */}
                   <button
-                    onClick={() => setPortalType('council')}
+                    onClick={() => navigate('/login/council')}
                     className="group relative bg-white rounded-2xl p-8 text-left shadow-xl shadow-slate-900/5 border border-white/50 hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all duration-300"
                   >
                     <div className="flex flex-col items-center text-center">
@@ -324,7 +345,7 @@ export default function Login() {
 
                   {/* Professional Portal */}
                   <button
-                    onClick={() => setPortalType('professional')}
+                    onClick={() => navigate('/login/professional')}
                     className="group relative bg-white rounded-2xl p-8 text-left shadow-xl shadow-slate-900/5 border border-white/50 hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all duration-300"
                   >
                     <div className="flex flex-col items-center text-center">
@@ -357,13 +378,9 @@ export default function Login() {
                 {/* Back button - centered */}
                 <div className="text-center mb-8">
                   <button
-                    onClick={() => {
-                      setPortalType(null);
-                      setError(null);
-                      setEmail("");
-                      setPassword("");
-                    }}
+                    onClick={() => navigate('/login')}
                     className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                    aria-label="Go back to portal selection"
                   >
                     <ArrowLeft className="w-5 h-5" />
                     <span className="font-medium">Back to portal selection</span>

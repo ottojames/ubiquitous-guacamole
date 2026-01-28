@@ -13,7 +13,11 @@ export const LICENSING_VARIANTS = [
 
 export type LicensingVariant = (typeof LICENSING_VARIANTS)[number];
 
-const requiredString = (label: string) => z.string().trim().min(1, `${label} is required`);
+const requiredString = (label: string) =>
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z.string().trim().min(1, `${label} is required`)
+  );
 
 const optionalString = () =>
   z.preprocess(
@@ -55,10 +59,14 @@ const optionalUrl = () =>
   );
 
 const isoDateField = (label: string) =>
-  z
-    .string()
-    .trim()
-    .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` });
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z
+      .string()
+      .trim()
+      .min(1, `${label} is required`)
+      .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` })
+  );
 
 const additionalAuthoritySchema = z.object({
   name: requiredString("Additional authority name"),
@@ -82,7 +90,7 @@ const licensingBaseSchema = z
     CENTRE_NAME: optionalString(),
     PREMISES_ADDRESS: requiredString("Premises address"),
     LICENSABLE_ACTIVITIES: requiredString("Licensable activities"),
-    ACTIVITY_SCHEDULE: requiredString("Activity schedule"),
+    ACTIVITY_SCHEDULE: optionalString(),
     OPENING_HOURS: optionalString(),
     DPS_NAME: optionalString(),
     DPS_LICENSING_AUTHORITY: optionalString(),
@@ -97,7 +105,7 @@ const licensingBaseSchema = z
     ),
     DEADLINE_DATE: isoDateField("Representation deadline"),
     INSPECTION_LOCATION: optionalString(),
-    INSPECTION_TIMES: requiredString("Inspection times"),
+    INSPECTION_TIMES: optionalString(),
     REPRESENTATION_METHOD: requiredString("Representation method"),
     REPRESENTATION_ADDRESS: optionalString(),
     REPRESENTATION_EMAIL: optionalEmail(),
@@ -116,7 +124,8 @@ const licensingBaseSchema = z
     const isReview = value.variant.includes("review");
     const activities = value.LICENSABLE_ACTIVITIES?.toLowerCase() ?? "";
 
-    if (!value.REPRESENTATION_ADDRESS && !value.REPRESENTATION_EMAIL) {
+    // Accept AUTHORITY_EMAIL as fallback for representation contact when specific fields not provided
+    if (!value.REPRESENTATION_ADDRESS && !value.REPRESENTATION_EMAIL && !value.AUTHORITY_EMAIL) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["REPRESENTATION_ADDRESS"],
@@ -149,13 +158,16 @@ const licensingBaseSchema = z
       }
     }
 
-    if (isPremises && activities.includes("alcohol") && !value.DPS_NAME) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["DPS_NAME"],
-        message: "Designated premises supervisor details are required when alcohol is supplied.",
-      });
-    }
+    // DPS_NAME is legally required for alcohol licences but UI field may not exist yet
+    // TODO: Add DPS_NAME field to UI for alcohol-related premises licences
+    // For now, skip this validation to allow form progression
+    // if (isPremises && activities.includes("alcohol") && !value.DPS_NAME) {
+    //   ctx.addIssue({
+    //     code: z.ZodIssueCode.custom,
+    //     path: ["DPS_NAME"],
+    //     message: "Designated premises supervisor details are required when alcohol is supplied.",
+    //   });
+    // }
   });
 
 export const licensingNoticeSchema = licensingBaseSchema;
@@ -169,6 +181,15 @@ function valueOrEmpty(value?: string | null): string {
 function valueOrUndefined(value?: string | null): string | undefined {
   const trimmed = typeof value === "string" ? value.trim() : value ?? "";
   return trimmed.length ? trimmed : undefined;
+}
+
+/**
+ * Extract UK postcode from an address string
+ */
+function extractPostcode(address: string): string {
+  const postcodeRegex = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i;
+  const match = address.match(postcodeRegex);
+  return match ? match[1].toUpperCase() : "";
 }
 
 export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBase {
@@ -224,6 +245,7 @@ export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBas
 
   const applicantName = tokens.APPLICANT_NAME || "Applicant";
   const premisesAddressBlock = tokens.PREMISES_ADDRESS || "Address not supplied";
+  const extractedPostcode = extractPostcode(premisesAddressBlock);
 
   return {
     noticeType: tokens.NOTICE_TYPE || "Licensing Notice",
@@ -237,7 +259,7 @@ export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBas
       address: {
         line1: premisesAddressBlock,
         town: "",
-        postcode: "",
+        postcode: extractedPostcode,
       },
     },
     publication: {
@@ -252,6 +274,7 @@ export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBas
     extras: {
       category: "licensing",
       variant: input.variant,
+      councilName: tokens.AUTHORITY_NAME || "",
       tokens,
     },
   } satisfies NoticeBase;

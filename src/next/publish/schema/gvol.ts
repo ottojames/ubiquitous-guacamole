@@ -56,7 +56,11 @@ const TRAFFIC_COMMISSIONER_OFFICES: Record<TrafficArea, { address: string; email
   },
 };
 
-const requiredString = (label: string) => z.string().trim().min(1, `${label} is required`);
+const requiredString = (label: string) =>
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z.string().trim().min(1, `${label} is required`)
+  );
 
 const optionalString = () =>
   z.preprocess(
@@ -71,16 +75,24 @@ const optionalString = () =>
   );
 
 const isoDateField = (label: string) =>
-  z
-    .string()
-    .trim()
-    .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` });
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z
+      .string()
+      .trim()
+      .min(1, `${label} is required`)
+      .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` })
+  );
 
 const digitsOnly = (label: string) =>
-  z
-    .string()
-    .trim()
-    .regex(/^\d+$/, { message: `${label} must be a whole number` });
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z
+      .string()
+      .trim()
+      .min(1, `${label} is required`)
+      .regex(/^\d+$/, { message: `${label} must be a whole number` })
+  );
 
 export const gvolNoticeSchema = z
   .object({

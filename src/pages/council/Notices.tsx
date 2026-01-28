@@ -39,7 +39,7 @@ interface Notice {
   support_count?: number;
 }
 
-type FilterStatus = 'all' | 'draft' | 'published' | 'expired';
+type FilterStatus = 'all' | 'draft' | 'published' | 'expired' | 'pending_approval';
 
 export default function Notices() {
   const { department, userRole } = useOutletContext<ContextType>();
@@ -54,6 +54,8 @@ export default function Notices() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasObjectionsFilter, setHasObjectionsFilter] = useState(false);
   const [highActivityFilter, setHighActivityFilter] = useState(false);
+  const [closingSoonFilter, setClosingSoonFilter] = useState(false);
+  const [hasRepsFilter, setHasRepsFilter] = useState(false);
   const [sortBy, setSortBy] = useState<'deadline-asc' | 'deadline-desc' | 'recent' | 'title'>('deadline-asc');
   const [filterNoticeType, setFilterNoticeType] = useState<string>('all');
 
@@ -64,19 +66,24 @@ export default function Notices() {
 
   // Bulk operations state
   const [selectedNotices, setSelectedNotices] = useState<Set<string>>(new Set());
-  const [bulkActionInProgress, setBulkActionInProgress] = useState(false);
-  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
-  const [csvImportFile, setCsvImportFile] = useState<File | null>(null);
 
-  // Check if we're in demo mode
-  const isDemoMode = orgSlug === 'sample-borough' || orgSlug === 'westminster' || orgSlug === 'westminster-city-of-council' || orgSlug === 'bristol-council' || orgSlug === 'sampleton-borough-council';
-  const isDemoSampleBorough = orgSlug === 'sample-borough';
-
-  // Read status from URL on mount
+  // Read filters from URL on mount
   useEffect(() => {
     const statusParam = searchParams.get('status');
-    if (statusParam && ['draft', 'published', 'expired'].includes(statusParam)) {
+    if (statusParam && ['draft', 'published', 'expired', 'pending_approval'].includes(statusParam)) {
       setFilterStatus(statusParam as FilterStatus);
+    }
+
+    // Handle closingSoon filter
+    const closingSoonParam = searchParams.get('closingSoon');
+    if (closingSoonParam === 'true') {
+      setClosingSoonFilter(true);
+    }
+
+    // Handle hasReps filter
+    const hasRepsParam = searchParams.get('hasReps');
+    if (hasRepsParam === 'true') {
+      setHasRepsFilter(true);
     }
   }, [searchParams]);
 
@@ -86,62 +93,17 @@ export default function Notices() {
 
   useEffect(() => {
     filterNotices();
-  }, [notices, filterStatus, searchQuery, hasObjectionsFilter, highActivityFilter, sortBy, filterNoticeType]);
+  }, [notices, filterStatus, searchQuery, hasObjectionsFilter, highActivityFilter, closingSoonFilter, hasRepsFilter, sortBy, filterNoticeType]);
 
+  // P1-005: Remove demo mode detection - use consistent data fetching for all orgs
   const loadNotices = async () => {
     try {
-      if (isDemoMode) {
-        // For demo mode, fetch all notices via API
-        const response = await fetch('/api/notices/search?limit=100&sort=created_at.desc');
-        if (!response.ok) {
-          throw new Error('Failed to fetch notices from API');
-        }
+      // Fetch notices for this department via API
+      // The API handles filtering by department context
+      const response = await fetch(`/api/notices/search?department_id=${department.id}&limit=100&sort=created_at.desc`);
 
-        const responseData = await response.json();
-        const allNotices = responseData.items || [];
-
-        // Transform API response to match Notice interface
-        const transformedNotices = await Promise.all(allNotices.map(async (n: any) => {
-          // Fetch representation counts from Supabase
-          let representationsCount = 0;
-          let objectionsCount = 0;
-          let supportCount = 0;
-
-          try {
-            const { data: reps, error } = await supabase
-              .from('representations')
-              .select('type')
-              .eq('notice_id', n.id);
-
-            if (!error && reps) {
-              representationsCount = reps.length;
-              objectionsCount = reps.filter(r => r.type === 'objection').length;
-              supportCount = reps.filter(r => r.type === 'support').length;
-            }
-          } catch (err) {
-            console.error('Failed to fetch representation counts for notice', n.id, err);
-          }
-
-          return {
-            id: n.id,
-            title: n.premisesName || n.title || 'Untitled Notice',
-            notice_type: n.noticeType || 'Unknown',
-            status: n.status || 'published',
-            created_at: n.publicationDate || n.created_at,
-            published_at: n.publicationDate || n.published_at,
-            expires_at: null,
-            representation_deadline: n.repsDeadline || null,
-            proof_pdf_url: n.proof_pdf_url || null,
-            representations_count: representationsCount,
-            objections_count: objectionsCount,
-            support_count: supportCount
-          };
-        }));
-
-        setNotices(transformedNotices);
-        setLoading(false);
-      } else {
-        // Production mode: filter by department_id
+      if (!response.ok) {
+        // Fallback to direct Supabase query if API fails
         const { data, error } = await supabase
           .from('notices')
           .select('id, title, notice_type, status, created_at, published_at, expires_at, representation_deadline, proof_pdf_url')
@@ -171,7 +133,52 @@ export default function Notices() {
 
         setNotices(noticesWithReps);
         setLoading(false);
+        return;
       }
+
+      const responseData = await response.json();
+      const allNotices = responseData.items || [];
+
+      // Transform API response to match Notice interface
+      const transformedNotices = await Promise.all(allNotices.map(async (n: any) => {
+        // Fetch representation counts from Supabase
+        let representationsCount = 0;
+        let objectionsCount = 0;
+        let supportCount = 0;
+
+        try {
+          const { data: reps, error } = await supabase
+            .from('representations')
+            .select('type')
+            .eq('notice_id', n.id);
+
+          if (!error && reps) {
+            representationsCount = reps.length;
+            objectionsCount = reps.filter(r => r.type === 'objection').length;
+            supportCount = reps.filter(r => r.type === 'support').length;
+          }
+        } catch (err) {
+          console.error('Failed to fetch representation counts for notice', n.id, err);
+        }
+
+        return {
+          id: n.id,
+          title: n.premisesName || n.title || 'Untitled Notice',
+          notice_type: n.noticeType || 'Unknown',
+          status: n.status || 'published',
+          created_at: n.publicationDate || n.created_at,
+          published_at: n.publicationDate || n.published_at,
+          expires_at: null,
+          representation_deadline: n.repsDeadline || null,
+          proof_pdf_url: n.proof_pdf_url || null,
+          representations_count: representationsCount,
+          objections_count: objectionsCount,
+          support_count: supportCount
+        };
+      }));
+
+      setNotices(transformedNotices);
+      setLoading(false);
     } catch (err) {
       console.error('Failed to load notices:', err);
       setLoading(false);
@@ -203,6 +210,22 @@ export default function Notices() {
     // Filter by high activity (5+ representations)
     if (highActivityFilter) {
       filtered = filtered.filter(n => (n.representations_count ?? 0) >= 5);
+    }
+
+    // Filter by closing soon (within 7 days)
+    if (closingSoonFilter) {
+      const now = new Date();
+      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      filtered = filtered.filter(n => {
+        if (!n.representation_deadline) return false;
+        const deadline = new Date(n.representation_deadline);
+        return deadline > now && deadline <= sevenDaysFromNow;
+      });
+    }
+
+    // Filter by has representations
+    if (hasRepsFilter) {
+      filtered = filtered.filter(n => (n.representations_count ?? 0) > 0);
     }
 
     // Filter by notice type
@@ -300,59 +323,7 @@ export default function Notices() {
     setSelectedNotices(newSelected);
   };
 
-  const handleBulkPublish = async () => {
-    if (!confirm(`Publish ${selectedNotices.size} selected notices?`)) return;
-
-    try {
-      setBulkActionInProgress(true);
-
-      // TODO: Replace with actual database update
-      // In production, this would call Supabase to update multiple notices
-      for (const noticeId of selectedNotices) {
-        await supabase
-          .from('notices')
-          .update({
-            status: 'published',
-            published_at: new Date().toISOString()
-          })
-          .eq('id', noticeId);
-      }
-
-      alert(`Successfully published ${selectedNotices.size} notices`);
-      setSelectedNotices(new Set());
-      loadNotices(); // Reload to show updated statuses
-    } catch (err) {
-      console.error('Bulk publish failed:', err);
-      alert('Failed to publish notices. Please try again.');
-    } finally {
-      setBulkActionInProgress(false);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedNotices.size} selected notices? This action cannot be undone.`)) return;
-
-    try {
-      setBulkActionInProgress(true);
-
-      // TODO: Replace with actual database delete
-      for (const noticeId of selectedNotices) {
-        await supabase
-          .from('notices')
-          .delete()
-          .eq('id', noticeId);
-      }
-
-      alert(`Successfully deleted ${selectedNotices.size} notices`);
-      setSelectedNotices(new Set());
-      loadNotices(); // Reload to show updated list
-    } catch (err) {
-      console.error('Bulk delete failed:', err);
-      alert('Failed to delete notices. Please try again.');
-    } finally {
-      setBulkActionInProgress(false);
-    }
-  };
+  // P1-006: Bulk publish/delete removed until properly implemented with proper authorization
 
   const handleBulkExport = () => {
     // Get selected notices data
@@ -389,57 +360,7 @@ export default function Notices() {
     alert(`Exported ${selectedNotices.size} notices to CSV`);
   };
 
-  const handleCsvImport = async () => {
-    if (!csvImportFile) return;
-
-    try {
-      setBulkActionInProgress(true);
-
-      // Read CSV file
-      const text = await csvImportFile.text();
-      const lines = text.split('\n').filter(line => line.trim());
-
-      if (lines.length < 2) {
-        throw new Error('CSV file appears to be empty');
-      }
-
-      // Parse CSV (simple implementation - assumes well-formed CSV)
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      const titleIndex = headers.indexOf('title');
-      const typeIndex = headers.indexOf('notice type') || headers.indexOf('notice_type');
-
-      if (titleIndex === -1 || typeIndex === -1) {
-        throw new Error('CSV must have "Title" and "Notice Type" columns');
-      }
-
-      let importCount = 0;
-
-      // Process each row (skip header)
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-
-        const title = values[titleIndex];
-        const noticeType = values[typeIndex];
-
-        if (!title || !noticeType) continue;
-
-        // TODO: In production, create actual notice records
-        // For now, just log what would be imported
-        console.log('Would import:', { title, noticeType });
-        importCount++;
-      }
-
-      alert(`Successfully imported ${importCount} notices from CSV`);
-      setShowBulkImportModal(false);
-      setCsvImportFile(null);
-      loadNotices(); // Reload to show imported notices
-    } catch (err) {
-      console.error('CSV import failed:', err);
-      alert(err instanceof Error ? err.message : 'Failed to import CSV. Please check the file format.');
-    } finally {
-      setBulkActionInProgress(false);
-    }
-  };
+  // P1-006: CSV import removed until properly implemented
 
   // Get department-specific configuration
   const deptConfig = getDepartmentConfig(department.type);
@@ -452,13 +373,17 @@ export default function Notices() {
     all: notices.length,
     draft: notices.filter(n => n.status === 'draft').length,
     published: notices.filter(n => n.status === 'published').length,
-    expired: notices.filter(n => n.status === 'expired').length
+    expired: notices.filter(n => n.status === 'expired').length,
+    pending_approval: notices.filter(n => n.status === 'pending_approval').length
   };
 
   // Filter out draft status for non-publishing departments
+  // Include pending_approval if there are any
   const availableStatuses: FilterStatus[] = deptConfig.showDraftsCard
-    ? ['all', 'draft', 'published', 'expired']
-    : ['all', 'published', 'expired'];
+    ? ['all', 'draft', 'published', 'pending_approval', 'expired']
+    : statusCounts.pending_approval > 0
+      ? ['all', 'published', 'pending_approval', 'expired']
+      : ['all', 'published', 'expired'];
 
   if (loading) {
     return (
@@ -505,25 +430,17 @@ export default function Notices() {
         </div>
         <div className="flex items-center gap-3">
           {canCreateNotice && (
-            <>
-              <button
-                onClick={() => setShowBulkImportModal(true)}
-                className="bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl"
-              >
-                Import CSV
-              </button>
-              <Link
-                to={`${basePath}/notices/new`}
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
-              >
-                + Create Notice
-              </Link>
-            </>
+            <Link
+              to={`${basePath}/notices/new`}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              + Create Notice
+            </Link>
           )}
         </div>
       </div>
 
-      {/* Bulk Actions Toolbar */}
+      {/* Bulk Actions Toolbar - P1-006: Only export is implemented */}
       {selectedNotices.size > 0 && (
         <div className="bg-blue-50 border-2 border-blue-200 rounded-3xl p-4">
           <div className="flex items-center justify-between">
@@ -539,31 +456,12 @@ export default function Notices() {
               </button>
             </div>
             <div className="flex items-center gap-3">
-              {hasPermission(PERMISSIONS.NOTICES_PUBLISH) && (
-                <button
-                  onClick={handleBulkPublish}
-                  disabled={bulkActionInProgress}
-                  className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-                >
-                  Publish Selected
-                </button>
-              )}
               <button
                 onClick={handleBulkExport}
-                disabled={bulkActionInProgress}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
               >
                 Export to CSV
               </button>
-              {hasPermission(PERMISSIONS.NOTICES_DELETE) && (
-                <button
-                  onClick={handleBulkDelete}
-                  disabled={bulkActionInProgress}
-                  className="bg-red-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  Delete Selected
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -652,6 +550,36 @@ export default function Notices() {
         {/* Additional Filters */}
         <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-gray-200">
           <button
+            onClick={() => setClosingSoonFilter(!closingSoonFilter)}
+            className={`px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2 ${
+              closingSoonFilter
+                ? 'bg-amber-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            title="Filter notices closing within 7 days"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Closing soon
+            {closingSoonFilter && ` (${filteredNotices.length})`}
+          </button>
+          <button
+            onClick={() => setHasRepsFilter(!hasRepsFilter)}
+            className={`px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2 ${
+              hasRepsFilter
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            title="Filter notices with representations"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+            Has reps
+            {hasRepsFilter && ` (${filteredNotices.length})`}
+          </button>
+          <button
             onClick={() => setHasObjectionsFilter(!hasObjectionsFilter)}
             className={`px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2 ${
               hasObjectionsFilter
@@ -681,11 +609,13 @@ export default function Notices() {
             High activity (5+)
             {highActivityFilter && ` (${filteredNotices.length})`}
           </button>
-          {(hasObjectionsFilter || highActivityFilter || filterNoticeType !== 'all') && (
+          {(hasObjectionsFilter || highActivityFilter || closingSoonFilter || hasRepsFilter || filterNoticeType !== 'all') && (
             <button
               onClick={() => {
                 setHasObjectionsFilter(false);
                 setHighActivityFilter(false);
+                setClosingSoonFilter(false);
+                setHasRepsFilter(false);
                 setFilterNoticeType('all');
               }}
               className="px-4 py-2 rounded-xl font-medium text-gray-600 hover:text-gray-900 underline"
@@ -863,90 +793,7 @@ export default function Notices() {
         </div>
       )}
 
-      {/* CSV Import Modal */}
-      {showBulkImportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full">
-            <div className="p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Import Notices from CSV</h2>
-                <button
-                  onClick={() => {
-                    setShowBulkImportModal(false);
-                    setCsvImportFile(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>CSV Format:</strong> Your file must include "Title" and "Notice Type" columns.
-                    Additional columns will be ignored.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select CSV File
-                  </label>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={(e) => setCsvImportFile(e.target.files?.[0] || null)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  {csvImportFile && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      Selected: {csvImportFile.name} ({(csvImportFile.size / 1024).toFixed(1)} KB)
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> This is a demo implementation. In production, imported notices
-                    would be created as drafts in the database for review before publishing.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={() => {
-                    setShowBulkImportModal(false);
-                    setCsvImportFile(null);
-                  }}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                  disabled={bulkActionInProgress}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCsvImport}
-                  disabled={!csvImportFile || bulkActionInProgress}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {bulkActionInProgress ? 'Importing...' : 'Import CSV'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* P1-006: CSV Import Modal removed until properly implemented */}
     </div>
   );
 }

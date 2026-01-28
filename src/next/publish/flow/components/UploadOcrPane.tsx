@@ -796,7 +796,6 @@ function FieldInput({ field, value, onChange, setValue, errors, definition }: Fi
       }
       break;
     case "email":
-    case "date":
     case "tel":
     case "url":
     case "number":
@@ -811,6 +810,25 @@ function FieldInput({ field, value, onChange, setValue, errors, definition }: Fi
           aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
           onChange={handleChange}
           maxLength={field.maxLength}
+        />
+      );
+      break;
+    case "date":
+      // Date input with click-to-open calendar behavior
+      control = (
+        <input
+          id={inputId}
+          name={field.token.toLowerCase().includes('_date') ? field.token.toLowerCase() : field.token.toLowerCase().replace(/_/g, '')}
+          type="date"
+          value={value}
+          className={`${errors?.length ? errorInputClasses : baseInputClasses} cursor-pointer`}
+          aria-required={field.required ? "true" : undefined}
+          aria-describedby={[helperId, errorId].filter(Boolean).join(" ") || undefined}
+          onChange={handleChange}
+          onClick={(e) => {
+            // Open the date picker when clicking anywhere on the input
+            (e.target as HTMLInputElement).showPicker?.();
+          }}
         />
       );
       break;

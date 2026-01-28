@@ -265,7 +265,7 @@ export default function AddressSearch({
       return;
     }
 
-    debounceRef.current = window.setTimeout(() => {
+    debounceRef.current = setTimeout(() => {
       fetchSuggestions(query);
     }, Math.max(100, debounceMs));
   }, [debounceMs, disabled, fetchSuggestions, queryValue, resetPending, showFallback]);

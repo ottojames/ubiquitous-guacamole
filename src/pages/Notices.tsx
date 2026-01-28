@@ -116,7 +116,8 @@ export default function NoticesPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showAllMapResults, setShowAllMapResults] = useState(false);
 
-  const mapView = viewParam === 'map';
+  // Default to map view (only show list view if explicitly set)
+  const mapView = viewParam !== 'list';
 
   useEffect(() => {
     setAddressValue(queryParam);
@@ -641,6 +642,7 @@ export default function NoticesPage() {
                 onSubmit={handleAddressSubmit}
                 onFreeText={handleFreeText}
                 testIdPrefix="notices"
+                showGeolocation
               />
               {addressInlineError && (
                 <p role="alert" className="mt-2 text-sm font-medium text-rose-600">

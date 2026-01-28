@@ -274,6 +274,23 @@ export default function NewPublishFlow() {
     }
   }, [buildStepUrl, currentStep, navigate, pathname]);
 
+  // Ref for the wizard content area
+  const wizardContentRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll wizard content into view when navigating between steps
+  // Uses scrollIntoView to stay focused on the form content rather than absolute page top
+  useEffect(() => {
+    if (currentStep !== null && wizardContentRef.current) {
+      // Small delay to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        wizardContentRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      });
+    }
+  }, [currentStep]);
+
   // Load firm practice areas if publishing from firm context
   useEffect(() => {
     const loadFirmPracticeAreas = async () => {
@@ -862,6 +879,85 @@ export default function NewPublishFlow() {
     }
   }, [builder, templateDraft, definition?.id]);
 
+  // Step 4 guard: Redirect to Step 3 if templateNotice is null for template mode
+  // This ensures users can't reach payment without valid form data
+  useEffect(() => {
+    if (currentStep === 4 && uploadMethod === "template" && !templateNotice) {
+      toast("Please complete all required fields before proceeding to payment.");
+      goToStep(3, { replace: true });
+    }
+  }, [currentStep, uploadMethod, templateNotice, goToStep]);
+
+  // Preview notice - generated from templateDraft even when validation fails
+  // This allows the preview to show template structure with placeholders for missing fields
+  const previewNotice: NoticeBase | null = useMemo(() => {
+    if (!definition || !templateDraft) {
+      return null;
+    }
+
+    // Generate a preview-only notice from the raw draft data
+    // This bypasses validation so we can show preview with partial data
+    const tokens = { ...templateDraft } as Record<string, string>;
+
+    // Ensure essential fields have placeholder values for preview
+    const placeholderValue = (key: string, label: string) => {
+      const val = tokens[key];
+      return (typeof val === 'string' && val.trim()) ? val : `[${label}]`;
+    };
+
+    return {
+      noticeType: definition.label,
+      applicant: {
+        type: 'company' as const,
+        fullName: placeholderValue('APPLICANT_NAME', 'Applicant Name'),
+        contactEmail: tokens.REPRESENTATION_EMAIL || '',
+      },
+      premises: {
+        name: tokens.PREMISES_NAME || undefined,
+        address: {
+          line1: placeholderValue('PREMISES_ADDRESS', 'Premises Address'),
+          town: '',
+          postcode: '',
+        },
+      },
+      publication: {
+        newspaper: '',
+        targetDate: tokens.PUBLICATION_DATE || tokens.APPLICATION_DATE || '',
+      },
+      consultation: {
+        applicationDate: tokens.APPLICATION_DATE || '[Application Date]',
+        repsDeadline: tokens.DEADLINE_DATE || '[Deadline Date]',
+        windowRule: 'LA2003_28D',
+      },
+      extras: {
+        category: definition.category,
+        variant: definition.id,
+        // Pass the raw template tokens for preview rendering
+        // Fix 2: Generate default NATURE_OF_VARIATION for variation types if empty
+        tokens: Object.fromEntries(
+          Object.entries(templateDraft).map(([key, value]) => {
+            // Special handling for NATURE_OF_VARIATION on variation notice types
+            if (key === 'NATURE_OF_VARIATION' && definition.id.includes('variation')) {
+              const val = typeof value === 'string' ? value.trim() : '';
+              if (!val) {
+                // Generate a helpful default based on LICENSABLE_ACTIVITIES if available
+                const activities = templateDraft.LICENSABLE_ACTIVITIES;
+                if (typeof activities === 'string' && activities.trim()) {
+                  return [key, `To vary the licence to authorise: ${activities}`];
+                }
+                return [key, '[Select activities above to auto-generate variation description]'];
+              }
+            }
+            return [
+              key,
+              typeof value === 'string' && value.trim() ? value : `[${key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}]`
+            ];
+          })
+        ),
+      },
+    } satisfies NoticeBase;
+  }, [definition, templateDraft]);
+
   const [templateText, setTemplateText] = useState("");
   const [templateInfo, setTemplateInfo] = useState<TemplateRenderResult | null>(null);
 
@@ -914,8 +1010,12 @@ export default function NewPublishFlow() {
   }, [templateNotice]);
 
   // Render notice text with custom template support
+  // Uses previewNotice (partial data with placeholders) when templateNotice (fully validated) isn't available
   useEffect(() => {
-    if (!templateNotice) {
+    // Use templateNotice if validation passed, otherwise use previewNotice for preview display
+    const noticeForPreview = templateNotice || previewNotice;
+
+    if (!noticeForPreview) {
       setTemplateText("");
       setTemplateInfo(null);
       return;
@@ -1017,9 +1117,10 @@ export default function NewPublishFlow() {
         console.log('[NewPublishFlow] Department ID:', departmentId);
         console.log('[NewPublishFlow] Notice Type ID:', noticeTypeId);
         console.log('[NewPublishFlow] Authority Name:', templateDraft?.AUTHORITY_NAME);
+        console.log('[NewPublishFlow] Using preview mode:', !templateNotice && !!previewNotice);
 
         // Use the template service which handles custom templates and fallback
-        const result = await renderNoticeWithTemplateInfo(templateNotice, departmentId, noticeTypeId);
+        const result = await renderNoticeWithTemplateInfo(noticeForPreview, departmentId, noticeTypeId);
 
         if (!cancelled) {
           setTemplateText(result.text);
@@ -1037,7 +1138,7 @@ export default function NewPublishFlow() {
           toast("Using default template format. Custom template could not be loaded.");
           if (templateRenderer) {
             try {
-              setTemplateText(templateRenderer.renderText(templateNotice) ?? "");
+              setTemplateText(templateRenderer.renderText(noticeForPreview) ?? "");
               setTemplateInfo({ text: '', isCustomTemplate: false });
             } catch {
               setTemplateText("");
@@ -1056,7 +1157,7 @@ export default function NewPublishFlow() {
     return () => {
       cancelled = true;
     };
-  }, [templateNotice, templateRenderer, templateDraft, definition]);
+  }, [templateNotice, previewNotice, templateRenderer, templateDraft, definition]);
 
   // Validation
   const validationIssues: WindowRuleIssue[] = useMemo(
@@ -1532,11 +1633,19 @@ export default function NewPublishFlow() {
       // Check if user is authenticated (for Phase 5 firm publishing)
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Use Phase 5 flow when:
-      // 1. User is in a portal context (/f/ or /c/) OR
-      // 2. User is authenticated (logged in firm/council)
-      // Anonymous public users at /publish will use legacy flow
-      const usePhase5Flow = !!session;
+      // Use Phase 5 flow ONLY when:
+      // 1. User is authenticated AND
+      // 2. User has organization membership (from UnifiedAuth context)
+      // This prevents errors when a user is logged in but not part of a firm
+      // Anonymous public users and logged-in users without firm membership use legacy flow
+      const usePhase5Flow = !!session && !!organization?.id;
+
+      console.log('[NewPublishFlow] Auth check:', {
+        hasSession: !!session,
+        hasOrganization: !!organization?.id,
+        organizationType: organization?.type,
+        usePhase5Flow,
+      });
 
       let noticeData: any;
 
@@ -1555,13 +1664,86 @@ export default function NewPublishFlow() {
         // Publishing from template builder
         // IMPORTANT: Pass raw template draft as extras.tokens so generateNoticeText() can use it
         console.log('[🔥 NewPublishFlow PUBLISH DEBUG] ✅ Using template branch - tokens will be:', templateDraft);
+
+        // Ensure NATURE_OF_VARIATION is set for variation notices (don't send empty/placeholder values)
+        const publishTokens = { ...(templateDraft || {}) };
+
+        // Helper to check if a value looks like a placeholder that shouldn't be published
+        const isPlaceholderValue = (val: unknown): boolean => {
+          if (typeof val !== 'string') return true;
+          const trimmed = val.trim();
+          if (!trimmed) return true;
+          // Check for various placeholder patterns
+          if (trimmed.startsWith('[') && trimmed.endsWith(']')) return true; // [placeholder]
+          if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) return true; // {{TOKEN}}
+          if (trimmed.toLowerCase().includes('placeholder')) return true;
+          if (trimmed.toLowerCase().includes('missing:')) return true;
+          if (trimmed.toLowerCase().includes('select activities')) return true;
+          if (trimmed.toLowerCase().includes('auto-generate')) return true;
+          return false;
+        };
+
+        // Debug: Log the raw templateDraft values
+        console.log('[NewPublishFlow] NATURE_OF_VARIATION debug:', {
+          definitionId: definition?.id,
+          isVariation: definition?.id.includes('variation'),
+          rawNatureOfVariation: templateDraft?.NATURE_OF_VARIATION,
+          rawLicensableActivities: templateDraft?.LICENSABLE_ACTIVITIES,
+          rawActivitySchedule: templateDraft?.ACTIVITY_SCHEDULE,
+        });
+
+        if (definition?.id.includes('variation')) {
+          const currentVariation = typeof publishTokens.NATURE_OF_VARIATION === 'string'
+            ? publishTokens.NATURE_OF_VARIATION.trim()
+            : '';
+
+          const needsGeneration = isPlaceholderValue(currentVariation);
+
+          console.log('[NewPublishFlow] NATURE_OF_VARIATION check:', {
+            currentVariation: currentVariation.substring(0, 100),
+            isPlaceholder: needsGeneration,
+          });
+
+          // Check if empty or still has placeholder text
+          if (needsGeneration) {
+            // Generate from LICENSABLE_ACTIVITIES if available
+            const activities = typeof publishTokens.LICENSABLE_ACTIVITIES === 'string'
+              ? publishTokens.LICENSABLE_ACTIVITIES.trim()
+              : '';
+
+            // Also check ACTIVITY_SCHEDULE for activity info
+            const schedule = typeof publishTokens.ACTIVITY_SCHEDULE === 'string'
+              ? publishTokens.ACTIVITY_SCHEDULE.trim()
+              : '';
+
+            console.log('[NewPublishFlow] Generating NATURE_OF_VARIATION:', { activities: activities || '(empty)', schedule: schedule.substring(0, 50) || '(empty)' });
+
+            if (activities && !isPlaceholderValue(activities)) {
+              publishTokens.NATURE_OF_VARIATION = `To vary the licence to authorise: ${activities}`;
+              console.log('[NewPublishFlow] Generated NATURE_OF_VARIATION from activities');
+            } else if (schedule && !isPlaceholderValue(schedule)) {
+              // Try to extract activity info from schedule
+              publishTokens.NATURE_OF_VARIATION = `To vary the conditions of the premises licence to permit the following: ${schedule.split('\n')[0]}`;
+              console.log('[NewPublishFlow] Generated NATURE_OF_VARIATION from schedule');
+            } else {
+              // Use generic default - this is the failsafe
+              publishTokens.NATURE_OF_VARIATION = 'Vary the conditions of the premises licence as described in the application';
+              console.log('[NewPublishFlow] Using default NATURE_OF_VARIATION');
+            }
+          } else {
+            console.log('[NewPublishFlow] NATURE_OF_VARIATION has valid value:', currentVariation.substring(0, 50));
+          }
+        }
+
+        console.log('[NewPublishFlow] Final publishTokens.NATURE_OF_VARIATION:', publishTokens.NATURE_OF_VARIATION);
+
         noticeData = {
           premises: templateNotice.premises || {},
           applicant: templateNotice.applicant || {},
           consultation: templateNotice.consultation || {},
           extras: {
             ...(templateNotice.extras || {}),
-            tokens: templateDraft || {}, // Raw template fields (PREMISES_NAME, APPLICANT_NAME, etc.)
+            tokens: publishTokens, // Raw template fields with ensured NATURE_OF_VARIATION
           },
         };
       } else if (uploadMethod === "notice") {
@@ -1619,91 +1801,41 @@ export default function NewPublishFlow() {
         console.log('[🔥 NewPublishFlow PUBLISH DEBUG] uploadMethod:', uploadMethod);
         console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateNotice:', templateNotice);
         console.log('[🔥 NewPublishFlow PUBLISH DEBUG] templateDraft:', templateDraft);
-        toast("Please complete the form before submitting");
+
+        // Provide specific error message about what's missing
+        if (uploadMethod === "template" && !templateNotice) {
+          // Get the actual validation errors
+          if (templateParse && !templateParse.success) {
+            const missingFields = templateParse.error.issues
+              .map(issue => issue.path.join('.') || issue.message)
+              .slice(0, 5); // Show first 5 errors
+            const fieldList = missingFields.join(', ');
+            console.error('[NewPublishFlow] Validation errors:', templateParse.error.issues);
+            toast(`Missing or invalid fields: ${fieldList}. Please go back and complete all required fields.`);
+          } else {
+            toast("Form validation failed. Please complete all required fields and try again.");
+          }
+        } else {
+          toast("Please complete the form before submitting");
+        }
         return;
       }
 
-      if (usePhase5Flow && session) {
-        // Phase 5: Authenticated firm publishing (goes live immediately with billing)
-        const { publishNotice } = await import("@/lib/notices");
-
-        // Prefer organization context from UnifiedAuth if available, otherwise use draft
-        let councilId: string | null = null;
-        let departmentId: string | null = null;
-        let councilName = "Unknown Council";
-
-        // First try to use context from UnifiedAuth (for logged-in firms)
-        if (organization?.id && department?.id) {
-          console.log("[NewPublishFlow] Using organization context from UnifiedAuth");
-          councilId = organization.id;
-          departmentId = department.id;
-          councilName = organization.name || "Unknown Council";
-        } else {
-          // Fallback to draft department ID (from dropdown selection)
-          const draftDepartmentId = templateDraft?.DEPARTMENT_ID;
-
-          if (!draftDepartmentId) {
-            toast("Please select a licensing authority (e.g., Westminster City Council)");
-            return;
-          }
-
-          console.log("[NewPublishFlow] Looking up department and council for:", draftDepartmentId);
-
-          // Query Supabase to get both department and its organization (council)
-          const { data: deptData, error: deptError } = await supabase
-            .from('departments')
-            .select('id, organization_id, organizations(id, name)')
-            .eq('id', draftDepartmentId)
-            .single();
-
-          if (deptError || !deptData) {
-            console.error("[NewPublishFlow] Department lookup failed:", deptError);
-            toast("Failed to find licensing authority. Please try selecting it again from the dropdown.");
-            return;
-          }
-
-          councilId = deptData.organization_id;
-          departmentId = deptData.id;
-          councilName = (deptData as any).organizations?.name || "Unknown Council";
-        }
-
-        console.log("[NewPublishFlow] Publishing to:", { councilName, councilId, departmentId });
-
-        const result = await publishNotice(
-          {
-            target_council_id: councilId ?? '',
-            target_department_id: departmentId ?? '',
-            notice_data: noticeData,
-            notice_type: definition?.id || "premises-licence",
-            title: legalDetails.premisesName || "Licensing Application",
-            // billing_amount calculated automatically by database trigger based on subscription tier
-          },
-          session.access_token
-        );
-
-        console.info("✓ Notice published with ID:", result.notice.id);
-
-        // Show Phase 5 success modal
-        setPublishResult(result);
-        setShowSuccessModal(true);
-      } else {
-        // Legacy flow: Direct database insert (for testing/councils)
+      // Helper function for legacy flow (used by both anonymous users and as fallback)
+      const publishViaLegacyFlow = async () => {
         const { submitNotice } = await import("@/lib/notices");
 
-        console.log("[NewPublishFlow] Publishing via legacy endpoint (no auth)...");
+        console.log("[NewPublishFlow] Publishing via legacy endpoint...");
 
-        // Determine department and organization IDs
-        // Priority: 1) UnifiedAuth context, 2) templateDraft.DEPARTMENT_ID from dropdown selection
+        // Determine department and organization IDs from template dropdown
         let legacyDepartmentId: string | null = department?.id || null;
         let legacyOrganizationId: string | null = organization?.id || null;
 
-        // If no context IDs but user selected a council from dropdown, use that
         const draftDeptId = templateDraft?.DEPARTMENT_ID as string | undefined;
         if (!legacyDepartmentId && draftDeptId) {
           legacyDepartmentId = draftDeptId;
           console.log("[NewPublishFlow] Using department_id from template dropdown:", legacyDepartmentId);
 
-          // Look up the organization_id for this department
           const { data: deptData } = await supabase
             .from('departments')
             .select('organization_id')
@@ -1716,16 +1848,14 @@ export default function NewPublishFlow() {
           }
         }
 
-        // Transform data to match submitNotice payload
         const payload = {
           notice_type: definition?.id || "premises-licence",
           status: "published",
-          contact_email: contactEmail, // Email for confirmation (from Step 2)
+          contact_email: contactEmail,
           applicant: noticeData.applicant || {},
           premises: noticeData.premises || {},
           consultation: noticeData.consultation || {},
           extras: noticeData.extras || {},
-          // Include organization context - from auth context or template dropdown
           organization_id: legacyOrganizationId,
           department_id: legacyDepartmentId,
         };
@@ -1733,18 +1863,79 @@ export default function NewPublishFlow() {
         console.log("[NewPublishFlow] Legacy publish payload department_id:", payload.department_id);
 
         const result = await submitNotice(payload);
-
         console.info("✓ Notice submitted with ID:", result.id);
-
-        // Show simple success message (no magic link or billing for legacy flow)
         toast("✓ Notice published successfully!");
 
-        // Navigate to confirmation page
         if (result.id) {
           navigate(`/notices/${result.id}/confirmation?published=true`);
         } else {
           navigate("/dashboard");
         }
+      };
+
+      // Only use Phase 5 flow if user has organization membership (is part of a firm)
+      // Otherwise use legacy flow for anonymous users and logged-in users without firm membership
+      if (usePhase5Flow && session && organization?.id) {
+        try {
+          // Phase 5: Authenticated firm publishing (goes live immediately with billing)
+          const { publishNotice } = await import("@/lib/notices");
+
+          let councilId: string | null = organization.id;
+          let departmentId: string | null = department?.id || null;
+          let councilName = organization.name || "Unknown Council";
+
+          // If no department from auth context, use dropdown selection
+          if (!departmentId) {
+            const draftDepartmentId = templateDraft?.DEPARTMENT_ID;
+
+            if (!draftDepartmentId) {
+              toast("Please select a licensing authority (e.g., Westminster City Council)");
+              return;
+            }
+
+            console.log("[NewPublishFlow] Looking up department for:", draftDepartmentId);
+
+            const { data: deptData, error: deptError } = await supabase
+              .from('departments')
+              .select('id, organization_id, organizations(id, name)')
+              .eq('id', draftDepartmentId)
+              .single();
+
+            if (deptError || !deptData) {
+              console.error("[NewPublishFlow] Department lookup failed:", deptError);
+              toast("Failed to find licensing authority. Please try selecting it again from the dropdown.");
+              return;
+            }
+
+            councilId = deptData.organization_id;
+            departmentId = deptData.id;
+            councilName = (deptData as any).organizations?.name || "Unknown Council";
+          }
+
+          console.log("[NewPublishFlow] Publishing to:", { councilName, councilId, departmentId });
+
+          const result = await publishNotice(
+            {
+              target_council_id: councilId ?? '',
+              target_department_id: departmentId ?? '',
+              notice_data: noticeData,
+              notice_type: definition?.id || "premises-licence",
+              title: legalDetails.premisesName || "Licensing Application",
+            },
+            session.access_token
+          );
+
+          console.info("✓ Notice published with ID:", result.notice.id);
+          setPublishResult(result);
+          setShowSuccessModal(true);
+        } catch (phase5Error: any) {
+          // If Phase 5 fails (e.g., "Organization not found"), fall back to legacy flow
+          console.warn("[NewPublishFlow] Phase 5 publish failed, falling back to legacy flow:", phase5Error.message);
+          await publishViaLegacyFlow();
+        }
+      } else {
+        // Legacy flow for anonymous users or logged-in users without firm membership
+        await publishViaLegacyFlow();
       }
 
     } catch (error: any) {
@@ -1788,7 +1979,8 @@ export default function NewPublishFlow() {
   // Step 2 should always render; controls inside handle disabled states
   const step2Blocked = false;
   const step3Blocked = currentStep === 3 && (!hasDefinition || !hasDraft || !hasUpload);
-  const step4Blocked = currentStep === 4 && (!hasDefinition || !hasDraft || !hasUpload);
+  // Step 4 (payment) requires valid notice data - for template mode, templateNotice must exist (schema validation passed)
+  const step4Blocked = currentStep === 4 && (!hasDefinition || !hasDraft || !hasUpload || (uploadMethod === "template" && !templateNotice));
 
   return (
     <WizardBoundary contextKey={boundaryContextKey} onReset={() => goToStep(1, { replace: true })}>
@@ -1831,7 +2023,7 @@ export default function NewPublishFlow() {
         )}
 
         {/* Main Content */}
-        <div className="bg-[#F9FAFB] py-12 md:py-16" data-testid="publish-next-flow">
+        <div ref={wizardContentRef} className="bg-[#F9FAFB] py-12 md:py-16" data-testid="publish-next-flow">
           <div className={UI.container}>
           {currentStep === 1 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -1890,9 +2082,9 @@ export default function NewPublishFlow() {
               onOcrTextChange={uploadMethod === "notice" ? handleOcrTextChange : undefined}
               isPortalContext={isPortalContext}
               legalDetails={uploadMethod === "notice" ? legalDetails as Record<string, unknown> : undefined}
-              onGenerateDraft={uploadMethod === "template" ? handleGenerateDraft : undefined}
-              draftGenerating={draftGenerating}
-              draftSuggestions={draftSuggestions}
+              // Note: onGenerateDraft intentionally NOT passed for template flow
+              // Template text is auto-generated when form fields change via renderNoticeWithTemplateInfo()
+              // The "Generate Draft" button was confusing users and could clear content
               preview={
                 <div className="rounded-xl border border-slate-200 p-3 space-y-3">
                   {/* Template indicator for Step 3 - only show when using template mode */}
@@ -1937,12 +2129,10 @@ export default function NewPublishFlow() {
                       onTextChange={(newText) => {
                         if (uploadMethod === "notice") {
                           handleOcrTextChange(newText);
-                        } else if (uploadMethod === "template" && templateDraft) {
-                          // Update template text - you may need to add this handler
-                          setTemplateText(newText);
                         }
+                        // Template text is read-only - generated from template data
                       }}
-                      editable={true}
+                      editable={uploadMethod === "notice"}
                     />
                   </React.Suspense>
                 </div>

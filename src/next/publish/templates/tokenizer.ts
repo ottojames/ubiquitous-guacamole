@@ -160,6 +160,18 @@ export function generateTokensFromNotice(notice: NoticeBase): Record<string, str
     // Merge pre-built tokens
     Object.assign(tokens, extras.tokens);
 
+    // Add alias mappings for templates that use different placeholder names
+    // VARIATION_DESCRIPTION is commonly used in custom templates as an alias for NATURE_OF_VARIATION
+    if (tokens.NATURE_OF_VARIATION && !tokens.VARIATION_DESCRIPTION) {
+      tokens.VARIATION_DESCRIPTION = tokens.NATURE_OF_VARIATION;
+    }
+
+    // PUBLICATION_DATE fallback: Use today's date if not set
+    // This is the date the notice is being published, which is typically today
+    if (!tokens.PUBLICATION_DATE || tokens.PUBLICATION_DATE.startsWith('[')) {
+      tokens.PUBLICATION_DATE = formatDate(new Date().toISOString().split('T')[0]);
+    }
+
     // Return early if we have all the tokens we need
     // (Template builder provides complete token set)
     return tokens;
@@ -327,7 +339,9 @@ export function generateTokensFromNotice(notice: NoticeBase): Record<string, str
 
   if (notice.publication) {
     tokens.NEWSPAPER_NAME = notice.publication.newspaper || '';
-    tokens.PUBLICATION_DATE = formatDate(notice.publication.targetDate);
+    // Use targetDate if available, fallback to applicationDate
+    const publicationDate = notice.publication.targetDate || notice.consultation?.applicationDate || '';
+    tokens.PUBLICATION_DATE = publicationDate ? formatDate(publicationDate) : '';
 
     if (notice.publication.urn) {
       tokens.PUBLICATION_URN = notice.publication.urn;

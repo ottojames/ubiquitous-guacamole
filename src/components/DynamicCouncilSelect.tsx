@@ -37,11 +37,12 @@ export default function DynamicCouncilSelect({
 
     // If user is from a council and not admin, only show their council
     if (organization?.type === 'council' && !isPlatformAdmin) {
+      const settings = organization.settings as Record<string, string> | undefined;
       const council: Council = {
         id: organization.id,
         name: organization.name,
-        email: organization.settings?.authority_email || organization.email || '',
-        address: organization.settings?.authority_address || ''
+        email: settings?.authority_email || '',
+        address: settings?.authority_address || ''
       };
       setCouncils([council]);
       onChange(council); // Auto-select their council

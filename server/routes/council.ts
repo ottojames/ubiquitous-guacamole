@@ -3,6 +3,9 @@ import { getServiceSupabaseClient } from '../lib/supabase.js';
 
 const router = express.Router();
 
+// Lazy getter for supabase client - called inside handlers, not at module load time
+const getSupabase = () => getServiceSupabaseClient();
+
 /**
  * GET /api/council/pending-submissions
  * Get all notices with approval_status = 'pending' for a specific department
@@ -15,7 +18,7 @@ router.get('/pending-submissions', async (req, res) => {
       return res.status(400).json({ error: 'departmentId query parameter required' });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('notices')
       .select(`
         id,
@@ -53,7 +56,7 @@ router.get('/departments/:councilId/stats', async (req, res) => {
     const { councilId } = req.params;
 
     // Get all departments for this council
-    const { data: departments, error: deptError } = await supabase
+    const { data: departments, error: deptError } = await getSupabase()
       .from('departments')
       .select('id, name')
       .eq('council_id', councilId);
@@ -67,21 +70,21 @@ router.get('/departments/:councilId/stats', async (req, res) => {
     const stats = await Promise.all(
       (departments || []).map(async (dept) => {
         // Count published notices
-        const { count: publishedCount } = await supabase
+        const { count: publishedCount } = await getSupabase()
           .from('notices')
           .select('id', { count: 'exact', head: true })
           .eq('department_id', dept.id)
           .eq('status', 'published');
 
         // Count pending submissions
-        const { count: pendingCount } = await supabase
+        const { count: pendingCount } = await getSupabase()
           .from('notices')
           .select('id', { count: 'exact', head: true })
           .eq('department_id', dept.id)
           .eq('approval_status', 'pending');
 
         // Count unread representations for this department's notices
-        const { data: noticeIds } = await supabase
+        const { data: noticeIds } = await getSupabase()
           .from('notices')
           .select('id')
           .eq('department_id', dept.id)
@@ -91,7 +94,7 @@ router.get('/departments/:councilId/stats', async (req, res) => {
         let unreadCount = 0;
 
         if (ids.length > 0) {
-          const { data: reps } = await supabase
+          const { data: reps } = await getSupabase()
             .from('representations')
             .select('id, read_by')
             .in('notice_id', ids);
@@ -133,7 +136,7 @@ router.post('/notices/:id/approve', async (req, res) => {
     }
 
     // Update the notice to approved status
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('notices')
       .update({
         approval_status: 'approved',
@@ -193,7 +196,7 @@ router.post('/notices/:id/reject', async (req, res) => {
     }
 
     // Update the notice to rejected status
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('notices')
       .update({
         approval_status: 'rejected',
@@ -278,7 +281,7 @@ router.get('/representations/unread-count', async (req, res) => {
     }
 
     // Get all notice IDs for this department
-    const { data: noticeIds } = await supabase
+    const { data: noticeIds } = await getSupabase()
       .from('notices')
       .select('id')
       .eq('department_id', departmentId)
@@ -291,7 +294,7 @@ router.get('/representations/unread-count', async (req, res) => {
     }
 
     // Get all representations for these notices
-    const { data: reps } = await supabase
+    const { data: reps } = await getSupabase()
       .from('representations')
       .select('id, read_by')
       .in('notice_id', ids);

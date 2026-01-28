@@ -35,7 +35,7 @@ export default function ApiDocs() {
                 GitHub
               </a>
               <button
-                onClick={() => window.open('/openapi.json', '_blank')}
+                onClick={() => window.open('/api/openapi.json', '_blank')}
                 className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30"
               >
                 <svg className="w-5 h-5 inline mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,7 +90,7 @@ export default function ApiDocs() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'swagger' && (
           <div className="bg-white rounded-3xl shadow-lg p-6">
-            <SwaggerUI url="/openapi.json" />
+            <SwaggerUI url="/api/openapi.json" />
           </div>
         )}
 

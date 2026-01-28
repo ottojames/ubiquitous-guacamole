@@ -21,6 +21,7 @@ export type NoticeSearchItem = {
   premisesName?: string | null;
   premisesAddress?: NoticeAddressSummary;
   premisesPostcode?: string | null;
+  councilName?: string | null;
   repsDeadline?: string | null;
   applicationDate?: string | null;
   publicationDate?: string | null;

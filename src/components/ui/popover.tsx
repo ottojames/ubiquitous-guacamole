@@ -139,7 +139,7 @@ export const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentPro
     useEffect(() => {
       if (!open) return;
 
-      const handlePointerDown = (event: MouseEvent) => {
+      const handlePointerDown = (event: Event) => {
         const target = event.target as Node;
         if (contentRef.current?.contains(target)) return;
         if (triggerRef.current?.contains(target)) return;

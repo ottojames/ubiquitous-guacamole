@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 
 import {
   canQuery,
@@ -7,6 +7,7 @@ import {
   addressDebugEnabled,
   type AddressSuggestion,
 } from '@/lib/address';
+import { useGeolocation, reverseGeocodeToPostcode } from '@/hooks/useGeolocation';
 
 export type AddressSearchSubmitPayload = {
   query: string;
@@ -24,6 +25,8 @@ type AddressSearchBarProps = {
   autoFocus?: boolean;
   testIdPrefix?: string;
   oneClickSelect?: boolean; // Enable one-click address selection
+  showGeolocation?: boolean; // Show "Use current location" button
+  onGeolocationSubmit?: (postcode: string, coords: { latitude: number; longitude: number }) => void;
 };
 
 const DEFAULT_HINT = 'Pick an address to view statutory notices nearby.';
@@ -40,6 +43,8 @@ export function AddressSearchBar({
   autoFocus,
   testIdPrefix = 'address',
   oneClickSelect = false,
+  showGeolocation = false,
+  onGeolocationSubmit,
 }: AddressSearchBarProps) {
   // Use appropriate hint based on mode
   const effectiveHint = hint ?? (oneClickSelect ? ONE_CLICK_HINT : DEFAULT_HINT);
@@ -49,6 +54,14 @@ export function AddressSearchBar({
   const [isFocused, setIsFocused] = React.useState(false);
   const [menuVisible, setMenuVisible] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(-1);
+
+  // Geolocation state
+  const {
+    loading: geoLoading,
+    error: geoError,
+    getCurrentPosition,
+    clearError: clearGeoError,
+  } = useGeolocation();
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const abortRef = React.useRef<AbortController | null>(null);
@@ -257,6 +270,31 @@ export function AddressSearchBar({
     [activeIndex, resetSuggestions, submitSearch, suggestions]
   );
 
+  const handleUseLocation = React.useCallback(async () => {
+    clearGeoError();
+    const position = await getCurrentPosition();
+    if (!position) return;
+
+    // Reverse geocode to get postcode
+    const postcode = await reverseGeocodeToPostcode(position.latitude, position.longitude);
+
+    if (postcode) {
+      // Update the input value with the postcode
+      onValueChange(postcode);
+
+      // If a custom handler is provided, use it
+      if (onGeolocationSubmit) {
+        onGeolocationSubmit(postcode, position);
+      } else {
+        // Otherwise, trigger the normal search with the postcode
+        onSubmit({ query: postcode });
+      }
+    } else {
+      // If we couldn't get a postcode, fall back to showing coordinates
+      setFetchError('Could not determine your postcode. Please enter it manually.');
+    }
+  }, [clearGeoError, getCurrentPosition, onGeolocationSubmit, onSubmit, onValueChange]);
+
   return (
     <form className="space-y-2" onSubmit={handleSubmit} role="search" aria-label="Search statutory notices by address">
       <div className="flex flex-col gap-2 md:flex-row md:items-center">
@@ -387,6 +425,23 @@ export function AddressSearchBar({
             </ul>
           )}
         </div>
+        {showGeolocation && (
+          <button
+            type="button"
+            data-testid={`${testIdPrefix}-location-btn`}
+            onClick={handleUseLocation}
+            disabled={disabled || geoLoading}
+            aria-label="Use current location"
+            title="Use current location"
+            className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-blue-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {geoLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+            ) : (
+              <MapPin className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        )}
         {!oneClickSelect && (
           <button
             type="submit"
@@ -398,6 +453,9 @@ export function AddressSearchBar({
           </button>
         )}
       </div>
+      {geoError && (
+        <p role="alert" className="text-xs text-rose-600">{geoError}</p>
+      )}
       {effectiveHint && <p className="text-xs text-slate-500">{effectiveHint}</p>}
     </form>
   );

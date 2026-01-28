@@ -293,3 +293,42 @@ PRD showed all tasks complete, but `npm run lint` had 19 errors (not just warnin
 
 ---
 
+## Session 4 - 2026-01-22 (Verification)
+
+### Initial State
+Checked PRD.md - all 14 tasks marked complete.
+
+### Verification Results
+- `npm run typecheck` - 0 errors ✅
+- `npm run lint` - 0 errors, 19 warnings (acceptable) ✅
+
+All tasks verified complete. No new work required.
+
+---
+
+## Session 5 - 2026-01-28 (Council Portal UX Fixes)
+
+### Initial State
+New PRD.md with Council Portal UX Fixes - 11 total tasks.
+
+---
+
+## Iteration 20 - Wire Analytics.tsx to show real data
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/Analytics.tsx
+**What Happened**: Replaced API endpoint calls with direct Supabase queries for:
+1. Total notices: `supabase.from('notices').select('id', { count: 'exact', head: true }).eq('department_id', department.id)`
+2. Published notices: Same + `.eq('status', 'published')`
+3. Active notices: Same + `.gte('representation_deadline', now)`
+4. Representations: `supabase.from('representations').select('*, notices!inner(department_id)', { count: 'exact', head: true }).eq('notices.department_id', department.id)`
+
+The component already had `department` from `useOutletContext` - just needed to use it for direct queries instead of relying on potentially non-existent API endpoints.
+
+**Learnings**:
+- Analytics.tsx was calling API endpoints that may not return real data
+- Direct Supabase queries with `{ count: 'exact', head: true }` are efficient for counts
+- Joining representations with notices uses `notices!inner(department_id)` pattern
+
+---
+

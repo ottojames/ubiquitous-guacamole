@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { BarChart, Clock, AlertCircle, CheckCircle, Users, TrendingUp } from 'lucide-react';
 import { format, differenceInDays, addDays } from 'date-fns';
@@ -31,6 +32,8 @@ interface ApplicationBreakdown {
 }
 
 export default function LicensingDashboardWidgets({ departmentId }: LicensingDashboardWidgetsProps) {
+  const { orgSlug, deptSlug } = useParams();
+  const basePath = `/c/${orgSlug}/${deptSlug}`;
   const [stats, setStats] = useState<LicensingStats>({
     totalApplications: 0,
     pendingReview: 0,
@@ -51,19 +54,20 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
     try {
       setLoading(true);
 
-      // Fetch all licensing notices for this department
+      console.log('[LicensingDashboardWidgets] Loading data for departmentId:', departmentId);
+
+      // Fetch all notices for this licensing department
+      // No need to filter by notice_type - department isolation ensures we only get licensing notices
       const { data: notices, error } = await supabase
         .from('notices')
         .select('*')
-        .eq('department_id', departmentId)
-        .in('notice_type', [
-          'premises-licence',
-          'premises-licence-variation',
-          'premises-licence-transfer',
-          'premises-licence-review',
-          'club-premises-certificate',
-          'temporary-event-notice'
-        ]);
+        .eq('department_id', departmentId);
+
+      console.log('[LicensingDashboardWidgets] Query result:', {
+        noticesCount: notices?.length || 0,
+        error: error?.message || null,
+        departmentId
+      });
 
       if (error) throw error;
 
@@ -82,7 +86,7 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
 
       (notices || []).forEach(notice => {
         // Count by type for breakdown
-        const type = notice.notice_type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const type = notice.notice_type.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
         typeBreakdown[type] = (typeBreakdown[type] || 0) + 1;
 
         // Count pending review
@@ -118,11 +122,17 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
           }
         }
 
-        // Count representations (simplified - in real app would query representations table)
-        if (notice.extras?.representations_count) {
-          repsCount += notice.extras.representations_count;
-        }
       });
+
+      // Query actual representations count from the representations table
+      if (notices && notices.length > 0) {
+        const noticeIds = notices.map(n => n.id);
+        const { count: actualRepsCount } = await supabase
+          .from('representations')
+          .select('*', { count: 'exact', head: true })
+          .in('notice_id', noticeIds);
+        repsCount = actualRepsCount || 0;
+      }
 
       // Sort deadlines by days remaining
       deadlines.sort((a, b) => a.daysRemaining - b.daysRemaining);
@@ -171,7 +181,11 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Total Applications */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Link
+          to={`${basePath}/notices`}
+          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer"
+          title="View all applications"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Applications</p>
@@ -181,10 +195,14 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
               <BarChart className="h-6 w-6 text-blue-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Pending Review */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Link
+          to={`${basePath}/notices?status=pending_approval`}
+          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-yellow-300 transition-all cursor-pointer"
+          title="View notices pending review"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Review</p>
@@ -194,10 +212,14 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
               <Clock className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Closing Soon */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Link
+          to={`${basePath}/notices?closingSoon=true`}
+          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-red-300 transition-all cursor-pointer"
+          title="View notices closing within 7 days"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Closing Soon</p>
@@ -208,10 +230,14 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
               <AlertCircle className="h-6 w-6 text-red-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Representations */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Link
+          to={`${basePath}/notices?hasReps=true`}
+          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-purple-300 transition-all cursor-pointer"
+          title="View notices with representations"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Representations</p>
@@ -221,10 +247,14 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
               <Users className="h-6 w-6 text-purple-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Approved This Month */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Link
+          to={`${basePath}/notices?status=published`}
+          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-green-300 transition-all cursor-pointer"
+          title="View published notices"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Approved (Month)</p>
@@ -234,10 +264,14 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Review Deadlines */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <Link
+          to={`${basePath}/notices?closingSoon=true`}
+          className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:border-indigo-300 transition-all cursor-pointer"
+          title="View notices with upcoming deadlines"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Review Deadlines</p>
@@ -248,7 +282,7 @@ export default function LicensingDashboardWidgets({ departmentId }: LicensingDas
               <TrendingUp className="h-6 w-6 text-indigo-600" />
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

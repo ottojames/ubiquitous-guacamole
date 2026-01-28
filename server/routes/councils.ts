@@ -6,18 +6,7 @@ const router = Router();
 router.get('/', async (req, res) => {
   const q = String(req.query.q || '').trim();
 
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    return res
-      .status(500)
-      .json({ ok: false, error: { code: 'NO_SUPABASE', message: 'Supabase not configured' } });
-  }
-
-  const sb = createClient(url, key);
+  const sb = getServiceSupabaseClient();
 
   // If query provided, filter by name, otherwise return all
   let query = sb

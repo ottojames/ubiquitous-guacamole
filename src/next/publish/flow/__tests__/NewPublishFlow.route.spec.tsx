@@ -27,7 +27,7 @@ vi.mock('react-router-dom', async () => {
       const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
       React.useEffect(() => {
         listeners.add(forceUpdate);
-        return () => listeners.delete(forceUpdate);
+        return () => { listeners.delete(forceUpdate); };
       }, []);
       const [pathname, search = ''] = currentPath.split('?');
       return { pathname, search: search ? `?${search}` : '', hash: '', state: null, key: 'mock' } as any;

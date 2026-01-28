@@ -41,7 +41,7 @@ type GeoJSONSourceWithClusters = maplibregl.GeoJSONSource & {
     clusterId: number,
     limit: number,
     offset: number
-  ) => maplibregl.MapboxGeoJSONFeature[];
+  ) => maplibregl.MapGeoJSONFeature[];
 };
 
 type NoticesMapViewProps = {
@@ -292,6 +292,8 @@ function NoticesMapViewComponent({
   const isAnimatingRef = useRef(false);
   const animationTimeoutRef = useRef<number | null>(null);
   const lastAnimatedNoticeRef = useRef<string | null>(null);
+  const isZoomingRef = useRef(false);
+  const zoomEndTimeoutRef = useRef<number | null>(null);
 
   const noticeLookup = useMemo(() => {
     return new Map(notices.map((notice) => [notice.id, notice]));
@@ -368,7 +370,33 @@ function NoticesMapViewComponent({
         window.clearTimeout(moveEndTimeoutRef.current);
         moveEndTimeoutRef.current = null;
       }
+      if (zoomEndTimeoutRef.current) {
+        window.clearTimeout(zoomEndTimeoutRef.current);
+        zoomEndTimeoutRef.current = null;
+      }
     };
+  }, []);
+
+  // Handle zoom start - set flag to prevent bounds changes during active zooming
+  const handleZoomStart = useCallback(() => {
+    isZoomingRef.current = true;
+    // Clear any pending zoom end timeout
+    if (zoomEndTimeoutRef.current) {
+      window.clearTimeout(zoomEndTimeoutRef.current);
+      zoomEndTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Handle zoom end - wait for user to stop zooming before allowing bounds changes
+  const handleZoomEnd = useCallback(() => {
+    // Debounce the zoom end - only mark as not zooming after user stops for 500ms
+    if (zoomEndTimeoutRef.current) {
+      window.clearTimeout(zoomEndTimeoutRef.current);
+    }
+    zoomEndTimeoutRef.current = window.setTimeout(() => {
+      isZoomingRef.current = false;
+      zoomEndTimeoutRef.current = null;
+    }, 500);
   }, []);
 
   const handleMoveEnd = useCallback(() => {
@@ -383,12 +411,19 @@ function NoticesMapViewComponent({
     console.log('[NoticesMapView] 📍 handleMoveEnd fired:', {
       zoom: zoom?.toFixed(2),
       isAnimating: isAnimatingRef.current,
+      isZooming: isZoomingRef.current,
       userAdjusted: userAdjustedViewportRef.current,
     });
 
     // CRITICAL: Block during programmatic animations - check FIRST
     if (isAnimatingRef.current) {
       console.log('[NoticesMapView] ⛔ BLOCKED by animation flag');
+      return;
+    }
+
+    // CRITICAL: Block during active zooming to prevent jitter
+    if (isZoomingRef.current) {
+      console.log('[NoticesMapView] ⛔ BLOCKED by active zooming');
       return;
     }
 
@@ -413,7 +448,7 @@ function NoticesMapViewComponent({
       }
       console.log('[NoticesMapView] ✅ Calling onBoundsChange');
       onBoundsChange(bbox, zoom);
-    }, 500); // Increased delay to 500ms
+    }, 1000); // Increased delay to 1000ms to prevent jitter during rapid zoom
   }, [onBoundsChange]);
 
   const getClusterSource = useCallback((): GeoJSONSourceWithClusters | null => {
@@ -431,10 +466,10 @@ function NoticesMapViewComponent({
       const source = getClusterSource();
       if (!source) return null;
 
-      let leaves: maplibregl.MapboxGeoJSONFeature[] = [];
+      let leaves: Array<{ properties?: Record<string, unknown> | null }> = [];
       try {
         // IMPORTANT: getClusterLeaves returns a Promise!
-        leaves = await source.getClusterLeaves(clusterId, 25, 0);
+        leaves = (await source.getClusterLeaves(clusterId, 25, 0)) as Array<{ properties?: Record<string, unknown> | null }>;
       } catch (error) {
         console.warn('[NoticesMapView] failed to inspect cluster leaves', error);
       }
@@ -456,7 +491,7 @@ function NoticesMapViewComponent({
         councilName = topCouncil ? `${topCouncil[0]} + more` : 'Multiple councils';
       } else if (leaves.length) {
         const sampleId = leaves[0].properties?.noticeId;
-        const sample = sampleId ? noticeLookup.get(sampleId) : null;
+        const sample = typeof sampleId === 'string' ? noticeLookup.get(sampleId) : null;
         if (sample?.councilName) councilName = sample.councilName;
       }
 
@@ -522,7 +557,8 @@ function NoticesMapViewComponent({
         console.log('[NoticesMapView] ✓ Valid cluster ID:', clusterId);
 
         // Validate coordinates before using them
-        const rawCoords = clusterFeature.geometry?.coordinates;
+        const geom = clusterFeature.geometry;
+        const rawCoords = geom && 'coordinates' in geom ? geom.coordinates : undefined;
         if (!Array.isArray(rawCoords) || rawCoords.length < 2) {
           console.error('[NoticesMapView] ❌ Invalid cluster coordinates:', rawCoords);
           return;
@@ -616,7 +652,8 @@ function NoticesMapViewComponent({
       if (clusterFeature) {
         const clusterId = clusterFeature.properties?.cluster_id;
         if (typeof clusterId === 'number') {
-          const rawCoords = clusterFeature.geometry?.coordinates;
+          const hoverGeom = clusterFeature.geometry;
+          const rawCoords = hoverGeom && 'coordinates' in hoverGeom ? hoverGeom.coordinates : undefined;
           if (Array.isArray(rawCoords) && rawCoords.length >= 2) {
             const [longitude, latitude] = rawCoords as [number, number];
             // Validate coordinates before using them
@@ -1030,6 +1067,8 @@ function NoticesMapViewComponent({
         interactiveLayerIds={[CLUSTER_LAYER_ID, NOTICE_POINTS_LAYER_ID]}
         onLoad={handleLoad}
         onMoveEnd={handleMoveEnd}
+        onZoomStart={handleZoomStart}
+        onZoomEnd={handleZoomEnd}
         onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -1039,8 +1078,8 @@ function NoticesMapViewComponent({
         touchPitch={false}
         maxZoom={18}
         minZoom={5}
-        scrollZoom={{ speed: 0.5, smooth: true }}
-        dragPan={{ inertia: 300 }}
+        scrollZoom={true}
+        dragPan={true}
       >
         <Source
           id={SOURCE_ID}

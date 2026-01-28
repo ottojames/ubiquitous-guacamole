@@ -117,18 +117,58 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       .eq('is_active', true)
       .maybeSingle();
 
+    // Helper to check if a value looks like a placeholder that shouldn't be saved
+    const isPlaceholderValue = (val: unknown): boolean => {
+      if (typeof val !== 'string') return true;
+      const trimmed = val.trim();
+      if (!trimmed) return true;
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) return true;
+      if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) return true;
+      if (trimmed.toLowerCase().includes('placeholder')) return true;
+      if (trimmed.toLowerCase().includes('missing:')) return true;
+      if (trimmed.toLowerCase().includes('select activities')) return true;
+      if (trimmed.toLowerCase().includes('auto-generate')) return true;
+      return false;
+    };
+
+    // Sanitize tokens before rendering - ensure NATURE_OF_VARIATION has a valid value for variations
+    const sanitizedTokens = { ...(notice_data.extras?.tokens || {}) };
+    if (notice_type?.includes('variation')) {
+      const currentNov = sanitizedTokens.NATURE_OF_VARIATION;
+      if (isPlaceholderValue(currentNov)) {
+        // Try to generate from activities
+        const activities = typeof sanitizedTokens.LICENSABLE_ACTIVITIES === 'string'
+          ? sanitizedTokens.LICENSABLE_ACTIVITIES.trim()
+          : '';
+        const schedule = typeof sanitizedTokens.ACTIVITY_SCHEDULE === 'string'
+          ? sanitizedTokens.ACTIVITY_SCHEDULE.trim()
+          : '';
+
+        if (activities && !isPlaceholderValue(activities)) {
+          sanitizedTokens.NATURE_OF_VARIATION = `To vary the licence to authorise: ${activities}`;
+          console.log('[notice-publish] Server-side fix: Generated NATURE_OF_VARIATION from activities');
+        } else if (schedule && !isPlaceholderValue(schedule)) {
+          sanitizedTokens.NATURE_OF_VARIATION = `To vary the conditions of the premises licence to permit the following: ${schedule.split('\n')[0]}`;
+          console.log('[notice-publish] Server-side fix: Generated NATURE_OF_VARIATION from schedule');
+        } else {
+          sanitizedTokens.NATURE_OF_VARIATION = 'Vary the conditions of the premises licence as described in the application';
+          console.log('[notice-publish] Server-side fix: Using default NATURE_OF_VARIATION');
+        }
+      }
+    }
+
     // Render template with tokens if custom template exists
     let renderedNoticeText = title || notice_data.description || null;
-    if (template && template.template_text && notice_data.extras?.tokens) {
+    if (template && template.template_text && Object.keys(sanitizedTokens).length > 0) {
       console.log('[notice-publish] Found custom template, rendering with tokens...');
       console.log('[notice-publish] Template preview:', template.template_text.substring(0, 200));
-      console.log('[notice-publish] Tokens received:', Object.keys(notice_data.extras.tokens));
+      console.log('[notice-publish] Tokens received:', Object.keys(sanitizedTokens));
+      console.log('[notice-publish] NATURE_OF_VARIATION:', sanitizedTokens.NATURE_OF_VARIATION?.substring(0, 50));
 
       let rendered = template.template_text;
-      const tokens = notice_data.extras.tokens;
 
       // Replace all {{TOKEN}} placeholders with actual values
-      for (const [key, value] of Object.entries(tokens)) {
+      for (const [key, value] of Object.entries(sanitizedTokens)) {
         const placeholder = `{{${key}}}`;
         rendered = rendered.replace(new RegExp(placeholder, 'g'), String(value || ''));
       }
@@ -140,7 +180,7 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       console.log('[notice-publish] No custom template found or missing tokens', {
         hasTemplate: !!template,
         hasTemplateText: !!template?.template_text,
-        hasTokens: !!notice_data.extras?.tokens
+        hasTokens: Object.keys(sanitizedTokens).length > 0
       });
     }
 

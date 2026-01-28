@@ -1034,3 +1034,130 @@ All 306 tasks across Phases 7-22 verified complete:
 - **TypeScript**: 54 non-blocking errors (Supabase type inference, third-party libs)
 - **Files created**: 50+ new files across server, src, e2e, supabase/migrations
 - **Migrations**: 30+ SQL migrations applied to Supabase
+
+---
+---
+
+# PRD: Major Refactoring and Bug Fixes (Completed 2026-01-21)
+
+**Created**: 2026-01-21
+**Completed**: 2026-01-21
+**Total Tasks**: 35
+
+This PRD addressed issues discovered during user walkthrough review, including department data isolation, representation comments, team invitations, template editor bugs, navigation consistency, and department-specific dashboards.
+
+---
+
+## Phase 0: Prerequisites [S] ✓
+
+- [x] **Create and run environment verification script** - Created `scripts/verify-env.sh` that validates env vars and server startup
+
+---
+
+## Phase 1: Department Data Isolation [CRITICAL] ✓
+
+- [x] **Remove demo mode bypass in Dashboard** - Deleted `isDemoMode` condition causing cross-department data leakage
+- [x] **Enforce department_id filter on all council portal queries** - Applied `.eq('department_id', department.id)` consistently
+- [x] **Add database-level RLS policies for department isolation** - Defense in depth with RLS policies
+
+---
+
+## Phase 2: Fix Representation Comments [HIGH] ✓
+
+- [x] **Debug and fix comment insertion failure** - Fixed RLS INSERT policy and field mapping
+- [x] **Add/fix RLS policies for internal_comments table** - Department members can INSERT and SELECT
+- [x] **Add success toast and improved error handling** - Confirmation when comment added
+
+---
+
+## Phase 3: Fix Team Invitations [HIGH] ✓
+
+- [x] **Create invitations database table and API** - Full invitation flow with table, RLS, API
+- [x] **Wire up invitation email via Resend** - Email template with accept link
+- [x] **Create invitation acceptance page** - Token validation and department_membership creation
+- [x] **Update Team page to call API and show pending invitations** - API call replaces direct Supabase insert
+
+---
+
+## Phase 4: Template Editor Cursor Bug [HIGH] ✓
+
+- [x] **Diagnose and fix cursor position loss** - Fixed contentEditable innerHTML reset issue with refs
+- [x] **Add template variable insertion without cursor disruption** - Used Range API for direct DOM manipulation
+
+---
+
+## Phase 5: Navigation Menu Consistency [HIGH] ✓
+
+- [x] **Unify header component across all pages** - SiteHeader used on Home, Pricing, EmailAlerts, Login
+- [x] **Fix "Find notices" link** - Changed from `#notices` to `/notices`
+- [x] **Add "Email alerts" to navigation consistently** - Added to both desktop and mobile nav
+- [x] **Decide on "For councils" nav item** - Kept `/#for-councils` anchor link (documented in CLAUDE.md)
+
+---
+
+## Phase 6: Email Alerts Page Redesign [MEDIUM] ✓
+
+- [x] **Complete page redesign matching site design system** - Hero section, gradient orbs, UI.card forms, Footer
+- [x] **Wire up and test email subscription flow end-to-end** - Created migration, fixed radius validation
+
+---
+
+## Phase 7: Homepage Community-First Messaging [MEDIUM] ✓
+
+- [x] **Rewrite hero headline and subtitle** - Changed to "Stay informed about licensing and planning decisions in your area"
+- [x] **Reposition CTAs** - Primary CTA now "Search notices near you" → /notices
+- [x] **Add notices carousel** - 12 notices with framer-motion animations, 5-second autoplay
+- [x] **Add footer tagline** - "Notice it. Understand it. Shape it."
+
+---
+
+## Phase 8: Sign-In Page UI Improvement [MEDIUM] ✓
+
+- [x] **Redesign login form with professional styling** - Added show/hide password toggle and loading spinner
+
+---
+
+## Phase 9: Pricing Page UI Fixes [MEDIUM] ✓
+
+- [x] **Fix hero gradient error** - Added dark gradient overlay for text readability
+- [x] **Improve section spacing** - Increased vertical padding to 80px/112px
+- [x] **Add resident escape hatch** - "Just looking for notices? Search here →"
+- [x] **Highlight council free portal better** - Emerald ring border, "£0 Portal Access" badge
+
+---
+
+## Phase 10: Council Portal Settings & Billing [MEDIUM] ✓
+
+- [x] **Redesign settings with proper sections and cards** - 5 sections with icons, cards, proper styling
+- [x] **Clarify billing messaging** - "Council Portal (FREE)" with "only pay when YOU publish"
+- [x] **Add save confirmation toast and inline validation** - Toast on save, inline email/phone/URL validation
+
+---
+
+## Phase 11: Analytics Page Styling [LOW] ✓
+
+- [x] **Reduce color saturation and fix org name** - Replaced lurid colors with design tokens, dynamic org name
+- [x] **Add data source indicators** - Live/Projected/Sample badges on all metric sections
+
+---
+
+## Phase 12: Department-Specific Dashboards [LOW] ✓
+
+- [x] **Research and document which departments legally require public notices** - Added to CLAUDE.md
+- [x] **Customize dashboard metrics per department type** - Licensing, Planning, Traffic, etc. have tailored KPIs
+- [x] **Filter notice types by department** - Notices page dropdown shows only department-relevant types
+
+---
+
+## Deferred: Audit Log Integration
+
+Deferred as `[XL]` complexity, `[LOW]` priority. Move to active PRD when Phases 1-10 complete and councils request audit trail features.
+
+---
+
+## Verification Summary (2026-01-21)
+
+All 35 tasks verified complete:
+- **Tests**: 508 passed, 2 skipped
+- **TypeScript**: Pre-existing errors only (no new errors)
+- **Key files**: Dashboard.tsx, Notices.tsx, Settings.tsx, Analytics.tsx, EmailAlerts.tsx, Home.tsx, Pricing.tsx, Login.tsx, SiteHeader.tsx, departmentConfig.ts

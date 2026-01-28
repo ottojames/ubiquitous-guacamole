@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 // The sanitizer has caused runtime errors — treat it as best-effort only.
 import { sanitiseNoticeText } from "@/lib/text/sanitiseNotice";
+import { renderHtmlFromText } from "@/next/publish/templates/engine";
 import type { OCRHighlight } from "@/next/publish/flow/lib/legalDetails";
 
 type Props = {
@@ -30,6 +31,17 @@ export default function NoticePreview({ text, highlights, activeHighlight, onHig
       return input;
     }
   }, [input, highlights]);
+
+  // Convert plain text with newlines to HTML with proper paragraph breaks
+  const htmlText = useMemo(() => {
+    if (!safeText) return "";
+    try {
+      return renderHtmlFromText(safeText);
+    } catch {
+      // Fallback: wrap in a single paragraph
+      return `<p>${safeText}</p>`;
+    }
+  }, [safeText]);
 
   const isEmpty = !safeText.trim();
 
@@ -213,11 +225,11 @@ export default function NoticePreview({ text, highlights, activeHighlight, onHig
               animate={{ opacity: 1 }}
               exit={{ opacity: reduceMotion ? 1 : 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.2 }}
-              className="notice-preview max-h-[600px] overflow-y-auto break-words bg-white p-4 font-sans text-[14px] leading-[1.6] text-slate-800 [overflow-wrap:anywhere] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100"
+              className="notice-preview max-h-[600px] overflow-y-auto break-words bg-white p-4 font-sans text-[14px] leading-[1.6] text-slate-800 [overflow-wrap:anywhere] scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 [&>p]:mb-4 [&>p:last-child]:mb-0"
               style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
               }}
-              dangerouslySetInnerHTML={{ __html: safeText }}
+              dangerouslySetInnerHTML={{ __html: htmlText }}
             />
           ) : (
             <motion.div
@@ -233,9 +245,7 @@ export default function NoticePreview({ text, highlights, activeHighlight, onHig
               </svg>
               <p className="text-sm font-medium text-slate-600">No preview yet</p>
               <p className="mt-1 text-xs text-slate-500">
-                {typeof window !== 'undefined' && window.location.pathname.includes('/publish')
-                  ? 'Use the "Load Sample Data" button below to quickly populate the form'
-                  : 'Upload a file or complete the form to see your notice'}
+                Complete the required fields to generate your notice preview
               </p>
             </motion.div>
           )}

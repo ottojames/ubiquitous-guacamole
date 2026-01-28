@@ -149,6 +149,60 @@ function sortRowsBy(rows: any[], column: string, direction: SortDirection) {
   return sorted;
 }
 
+// Comprehensive mapping of notice type slugs to human-readable labels
+// Mirrors the definitions in src/next/publish/config/noticeTypes.ts
+const NOTICE_TYPE_LABELS: Record<string, string> = {
+  // Licensing Act 2003 - Premises Licence
+  'licensing-premises-new': 'Premises Licence — New',
+  'licensing-premises-variation': 'Premises Licence — Variation',
+  'licensing-premises-review': 'Premises Licence — Review',
+  // Licensing Act 2003 - Club Premises Certificate
+  'licensing-club-new': 'Club Premises Certificate — New',
+  'licensing-club-variation': 'Club Premises Certificate — Variation',
+  'licensing-club-review': 'Club Premises Certificate — Review',
+  // Gambling Act 2005 - Betting
+  'gambling-betting-new': 'Betting — New',
+  'gambling-betting-variation': 'Betting — Variation',
+  'gambling-betting-review': 'Betting — Review',
+  'gambling-betting-transfer': 'Betting — Transfer',
+  // Gambling Act 2005 - Bingo
+  'gambling-bingo-new': 'Bingo — New',
+  'gambling-bingo-variation': 'Bingo — Variation',
+  'gambling-bingo-review': 'Bingo — Review',
+  'gambling-bingo-transfer': 'Bingo — Transfer',
+  // Gambling Act 2005 - Adult Gaming Centre
+  'gambling-agc-new': 'Adult Gaming Centre — New',
+  'gambling-agc-variation': 'Adult Gaming Centre — Variation',
+  'gambling-agc-review': 'Adult Gaming Centre — Review',
+  'gambling-agc-transfer': 'Adult Gaming Centre — Transfer',
+  // Gambling Act 2005 - Family Entertainment Centre
+  'gambling-fec-new': 'Family Entertainment Centre — New',
+  'gambling-fec-variation': 'Family Entertainment Centre — Variation',
+  'gambling-fec-review': 'Family Entertainment Centre — Review',
+  'gambling-fec-transfer': 'Family Entertainment Centre — Transfer',
+  // GVOL
+  'gvol-new': 'GVOL — New',
+  'gvol-variation': 'GVOL — Variation',
+  // Planning
+  'planning-major': 'Major Development',
+  'planning-eia': 'EIA Development',
+  'planning-listed': 'Listed Building',
+  'planning-conservation': 'Conservation Area',
+  'planning-prow': 'Public Right of Way',
+  'planning-departure': 'Departure',
+  // Probate
+  'probate-trustee-s27': 'Trustee Act 1925 s.27',
+  // TRO
+  'tro-permanent': 'TRO — Permanent',
+  'tro-temporary': 'TRO — Temporary',
+  'tro-experimental': 'TRO — Experimental',
+};
+
+function getNoticeTypeLabel(noticeTypeSlug: string): string {
+  if (!noticeTypeSlug) return 'Notice';
+  return NOTICE_TYPE_LABELS[noticeTypeSlug] || noticeTypeSlug;
+}
+
 function firstNonEmptyString(...values: any[]): string | null {
   for (const value of values) {
     if (typeof value === 'string') {
@@ -178,24 +232,70 @@ function extractPostcode(row: any): string | null {
   return postcode ? postcode.toUpperCase() : null;
 }
 
+// Remove duplicate consecutive words/segments from address string
+function dedupeAddressString(address: string): string {
+  // Split by comma, trim each part, remove duplicates while preserving order
+  const parts = address.split(',').map(p => p.trim()).filter(Boolean);
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const part of parts) {
+    const normalized = part.toLowerCase();
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      unique.push(part);
+    }
+  }
+  return unique.join(', ');
+}
+
 function extractPremisesAddress(row: any): string | null {
+  // Check premises.address as string
   if (typeof row?.premises?.address === 'string') {
     const trimmed = row.premises.address.trim();
-    if (trimmed) return trimmed;
+    if (trimmed) return dedupeAddressString(trimmed);
   }
 
+  // Check premises.address as object (line1, line2, town, postcode)
+  const premisesAddressObj = row?.premises?.address;
+  if (premisesAddressObj && typeof premisesAddressObj === 'object' && !Array.isArray(premisesAddressObj)) {
+    const segments: string[] = [];
+    for (const key of ['line1', 'line2', 'town', 'postcode']) {
+      const value = typeof premisesAddressObj?.[key] === 'string' ? premisesAddressObj[key].trim() : '';
+      if (value) {
+        // Skip if this value is already contained in a previous segment (e.g., postcode in line1)
+        const alreadyIncluded = segments.some(seg => seg.includes(value) || value.includes(seg));
+        if (!alreadyIncluded) {
+          segments.push(value);
+        }
+      }
+    }
+    if (segments.length) {
+      return dedupeAddressString(segments.join(', '));
+    }
+  }
+
+  // Check premises_address column as string
   const premisesAddress = row?.premises_address;
   if (typeof premisesAddress === 'string') {
     const trimmed = premisesAddress.trim();
-    if (trimmed) return trimmed;
+    if (trimmed) return dedupeAddressString(trimmed);
   }
 
+  // Check premises_address column as object
   if (premisesAddress && typeof premisesAddress === 'object' && !Array.isArray(premisesAddress)) {
-    const segments = ['line1', 'line2', 'town', 'postcode']
-      .map((key) => (typeof premisesAddress?.[key] === 'string' ? premisesAddress[key].trim() : ''))
-      .filter(Boolean);
+    const segments: string[] = [];
+    for (const key of ['line1', 'line2', 'town', 'postcode']) {
+      const value = typeof premisesAddress?.[key] === 'string' ? premisesAddress[key].trim() : '';
+      if (value) {
+        // Skip if this value is already contained in a previous segment
+        const alreadyIncluded = segments.some(seg => seg.includes(value) || value.includes(seg));
+        if (!alreadyIncluded) {
+          segments.push(value);
+        }
+      }
+    }
     if (segments.length) {
-      return segments.join(', ');
+      return dedupeAddressString(segments.join(', '));
     }
   }
 
@@ -606,6 +706,27 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       }
     }
 
+    // FIX C2: If we have organization_id but no department_id, resolve to the default licensing department
+    if (resolvedOrganizationId && !resolvedDepartmentId) {
+      try {
+        console.log('[notice-submit] Looking up default department for org:', resolvedOrganizationId);
+        const { data: defaultDept } = await client
+          .from('departments')
+          .select('id')
+          .eq('organization_id', resolvedOrganizationId)
+          .eq('type', 'licensing')
+          .limit(1)
+          .single();
+
+        if (defaultDept?.id) {
+          resolvedDepartmentId = defaultDept.id;
+          console.log('[notice-submit] Resolved default department:', resolvedDepartmentId);
+        }
+      } catch (deptErr) {
+        console.warn('[notice-submit] Default department lookup failed:', deptErr);
+      }
+    }
+
     // Generate notice text using custom template if available
     let generatedDescription = payload.description || null;
     if (resolvedDepartmentId && payload.notice_type && !generatedDescription) {
@@ -816,14 +937,8 @@ router.post('/notices/submit', optionalAuth, async (req, res) => {
       try {
         const { sendNoticeConfirmation } = await import('../services/email');
 
-        // Get notice type label
-        const noticeTypeLabels: Record<string, string> = {
-          'licensing-premises-new': 'Premises Licence - New Application',
-          'licensing-club-new': 'Club Premises Certificate - New',
-          'licensing-premises-variation': 'Premises Licence - Variation',
-          // Add more as needed
-        };
-        const noticeTypeLabel = noticeTypeLabels[noticeData.notice_type] || noticeData.notice_type;
+        // Get notice type label using global mapping
+        const noticeTypeLabel = getNoticeTypeLabel(noticeData.notice_type);
 
         // Generate view URL
         const baseUrl = process.env.VITE_SUPABASE_URL?.replace('.getServiceSupabaseClient().co', '') || 'http://localhost:5173';
@@ -1316,7 +1431,7 @@ router.get('/notices/search', optionalAuth, async (req, res) => {
 
       return {
         id: row.id,
-        noticeType: row.notice_type,
+        noticeType: getNoticeTypeLabel(row.notice_type),
         status: row.status,
         contact_email: row.contact_email,
         premisesName: extractPremisesName(row),
@@ -1398,7 +1513,7 @@ router.get('/notices/:id', optionalAuth, async (req, res) => {
 
     const notice = {
       id: row.id,
-      noticeType: row.notice_type,
+      noticeType: getNoticeTypeLabel(row.notice_type),
       status: row.status,
       premisesName: extractPremisesName(row),
       premisesAddress: extractPremisesAddress(row),
@@ -1583,24 +1698,6 @@ router.post('/notices/:id/representations', async (req, res) => {
           'neutral': 'comment'
         };
 
-        // Get notice type label
-        const noticeTypeLabels: Record<string, string> = {
-          'premises-licence': 'Premises Licence Application',
-          'premises-licence-variation': 'Premises Licence Variation',
-          'premises-licence-review': 'Premises Licence Review',
-          'club-premises-certificate': 'Club Premises Certificate',
-          'temporary-event-notice': 'Temporary Event Notice',
-          'personal-licence': 'Personal Licence',
-          'designated-premises-supervisor': 'Designated Premises Supervisor',
-          'interim-authority-notice': 'Interim Authority Notice',
-          'transfer-premises-licence': 'Transfer of Premises Licence',
-          'planning-application': 'Planning Application',
-          'traffic-order': 'Traffic Order',
-          'street-works': 'Street Works Notice',
-          'environmental-permit': 'Environmental Permit',
-          'public-space-protection-order': 'Public Space Protection Order'
-        };
-
         const noticeUrl = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/notices/${id}`;
 
         // Format deadline if available
@@ -1634,7 +1731,7 @@ router.post('/notices/:id/representations', async (req, res) => {
 
         await sendRepresentationConfirmation({
           representationId: refNumber,
-          noticeType: noticeTypeLabels[notice.notice_type] || notice.notice_type,
+          noticeType: getNoticeTypeLabel(notice.notice_type),
           premisesName: notice.premises?.name,
           premisesAddress,
           stance: stanceMap[type.toLowerCase()] || 'comment',

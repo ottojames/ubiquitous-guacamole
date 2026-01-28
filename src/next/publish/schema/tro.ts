@@ -6,7 +6,11 @@ export const TRO_VARIANTS = ["tro-permanent", "tro-temporary", "tro-experimental
 
 export type TroVariant = (typeof TRO_VARIANTS)[number];
 
-const requiredString = (label: string) => z.string().trim().min(1, `${label} is required`);
+const requiredString = (label: string) =>
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z.string().trim().min(1, `${label} is required`)
+  );
 
 const optionalString = () =>
   z.preprocess(
@@ -21,10 +25,14 @@ const optionalString = () =>
   );
 
 const isoDateField = (label: string) =>
-  z
-    .string()
-    .trim()
-    .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` });
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z
+      .string()
+      .trim()
+      .min(1, `${label} is required`)
+      .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` })
+  );
 
 export const troNoticeSchema = z
   .object({

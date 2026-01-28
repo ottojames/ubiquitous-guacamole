@@ -74,7 +74,7 @@ export async function getTemplateForDepartment(
     if (data && data.template_text) {
       // Extract placeholders from template_text
       const placeholderMatches = data.template_text.match(/\{\{([A-Z_]+)\}\}/g) || [];
-      const placeholders = [...new Set(placeholderMatches.map((m: string) => m.replace(/\{\{|\}\}/g, '')))];
+      const placeholders = [...new Set(placeholderMatches.map((m: string) => m.replace(/\{\{|\}\}/g, '')))] as string[];
 
       console.log('[Template Service] Found template:', data.name, 'with placeholders:', placeholders);
 
@@ -181,23 +181,27 @@ export async function renderNoticeWithTemplateInfo(
 function renderDefaultTemplate(notice: NoticeBase): string {
   // Map notice type to appropriate default renderer
   const noticeType = notice.noticeType;
+  const category = notice.extras?.category;
 
   try {
+    // Use category from extras if available (preferred - set by schema mappers)
+    // Fall back to checking noticeType string for backwards compatibility
+
     // Licensing notices
-    if (noticeType.startsWith('licensing-')) {
+    if (category === 'licensing' || noticeType.startsWith('licensing-')) {
       return renderLicensingText(notice);
     }
 
     // Gambling notices
-    if (noticeType === 'gambling') {
+    if (category === 'gambling' || noticeType === 'gambling' || noticeType.startsWith('gambling-')) {
       return renderGamblingText(notice);
     }
 
     // TODO: Add other notice type renderers as needed
-    // - GVOL
-    // - TRO
-    // - Planning
-    // - Probate
+    // - GVOL (category === 'gvol')
+    // - TRO (category === 'tro')
+    // - Planning (category === 'planning')
+    // - Probate (category === 'probate')
 
     // Generic fallback - extract what we can
     return renderGenericNotice(notice);

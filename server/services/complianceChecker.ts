@@ -305,20 +305,55 @@ export function checkCompliance(notice: Partial<NoticeDraft>): ComplianceResult 
 }
 
 /**
+ * Extract UK postcode from an address string
+ * Handles common UK postcode formats like "SW1A 1AA", "BS1 1HQ", etc.
+ */
+function extractPostcodeFromAddress(address: string | undefined): string | undefined {
+  if (!address) return undefined;
+  // UK postcode regex - matches formats like SW1A 1AA, BS1 1HQ, etc.
+  const postcodeRegex = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i;
+  const match = address.match(postcodeRegex);
+  return match ? match[1].toUpperCase() : undefined;
+}
+
+/**
  * Check compliance for NoticeBase format (used in wizard flow)
  */
 export function checkNoticeBaseCompliance(notice: NoticeBase): ComplianceResult {
+  // Extract data from extras.tokens if available (template flow stores data here)
+  const tokens = (notice.extras?.tokens || {}) as Record<string, string>;
+
+  // Try multiple sources for postcode:
+  // 1. Structured address field
+  // 2. Tokens from template flow
+  // 3. Extract from full address string
+  const structuredPostcode = notice.premises?.address?.postcode;
+  const tokenPostcode = tokens.PREMISES_POSTCODE;
+  const extractedPostcode = extractPostcodeFromAddress(
+    tokens.PREMISES_ADDRESS || notice.premises?.address?.line1
+  );
+  const postcode = structuredPostcode || tokenPostcode || extractedPostcode;
+
+  // Try multiple sources for council name:
+  // 1. extras.councilName (direct)
+  // 2. tokens.AUTHORITY_NAME (template flow)
+  const councilName =
+    (notice.extras?.councilName as string) ||
+    tokens.AUTHORITY_NAME ||
+    '';
+
   // Convert NoticeBase to draft-like format for checking
   const draftLike: Partial<NoticeDraft> = {
     noticeType: notice.noticeType as NoticeDraft['noticeType'],
-    applicantName: notice.applicant.fullName || notice.applicant.companyName,
-    applicantEmail: notice.applicant.contactEmail,
+    applicantName: notice.applicant.fullName || notice.applicant.companyName || tokens.APPLICANT_NAME,
+    applicantEmail: notice.applicant.contactEmail || tokens.REPRESENTATION_EMAIL,
     applicantPhone: notice.applicant.contactPhone,
-    premisesAddress: notice.premises?.address?.line1,
-    premisesName: notice.premises?.name,
-    postcode: notice.premises?.address?.postcode,
-    consultationStart: notice.consultation.applicationDate,
-    consultationEnd: notice.consultation.repsDeadline,
+    premisesAddress: notice.premises?.address?.line1 || tokens.PREMISES_ADDRESS,
+    premisesName: notice.premises?.name || tokens.PREMISES_NAME,
+    postcode,
+    councilName,
+    consultationStart: notice.consultation.applicationDate || tokens.APPLICATION_DATE,
+    consultationEnd: notice.consultation.repsDeadline || tokens.DEADLINE_DATE,
   };
 
   return checkCompliance(draftLike);

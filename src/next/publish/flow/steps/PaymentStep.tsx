@@ -95,7 +95,19 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
   }, [firmSlug]);
 
   const handlePayment = async () => {
-    if (!notice) return;
+    console.log('[PaymentStep] handlePayment called');
+    console.log('[PaymentStep] notice:', notice ? 'EXISTS' : 'NULL');
+    console.log('[PaymentStep] isConfigured:', isConfigured);
+    console.log('[PaymentStep] allowanceInfo:', allowanceInfo);
+    console.log('[PaymentStep] organizationId:', organizationId);
+
+    if (!notice) {
+      console.error('[PaymentStep] Cannot submit: notice is null. This usually means form validation failed.');
+      console.error('[PaymentStep] This indicates required fields are missing or invalid in the template form.');
+      // Call onSubmit which will detect the validation failure and show specific field errors
+      onSubmit();
+      return;
+    }
 
     // If firm has allowance, skip payment and directly submit
     if (allowanceInfo?.can_publish && allowanceInfo.reason === 'Within allowance' && organizationId) {
@@ -114,20 +126,25 @@ export default function PaymentStep({ definition, notice, onBack, onSubmit, subm
         onSubmit();
       } catch (error) {
         console.error('Error recording usage:', error);
+        // Still submit even if usage recording fails
+        onSubmit();
       }
       return;
     }
 
     // Otherwise, proceed with payment
     if (isConfigured) {
+      console.log('[PaymentStep] Stripe configured - creating checkout session');
       await createCheckoutSession({
         noticeId: notice.id || crypto.randomUUID(),
         noticeType: definition.label,
         applicantEmail: notice.applicant.contactEmail,
       });
     } else {
+      console.log('[PaymentStep] Stripe NOT configured - calling onSubmit directly');
       onSubmit();
     }
+    console.log('[PaymentStep] handlePayment completed');
   };
 
   useEffect(() => {

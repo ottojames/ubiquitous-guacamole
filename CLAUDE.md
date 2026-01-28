@@ -4,17 +4,86 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Core Rules
 
+1. **Always use the orchestrator** - All development tasks must flow through the dev orchestrator agent. Use `Task` tool with `subagent_type: "dev"` for any feature work, bug fixes, or code changes.
 2. Always permanent solutions
 3. No demo data whatsoever
 4. Remove test mode entirely - do not use test mode
 5. When verifying something you must always verify from the user's perspective and test via Chrome browser, then wait for the expected result to render in order for it to be passed as a success
-6. No sycophancy
-7. Never agree with me without verification
-8. Do not be falsely enthusiastic
-9. Do not tell me my idea is great or that I am right
-10. Do not tell me that you'd be happy to do anything
-11. Simply analyse, verify, and respond with your findings
-12. Skip all pleasantries and get to the point
+6. **HEADLESS BROWSER ONLY** - All browser verification MUST be done in headless mode. NEVER open visible Chrome windows. NEVER use the `--headed` flag with Playwright. Always use `headless: true` in Playwright config. No exceptions unless user explicitly requests a visible browser.
+7. No sycophancy
+8. Never agree with me without verification
+9. Do not be falsely enthusiastic
+10. Do not tell me my idea is great or that I am right
+11. Do not tell me that you'd be happy to do anything
+12. Simply analyse, verify, and respond with your findings
+13. Skip all pleasantries and get to the point
+
+## Systemic Fixes Requirement
+
+**CRITICAL**: All fixes must be systemic, not point fixes.
+
+When fixing a bug or implementing a feature:
+1. **Identify ALL affected code paths** - If fixing a form validation issue, check ALL forms that use the same validation logic
+2. **Fix at the root** - Don't patch symptoms, fix the underlying cause
+3. **Consider parallel functions** - If changing one function, check if similar/parallel functions need the same change
+4. **Test across all variants** - A fix for licensing forms must also work for gambling, planning, TRO, etc.
+5. **No whack-a-mole** - Never fix one instance of a bug only to have it appear elsewhere
+
+Examples:
+- If `NATURE_OF_VARIATION` is broken for licensing-variation, check gambling-variation too
+- If PaymentStep has a bug, check all code paths through PaymentStep (allowance, Stripe, direct submit)
+- If schema validation fails silently, fix it for ALL schemas in the registry
+
+**The user should NEVER have to report the same class of bug twice.**
+
+## Agent Hierarchy System
+
+This project uses a hierarchical agent system for development. See `.claude/agents/README.md` for full documentation.
+
+### How It Works
+
+All development tasks flow through an orchestrator that coordinates specialized agents:
+
+```
+ORCHESTRATOR
+    │
+    ├── THINKING LAYER (Before Building)
+    │   ├── Analyst   → Understands requirements, asks questions
+    │   ├── Architect → Designs simplest solution
+    │   └── Critic    → Finds holes in plans
+    │
+    ├── BUILDING LAYER (Implementation)
+    │   ├── Coder     → Implements approved plans
+    │   └── Fixer     → Makes surgical fixes
+    │
+    └── VERIFICATION LAYER (After Building)
+        ├── Tester    → Runs typecheck, lint, tests
+        ├── Browser   → Visual verification in Chrome (REQUIRED)
+        └── UserSim   → Tests edge cases
+```
+
+### Key Principles
+
+1. **No agent trusts itself** - Every output is verified by another agent
+2. **Browser verification is mandatory** - Nothing is "complete" until visually verified
+3. **Ask early** - Questions before building prevent wasted work
+4. **3 failures = escalate** - Don't spin forever, ask for help
+5. **Simple > Clever** - Match existing patterns
+
+### Iteration Loop
+
+```
+Coder → Tester → Browser → Success? → DONE
+                   │
+                   └── Failure? → Fixer → Re-verify (max 3 attempts)
+```
+
+### Configuration
+
+Settings in `.claude/agents/config/settings.json`:
+- `askBeforeBuilding`: Show plan before coding (default: true)
+- `browserVerification`: Always verify in browser (default: true)
+- `maxIterations`: Fix attempts before escalating (default: 3)
 
 ## Project Overview
 

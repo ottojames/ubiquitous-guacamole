@@ -108,6 +108,11 @@ export default function App() {
         <Route path="/track" element={<TrackNotice />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/login/council" element={<Login />} />
+        <Route path="/login/professional" element={<Login />} />
+        {/* Legacy URL redirects */}
+        <Route path="/council/login" element={<Navigate to="/login/council" replace />} />
+        <Route path="/firm/login" element={<Navigate to="/login/professional" replace />} />
         <Route path="/publish/*" element={<PublishPage />} />
         <Route path="/notices/upload/template" element={<PublishPage />} />
         <Route path="/success" element={<Success />} />

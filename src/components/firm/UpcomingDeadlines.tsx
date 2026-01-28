@@ -84,7 +84,12 @@ export default function UpcomingDeadlines({ firmId, firmSlug }: UpcomingDeadline
         ];
         setNotices(mockData);
       } else {
-        setNotices(data as DeadlineNotice[]);
+        // Transform client array from Supabase join to single object
+        const transformed = (data || []).map(row => ({
+          ...row,
+          client: Array.isArray(row.client) ? row.client[0] : row.client
+        })) as DeadlineNotice[];
+        setNotices(transformed);
       }
     } catch (err) {
       console.error('Failed to load upcoming deadlines:', err);

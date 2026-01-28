@@ -38,12 +38,23 @@ export default function RepresentationsList({
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { counts, refetch: refetchCounts } = useRepresentationCounts(noticeId, userId);
 
   useEffect(() => {
     loadRepresentations();
   }, [noticeId, userId]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadRepresentations();
+      refetchCounts();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const loadRepresentations = async () => {
     setLoading(true);
@@ -172,9 +183,10 @@ export default function RepresentationsList({
       const result = await response.json();
 
       // Update local state with new comment
+      // The API returns { success, comment, representation, internal_notes }
       const updatedRep = {
         ...selectedRep,
-        internal_notes: result.internal_notes || [],
+        internal_notes: result.representation?.internal_notes || result.internal_notes || [],
       };
 
       setSelectedRep(updatedRep);
@@ -267,6 +279,22 @@ export default function RepresentationsList({
           )}
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            title="Refresh representations"
+          >
+            <svg
+              className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
           <button
             onClick={handleMarkAllAsRead}
             disabled={representations.filter((r) => !r.is_read).length === 0}

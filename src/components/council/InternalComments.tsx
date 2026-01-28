@@ -48,19 +48,13 @@ export default function InternalComments({
     try {
       setLoading(true);
 
+      // P2-002: Remove demo mode fallback - require authentication
       const token = await getAuthToken();
 
       if (!token) {
-        // Fall back to direct Supabase query for demo mode
-        const { data, error } = await supabase
-          .from('internal_comments')
-          .select('*')
-          .eq('representation_id', representationId)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-        setComments(data || []);
+        // No token means not authenticated - show empty state, don't use demo fallback
+        setComments([]);
+        setError('Please log in to view internal comments.');
         return;
       }
 
@@ -103,9 +97,9 @@ export default function InternalComments({
 
       const token = await getAuthToken();
 
+      // P2-002: Remove demo mode - require authentication for all operations
       if (!token) {
-        // For demo mode without auth, show helpful error
-        setError('Please log in to add comments. Demo mode requires authentication for this feature.');
+        setError('Please log in to add comments. Authentication is required.');
         return;
       }
 

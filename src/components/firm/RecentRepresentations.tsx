@@ -122,11 +122,11 @@ export default function RecentRepresentations({
 
       if (error) throw error;
 
-      // Transform the data to include notice info
+      // Transform the data to include notice info (Supabase returns arrays for joins)
       const transformedData = (data || []).map(rep => ({
         ...rep,
-        notice: rep.notices
-      }));
+        notice: Array.isArray(rep.notices) ? rep.notices[0] : rep.notices
+      })).filter(rep => rep.notice) as Representation[];
 
       setRepresentations(transformedData);
       setTotalCount(count || 0);

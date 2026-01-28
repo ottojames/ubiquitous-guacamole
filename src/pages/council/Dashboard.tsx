@@ -6,6 +6,7 @@ import { isClosingSoon } from '@/lib/dateUtils';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { PERMISSIONS } from '@/types/permissions';
 import { CardSkeleton, RecentNoticesSkeleton } from '@/components/skeletons';
+import LicensingDashboardWidgets from '@/components/council/LicensingDashboardWidgets';
 
 interface Department {
   id: string;
@@ -87,6 +88,13 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
+      console.log('[Dashboard] Loading data for department:', {
+        id: department.id,
+        name: department.name,
+        type: department.type,
+        orgId: department.organization?.id
+      });
+
       let notices: any[] = [];
       let recent: any[] = [];
 
@@ -95,6 +103,12 @@ export default function Dashboard() {
         .from('notices')
         .select('id, status')
         .eq('department_id', department.id);
+
+      console.log('[Dashboard] Notices query result:', {
+        count: noticesData?.length || 0,
+        error: noticesError?.message || null,
+        departmentId: department.id
+      });
 
       if (noticesError) throw noticesError;
 
@@ -107,6 +121,11 @@ export default function Dashboard() {
         .eq('department_id', department.id)
         .order('created_at', { ascending: false })
         .limit(5);
+
+      console.log('[Dashboard] Recent notices result:', {
+        count: recentData?.length || 0,
+        error: recentError?.message || null
+      });
 
       if (recentError) throw recentError;
 
@@ -371,28 +390,33 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Stats Grid - Dynamic based on department type */}
-      {/* Using static grid classes since Tailwind JIT can't detect dynamic class names */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
-        deptConfig.dashboardMetrics.length === 4 ? 'lg:grid-cols-4' :
-        deptConfig.dashboardMetrics.length === 5 ? 'lg:grid-cols-5' :
-        'lg:grid-cols-5'
-      }`}>
-        {deptConfig.dashboardMetrics.map((metric) => (
-          <Link
-            key={metric.type}
-            to={`${basePath}/notices${metric.linkFilter || ''}`}
-            className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
-            title={metric.tooltip}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">{metric.label}</h3>
-              {getMetricIcon(metric.icon, metric.color)}
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{getMetricValue(metric.type)}</p>
-          </Link>
-        ))}
-      </div>
+      {/* Stats Grid - For licensing departments, use the richer LicensingDashboardWidgets */}
+      {department.type === 'licensing' ? (
+        <LicensingDashboardWidgets departmentId={department.id} />
+      ) : (
+        /* Stats Grid - Dynamic based on department type */
+        /* Using static grid classes since Tailwind JIT can't detect dynamic class names */
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
+          deptConfig.dashboardMetrics.length === 4 ? 'lg:grid-cols-4' :
+          deptConfig.dashboardMetrics.length === 5 ? 'lg:grid-cols-5' :
+          'lg:grid-cols-5'
+        }`}>
+          {deptConfig.dashboardMetrics.map((metric) => (
+            <Link
+              key={metric.type}
+              to={`${basePath}/notices${metric.linkFilter || ''}`}
+              className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer"
+              title={metric.tooltip}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-600">{metric.label}</h3>
+                {getMetricIcon(metric.icon, metric.color)}
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{getMetricValue(metric.type)}</p>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Priorities Section */}
       {priorities.length > 0 && (
@@ -596,7 +620,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link
           to={`${basePath}/templates`}
           className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
@@ -644,6 +668,31 @@ export default function Dashboard() {
           </h3>
           <p className="text-sm text-gray-600">
             Manage officers and permissions within this department.
+          </p>
+        </Link>
+
+        <Link
+          to={`${basePath}/audit`}
+          className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6 hover:shadow-xl hover:scale-[1.02] transition-all"
+        >
+          <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg
+              className="w-6 h-6 text-amber-600"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Audit Log
+          </h3>
+          <p className="text-sm text-gray-600">
+            View all department activity and compliance records.
           </p>
         </Link>
 

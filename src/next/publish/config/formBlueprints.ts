@@ -253,6 +253,20 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       const isNew = !isVariation && !isReview;
 
       const sections: SectionBlueprint[] = [
+        // AUTHORITY FIRST: Select council to load template preview immediately
+        {
+          id: "authority-select",
+          title: "Publishing to",
+          description: "Select the licensing authority to load the correct template and preview.",
+          fields: [
+            field("AUTHORITY_NAME", {
+              label: "Licensing authority",
+              required: true,
+              span: 12,
+              hint: "Start typing to search for your council's licensing department.",
+            }),
+          ],
+        },
         {
           id: "applicant",
           title: "Applicant / Publisher",
@@ -325,6 +339,8 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               hint: "Times shown are when the activity may take place. Opening hours may differ.",
             }),
             // Removed DPS_NAME and DPS_LICENSING_AUTHORITY as per FIX-004
+            // NATURE_OF_VARIATION is auto-generated from selected activities and hours
+            // Hidden from form but value is set by TemplateBuilderForm.updateActivitiesHoursData()
             field("NATURE_OF_VARIATION", {
               label: "Nature of variation",
               type: "textarea",
@@ -332,8 +348,8 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               required: isVariation,
               span: 12,
               maxLength: 1500,
-              hint: "Describe the change in plain English (max 1,500 characters, soft warn at 1,200).",
-              showIf: () => isVariation,
+              hint: "Auto-generated from selected activities and hours.",
+              showIf: () => false, // Hidden - auto-generated from activities selection
             }),
             field("REVIEW_APPLICANT_NAME", {
               label: "Review applicant name",
@@ -382,13 +398,10 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         },
         {
           id: "authority",
-          title: "Authority & representations",
+          title: "Authority details",
+          description: "These fields auto-populate from your selected authority. Edit if needed.",
           fields: [
-            field("AUTHORITY_NAME", {
-              label: "Licensing authority name",
-              required: true,
-              span: 12,
-            }),
+            // AUTHORITY_NAME moved to top "authority-select" section
             field("AUTHORITY_ADDRESS", {
               label: "Authority address",
               type: "textarea",
@@ -456,6 +469,20 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       const premisesType = definition.group;
 
       const sections: SectionBlueprint[] = [
+        // AUTHORITY FIRST: Select council to load template preview immediately
+        {
+          id: "authority-select",
+          title: "Publishing to",
+          description: "Select the licensing authority to load the correct template and preview.",
+          fields: [
+            field("AUTHORITY_NAME", {
+              label: "Licensing authority",
+              required: true,
+              span: 12,
+              hint: "Start typing to search for your council's licensing department.",
+            }),
+          ],
+        },
         {
           id: "applicant",
           title: "Applicant / Publisher",
@@ -535,6 +562,8 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
                 { value: "fec", label: "Family Entertainment Centre (FEC)" },
               ],
             }),
+            // NATURE_OF_VARIATION is auto-generated from selected gambling activities
+            // Hidden from form but value is set by TemplateBuilderForm.updateGamblingActivitiesHoursData()
             field("NATURE_OF_VARIATION", {
               label: "Nature of variation",
               type: "textarea",
@@ -542,8 +571,8 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               required: isVariation,
               span: 12,
               maxLength: 1500,
-              hint: "Describe the variation requested (max 1,500 characters).",
-              showIf: () => isVariation,
+              hint: "Auto-generated from selected gambling activities.",
+              showIf: () => false, // Hidden - auto-generated from activities selection
             }),
             field("REVIEW_APPLICANT_NAME", {
               label: "Review applicant name",
@@ -606,13 +635,10 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         },
         {
           id: "authority",
-          title: "Authority contact",
+          title: "Authority details",
+          description: "These fields auto-populate from your selected authority. Edit if needed.",
           fields: [
-            field("AUTHORITY_NAME", {
-              label: "Licensing authority name",
-              required: true,
-              span: 12,
-            }),
+            // AUTHORITY_NAME moved to top "authority-select" section
             field("AUTHORITY_ADDRESS", {
               label: "Authority address",
               type: "textarea",
@@ -665,6 +691,22 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       const isVariation = definition.id.includes("variation");
 
       const sections: SectionBlueprint[] = [
+        // AUTHORITY FIRST: Select Traffic Area to load template preview immediately
+        {
+          id: "authority-select",
+          title: "Publishing to",
+          description: "Select the Traffic Commissioner office for your area.",
+          fields: [
+            field("TRAFFIC_AREA_NAME", {
+              label: "Traffic area",
+              required: true,
+              span: 12,
+              type: "select",
+              options: TRAFFIC_AREA_OPTIONS,
+              hint: "Select the traffic area where your operating centre is located.",
+            }),
+          ],
+        },
         applicantSection({ addressRequired: true, tradingAsLabel: "Trading name (if any)" }),
         {
           id: "application-details",
@@ -677,13 +719,7 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               type: "select",
               options: LICENCE_CATEGORY_OPTIONS,
             }),
-            field("TRAFFIC_AREA_NAME", {
-              label: "Traffic area",
-              required: true,
-              span: 12,
-              type: "select",
-              options: TRAFFIC_AREA_OPTIONS,
-            }),
+            // TRAFFIC_AREA_NAME moved to top "authority-select" section
             field("OPERATING_CENTRE_ADDRESS", {
               label: "Operating centre address",
               type: "textarea",
@@ -732,12 +768,9 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         {
           id: "authority",
           title: "Traffic Commissioner contact",
+          description: "Address for objections - auto-populated based on traffic area.",
           fields: [
-            field("AUTHORITY_NAME", {
-              label: "Traffic Commissioner / Area office",
-              required: true,
-              span: 12,
-            }),
+            // AUTHORITY_NAME is auto-populated as "The Traffic Commissioner"
             field("AUTHORITY_ADDRESS", {
               label: "Address for representations",
               type: "textarea",
@@ -768,6 +801,20 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       const isDeparture = definition.id === "planning-departure";
 
       const sections: SectionBlueprint[] = [
+        // AUTHORITY FIRST: Select council to load template preview immediately
+        {
+          id: "authority-select",
+          title: "Publishing to",
+          description: "Select the planning authority to load the correct template and preview.",
+          fields: [
+            field("AUTHORITY_NAME", {
+              label: "Planning authority",
+              required: true,
+              span: 12,
+              hint: "Start typing to search for your council's planning department.",
+            }),
+          ],
+        },
         applicantSection(),
         {
           id: "site",
@@ -885,13 +932,10 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
         },
         {
           id: "authority",
-          title: "Planning authority",
+          title: "Authority details",
+          description: "These fields auto-populate from your selected authority. Edit if needed.",
           fields: [
-            field("AUTHORITY_NAME", {
-              label: "Authority name",
-              required: true,
-              span: 12,
-            }),
+            // AUTHORITY_NAME moved to top "authority-select" section
             field("AUTHORITY_ADDRESS", {
               label: "Authority address",
               type: "textarea",
@@ -1020,16 +1064,25 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       const isExperimental = definition.id.includes("experimental");
 
       const sections: SectionBlueprint[] = [
+        // AUTHORITY FIRST: Select council to load template preview immediately
         {
-          id: "authority",
-          title: "Highway authority",
+          id: "authority-select",
+          title: "Publishing to",
+          description: "Select the highway authority to load the correct template and preview.",
           fields: [
             field("AUTHORITY_NAME", {
-              label: "Authority name",
+              label: "Highway authority",
               required: true,
               span: 12,
-              hint: "Full name of the local highway authority",
+              hint: "Start typing to search for your council's highways department.",
             }),
+          ],
+        },
+        {
+          id: "authority-details",
+          title: "Authority contact",
+          description: "Additional contact details for objections.",
+          fields: [
             field("AUTHORITY_EMAIL", {
               label: "Authority email (optional)",
               type: "email",

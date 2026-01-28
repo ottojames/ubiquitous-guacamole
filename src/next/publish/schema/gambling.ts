@@ -23,7 +23,11 @@ export const GAMBLING_VARIANTS = [
 
 export type GamblingVariant = (typeof GAMBLING_VARIANTS)[number];
 
-const requiredString = (label: string) => z.string().trim().min(1, `${label} is required`);
+const requiredString = (label: string) =>
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z.string().trim().min(1, `${label} is required`)
+  );
 
 const optionalString = () =>
   z.preprocess(
@@ -50,10 +54,14 @@ const optionalEmail = () =>
   );
 
 const isoDateField = (label: string) =>
-  z
-    .string()
-    .trim()
-    .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` });
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z
+      .string()
+      .trim()
+      .min(1, `${label} is required`)
+      .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` })
+  );
 
 const gamblingBaseSchema = z
   .object({
@@ -83,7 +91,7 @@ const gamblingBaseSchema = z
     ),
     DEADLINE_DATE: isoDateField("Representation deadline"),
     INSPECTION_LOCATION: optionalString(),
-    INSPECTION_TIMES: requiredString("Inspection times"),
+    INSPECTION_TIMES: optionalString(),
     REPRESENTATION_METHOD: requiredString("Representation method"),
     REPRESENTATION_ADDRESS: optionalString(),
     REPRESENTATION_EMAIL: optionalEmail(),
@@ -177,6 +185,15 @@ function valueOrUndefined(value?: string | null): string | undefined {
   return trimmed.length ? trimmed : undefined;
 }
 
+/**
+ * Extract UK postcode from an address string
+ */
+function extractPostcode(address: string): string {
+  const postcodeRegex = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i;
+  const match = address.match(postcodeRegex);
+  return match ? match[1].toUpperCase() : "";
+}
+
 export function mapGamblingToNoticeBase(input: GamblingNoticeInput): NoticeBase {
   const tokens: Record<string, string> = {
     NOTICE_TYPE: valueOrEmpty(input.NOTICE_TYPE),
@@ -210,6 +227,9 @@ export function mapGamblingToNoticeBase(input: GamblingNoticeInput): NoticeBase 
     AUTHORITY_EMAIL: valueOrEmpty(input.AUTHORITY_EMAIL),
   };
 
+  const premisesAddress = tokens.PREMISES_ADDRESS || "Address not supplied";
+  const extractedPostcode = extractPostcode(premisesAddress);
+
   return {
     noticeType: tokens.NOTICE_TYPE || "Gambling Notice",
     applicant: {
@@ -220,9 +240,9 @@ export function mapGamblingToNoticeBase(input: GamblingNoticeInput): NoticeBase 
     premises: {
       name: valueOrUndefined(input.PREMISES_NAME),
       address: {
-        line1: tokens.PREMISES_ADDRESS || "Address not supplied",
+        line1: premisesAddress,
         town: "",
-        postcode: "",
+        postcode: extractedPostcode,
       },
     },
     publication: {
@@ -237,6 +257,7 @@ export function mapGamblingToNoticeBase(input: GamblingNoticeInput): NoticeBase 
     extras: {
       category: "gambling",
       variant: input.variant,
+      councilName: tokens.AUTHORITY_NAME || "",
       tokens,
     },
   } satisfies NoticeBase;

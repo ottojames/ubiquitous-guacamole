@@ -37,6 +37,9 @@ export function useRepresentationCounts(
       return;
     }
 
+    // Capture the narrowed values for use in async closure
+    const safeNoticeId = noticeId;
+    const safeUserId = userId;
     let cancelled = false;
 
     async function fetchCounts() {
@@ -45,7 +48,7 @@ export function useRepresentationCounts(
 
       try {
         const response = await fetch(
-          `/api/notices/${noticeId}/representations/counts?userId=${encodeURIComponent(userId)}`
+          `/api/notices/${safeNoticeId}/representations/counts?userId=${encodeURIComponent(safeUserId)}`
         );
 
         if (!response.ok) {

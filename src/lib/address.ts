@@ -1087,7 +1087,7 @@ function safeToSuggestion(it: any): AddressSuggestion | null {
 
   // If we don't have a postcode, try to extract it from the label
   if (!postcode && label) {
-    const parts = label.split(',').map(p => p.trim());
+    const parts = label.split(',').map((p: string) => p.trim());
     for (const part of parts) {
       const extractedPostcode = normalisePostcode(part);
       if (extractedPostcode) {

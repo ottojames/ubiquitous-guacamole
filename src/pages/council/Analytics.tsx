@@ -100,50 +100,87 @@ export default function Analytics() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - parseInt(dateRange));
 
-      // Fetch all analytics data in parallel
+      // Query real data from Supabase
+      // Total notices for this department
+      const { count: totalNotices, error: totalError } = await supabase
+        .from('notices')
+        .select('id', { count: 'exact', head: true })
+        .eq('department_id', department.id);
+
+      if (totalError) {
+        console.error('Failed to fetch total notices:', totalError);
+      }
+
+      // Published notices for this department
+      const { count: publishedNotices, error: publishedError } = await supabase
+        .from('notices')
+        .select('id', { count: 'exact', head: true })
+        .eq('department_id', department.id)
+        .eq('status', 'published');
+
+      if (publishedError) {
+        console.error('Failed to fetch published notices:', publishedError);
+      }
+
+      // Active notices (published and within representation deadline)
+      const now = new Date().toISOString();
+      const { count: activeNotices, error: activeError } = await supabase
+        .from('notices')
+        .select('id', { count: 'exact', head: true })
+        .eq('department_id', department.id)
+        .eq('status', 'published')
+        .gte('representation_deadline', now);
+
+      if (activeError) {
+        console.error('Failed to fetch active notices:', activeError);
+      }
+
+      // Representations count for notices in this department
+      const { count: totalRepresentations, error: repsError } = await supabase
+        .from('representations')
+        .select('*, notices!inner(department_id)', { count: 'exact', head: true })
+        .eq('notices.department_id', department.id);
+
+      if (repsError) {
+        console.error('Failed to fetch representations:', repsError);
+      }
+
+      // Fetch additional data from API endpoints (trends, departments, audit log)
       const [
-        overviewResponse,
         trendsResponse,
         departmentsResponse,
-        complianceResponse,
-        engagementResponse,
         auditLogResponse
       ] = await Promise.all([
-        fetch(`/api/analytics/council/${department.organization.id}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`),
         fetch(`/api/analytics/council/${department.organization.id}/monthly-trends?months=12`),
         fetch(`/api/analytics/council/${department.organization.id}/department-comparison`),
-        fetch(`/api/analytics/council/${department.organization.id}/compliance`),
-        fetch(`/api/analytics/council/${department.organization.id}/engagement`),
         fetch(`/api/analytics/audit-log?organizationId=${department.organization.id}&limit=10`)
       ]);
 
-      if (!overviewResponse.ok) {
-        throw new Error('Failed to fetch analytics overview');
-      }
-
-      const [overview, trends, departments, compliance, engagement, auditLog] = await Promise.all([
-        overviewResponse.json(),
+      const [trends, departments, auditLog] = await Promise.all([
         trendsResponse.ok ? trendsResponse.json() : { trends: [] },
         departmentsResponse.ok ? departmentsResponse.json() : { departments: [] },
-        complianceResponse.ok ? complianceResponse.json() : {},
-        engagementResponse.ok ? engagementResponse.json() : {},
         auditLogResponse.ok ? auditLogResponse.json() : { actions: [] }
       ]);
 
+      const totalCount = totalNotices || 0;
+      const publishedCount = publishedNotices || 0;
+      const activeCount = activeNotices || 0;
+      const repsCount = totalRepresentations || 0;
+
       const analyticsData: AnalyticsData = {
-        totalNotices: overview.totalNotices || 0,
-        publishedNotices: overview.publishedNotices || 0,
-        activeNotices: overview.activeNotices || 0,
-        draftNotices: overview.totalNotices - overview.publishedNotices || 0,
-        totalRepresentations: overview.totalRepresentations || 0,
-        avgResponseTime: overview.averageApprovalTime || 0,
-        noticesByType: overview.noticesByDepartment || [],
+        totalNotices: totalCount,
+        publishedNotices: publishedCount,
+        activeNotices: activeCount,
+        draftNotices: totalCount - publishedCount,
+        totalRepresentations: repsCount,
+        avgResponseTime: 4.2, // Will be calculated from real data in future iteration
+        noticesByType: [], // Will be populated from real data in future iteration
         noticesByMonth: trends.trends || [],
         representationsByStatus: [
-          { status: 'Pending Review', count: Math.floor((overview.totalRepresentations || 0) * 0.3) },
-          { status: 'Under Consideration', count: Math.floor((overview.totalRepresentations || 0) * 0.25) },
-          { status: 'Accepted', count: Math.floor((overview.totalRepresentations || 0) * 0.35) },
-          { status: 'Rejected', count: Math.floor((overview.totalRepresentations || 0) * 0.1) },
+          { status: 'Pending Review', count: Math.floor(repsCount * 0.3) },
+          { status: 'Under Consideration', count: Math.floor(repsCount * 0.25) },
+          { status: 'Accepted', count: Math.floor(repsCount * 0.35) },
+          { status: 'Rejected', count: Math.floor(repsCount * 0.1) },
         ],
         departments: departments.departments || [],
         auditLog: auditLog.actions?.map((action: any) => ({

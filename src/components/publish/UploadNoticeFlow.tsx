@@ -237,7 +237,7 @@ export default function UploadNoticeFlow() {
   /* CN:LICENSING-TEMPLATES-END */
   /* CN:TEMPLATES-PREVIEW-END */
 
-  const requiredOk =
+  const requiredOk = Boolean(
     draft.applicantName.trim() &&
     draft.premisesAddress.trim() &&
     draft.postcode.trim() &&
@@ -247,7 +247,7 @@ export default function UploadNoticeFlow() {
     draft.applicationDate.trim() &&
     /* CN:TEMPLATES-PREVIEW-START */
     /* CN:LICENSING-TEMPLATES-START */
-    summariesOk;
+    summariesOk);
     /* CN:LICENSING-TEMPLATES-END */
     /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-LAYOUT-START */

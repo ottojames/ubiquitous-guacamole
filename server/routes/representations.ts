@@ -346,6 +346,7 @@ router.post('/representations/:representationId/comment', optionalAuth, async (r
       success: true,
       comment: newComment,
       representation: updated,
+      internal_notes: updated?.internal_notes || updatedNotes, // For backwards compatibility
     });
   } catch (error) {
     console.error('Error in POST /api/representations/:representationId/comment:', error);

@@ -83,7 +83,8 @@ export default function LiveRepresentationFeed({
       // Calculate stance counts
       const counts = { support: 0, oppose: 0, comment: 0 };
       (data || []).forEach(rep => {
-        counts[rep.stance]++;
+        const stance = rep.stance as keyof typeof counts;
+        if (stance in counts) counts[stance]++;
       });
       setStanceCounts(counts);
     } catch (error) {

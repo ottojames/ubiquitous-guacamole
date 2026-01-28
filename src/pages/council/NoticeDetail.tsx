@@ -4,6 +4,24 @@ import { getDepartmentConfig } from '@/config/departmentConfig';
 import { isClosingSoon, formatCouncilDate } from '@/lib/dateUtils';
 import RepresentationsList from '@/components/council/RepresentationsList';
 import EvidencePackDownload from '@/components/council/EvidencePackDownload';
+import { supabase } from '@/lib/supabase';
+
+// P1-001: Interface for real audit log entries
+interface AuditEntry {
+  id: string;
+  action: string;
+  action_category: string;
+  created_at: string;
+  user_email?: string;
+  metadata?: any;
+}
+
+// P1-001: Interface for representation stats
+interface RepStats {
+  total: number;
+  objections: number;
+  support: number;
+}
 
 interface Department {
   id: string;
@@ -54,6 +72,10 @@ export default function NoticeDetail() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<NoticeDetailData | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  // P1-001: State for real audit history and representation stats
+  const [auditHistory, setAuditHistory] = useState<AuditEntry[]>([]);
+  const [repStats, setRepStats] = useState<RepStats>({ total: 0, objections: 0, support: 0 });
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Get department-specific configuration
   const deptConfig = getDepartmentConfig(department.type);
@@ -61,6 +83,59 @@ export default function NoticeDetail() {
   useEffect(() => {
     loadNoticeData();
   }, [noticeId]);
+
+  // P1-001: Load audit history when history tab is selected
+  useEffect(() => {
+    if (activeTab === 'history' && noticeId) {
+      loadAuditHistory();
+      loadRepresentationStats();
+    }
+  }, [activeTab, noticeId]);
+
+  // P1-001: Fetch real audit log entries for this notice
+  const loadAuditHistory = async () => {
+    if (!noticeId) return;
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('id, action, action_category, created_at, user_email, metadata')
+        .eq('resource_id', noticeId)
+        .eq('resource_type', 'notice')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setAuditHistory(data || []);
+    } catch (err) {
+      console.error('Failed to load audit history:', err);
+      setAuditHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // P1-001: Fetch real representation counts for this notice
+  const loadRepresentationStats = async () => {
+    if (!noticeId) return;
+    try {
+      const { data, error } = await supabase
+        .from('representations')
+        .select('type')
+        .eq('notice_id', noticeId);
+
+      if (error) throw error;
+
+      const stats = {
+        total: data?.length || 0,
+        objections: data?.filter(r => r.type === 'objection').length || 0,
+        support: data?.filter(r => r.type === 'support').length || 0
+      };
+      setRepStats(stats);
+    } catch (err) {
+      console.error('Failed to load representation stats:', err);
+    }
+  };
 
   const loadNoticeData = async () => {
     try {
@@ -422,7 +497,7 @@ export default function NoticeDetail() {
               </div>
             )}
 
-            {/* Default licensing activities for demo if none present */}
+            {/* P1-002: Show "No activities specified" instead of fake data when none present */}
             {(!notice.licensingActivities || notice.licensingActivities.length === 0) && notice.noticeType.includes('licensing') && (
               <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-100 mb-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -431,22 +506,13 @@ export default function NoticeDetail() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Licensable Activities Requested</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Licensable Activities</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {['Sale of alcohol (on and off premises)', 'Late night refreshment (11pm-5am)', 'Live music', 'Recorded music'].map((activity: string, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 text-gray-900">
-                      <svg className="w-4 h-4 text-cyan-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-base">{activity}</span>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-gray-600 italic">No activities specified in this application.</p>
               </div>
             )}
 
-            {/* Operating Hours */}
+            {/* P1-003: Operating Hours - Only show if actual data exists, otherwise show "Hours not specified" */}
             {notice.noticeType.includes('licensing') && (
               <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl p-6 border border-rose-100 mb-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -467,20 +533,7 @@ export default function NoticeDetail() {
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center py-2 border-b border-rose-100">
-                      <span className="font-semibold text-gray-900">Monday - Thursday</span>
-                      <span className="text-gray-700">11:00 - 23:30</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-rose-100">
-                      <span className="font-semibold text-gray-900">Friday - Saturday</span>
-                      <span className="text-gray-700">11:00 - 01:00</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="font-semibold text-gray-900">Sunday</span>
-                      <span className="text-gray-700">12:00 - 22:30</span>
-                    </div>
-                  </div>
+                  <p className="text-gray-600 italic">Hours not specified in this application.</p>
                 )}
               </div>
             )}
@@ -529,12 +582,22 @@ export default function NoticeDetail() {
         )}
 
         {activeTab === 'representations' && noticeId && (
-          <RepresentationsList
-            noticeId={noticeId}
-            userId={department.id || 'demo-user'}
-            repLabel={deptConfig.repLabel}
-            repLabelPlural={deptConfig.repLabelPlural}
-          />
+          department.id ? (
+            <RepresentationsList
+              noticeId={noticeId}
+              userId={department.id}
+              repLabel={deptConfig.repLabel}
+              repLabelPlural={deptConfig.repLabelPlural}
+            />
+          ) : (
+            <div className="text-center py-8">
+              <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-red-600 font-semibold">Unable to load representations</p>
+              <p className="text-gray-600 text-sm mt-1">Department context is not available. Please refresh the page or contact support.</p>
+            </div>
+          )
         )}
 
         {activeTab === 'documents' && (
@@ -542,83 +605,7 @@ export default function NoticeDetail() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Application Documents</h2>
 
             <div className="space-y-3">
-              {/* Application Form */}
-              <div className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <svg className="w-8 h-8 text-blue-600 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <div>
-                      <p className="font-semibold text-gray-900">Application Form</p>
-                      <p className="text-sm text-gray-600">Completed premises licence variation form</p>
-                      <p className="text-xs text-gray-500 mt-1">PDF • 2.4 MB • Uploaded {formatDate(notice.applicationDate || notice.publicationDate)}</p>
-                    </div>
-                  </div>
-                  <button className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors">
-                    View
-                  </button>
-                </div>
-              </div>
-
-              {/* Site Plan */}
-              <div className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <svg className="w-8 h-8 text-green-600 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                    <div>
-                      <p className="font-semibold text-gray-900">Site Plan</p>
-                      <p className="text-sm text-gray-600">Premises layout showing licensed areas</p>
-                      <p className="text-xs text-gray-500 mt-1">PDF • 1.8 MB • Scale 1:50</p>
-                    </div>
-                  </div>
-                  <button className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors">
-                    View
-                  </button>
-                </div>
-              </div>
-
-              {/* Operating Schedule */}
-              <div className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <svg className="w-8 h-8 text-purple-600 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="font-semibold text-gray-900">Operating Schedule</p>
-                      <p className="text-sm text-gray-600">Proposed hours and conditions</p>
-                      <p className="text-xs text-gray-500 mt-1">PDF • 850 KB • 4 pages</p>
-                    </div>
-                  </div>
-                  <button className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors">
-                    View
-                  </button>
-                </div>
-              </div>
-
-              {/* Consent Form */}
-              <div className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <svg className="w-8 h-8 text-indigo-600 flex-shrink-0" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="font-semibold text-gray-900">DPS Consent Form</p>
-                      <p className="text-sm text-gray-600">Signed consent from designated premises supervisor</p>
-                      <p className="text-xs text-gray-500 mt-1">PDF • 450 KB • Signed digitally</p>
-                    </div>
-                  </div>
-                  <button className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors">
-                    View
-                  </button>
-                </div>
-              </div>
-
-              {/* Public Notice */}
+              {/* Published Notice (Proof) - Only real document shown */}
               {notice.proof_pdf_url ? (
                 <a
                   href={notice.proof_pdf_url}
@@ -637,7 +624,7 @@ export default function NoticeDetail() {
                     </div>
                   </div>
                   <span className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50">
-                    Download ↗
+                    Download
                   </span>
                 </a>
               ) : (
@@ -674,7 +661,7 @@ export default function NoticeDetail() {
                 <div className="text-sm">
                   <p className="font-semibold text-gray-900 mb-1">Document Access</p>
                   <p className="text-gray-700">
-                    All application documents can be viewed by licensing officers. Some documents may be restricted from public view to protect personal data (GDPR). Representations and decision notices will be added to this section as they become available.
+                    Application documents such as site plans and operating schedules are submitted directly to the licensing authority. Contact the licensing team for access to the full application file. Representations and decision notices will be added to this section as they become available.
                   </p>
                 </div>
               </div>
@@ -682,126 +669,160 @@ export default function NoticeDetail() {
           </div>
         )}
 
+        {/* P1-001: History tab now shows real audit data instead of hardcoded timeline */}
         {activeTab === 'history' && (
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Application Timeline</h2>
 
-            <div className="space-y-1">
-              {/* Current Status */}
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-2 bg-green-600 rounded-full"></div>
-                <div className="flex-1 pb-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-bold text-gray-900">Consultation Active</p>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                      Current
-                    </span>
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {/* Current Status - Based on notice status and deadline */}
+                {notice.status === 'published' && notice.repsDeadline && new Date(notice.repsDeadline) > new Date() && (
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-2 bg-green-600 rounded-full"></div>
+                    <div className="flex-1 pb-6">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-900">Consultation Active</p>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          Current
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Public consultation period in progress. Representations being accepted until deadline.
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Deadline: {formatCouncilDate(notice.repsDeadline)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Public consultation period in progress. Representations being accepted until deadline.
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Deadline: {formatCouncilDate(notice.repsDeadline || notice.publicationDate)}
-                  </p>
-                </div>
-              </div>
+                )}
 
-              {/* Representations received */}
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-2 bg-blue-600 rounded-full"></div>
-                <div className="flex-1 pb-6">
-                  <p className="font-semibold text-gray-900">11 Representations Received</p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    8 objections and 3 support submissions from local residents and stakeholders
-                  </p>
-                  <p className="text-xs text-gray-500">Various dates • Most recent: 2 days ago</p>
-                </div>
-              </div>
+                {/* Representations received - Real count from database */}
+                {repStats.total > 0 && (
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-2 bg-blue-600 rounded-full"></div>
+                    <div className="flex-1 pb-6">
+                      <p className="font-semibold text-gray-900">{repStats.total} Representation{repStats.total !== 1 ? 's' : ''} Received</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {repStats.objections > 0 && `${repStats.objections} objection${repStats.objections !== 1 ? 's' : ''}`}
+                        {repStats.objections > 0 && repStats.support > 0 && ' and '}
+                        {repStats.support > 0 && `${repStats.support} support submission${repStats.support !== 1 ? 's' : ''}`}
+                        {repStats.objections === 0 && repStats.support === 0 && `${repStats.total} comment${repStats.total !== 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-              {/* Published */}
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-2 bg-purple-600 rounded-full"></div>
-                <div className="flex-1 pb-6">
-                  <p className="font-semibold text-gray-900">Notice Published</p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Statutory public notice published and consultation period commenced
-                  </p>
-                  <p className="text-xs text-gray-500">{formatDate(notice.publicationDate)}</p>
-                </div>
-              </div>
+                {/* Real audit log entries */}
+                {auditHistory.length > 0 ? (
+                  auditHistory.map((entry, idx) => (
+                    <div key={entry.id} className="flex gap-4">
+                      <div className={`flex-shrink-0 w-2 rounded-full ${
+                        entry.action.includes('created') ? 'bg-green-600' :
+                        entry.action.includes('published') ? 'bg-purple-600' :
+                        entry.action.includes('updated') ? 'bg-blue-600' :
+                        entry.action.includes('viewed') ? 'bg-gray-400' :
+                        'bg-indigo-600'
+                      }`}></div>
+                      <div className={`flex-1 ${idx < auditHistory.length - 1 ? 'pb-6' : ''}`}>
+                        <p className="font-semibold text-gray-900 capitalize">
+                          {entry.action.replace(/_/g, ' ').replace(/\./g, ' ')}
+                        </p>
+                        {entry.user_email && (
+                          <p className="text-sm text-gray-600 mb-1">
+                            By: {entry.user_email}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500">
+                          {new Date(entry.created_at).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {/* Fallback: Show publication event from notice data */}
+                    <div className="flex gap-4">
+                      <div className="flex-shrink-0 w-2 bg-purple-600 rounded-full"></div>
+                      <div className="flex-1 pb-6">
+                        <p className="font-semibold text-gray-900">Notice Published</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Statutory public notice published and consultation period commenced
+                        </p>
+                        <p className="text-xs text-gray-500">{formatDate(notice.publicationDate)}</p>
+                      </div>
+                    </div>
 
-              {/* Application received */}
-              {notice.applicationDate && (
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-2 bg-amber-600 rounded-full"></div>
-                  <div className="flex-1 pb-6">
-                    <p className="font-semibold text-gray-900">Application Received</p>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Variation application submitted to Westminster City Council
-                    </p>
-                    <p className="text-xs text-gray-500">{formatDate(notice.applicationDate)}</p>
+                    {/* Application date if available */}
+                    {notice.applicationDate && (
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-2 bg-amber-600 rounded-full"></div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">Application Received</p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Application submitted by applicant
+                          </p>
+                          <p className="text-xs text-gray-500">{formatDate(notice.applicationDate)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Empty state for audit history */}
+                {auditHistory.length === 0 && !notice.applicationDate && (
+                  <div className="text-center py-8 text-gray-500">
+                    <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p>No detailed audit history available for this notice.</p>
+                    <p className="text-sm mt-1">Activity will be recorded as events occur.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Next Steps - Only show if consultation is still active */}
+            {notice.status === 'published' && notice.repsDeadline && new Date(notice.repsDeadline) > new Date() && (
+              <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-2xl">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h3 className="font-bold text-gray-900 mb-2">Next Steps</h3>
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 mt-0.5">•</span>
+                        <span>Consultation period closes on {formatCouncilDate(notice.repsDeadline)}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 mt-0.5">•</span>
+                        <span>Officer will prepare report summarizing all representations received</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 mt-0.5">•</span>
+                        <span>Application will be determined by Licensing Sub-Committee hearing</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-600 mt-0.5">•</span>
+                        <span>Decision notice will be issued to all parties within 5 working days</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
-              )}
-
-              {/* Application validated */}
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-2 bg-indigo-600 rounded-full"></div>
-                <div className="flex-1 pb-6">
-                  <p className="font-semibold text-gray-900">Application Validated</p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Licensing officer verified application completeness and statutory requirements
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatDate(notice.applicationDate || notice.publicationDate)}
-                  </p>
-                </div>
               </div>
-
-              {/* Initial submission */}
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-2 bg-gray-400 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">Application Submitted</p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Applicant submitted variation application via solicitor
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatDate(notice.applicationDate || notice.publicationDate)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-2xl">
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-2">Next Steps</h3>
-                  <ul className="space-y-2 text-sm text-gray-700">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600 mt-0.5">•</span>
-                      <span>Consultation period closes on {formatCouncilDate(notice.repsDeadline || notice.publicationDate)}</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600 mt-0.5">•</span>
-                      <span>Officer will prepare report summarizing all representations received</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600 mt-0.5">•</span>
-                      <span>Application will be determined by Licensing Sub-Committee hearing</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-600 mt-0.5">•</span>
-                      <span>Decision notice will be issued to all parties within 5 working days</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>
