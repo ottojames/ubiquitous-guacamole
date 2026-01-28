@@ -579,3 +579,48 @@ New PRD.md for council-specific research. Instance 3 focuses on researching indi
 - Main phone: 0121 303 1111
 
 ---
+
+## Iteration 3 - Research Manchester City Council
+**Status**: PASS
+**Task Type**: Research
+**Files Created**: councils/manchester.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Manchester City Council via web search and website fetches:
+1. **Licensing**: premises.licensing@manchester.gov.uk, phone 0161 234 5004
+   - Handles Licensing Act 2003 and Gambling Act 2005 premises
+   - Address: Licensing Unit, Level 1, Town Hall Extension, Manchester M60 2LA
+   - Register viewable by appointment 9am-5pm
+   - Out of hours (after 8pm): 0161 234 5004
+2. **Street Trading**: premises.licensing@manchester.gov.uk, phone 0161 234 5004
+   - Two types: Street Trader Licence (City Centre) and Street Trader Consent (elsewhere)
+   - Web form at manchester.gov.uk/xfp/form/1947
+3. **Planning**: planning@manchester.gov.uk, phone 0161 234 4516
+   - Uses national Planning Portal
+   - Address: PO Box 463, Town Hall, Manchester M60 3NY
+4. **Building Control**: building.control@manchester.gov.uk, phone 0161 234 4490
+   - Experiencing substantial delays due to staff shortages
+   - Office hours: 9am-4pm Monday to Friday
+5. **Highways**: highwaynetworkmanagement@manchester.gov.uk
+   - TRO/TTRO applications via web form
+   - Event road closures: minimum £167, works closures: minimum £2,522
+   - Six week lead-in for TTRO applications
+6. **Environmental Health**: No email, online forms only
+   - Phone: 0161 234 5004
+   - Address: 1 Hammerstone Road, Manchester M18 8EQ
+7. **Public Protection**: phone 0161 234 4854
+   - Responsible authority for licensing consultations
+8. **Trading Standards**: trading_standards@manchester.gov.uk, phone 0161 234 1555
+   - Address: 1 Hammerstone Road, Gorton, Manchester M18 8EQ
+9. **Property Licensing**: hmolicensingenquiry@manchester.gov.uk
+   - Portal at propertylicensing.manchester.gov.uk
+   - HMO mandatory for 5+ persons, 2+ households
+   - Selective Licensing Scheme 3 (May 2025-May 2030): Cheetham, Crumpsall, Harpurhey, Longsight, Miles Platting & Newton Heath, Moss Side
+**Learnings**:
+- Manchester uses Town Hall Extension for licensing services
+- Building control also experiencing staff shortages (like Birmingham)
+- Environmental Health prefers online forms over email (similar pattern to other large councils)
+- Comprehensive responsible authorities list available on website
+- Council address: Town Hall, Albert Square, Manchester M60 2LA
+- Main phone: 0161 234 5000
+
+---

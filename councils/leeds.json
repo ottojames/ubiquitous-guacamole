@@ -1,0 +1,296 @@
+{
+  "name": "Leeds City Council",
+  "type": "Metropolitan Borough",
+  "region": "West Yorkshire",
+  "website": "https://www.leeds.gov.uk",
+  "address": {
+    "line1": "Civic Hall",
+    "line2": "Calverley Street",
+    "city": "Leeds",
+    "postcode": "LS1 1UR"
+  },
+  "mainPhone": "0113 222 4444",
+  "departments": [
+    {
+      "name": "Entertainment Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "personal-licence",
+        "temporary-event-notice"
+      ],
+      "email": "entertainment.licensing@leeds.gov.uk",
+      "phone": "0113 378 5029",
+      "address": {
+        "line1": "Entertainment Licensing",
+        "line2": "Leeds City Council",
+        "line3": "Civic Hall",
+        "city": "Leeds",
+        "postcode": "LS1 1UR"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.leeds.gov.uk/licensing/alcohol-and-entertainment/premises-licence",
+      "publicRegister": "https://www.leeds.gov.uk/licensing/gambling/licensing-act-register",
+      "notes": "Handles Licensing Act 2003 (alcohol, entertainment, late night refreshment) and Gambling Act 2005 premises. Office hours: Monday-Friday, 9am-5pm. After application submission, blue notice must be displayed at premises for 10 working days. Objection period is 28 days. Applications also sent to West Yorkshire Police at Elland Road."
+    },
+    {
+      "name": "Taxi and Private Hire Licensing",
+      "handles": [
+        "hackney-carriage-licence",
+        "private-hire-driver",
+        "private-hire-vehicle",
+        "private-hire-operator"
+      ],
+      "email": "taxiprivatehire.licensing@leeds.gov.uk",
+      "phone": "0113 378 1570",
+      "address": {
+        "line1": "Taxi and Private Hire Licensing",
+        "line2": "Civic Hall",
+        "city": "Leeds",
+        "postcode": "LS1 1UR"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.leeds.gov.uk/licensing/taxi-and-private-hire-licensing",
+      "notes": "Office hours: Monday-Friday. Drop-in: 9am-12pm. By appointment only: 1pm-3pm. Staff training every third Tuesday until 10am. Quote badge/plate number and DOB when contacting."
+    },
+    {
+      "name": "Property Licensing (HMO)",
+      "handles": [
+        "hmo-licence",
+        "mandatory-hmo",
+        "additional-hmo"
+      ],
+      "email": "hmo.team@leeds.gov.uk",
+      "phone": "0113 535 1369",
+      "address": {
+        "line1": "Private Sector Housing",
+        "line2": "Knowsthorpe Gate",
+        "city": "Leeds",
+        "postcode": "LS9 0NP"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.leeds.gov.uk/housing/information-for-landlords/houses-in-multiple-occupation",
+      "notes": "HMO licensing mandatory for properties with 5+ persons forming 2+ households. Contact before making any licence changes."
+    },
+    {
+      "name": "Selective Licensing",
+      "handles": [
+        "selective-licence"
+      ],
+      "email": "ESWSelective.licensing@leeds.gov.uk",
+      "phone": "0113 535 1369",
+      "address": {
+        "line1": "Selective Licensing Team",
+        "line2": "Private Sector Housing",
+        "line3": "Knowsthorpe Gate",
+        "city": "Leeds",
+        "postcode": "LS9 0NP"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.leeds.gov.uk/housing/information-for-landlords/selective-licensing",
+      "notes": "Selective Licensing Scheme from 9 February 2026 to 8 February 2031. Covers parts of Armley, Beeston & Holbeck, Burmantofts & Richmond Hill, Hunslet & Riverside, Gipton & Harehills, Farnley & Wortley wards. Non-compliance penalty: unlimited fine or civil penalty up to £30,000."
+    },
+    {
+      "name": "Markets and Street Trading",
+      "handles": [
+        "street-trading-licence",
+        "market-stall"
+      ],
+      "email": "markets@leeds.gov.uk",
+      "phone": "0113 378 1950",
+      "address": {
+        "line1": "Leeds Markets",
+        "line2": "Kirkgate Market",
+        "city": "Leeds",
+        "postcode": "LS2 7HY"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://markets.leeds.gov.uk/trade-our-markets/street-trading",
+      "notes": "Phone hours: 9am-5pm Monday-Saturday. City centre pitches have waiting list - email to register interest. Food vendors need hygiene rating 4 or 5. Events/specialist markets: market.events@leeds.gov.uk"
+    },
+    {
+      "name": "Street Cafe (Pavement Licence)",
+      "handles": [
+        "pavement-licence",
+        "street-cafe"
+      ],
+      "email": "streetcafes@leeds.gov.uk",
+      "phone": "0113 222 4444",
+      "submissionMethod": "portal",
+      "webForm": "https://www.leeds.gov.uk/licensing/street-cafe-licence",
+      "notes": "Licence fee: £500. Valid until 31 March annually. Public can comment on applications via council website."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": null,
+      "phone": "0113 222 4409",
+      "address": {
+        "line1": "City Development",
+        "line2": "Merrion House",
+        "line3": "110 Merrion Street",
+        "city": "Leeds",
+        "postcode": "LS2 8BB"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://www.planning.data.gov.uk/entity/195",
+      "notes": "Applications submitted via national Planning Portal. Search and comment on applications via leeds.gov.uk/planning. No direct email for planning applications - use Planning Portal or phone."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation"
+      ],
+      "email": "building.control@leeds.gov.uk",
+      "phone": "0113 378 6006",
+      "address": {
+        "line1": "Building Control",
+        "line2": "9th Floor, Merrion House",
+        "line3": "110 Merrion Centre",
+        "city": "Leeds",
+        "postcode": "LS2 8BB"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.submitaplan.com/building-control/leeds-city-council",
+      "publicRegister": "https://publicaccess.leeds.gov.uk/online-applications/search.do?action=simple&searchType=BuildingControl",
+      "notes": "Head of Building Control: David Pickles. Office hours: Mon-Thu 8:30am-5pm, Fri 8:30am-4:30pm. Voicemail outside hours. Currently experiencing substantial delays due to staff shortages - alternative building control providers may be considered. Regularisation only for work completed after 11 November 1985."
+    },
+    {
+      "name": "Highways (Traffic Orders)",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure"
+      ],
+      "email": "legal.development@leeds.gov.uk",
+      "phone": "0113 222 4444",
+      "address": {
+        "line1": "Development Section",
+        "line2": "Legal Services",
+        "line3": "Civic Hall",
+        "city": "Leeds",
+        "postcode": "LS1 1UR"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "publicRegister": "https://leeds.traffweb.app/traffweb/1/TrafficOrders",
+      "publicConsultation": "https://leeds.traffweb.app/traffweb/2/PublicConsultation",
+      "notes": "TRO objections/representations to Mr R A Hardy at Legal Services. TraffWeb system displays parking places and restrictions. Public consultations on proposed Traffic Management measures available online. Contact for: parking restrictions, bus lanes, moving traffic contraventions."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "noise-complaint",
+        "health-safety-inspection",
+        "statutory-nuisance",
+        "air-quality"
+      ],
+      "email": "env.health@leeds.gov.uk",
+      "phone": "0113 378 5959",
+      "address": {
+        "line1": "Environmental Health",
+        "line2": "Seacroft Ring Road Depot",
+        "city": "Leeds",
+        "postcode": "LS14 1NZ"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://services.leeds.gov.uk/Home/HealthAndSafety",
+      "notes": "Handles food safety, statutory nuisance, air quality, odour, pollution (light, dust, smoke). Out of hours noise nuisance: 0113 376 0337 (5pm-3:30am). Also responsible authority for licensing consultations."
+    },
+    {
+      "name": "Child Performance Licensing",
+      "handles": [
+        "child-performance-licence",
+        "child-work-permit"
+      ],
+      "email": null,
+      "phone": "0113 222 4444",
+      "submissionMethod": "web-form",
+      "webForm": "https://www.leeds.gov.uk/licensing/other-licences",
+      "notes": "Licences and work permits for child performers."
+    },
+    {
+      "name": "Animal Welfare Licensing",
+      "handles": [
+        "pet-shop-licence",
+        "animal-boarding",
+        "dog-breeding"
+      ],
+      "email": null,
+      "phone": "0113 222 4444",
+      "submissionMethod": "web-form",
+      "webForm": "https://www.leeds.gov.uk/licensing/other-licences",
+      "notes": "Covers pet shops, doggy day care, animal boarding facilities, breeding licences."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "West Yorkshire Police - Leeds District Licensing",
+      "email": "Ca.licensing@westyorkshire.pnn.police.uk",
+      "phone": "0113 385 9413",
+      "address": "Leeds District Headquarters, Elland Road, Leeds LS11 8BU"
+    },
+    "fire": {
+      "name": "West Yorkshire Fire and Rescue Service",
+      "email": "fire.safety@westyorksfire.gov.uk",
+      "phone": "01274 655785",
+      "address": "Oakroyd Hall, Birkenshaw, West Yorkshire BD11 2DY"
+    },
+    "safeguarding": {
+      "name": "Leeds Safeguarding Children Board",
+      "email": "LSCP.info@leeds.gov.uk",
+      "phone": "0113 395 2610",
+      "address": "Merrion House, 110 Merrion Street, Leeds LS2 8BB"
+    },
+    "publicHealth": {
+      "name": "Leeds City Council Public Health",
+      "email": "Publichealth.Enquiries@leeds.gov.uk",
+      "address": "Merrion House, 110 Merrion Street, Leeds LS2 8BB"
+    },
+    "tradingStandards": {
+      "name": "West Yorkshire Trading Standards Service",
+      "phone": "0113 253 0241",
+      "website": "https://ts.wyjs.org.uk",
+      "address": "PO Box 5, Nepshaw Lane South, Morley, Leeds LS27 0QP"
+    },
+    "homeOffice": {
+      "name": "Home Office Immigration Enforcement",
+      "email": "Ie.licensing.applications@homeoffice.gov.uk",
+      "address": "2 Ruskin Square (Floor 6), Dingwall Road, Croydon CR0 2WF",
+      "notes": "New premises licence applications only"
+    },
+    "gamblingCommission": {
+      "name": "Gambling Commission",
+      "email": "info@gamblingcommission.gov.uk",
+      "phone": "0121 230 6666",
+      "address": "Victoria Square House, Victoria Square, Birmingham B2 4BP"
+    }
+  },
+  "additionalResources": {
+    "licensingPublicRegister": "https://www.leeds.gov.uk/licensing/gambling/licensing-act-register",
+    "planningApplicationSearch": "https://www.planning.data.gov.uk/entity/195",
+    "trafficRegulationOrders": "https://leeds.traffweb.app/traffweb/1/TrafficOrders",
+    "publicConsultations": "https://leeds.traffweb.app/traffweb/2/PublicConsultation",
+    "buildingControlSearch": "https://publicaccess.leeds.gov.uk/online-applications/search.do?action=simple&searchType=BuildingControl",
+    "reportIssues": "https://services.leeds.gov.uk/Home/HealthAndSafety",
+    "selectiveLicensingPortal": "https://www.leeds.gov.uk/housing/information-for-landlords/selective-licensing"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Leeds City Council website and web searches. Main council offices at Civic Hall, Calverley Street. Building Control at Merrion House (9th floor) experiencing staff shortages and delays. Selective Licensing Scheme starting Feb 2026 covers 6 wards. Entertainment Licensing handles both Licensing Act 2003 and Gambling Act 2005 applications. West Yorkshire Police (Elland Road) and Fire Service (Oakroyd Hall, Birkenshaw) are key responsible authorities. TraffWeb system used for Traffic Order information and consultations."
+}

@@ -11,7 +11,7 @@
 - [x] Research Westminster City Council — all departments handling public notices, contact emails, submission methods. Create `/councils/westminster.json`
 - [x] Research Birmingham City Council — all departments, contacts, methods. Create `/councils/birmingham.json`
 - [x] Research Manchester City Council — all departments, contacts, methods. Create `/councils/manchester.json`
-- [ ] Research Leeds City Council — all departments, contacts, methods. Create `/councils/leeds.json`
+- [x] Research Leeds City Council — all departments, contacts, methods. Create `/councils/leeds.json`
 - [ ] Research Liverpool City Council — all departments, contacts, methods. Create `/councils/liverpool.json`
 
 ### London Boroughs
@@ -102,4 +102,25 @@ Create each council file in `/councils/` with this structure:
   - Selective Licensing Scheme 3 covers parts of 6 wards (May 2025-May 2030)
   - Council address: Town Hall, Albert Square, Manchester M60 2LA
   - Main phone: 0161 234 5000
+
+### Leeds City Council
+- **Type**: Metropolitan Borough
+- **Website**: https://www.leeds.gov.uk
+- **File**: `/councils/leeds.json`
+- **Departments Researched**: 12 (Entertainment Licensing, Taxi/Private Hire, HMO Licensing, Selective Licensing, Markets/Street Trading, Street Cafe, Planning, Building Control, Highways, Environmental Health, Child Performance, Animal Welfare)
+- **Key Findings**:
+  - Entertainment Licensing email: entertainment.licensing@leeds.gov.uk, phone 0113 378 5029
+  - Handles both Licensing Act 2003 and Gambling Act 2005 applications
+  - Taxi/Private Hire: taxiprivatehire.licensing@leeds.gov.uk, phone 0113 378 1570
+  - HMO Licensing: hmo.team@leeds.gov.uk, phone 0113 535 1369
+  - Selective Licensing: ESWSelective.licensing@leeds.gov.uk (scheme starts Feb 2026 for 6 wards)
+  - Markets: markets@leeds.gov.uk, phone 0113 378 1950
+  - Street Cafe: streetcafes@leeds.gov.uk (£500 annual fee)
+  - Planning: phone 0113 222 4409, uses national Planning Portal
+  - Building Control: building.control@leeds.gov.uk, phone 0113 378 6006 (experiencing delays)
+  - Highways/TRO: legal.development@leeds.gov.uk, TraffWeb system at leeds.traffweb.app
+  - Environmental Health: env.health@leeds.gov.uk, phone 0113 378 5959
+  - Responsible authorities: West Yorkshire Police (Elland Road), West Yorkshire Fire (Birkenshaw)
+  - Council address: Civic Hall, Calverley Street, Leeds LS1 1UR
+  - Main phone: 0113 222 4444
 
