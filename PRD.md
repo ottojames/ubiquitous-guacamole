@@ -10,7 +10,7 @@
 - [x] Research total number of UK councils and council types (County, District, Unitary, Metropolitan, London Borough, Welsh, Scottish). Create a complete table with counts and examples
 - [x] Research and document the official UK council directory sources (GOV.UK, LGA, etc.) — find the authoritative list
 - [x] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
-- [ ] Research common council department structures — which departments handle which notice types
+- [x] Research common council department structures — which departments handle which notice types
 - [ ] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
 - [ ] Research submission methods councils accept (email, web forms, portals, post)
 
@@ -324,7 +324,169 @@ async function getCouncilFromPostcode(postcode: string) {
 - [Digital Land - Finding LA for Address](https://digital-land.github.io/local-authority-addresses/)
 
 ### Department Patterns
-*Document findings:*
+
+#### Overview: Council Organisational Structure
+
+UK councils typically organize their senior management around key directorate headings:
+
+| Directorate | Typical Services Included |
+|-------------|---------------------------|
+| **Place** | Planning, Regeneration, Highways, Environment, Building Control |
+| **Communities** | Housing, Community Safety, Customer Access, Licensing |
+| **Resources** | Finance, HR, IT, Legal Services, Democratic Services |
+| **People** | Adults Social Care, Children's Services, Education |
+
+Within these directorates, specific departments handle public notice requirements.
+
+#### Departments That Issue Public Notices
+
+**1. Licensing Department** (District/Unitary level)
+- **Location**: Usually within "Communities" or "Regulatory Services" directorate
+- **Statutory Basis**: Licensing Act 2003, Gambling Act 2005
+- **Notice Types**:
+  - Premises licence applications (new, variation, review)
+  - Gambling premises licences
+  - Personal licence applications
+  - Temporary event notices
+  - Street trading licences
+  - Sex establishment licences
+  - Taxi/private hire vehicle licences
+- **Notice Period**: 28 consecutive days for premises licences
+- **Publication**: Local newspaper + site notice required
+
+**2. Planning Department** (District/Unitary level)
+- **Location**: Usually within "Place" directorate
+- **Sub-teams**: Development Management, Planning Policy, Planning Enforcement
+- **Statutory Basis**: Town and Country Planning Act 1990, DMPO 2015
+- **Notice Types**:
+  - Planning application notices (major/minor applications)
+  - Listed building consent
+  - Conservation area notices
+  - Advertisement consent
+  - Tree preservation orders (TPOs)
+  - Environmental Impact Assessments
+  - Local Plan consultations
+- **Notice Period**: Minimum 21 days
+- **Publication**: Site notice + newspaper (for major applications)
+
+**3. Highways Department** (County level in two-tier, Unitary otherwise)
+- **Location**: Usually within "Place" or standalone "Highways & Transport" directorate
+- **Statutory Basis**: Road Traffic Regulation Act 1984
+- **Notice Types**:
+  - Traffic Regulation Orders (TROs) - permanent, temporary, experimental
+  - Road closures (temporary and permanent)
+  - Parking restrictions
+  - Speed limit changes
+  - Bus lanes
+  - Cycle lanes
+  - Street works notices
+- **Notice Period**: 21 days consultation period
+- **Publication**: Local newspaper + site notices on affected roads
+
+**4. Environmental Health Department** (District/Unitary level)
+- **Location**: Usually within "Regulatory Services" or "Environmental Services" directorate
+- **Statutory Basis**: Environmental Protection Act 1990 Part 2A
+- **Notice Types**:
+  - Contaminated land remediation notices
+  - Statutory nuisance abatement notices
+  - Air quality management area declarations
+  - Food safety emergency prohibition notices
+- **Notice Period**: Varies (21 days typical for appeals)
+- **Publication**: Public register maintained, individual notices served
+
+**5. Building Control Department** (District/Unitary level)
+- **Location**: Usually combined with Planning within "Place" directorate
+- **Statutory Basis**: Building Act 1984, Building Regulations 2010, Building Safety Act 2022
+- **Notice Types**:
+  - Demolition notices (to adjacent property owners)
+  - Dangerous structure notices
+  - Building regulation compliance notices
+  - Initial/final notices (Approved Inspectors)
+- **Notice Period**: Varies by notice type
+- **Publication**: Usually direct service, not newspaper
+
+**6. Electoral Services Department** (All council tiers)
+- **Location**: Usually within "Resources" or "Democratic Services" directorate
+- **Statutory Basis**: Representation of the People Act 1983
+- **Notice Types**:
+  - Electoral register publication
+  - Election notices (polling stations, candidates)
+  - Boundary review consultations
+- **Publication**: Council offices + website
+
+**7. Legal/Democratic Services** (All council tiers)
+- **Notice Types**:
+  - Public Path Orders (footpath diversions/closures)
+  - Compulsory Purchase Orders
+  - Council meeting notices
+  - Public consultations
+  - PSPO (Public Spaces Protection Orders)
+- **Publication**: Varies by order type
+
+#### Two-Tier Area Responsibility Split
+
+In two-tier areas (County + District), public notice responsibilities are divided:
+
+| Notice Type | Responsible Authority |
+|-------------|----------------------|
+| Licensing (alcohol, gambling) | **District Council** |
+| Planning (general applications) | **District Council** |
+| Planning (minerals & waste) | **County Council** |
+| Highways (TROs, road closures) | **County Council** |
+| Environmental Health | **District Council** |
+| Building Control | **District Council** |
+| Education notices | **County Council** |
+| Social care notices | **County Council** |
+| Waste disposal | **County Council** |
+| Waste collection | **District Council** |
+
+**Critical for Notice Routing:**
+- Postcode lookup returns `admin_district` (e.g., "Guildford")
+- Must also check `admin_county` (e.g., "Surrey") for highways/education
+- If `admin_county` is null → unitary authority, all notices go to same council
+- If `admin_county` exists → route licensing/planning to district, highways to county
+
+#### Common Department Name Variations
+
+The same function may have different names across councils:
+
+| Function | Common Names |
+|----------|--------------|
+| Licensing | Licensing, Licensing & Regulatory Services, Environmental Health & Licensing, Public Protection |
+| Planning | Planning, Development Management, Development Control, Planning & Building Control |
+| Highways | Highways, Highways & Transportation, Roads & Transport, Traffic & Transportation |
+| Environmental Health | Environmental Health, Environmental Services, Public Protection, Regulatory Services |
+| Building Control | Building Control, Building Standards (Scotland), Building Regulations |
+
+#### Shared Services
+
+Some councils share regulatory services across multiple authorities:
+- **Worcestershire Regulatory Services**: Covers licensing and environmental health for all 6 Worcestershire districts
+- **Staffordshire Regulatory Services Partnership**: Shared between multiple boroughs
+- These shared services still issue notices on behalf of individual constituent councils
+
+#### Digital Transformation
+
+Modern councils increasingly use:
+- Online consultation portals (e.g., Planning Portal integrations)
+- Public notice portals (publicnoticeportal.uk)
+- Email notification services for registered interests
+- Interactive maps for TRO consultations
+
+However, statutory requirements for newspaper publication remain for most notice types.
+
+#### Sources
+
+- [House of Commons Library - Traffic Regulation Orders](https://commonslibrary.parliament.uk/research-briefings/sn06013/)
+- [GOV.UK - Statutory nuisances: how councils deal with complaints](https://www.gov.uk/guidance/statutory-nuisances-how-councils-deal-with-complaints)
+- [GOV.UK - Alcohol licensing](https://www.gov.uk/guidance/alcohol-licensing)
+- [Wikipedia - Local planning authority](https://en.wikipedia.org/wiki/Local_planning_authority)
+- [Wikipedia - Development management in the UK](https://en.wikipedia.org/wiki/Development_management_in_the_United_Kingdom)
+- [Wikipedia - Local government in England](https://en.wikipedia.org/wiki/Local_government_in_England)
+- [LGA - Local Government Structure Overview](https://www.local.gov.uk/sites/default/files/documents/local-government-structur-634.pdf)
+- [Edinburgh Council - How we are organised](https://www.edinburgh.gov.uk/work-us/organised)
+- [South Lanarkshire - Planning and Regulatory Services](https://www.southlanarkshire.gov.uk/info/200171/council_departments/589/community_and_enterprise_resources/3)
+- [Dudley Council - Public notices](https://www.dudley.gov.uk/council-community/public-notices/)
 
 ### Contact Patterns
 *Document findings:*
