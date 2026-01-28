@@ -341,3 +341,22 @@ The component already had `department` from `useOutletContext` - just needed to 
 
 ---
 
+## Iteration 22 - Audit Log UX improvements (6 tasks)
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/AuditLog.tsx
+**What Happened**: Implemented six UX improvements:
+1. **Premises names**: Added `loadPremisesNames` to fetch notice titles and rep premises via Supabase joins
+2. **Staff names**: Created `formatUserName` to extract name from email (before @, title case)
+3. **Relative time**: Added `formatRelativeTime` using date-fns `formatDistanceToNow` for <7 days, friendly format for older
+4. **Plain English actions**: Created `formatActionText` with action code to English mapping
+5. **Note preview**: Display `metadata.comment_preview` below action in italic gray
+6. **Human-readable details**: Replaced JSON in View Details with key-value pairs
+
+**Learnings**:
+- date-fns is already installed - use `formatDistanceToNow` and `differenceInDays`
+- Supabase joins for representations: `.select('id, notices(title)')` - result may be array
+- Cache premises names in state to avoid re-fetching on every render
+
+---
+

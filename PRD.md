@@ -19,12 +19,12 @@
 
 ### Audit Log UX Improvements
 
-- [ ] In `src/pages/council/AuditLog.tsx`, when `resource_type` is 'representation' or 'notice', look up the premises name from the resource_id and display it instead of just showing the truncated ID
-- [ ] In `src/pages/council/AuditLog.tsx`, display the staff member name from `user_email` field instead of showing "System" - format as just the name part before @ if no display name available
-- [ ] In `src/pages/council/AuditLog.tsx`, format timestamps as relative time using date-fns formatDistanceToNow (e.g., "2 hours ago") for recent entries, and friendly format for older ones
-- [ ] In `src/pages/council/AuditLog.tsx`, transform action codes to plain English: `representation_note_added` → "Added internal note", `notice.created` → "Notice submitted", `notice.published` → "Notice published", `notice.status_changed` → "Status changed"
-- [ ] In `src/pages/council/AuditLog.tsx`, show comment/note preview inline from `metadata.comment_preview` if available, displayed below the action in a subtle gray text
-- [ ] In `src/pages/council/AuditLog.tsx`, simplify the "View Details" expanded view to show human-readable formatted info instead of raw JSON - show key fields like premises name, action taken, user, and any notes
+- [x] In `src/pages/council/AuditLog.tsx`, when `resource_type` is 'representation' or 'notice', look up the premises name from the resource_id and display it instead of just showing the truncated ID
+- [x] In `src/pages/council/AuditLog.tsx`, display the staff member name from `user_email` field instead of showing "System" - format as just the name part before @ if no display name available
+- [x] In `src/pages/council/AuditLog.tsx`, format timestamps as relative time using date-fns formatDistanceToNow (e.g., "2 hours ago") for recent entries, and friendly format for older ones
+- [x] In `src/pages/council/AuditLog.tsx`, transform action codes to plain English: `representation_note_added` → "Added internal note", `notice.created` → "Notice submitted", `notice.published` → "Notice published", `notice.status_changed` → "Status changed"
+- [x] In `src/pages/council/AuditLog.tsx`, show comment/note preview inline from `metadata.comment_preview` if available, displayed below the action in a subtle gray text
+- [x] In `src/pages/council/AuditLog.tsx`, simplify the "View Details" expanded view to show human-readable formatted info instead of raw JSON - show key fields like premises name, action taken, user, and any notes
 
 ### Settings Authority Address
 

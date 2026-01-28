@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
 
 interface Department {
   id: string;
@@ -49,7 +50,155 @@ export default function AuditLog() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [premisesNames, setPremisesNames] = useState<Record<string, string>>({});
   const logsPerPage = 20;
+
+  // Look up premises names for notice/representation resource_ids
+  const loadPremisesNames = useCallback(async (logEntries: AuditLogEntry[]) => {
+    const noticeIds = logEntries
+      .filter(log => log.resource_type === 'notice' && log.resource_id)
+      .map(log => log.resource_id);
+
+    const representationIds = logEntries
+      .filter(log => log.resource_type === 'representation' && log.resource_id)
+      .map(log => log.resource_id);
+
+    const names: Record<string, string> = {};
+
+    // Fetch notice premises names
+    if (noticeIds.length > 0) {
+      const { data: notices } = await supabase
+        .from('notices')
+        .select('id, title')
+        .in('id', noticeIds);
+
+      notices?.forEach(notice => {
+        names[notice.id] = notice.title || 'Untitled Notice';
+      });
+    }
+
+    // Fetch representation premises names via notice join
+    if (representationIds.length > 0) {
+      const { data: representations } = await supabase
+        .from('representations')
+        .select('id, notices(title)')
+        .in('id', representationIds);
+
+      representations?.forEach((rep: any) => {
+        const noticeTitle = Array.isArray(rep.notices) ? rep.notices[0]?.title : rep.notices?.title;
+        names[rep.id] = noticeTitle || 'Unknown Premises';
+      });
+    }
+
+    setPremisesNames(prev => ({ ...prev, ...names }));
+  }, []);
+
+  // Transform action codes to plain English
+  const formatActionText = (action: string): string => {
+    const actionMap: Record<string, string> = {
+      'representation_note_added': 'Added internal note',
+      'representation.note_added': 'Added internal note',
+      'notice.created': 'Notice submitted',
+      'notice.published': 'Notice published',
+      'notice.status_changed': 'Status changed',
+      'notice.updated': 'Notice updated',
+      'notice.deleted': 'Notice deleted',
+      'representation.created': 'Representation submitted',
+      'representation.updated': 'Representation updated',
+      'representation.status_changed': 'Representation status changed',
+      'template.created': 'Template created',
+      'template.updated': 'Template updated',
+      'team.member_added': 'Team member added',
+      'team.member_removed': 'Team member removed',
+      'team.role_changed': 'Team member role changed',
+      'settings.updated': 'Settings updated',
+    };
+
+    // Check for exact match first
+    if (actionMap[action]) return actionMap[action];
+
+    // Try with underscores replaced by dots
+    const withDots = action.replace(/_/g, '.');
+    if (actionMap[withDots]) return actionMap[withDots];
+
+    // Fallback: format the action nicely
+    return action
+      .replace(/[._]/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  };
+
+  // Extract display name from email
+  const formatUserName = (email: string | null, userId: string | null): string => {
+    if (!email) {
+      return userId ? `User ${userId.slice(0, 8)}` : 'System';
+    }
+    // Extract name part before @
+    const namePart = email.split('@')[0];
+    // Convert to title case and replace dots/underscores with spaces
+    return namePart
+      .replace(/[._]/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  };
+
+  // Format timestamp with relative time for recent, friendly for older
+  const formatRelativeTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    const daysDiff = differenceInDays(new Date(), date);
+
+    if (daysDiff < 7) {
+      // Recent: use relative time
+      return formatDistanceToNow(date, { addSuffix: true });
+    } else {
+      // Older: use friendly format
+      return date.toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  };
+
+  // Format View Details content in human-readable way
+  const formatDetailsContent = (log: AuditLogEntry): { key: string; value: string }[] => {
+    const details: { key: string; value: string }[] = [];
+
+    // Add premises name if available
+    if (premisesNames[log.resource_id]) {
+      details.push({ key: 'Premises', value: premisesNames[log.resource_id] });
+    }
+
+    // Add action taken
+    details.push({ key: 'Action', value: formatActionText(log.action) });
+
+    // Add user
+    details.push({ key: 'User', value: formatUserName(log.user_email, log.user_id) });
+
+    // Add timestamp
+    details.push({ key: 'Time', value: formatRelativeTime(log.created_at) });
+
+    // Add notes from metadata if available
+    if (log.metadata?.comment_preview) {
+      details.push({ key: 'Note', value: log.metadata.comment_preview });
+    } else if (log.metadata?.note) {
+      details.push({ key: 'Note', value: log.metadata.note });
+    } else if (log.metadata?.comment) {
+      details.push({ key: 'Note', value: log.metadata.comment });
+    }
+
+    // Add key changes from new_values
+    if (log.new_values) {
+      if (log.new_values.status) {
+        details.push({ key: 'New Status', value: log.new_values.status });
+      }
+      if (log.new_values.title) {
+        details.push({ key: 'Title', value: log.new_values.title });
+      }
+    }
+
+    return details;
+  };
 
   useEffect(() => {
     loadAuditLogs();
@@ -86,7 +235,12 @@ export default function AuditLog() {
 
       if (error) throw error;
 
-      setLogs(data || []);
+      const logData = data || [];
+      setLogs(logData);
+      // Load premises names for notices and representations
+      if (logData.length > 0) {
+        loadPremisesNames(logData);
+      }
       setLoading(false);
     } catch (err) {
       console.error('Failed to load audit logs:', err);
@@ -435,7 +589,7 @@ export default function AuditLog() {
                       <div className="flex items-center gap-3 mb-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${getActionColor(log.action, log.severity)}`}>
                           {getActionIcon(log.action)}
-                          {log.action.replace(/_/g, ' ').replace(/\./g, ' ')}
+                          {formatActionText(log.action)}
                         </span>
                         {log.resource_type && (
                           <span className="text-sm font-semibold text-gray-900">
@@ -452,50 +606,42 @@ export default function AuditLog() {
                       </div>
 
                       <div className="space-y-1 text-sm text-gray-600">
-                        {log.resource_id && (
-                          <p>
-                            Resource ID: <span className="font-mono text-xs">{log.resource_id.slice(0, 8)}...</span>
+                        {/* Show premises name if available for notice/representation */}
+                        {(log.resource_type === 'notice' || log.resource_type === 'representation') && premisesNames[log.resource_id] && (
+                          <p className="font-medium text-gray-900">
+                            {premisesNames[log.resource_id]}
                           </p>
                         )}
                         <p>
-                          User: <span className="font-mono text-xs">{log.user_email || (log.user_id ? log.user_id.slice(0, 8) + '...' : 'System')}</span>
+                          {formatUserName(log.user_email, log.user_id)}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {formatDate(log.created_at)}
+                          {formatRelativeTime(log.created_at)}
                         </p>
                       </div>
 
-                      {/* Show changed values for updates */}
+                      {/* Show comment/note preview if available */}
+                      {(log.metadata?.comment_preview || log.metadata?.note || log.metadata?.comment) && (
+                        <p className="mt-2 text-sm text-gray-500 italic">
+                          "{log.metadata.comment_preview || log.metadata.note || log.metadata.comment}"
+                        </p>
+                      )}
+
+                      {/* Show human-readable details for updates */}
                       {(log.new_values || log.old_values || log.metadata) && (
                         <details className="mt-3">
                           <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-700">
                             View Details
                           </summary>
-                          <div className="mt-2 p-3 bg-gray-50 rounded-xl space-y-2">
-                            {log.old_values && (
-                              <div>
-                                <p className="text-xs font-semibold text-gray-700 mb-1">Previous Values:</p>
-                                <pre className="text-xs overflow-x-auto text-gray-600">
-                                  {JSON.stringify(log.old_values, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-                            {log.new_values && (
-                              <div>
-                                <p className="text-xs font-semibold text-gray-700 mb-1">New Values:</p>
-                                <pre className="text-xs overflow-x-auto text-gray-600">
-                                  {JSON.stringify(log.new_values, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-                            {log.metadata && (
-                              <div>
-                                <p className="text-xs font-semibold text-gray-700 mb-1">Additional Info:</p>
-                                <pre className="text-xs overflow-x-auto text-gray-600">
-                                  {JSON.stringify(log.metadata, null, 2)}
-                                </pre>
-                              </div>
-                            )}
+                          <div className="mt-2 p-3 bg-gray-50 rounded-xl">
+                            <div className="space-y-2">
+                              {formatDetailsContent(log).map((item, idx) => (
+                                <div key={idx} className="flex">
+                                  <span className="text-xs font-semibold text-gray-700 w-24">{item.key}:</span>
+                                  <span className="text-xs text-gray-600 flex-1">{item.value}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </details>
                       )}
