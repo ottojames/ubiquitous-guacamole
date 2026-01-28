@@ -9,7 +9,7 @@
 
 - [x] Research total number of UK councils and council types (County, District, Unitary, Metropolitan, London Borough, Welsh, Scottish). Create a complete table with counts and examples
 - [x] Research and document the official UK council directory sources (GOV.UK, LGA, etc.) — find the authoritative list
-- [ ] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
+- [x] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
 - [ ] Research common council department structures — which departments handle which notice types
 - [ ] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
 - [ ] Research submission methods councils accept (email, web forms, portals, post)
@@ -168,7 +168,160 @@ This means the current structure of 21 county councils + 164 districts will be r
 **Old ONS Code Format:** `ANNNNNNNN` (deprecated but still referenced in some datasets)
 
 ### Postcode Lookup Method
-*Document best API/method:*
+
+**Recommended: Postcodes.io** (Free, no auth, comprehensive data)
+
+#### Option Comparison Table
+
+| Service | Cost | Auth | Rate Limit | Two-Tier Handling | Data Source | Recommendation |
+|---------|------|------|------------|-------------------|-------------|----------------|
+| **Postcodes.io** | Free | None | Unlimited (fair use) | Returns district only, `admin_county` field available | ONS NSPL quarterly | **Best for production** |
+| **GOV.UK Local Authorities API** | Free | None | Rate limited | Returns district with parent county in response | OS Places API | Undocumented, may change |
+| **MapIt** | £22/mo (free for low-volume non-profit) | API key | Tiered by plan | Returns `council.county` and `council.district` | ONS + Ordnance Survey | Good if budget allows |
+| **ONS NSPL Dataset** | Free download | N/A | N/A (local) | LAD codes only | Quarterly releases | Best for offline/batch |
+
+#### Postcodes.io API (Recommended)
+
+**Why Postcodes.io?**
+- Completely free, no API key required
+- No explicit rate limits (fair use)
+- Returns comprehensive local authority data including GSS codes
+- Open source (can self-host if needed)
+- Backed by ONS National Statistics Postcode Lookup data
+- Updated quarterly
+
+**Endpoint:** `GET https://api.postcodes.io/postcodes/{postcode}`
+
+**Key Fields Returned:**
+```json
+{
+  "admin_district": "Westminster",        // District/Unitary name
+  "admin_county": null,                   // County name (null for unitaries)
+  "codes": {
+    "admin_district": "E09000033",        // GSS code for district
+    "admin_county": "E99999999"           // GSS code for county
+  }
+}
+```
+
+**Two-Tier Area Handling:**
+- `admin_district` always returns the lowest tier (district in two-tier, unitary otherwise)
+- `admin_county` returns county name in two-tier areas, null otherwise
+- Need to check BOTH fields to route notices correctly in two-tier areas
+
+**Example Responses:**
+
+*Unitary (Westminster):*
+```json
+{
+  "admin_district": "Westminster",
+  "admin_county": null
+}
+```
+
+*Two-tier (Guildford in Surrey):*
+```json
+{
+  "admin_district": "Guildford",
+  "admin_county": "Surrey"
+}
+```
+
+**Limitation:** ~1.2% of UK addresses (387,000) are in a different local authority than their postcode's centroid. This is unavoidable with postcode-only lookup - the same limitation applies to all services.
+
+#### Alternative: GOV.UK Local Authorities API
+
+**Endpoint:** `GET https://www.gov.uk/api/local-authority?postcode={postcode}`
+
+**Pros:**
+- Same source GOV.UK uses for their own lookup
+- Returns URL slug for council (useful for deep linking)
+- Explicitly handles two-tier with parent county in response
+
+**Cons:**
+- Undocumented, unversioned - "may change without notice"
+- Rate limited (limits not published)
+- Not intended for third-party production use
+
+**Response Format:**
+```json
+{
+  "local_authorities": [{
+    "name": "Guildford Borough Council",
+    "slug": "guildford",
+    "tier": "district",
+    "homepage_url": "https://www.guildford.gov.uk",
+    "parent": {
+      "name": "Surrey County Council",
+      "slug": "surrey",
+      "tier": "county"
+    }
+  }]
+}
+```
+
+#### Alternative: ONS NSPL Dataset (Offline/Batch)
+
+**Download:** [ONS Geoportal - NSPL May 2025](https://geoportal.statistics.gov.uk/datasets/077631e063eb4e1ab43575d01381ec33)
+
+**Pros:**
+- Complete UK coverage (2.7M+ postcodes)
+- No API dependency
+- Includes historical/terminated postcodes
+- Released quarterly (Feb, May, Aug, Nov)
+
+**Cons:**
+- Large file (~300MB CSV)
+- Requires local storage/database
+- Manual updates required
+- Only returns LAD code, need separate lookup for names
+
+**Key Fields:**
+- `pcd`: Postcode (7-char format)
+- `pcd2`: Postcode (8-char format with space)
+- `lad25cd`: Local Authority District GSS code (e.g., E09000033)
+- Requires separate LAD names/codes file to map code → name
+
+#### Implementation Recommendation for Civic Notices
+
+**Phase 1 (MVP):** Use Postcodes.io
+```typescript
+async function getCouncilFromPostcode(postcode: string) {
+  const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
+  const data = await res.json();
+
+  if (data.status !== 200) throw new Error('Invalid postcode');
+
+  return {
+    district: data.result.admin_district,
+    county: data.result.admin_county,  // null for unitaries
+    districtCode: data.result.codes.admin_district,
+    countyCode: data.result.codes.admin_county,
+  };
+}
+
+// For notice routing:
+// - If county is null → unitary authority, use district
+// - If county exists → two-tier area, may need both depending on notice type
+```
+
+**Phase 2 (Scale):** Self-host NSPL
+- Download quarterly NSPL dataset
+- Import into Supabase/PostgreSQL
+- Create postcode → LAD lookup table
+- Eliminates external API dependency
+- Enables bulk operations without rate limit concerns
+
+#### Sources
+
+- [Postcodes.io Documentation](https://postcodes.io/docs/overview/)
+- [Postcodes.io GitHub](https://github.com/ideal-postcodes/postcodes.io)
+- [GOV.UK Local Authorities API](https://docs.publishing.service.gov.uk/repos/frontend/local-authorities-api.html)
+- [MapIt by mySociety](https://mapit.mysociety.org/)
+- [MapIt Pricing](https://mapit.mysociety.org/pricing/)
+- [ONS NSPL May 2025](https://geoportal.statistics.gov.uk/datasets/077631e063eb4e1ab43575d01381ec33)
+- [ONS Postcode Products](https://www.ons.gov.uk/methodology/geography/geographicalproducts/postcodeproducts)
+- [Digital Land - Finding LA for Address](https://digital-land.github.io/local-authority-addresses/)
 
 ### Department Patterns
 *Document findings:*
