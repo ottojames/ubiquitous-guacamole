@@ -12,7 +12,7 @@
 - [x] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
 - [x] Research common council department structures — which departments handle which notice types
 - [x] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
-- [ ] Research submission methods councils accept (email, web forms, portals, post)
+- [x] Research submission methods councils accept (email, web forms, portals, post)
 
 ---
 
@@ -708,5 +708,195 @@ type DepartmentType =
 - [Welsh Local Planning Authorities](https://www.gov.wales/find-your-local-planning-authority)
 
 ### Submission Methods
-*Document findings:*
 
+#### Overview
+
+UK councils accept public notice submissions and related applications through multiple channels. The preferred method varies by council and notice type, but all statutory notices must ultimately be published through approved channels (typically local newspapers and site notices).
+
+#### Submission Channels by Type
+
+**1. Online Portals & Web Forms**
+
+| Platform | Description | Coverage |
+|----------|-------------|----------|
+| **Planning Portal** | National online planning application system. Preferred by most councils. | England & Wales |
+| **GOV.UK Forms** | For licensing applications (alcohol, gambling, personal licences) | UK-wide |
+| **Council Self-Service Portals** | MyCouncil, Citizen Access platforms (Granicus/govService, Abavus) | Individual councils |
+| **Scottish Government ePlanning** | Planning applications for Scotland | Scotland |
+
+**Key Features of Online Submission:**
+- Instant validation of required fields and documents
+- Automatic routing to correct department
+- Payment integration (GOV.UK Pay, Capita, Civica)
+- Application tracking and status updates
+- Receipt confirmation within minutes
+
+**2. Email Submission**
+
+Many councils accept applications and notices via email, particularly for:
+- Licensing applications with supporting documents
+- TRO objections and comments
+- Building control notifications
+- Environmental health complaints
+
+**Common Patterns:**
+- `licensing@[council].gov.uk` - Licensing applications
+- `planning@[council].gov.uk` - Planning applications (some councils)
+- `trafficorders@[council].gov.uk` - TRO consultations
+- `buildingcontrol@[council].gov.uk` - Building notices
+
+**Requirements for Email Submission:**
+- PDF format for application forms
+- Maximum attachment size limits (typically 10-25MB)
+- May require follow-up phone payment
+- Longer processing times than online
+
+**3. Postal/Paper Submission**
+
+Still accepted by all councils but increasingly discouraged:
+- Planning applications: 2 copies of forms, plans, and documents required
+- Processing delays compared to online (up to 5 additional working days)
+- **Additional fees from 2025**: Some councils charge administrative surcharges for paper applications
+  - Lambeth: Administration charge from 4 August 2025
+  - Derby: Administration costs from 1 September 2025
+
+**Requirements:**
+- Do not bind or use plastic covers (councils scan documents)
+- Include correct fee payment (cheque or reference for bank transfer)
+- Send to correct departmental address
+
+**4. In-Person Submission**
+
+Declining in availability but still offered:
+- Council reception/Customer Services
+- Appointment-based for complex applications
+- Cash/card payment on site
+- Limited hours (typically 9am-5pm weekdays)
+
+#### Submission Methods by Notice Type
+
+| Notice Type | Online | Email | Post | In-Person | Notes |
+|-------------|--------|-------|------|-----------|-------|
+| **Premises Licence (Alcohol)** | ✅ GOV.UK | ✅ | ✅ | Limited | Also requires newspaper + site notice |
+| **Gambling Premises** | ❌ Often not | ✅ | ✅ | ❌ | Complex documentation required |
+| **Planning Application** | ✅ Portal | ✅ Some | ✅ | Limited | Online strongly preferred |
+| **Listed Building Consent** | ✅ Portal | ✅ | ✅ | ❌ | Consultation required |
+| **TRO Objections** | ✅ Some | ✅ | ✅ | ❌ | 21-day objection period |
+| **Building Notice** | ✅ Some | ✅ | ✅ | ✅ | Building Control |
+| **Environmental Health** | ✅ Forms | ✅ | ✅ | ✅ | Complaint-based |
+
+#### Council Digital Maturity Spectrum
+
+**Fully Digital-First (Electronic Only):**
+- Edinburgh Council: "We only accept electronic licence application forms and payments submitted using our electronic submission form. We do not accept paper application forms."
+- Requires scanning apps (Microsoft Lens, Adobe Scan) for document conversion
+
+**Digital Preferred (Paper with Surcharge):**
+- Lambeth, Derby: Accept paper but charge additional admin fees from 2025
+- Online processing prioritised
+
+**Multi-Channel (Equal Treatment):**
+- Three Rivers: "It doesn't matter which delivery method you choose."
+- Oxford: Email, post, or Public Access Register equally accepted
+
+**Limited Digital:**
+- Some rural councils with restricted online services
+- May require specific forms downloaded and printed
+
+#### Platform Landscape
+
+**National Platforms:**
+- **Planning Portal** (planningportal.co.uk): Operated by PortalPlanQuest for England & Wales
+- **GOV.UK Forms**: Licensing Act 2003 applications, personal licences
+- **The Gazette** (thegazette.co.uk): Statutory notices requiring Gazette publication
+
+**Council Platform Providers:**
+- **Granicus/govService** (formerly Firmstep): ~1/3 of UK councils
+- **Abavus My Council Services**: Growing market share
+- **Capita/Civica**: Legacy payment and form integrations
+- **Idox**: Planning and regulatory services
+
+**Integration Standards:**
+- **GOV.UK Pay**: Free payment platform for councils, PCI DSS compliant
+- **GOV.UK Notify**: Text and email notification service
+- **GOV.UK One Login**: Single sign-on (expanding to councils 2025-2027)
+
+#### The Public Notice Publication Flow
+
+**Important Distinction:** There are two separate workflows:
+
+1. **Application Submission** (to council):
+   - Online portal, email, or post
+   - Goes to council licensing/planning team
+   - Starts internal processing
+
+2. **Notice Publication** (statutory requirement):
+   - **Newspaper publication**: Local newspaper, within 10 working days of application
+   - **Site notice**: Displayed at premises/site for 21-28 days
+   - **Online aggregation**: Public Notice Portal (publicnoticeportal.uk) aggregates from newspapers
+
+**Public Notice Portal:**
+- Does NOT accept direct submissions from councils or businesses
+- Aggregates notices from local news publishers only
+- Nearly 900 local/regional news titles
+- Searchable archive with email alerts
+- Funded by Google News Initiative
+
+#### Recommendations for Civic Notices Platform
+
+**Phase 1: Focus on High-Volume Channels**
+1. Email submission (to council licensing@/planning@ addresses)
+2. Integration with Planning Portal (via their API if available)
+3. Direct submission to GOV.UK Forms endpoints
+
+**Phase 2: Notice Publication**
+1. Partner with local newspaper groups for publication
+2. Consider bulk newspaper booking service
+3. Site notice template generation (PDF/print)
+
+**Phase 3: Council Integration**
+1. Granicus/govService API integration for participating councils
+2. White-label submission portal for council adoption
+3. GOV.UK Pay integration for payments
+
+#### Key Findings
+
+1. **No single national submission portal exists** - each council has its own systems
+2. **Online is strongly preferred** but not universally required
+3. **Paper surcharges are emerging** - councils pushing digital adoption through pricing
+4. **Email remains a universal fallback** - all councils accept email for most submissions
+5. **Statutory newspaper publication is still required** - despite digital transformation, most public notices legally require newspaper publication
+6. **TRO reform pending** - Government plans to digitalise TRO publication requirements
+
+#### Sources
+
+- [Planning Portal - Paper Forms](https://www.planningportal.co.uk/planning/planning-applications/paper-forms/)
+- [GOV.UK - Alcohol Licensing](https://www.gov.uk/guidance/alcohol-licensing)
+- [GOV.UK - Building Regulations Approval](https://www.gov.uk/building-regulations-approval/how-to-apply)
+- [Edinburgh Council - Licences and Permits](https://www.edinburgh.gov.uk/licences-permits/licences-permits-applications)
+- [Hackney Council - Premises Licence](https://hackney.gov.uk/premises-licence/)
+- [Lambeth Council - Planning Applications](https://www.lambeth.gov.uk/planning-building-control/planning-applications/submit-or-pay-planning-application)
+- [Public Notice Portal](https://publicnoticeportal.uk/)
+- [News Media Association - Public Notice Portal Launch](https://newsmediauk.org/blog/2023/05/25/local-news-sector-announces-full-launch-of-public-notice-portal/)
+- [GOV.UK Pay - Get Started](https://www.payments.service.gov.uk/getstarted/)
+- [GDS Blog - Local Government Pay](https://gds.blog.gov.uk/2017/09/12/local-government-pay/)
+- [Granicus Acquires Firmstep](https://granicus.com/uk/press-release/granicus-acquires-firmstep/)
+- [Bristol Council - TRO Comments](https://www.bristol.gov.uk/residents/streets-travel/make-a-comment-on-traffic-regulation-orders-tros)
+- [House of Commons Library - TROs](https://commonslibrary.parliament.uk/research-briefings/sn06013/)
+- [GOV.UK - TRO Publishing Requirements Consultation](https://www.gov.uk/government/consultations/traffic-regulation-orders-changes-to-publishing-requirements-and-special-events-order-approvals)
+- [Gambling Commission - Premises Licences](https://www.gamblingcommission.gov.uk/guidance/guidance-to-licensing-authorities/part-2-premises-licences)
+
+---
+
+## Phase 1: Implement Postcode Lookup (After Research)
+
+- [ ] Update `/src/lib/councilLookup.ts` to use the researched postcode API (likely postcodes.io). Replace the rough heuristic with real lookup.
+- [ ] Add proper error handling for postcode lookup failures.
+- [ ] Create `/src/lib/councilLookup.test.ts` with tests for the new lookup function using real postcodes.
+- [ ] Run `npm run typecheck` to verify implementation.
+
+## Phase 2: Council Data Structure
+
+- [ ] Create `/src/data/councils.ts` with TypeScript interfaces for council data structure.
+- [ ] Create `/src/data/departments.ts` with department types and which notice types each handles.
+- [ ] Wire council lookup to return department contacts based on notice type.
