@@ -16,8 +16,8 @@
 
 ### London Boroughs
 - [x] Research Camden Council — departments, contacts, methods. Create `/councils/camden.json`
-- [ ] Research Islington Council — departments, contacts, methods. Create `/councils/islington.json`
-- [ ] Research Tower Hamlets Council — departments, contacts, methods. Create `/councils/tower-hamlets.json`
+- [x] Research Islington Council — departments, contacts, methods. Create `/councils/islington.json`
+- [x] Research Tower Hamlets Council — departments, contacts, methods. Create `/councils/tower-hamlets.json`
 - [ ] Research Hackney Council — departments, contacts, methods. Create `/councils/hackney.json`
 - [ ] Research Southwark Council — departments, contacts, methods. Create `/councils/southwark.json`
 
@@ -169,6 +169,34 @@ Create each council file in `/councils/` with this structure:
   - Taxi/private hire licensing handled by Transport for London (not Camden)
   - Council address: 5 Pancras Square, Kings Cross, London N1C 4AG
   - Main phone: 020 7974 4444
+
+### London Borough of Tower Hamlets
+- **Type**: London Borough
+- **Website**: https://www.towerhamlets.gov.uk
+- **File**: `/councils/tower-hamlets.json`
+- **Departments Researched**: 8 (Licensing, Street Trading & Markets, Planning, Building Control, Highways, Environmental Health, HMO Licensing, Trading Standards)
+- **Key Findings**:
+  - Licensing email: licensing@towerhamlets.gov.uk, phone 020 7364 5008
+  - Statement of Licensing Policy 2023-2028 in effect
+  - Statement of Gambling Policy 2025-2028 (effective December 2025)
+  - Brick Lane Cumulative Impact Area active (extended November 2024); Bethnal Green CIA removed
+  - Public Register: https://alcohol-entertainment.towerhamlets.gov.uk/Civica-elr-3.2_live/
+  - Street Trading/Markets: streetmarkets@towerhamlets.gov.uk, phone 020 7364 1717
+  - Operates 10 markets including: Brick Lane (Sun), Columbia Road (Sun), Petticoat Lane (Sun), Whitechapel (Mon-Sat)
+  - Market Services address: 131 Commercial Street, E1 6BJ (Tue-Thu 10am-3pm)
+  - Planning: planning@towerhamlets.gov.uk, development.control@towerhamlets.gov.uk, phone 020 7364 5009
+  - Building Control: buildingcontrol@towerhamlets.gov.uk, phone 020 7364 5000
+  - Highways/TMO: TMO.Project@towerhamlets.gov.uk, TraffWeb portal at towerhamlets.traffweb.app
+  - Environmental Health: environmentalhealth@towerhamlets.gov.uk, foodsafety@towerhamlets.gov.uk
+  - 24hr Noise Hotline (council tenants): 020 7364 2332
+  - HMO Licensing: housinglicensing@towerhamlets.gov.uk, phone 020 7364 5008
+  - Mandatory HMO: £781.50 + £54.50/room (3-year licence - shorter than typical)
+  - Additional Licensing: £756 + £54.50/room (Borough-wide from April 2024 to March 2029)
+  - Selective Licensing: £747 (Whitechapel, Weavers, Spitalfields & Banglatown until September 2026)
+  - Responsible authorities: Met Police (CEMailbox-.TowerHamletsLicensing@met.police.uk), LFB (FSR-AdminSupport@london-fire.gov.uk)
+  - Child Protection: Licensing-ChildProtection@towerhamlets.gov.uk
+  - Council address: Tower Hamlets Town Hall, 160 Whitechapel Road, London E1 1BJ
+  - Main phone: 020 7364 5000
 
 ---
 

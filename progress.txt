@@ -727,3 +727,48 @@ New PRD.md for council-specific research. Instance 3 focuses on researching indi
 - Main phone: 0113 222 4444
 
 ---
+
+## Iteration 6 - Research Camden Council
+**Status**: PASS
+**Task Type**: Research
+**Files Created**: councils/camden.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched London Borough of Camden via web search:
+1. **Licensing**: licensing@camden.gov.uk, phone 020 7974 4444
+   - Enforcement phone: 020 7974 6767
+   - Handles Licensing Act 2003 and Gambling Act 2005 applications
+   - Pre-application advice: Small £153, Medium £275.40, Large £581.40
+   - Statement of Licensing Policy 2025-2030 in effect until 30 January 2027
+   - Address: 5 Pancras Square, Kings Cross, London N1C 4AG
+2. **Street Trading**: marketsteam@camden.gov.uk, phone 020 7974 3864
+   - Applications email: marketapplications@camden.gov.uk
+   - 8 council-run markets and 48 trading sites
+   - Excludes private markets (e.g., Camden Lock)
+3. **Planning**: phone 020 7974 5613, uses national Planning Portal
+   - Development Management at Camden Town Hall Extension, Argyle Street WC1H 8EQ
+   - Hours: Mon-Wed & Fri 9am-5pm, Thu 9am-7pm
+4. **Building Control**: building.control@camden.gov.uk, phone 020 7974 2387
+   - Head of Building Control: Nasser Rad
+   - Handles dangerous structures
+5. **Highways**: No email, multiple phone numbers by function
+   - Parking: 020 7974 5958/5146/5141/5957/3053
+   - Road safety: 020 7974 2066/7899/2221
+   - Traffic proposals viewable online with public comment
+6. **Environmental Health**: noiseteam@camden.gov.uk for noise complaints
+   - Online reporting requires Camden Account registration
+7. **HMO Licensing**: hmolicensing@camden.gov.uk, phone 020 7974 5969
+   - Borough-wide additional scheme started Dec 2025 (runs to Dec 2030)
+   - Fee: £1,531 (£100 discount for accredited landlords)
+8. **Trading Standards**: Via Citizens Advice Consumer Service (0808 223 1133)
+   - Partnership model rather than direct council contact
+**Learnings**:
+- Camden headquarters at 5 Pancras Square, Kings Cross (modern building)
+- Taxi/private hire licensing handled by Transport for London, not borough councils
+- Environmental Health prefers online forms but has noiseteam@ email for case updates
+- HMO licensing renewed December 2025 for another 5 years
+- Highways has no email - must use phone, categorised by function
+- Trading Standards routed through Citizens Advice (like some other councils)
+- Council address: 5 Pancras Square, Kings Cross, London N1C 4AG
+- Main phone: 020 7974 4444
+
+---
