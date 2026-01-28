@@ -1,51 +1,117 @@
-# Council Portal - Team, Audit Log & Analytics Fixes
+# Instance 2: Council Landscape Research
 
-**Date:** 28 January 2026
-**Priority:** HIGH - User-facing issues affecting council officers
+**Focus:** Research UK council structure, directories, lookup methods
+**Output:** Populate findings in this PRD, then merge back to main
 
 ---
 
 ## Tasks
 
-### Team Tab - Functionality & Domain Validation
-
-- [x] In `src/pages/council/Team.tsx`, verify the invite flow works end-to-end by checking the API endpoint at `/api/departments/:id/team/invite` exists and returns proper responses
-- [x] In `src/pages/council/Team.tsx`, add domain validation for invites - extract the council's domain from the organization settings (e.g., `westminster.gov.uk`) and only allow invitations to emails ending with that domain
-- [x] In `src/pages/council/Team.tsx`, display a clear error message when someone tries to invite an email that doesn't match the council's domain (e.g., "Invitations can only be sent to @westminster.gov.uk addresses")
-- [x] In `src/pages/council/Team.tsx`, show actual user email addresses instead of truncated user IDs in the team members list (query user emails from the API or database)
-
-### Audit Log - Immediate Visibility Improvements
-
-- [x] In `src/pages/council/AuditLog.tsx`, show the exact timestamp (e.g., "28 Jan 2026, 14:32") alongside the relative time ("2 hours ago") - display both so users can see the precise time at a glance
-- [x] In `src/pages/council/AuditLog.tsx`, make the notice/premises name immediately visible in the main row (not hidden in "View Details") - display prominently as the first piece of information
-- [x] In `src/pages/council/AuditLog.tsx`, make the user name immediately visible in the main row with clear formatting (not requiring expansion to see who did what)
-- [x] In `src/pages/council/AuditLog.tsx`, restructure each audit entry to show: [User Name] • [Notice/Premises] • [Action] • [Time] all on the main visible row, with any additional notes/comments shown below in subtle gray text
-
-### Analytics Tab - Remove Unused Sections
-
-- [x] In `src/pages/council/Analytics.tsx`, remove the "Cost Savings Calculator" section entirely from the Overview tab (lines ~442-494) - it's not useful for councils
-- [x] In `src/pages/council/Analytics.tsx`, remove the "Compliance" tab from the tabs array and its corresponding content section (the compliance tab just shows placeholder sample data)
-- [x] In `src/pages/council/Analytics.tsx`, fix the Audit Log tab in Analytics - it shows "Complete Audit Log" header but no actual entries; either wire it to show real audit data or link to the dedicated Audit Log page instead
-
-### Council Portal UI/UX Review
-
-- [x] Review the overall council portal UI/UX and identify any areas that look "boring" or could be improved - focus on the Team tab, Dashboard, and navigation
-- [x] Ensure all interactive elements (buttons, links, cards) have proper hover states and visual feedback
+- [x] Research total number of UK councils and council types (County, District, Unitary, Metropolitan, London Borough, Welsh, Scottish). Create a complete table with counts and examples
+- [ ] Research and document the official UK council directory sources (GOV.UK, LGA, etc.) — find the authoritative list
+- [ ] Research postcode → council lookup methods (APIs, datasets). Document the best free/cheap method to implement
+- [ ] Research common council department structures — which departments handle which notice types
+- [ ] Research contact email patterns across councils (planning@, licensing@, highways@, etc.)
+- [ ] Research submission methods councils accept (email, web forms, portals, post)
 
 ---
 
-## Verification Checklist
+## Council Landscape Findings
 
-After all tasks complete, run:
+### UK Council Types Overview
 
-```bash
-npm run typecheck   # Should pass with 0 errors
-npm run lint        # Should pass (warnings OK)
-```
+**Total UK Local Authorities: 382** (as of 2024)
 
-Then verify in browser:
-- Team tab shows real email addresses, not truncated user IDs
-- Inviting an email with wrong domain shows clear error
-- Audit log entries show user, notice, action, and exact time all at a glance
-- Analytics has no Cost Savings or Compliance sections
-- Analytics Audit tab either shows real data or redirects appropriately
+| Country | Total |
+|---------|-------|
+| England | 317 |
+| Scotland | 32 |
+| Wales | 22 |
+| Northern Ireland | 11 |
+
+### England Council Types (317 total)
+
+| Type | Count | Examples | Notes |
+|------|-------|----------|-------|
+| **County Council** | 21 | Surrey, Kent, Essex, Hampshire, Lancashire, Norfolk, Devon, Hertfordshire | Upper-tier authority. Shares area with district councils. Responsible for ~80% of services: education, social care, highways, waste disposal, libraries |
+| **District Council** | 164 | Guildford, Maidstone, Chelmsford, Waverley, Reigate & Banstead, Spelthorne | Lower-tier authority within county council areas. Handles: housing, planning applications, council tax collection, waste collection, local licensing |
+| **Unitary Authority** | 62 | Bristol, Reading, Slough, Milton Keynes, Swindon, Peterborough, Luton, Bedford | Single-tier: provides ALL local government services. No county/district split. |
+| **Metropolitan Borough** | 36 | Birmingham, Manchester, Liverpool, Sheffield, Leeds, Newcastle, Bradford, Wolverhampton | Unitary authorities in 6 metro counties. Joint boards for some services (fire, transport) |
+| **London Borough** | 32 | Westminster, Camden, Islington, Hackney, Tower Hamlets, Greenwich, Lambeth, Southwark | Unitary authorities in Greater London. Work alongside GLA/Mayor of London |
+| **Sui Generis** | 2 | City of London Corporation, Council of the Isles of Scilly | Unique legal status with special powers |
+
+### Scotland Council Types (32 total)
+
+| Type | Count | Examples | Notes |
+|------|-------|----------|-------|
+| **Unitary Council** | 32 | Glasgow City, Edinburgh City, Aberdeen City, Highland, Fife, South Lanarkshire, North Lanarkshire, Dundee City | All Scottish councils are unitary since 1996. Single tier handles all local government services. |
+
+**Complete Scotland List:** Aberdeen City, Aberdeenshire, Angus, Argyll & Bute, Clackmannanshire, Dumfries & Galloway, Dundee City, East Ayrshire, East Dunbartonshire, East Lothian, East Renfrewshire, Edinburgh City, Falkirk, Fife, Glasgow City, Highland, Inverclyde, Midlothian, Moray, North Ayrshire, North Lanarkshire, Orkney Islands, Perth & Kinross, Renfrewshire, Scottish Borders, Shetland Islands, South Ayrshire, South Lanarkshire, Stirling, West Dunbartonshire, Western Isles (Comhairle nan Eilean Siar), West Lothian
+
+### Wales Council Types (22 total)
+
+| Type | Count | Examples | Notes |
+|------|-------|----------|-------|
+| **County Council** | 11 | Powys, Gwynedd, Pembrokeshire, Carmarthenshire, Ceredigion, Monmouthshire, Flintshire, Denbighshire, Isle of Anglesey | Unitary authorities with county status (typically more rural areas) |
+| **County Borough** | 11 | Cardiff, Swansea, Newport, Wrexham, Bridgend, Caerphilly, Merthyr Tydfil, Neath Port Talbot, Rhondda Cynon Taf, Blaenau Gwent, Torfaen | Unitary authorities with county borough status (large population centres) |
+
+**All 22 Welsh councils are unitary** - established 1996 by Local Government (Wales) Act 1994, replacing previous 8 counties + 37 districts.
+
+### Two-Tier vs Single-Tier Explained
+
+**Two-Tier Areas (County + Districts):**
+- County council handles: Education, social services, highways, strategic planning, libraries, waste disposal
+- District council handles: Housing, planning applications, council tax collection, local licensing, waste collection
+- Public notices may go to EITHER tier depending on notice type (e.g., planning → district, highways → county)
+
+**Single-Tier/Unitary Areas:**
+- One council handles ALL services
+- Public notices always go to the same council regardless of type
+
+### The 6 Metropolitan Counties
+
+These no longer have county councils (abolished 1986) but still exist as geographic areas:
+1. **Greater Manchester** (10 boroughs): Manchester, Salford, Bolton, Bury, Oldham, Rochdale, Stockport, Tameside, Trafford, Wigan
+2. **West Midlands** (7 boroughs): Birmingham, Coventry, Dudley, Sandwell, Solihull, Walsall, Wolverhampton
+3. **West Yorkshire** (5 boroughs): Leeds, Bradford, Calderdale, Kirklees, Wakefield
+4. **South Yorkshire** (4 boroughs): Sheffield, Barnsley, Doncaster, Rotherham
+5. **Merseyside** (5 boroughs): Liverpool, Sefton, Knowsley, St Helens, Wirral
+6. **Tyne & Wear** (5 boroughs): Newcastle, Gateshead, North Tyneside, South Tyneside, Sunderland
+
+### Upcoming Changes (2025-2028)
+
+**English Devolution White Paper (Dec 2024):**
+- Government plans to abolish ALL two-tier areas in England
+- Will create new unitary authorities with minimum 500,000 population
+- Deadline for council proposals: November 2025
+- New arrangements in place: 2027-28
+
+**Surrey Example (confirmed Oct 2025):**
+- Surrey County Council + 11 districts → 2 new unitaries (West Surrey, East Surrey)
+- Operational: 1 April 2027
+
+This means the current structure of 21 county councils + 164 districts will be replaced by ~50-60 larger unitaries.
+
+### Sources
+- [House of Commons Library - Local government in England: structures](https://commonslibrary.parliament.uk/research-briefings/sn07104/)
+- [GOV.UK - Local government structure and elections](https://www.gov.uk/guidance/local-government-structure-and-elections)
+- [Wikipedia - Local government in England](https://en.wikipedia.org/wiki/Local_government_in_England)
+- [Wikipedia - Local government in Scotland](https://en.wikipedia.org/wiki/Local_government_in_Scotland)
+- [Wikipedia - Principal areas of Wales](https://en.wikipedia.org/wiki/Principal_areas_of_Wales)
+- [LGiU - Local government facts and figures: England](https://lgiu.org/local-government-facts-and-figures-england/)
+
+### Directory Sources
+*Document authoritative sources:*
+
+### Postcode Lookup Method
+*Document best API/method:*
+
+### Department Patterns
+*Document findings:*
+
+### Contact Patterns
+*Document findings:*
+
+### Submission Methods
+*Document findings:*
+
