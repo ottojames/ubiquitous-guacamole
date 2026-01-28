@@ -785,3 +785,30 @@ New tasks in PRD.md for Phase 1 implementation after research completion.
 
 ---
 
+## Iteration 37 - Add proper error handling for postcode lookup failures
+**Status**: PASS
+**Agent Flow**: Direct implementation
+**Files Changed**: src/lib/councilLookup.ts, PRD.md
+**What Happened**: Added comprehensive error handling for postcode lookup:
+1. Created `PostcodeLookupError` class with typed error codes
+2. Added error codes: `INVALID_POSTCODE`, `POSTCODE_NOT_FOUND`, `POSTCODE_TERMINATED`, `NETWORK_ERROR`, `API_ERROR`
+3. Added `POSTCODE_ERROR_MESSAGES` mapping for user-friendly messages
+4. Added `isValidPostcodeFormat()` for basic validation before API call
+5. Updated `lookupCouncilByPostcodeAsync()` to throw `PostcodeLookupError` on failures
+6. Added `lookupCouncilByPostcodeSafe()` - returns null instead of throwing (for backward compat)
+7. Wrapped fetch in try/catch to handle network errors
+
+**Key Design Decisions:**
+- Throwing errors (not returning null) allows callers to distinguish error types
+- Provide `lookupCouncilByPostcodeSafe()` for callers who prefer null over try/catch
+- User-friendly messages exported for UI display
+- Validate format before API call to avoid unnecessary network requests
+
+**Learnings**:
+- UK postcode regex: `/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i`
+- fetch() throws on network errors (offline, DNS, timeout) - must wrap in try/catch
+- postcodes.io returns 404 for invalid postcodes, but also returns 200 with status=404 in body
+- Provide both throwing and non-throwing variants for different caller preferences
+
+---
+
