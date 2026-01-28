@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
@@ -87,11 +87,7 @@ export default function Analytics() {
   const [dateRange, setDateRange] = useState('90'); // days
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [department.id, dateRange]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -199,7 +195,11 @@ export default function Analytics() {
       // Fallback to empty data rather than keeping old stale data
       setLoading(false);
     }
-  };
+  }, [department.id, department.organization.id, dateRange]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   const handleExport = () => {
     if (!analytics) return;
