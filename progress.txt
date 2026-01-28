@@ -452,3 +452,21 @@ New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log
 
 ---
 
+## Iteration 27 - Restructure AuditLog for visibility
+**Status**: PASS
+**Agent Flow**: Analyst → Architect → Coder → Tester
+**Files Changed**: src/pages/council/AuditLog.tsx
+**What Happened**: Restructured audit log entries for immediate visibility:
+1. Changed main row to show: [User Name] • [Notice/Premises] • [Action] • [Time]
+2. Time now shows both exact timestamp AND relative time: "28 Jan 2026, 14:32 (2 hours ago)"
+3. User name is now first and prominently displayed in bold
+4. Notice/premises name is immediately visible after user name
+5. Notes/comments shown below in subtle gray italic text
+6. View Details accordion kept for additional metadata
+**Learnings**:
+- All key information should be visible at a glance without expanding
+- Using bullet separators (•) makes inline information scannable
+- Showing both exact and relative time serves different use cases (precision vs recency)
+
+---
+

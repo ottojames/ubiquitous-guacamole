@@ -16,10 +16,10 @@
 
 ### Audit Log - Immediate Visibility Improvements
 
-- [ ] In `src/pages/council/AuditLog.tsx`, show the exact timestamp (e.g., "28 Jan 2026, 14:32") alongside the relative time ("2 hours ago") - display both so users can see the precise time at a glance
-- [ ] In `src/pages/council/AuditLog.tsx`, make the notice/premises name immediately visible in the main row (not hidden in "View Details") - display prominently as the first piece of information
-- [ ] In `src/pages/council/AuditLog.tsx`, make the user name immediately visible in the main row with clear formatting (not requiring expansion to see who did what)
-- [ ] In `src/pages/council/AuditLog.tsx`, restructure each audit entry to show: [User Name] • [Notice/Premises] • [Action] • [Time] all on the main visible row, with any additional notes/comments shown below in subtle gray text
+- [x] In `src/pages/council/AuditLog.tsx`, show the exact timestamp (e.g., "28 Jan 2026, 14:32") alongside the relative time ("2 hours ago") - display both so users can see the precise time at a glance
+- [x] In `src/pages/council/AuditLog.tsx`, make the notice/premises name immediately visible in the main row (not hidden in "View Details") - display prominently as the first piece of information
+- [x] In `src/pages/council/AuditLog.tsx`, make the user name immediately visible in the main row with clear formatting (not requiring expansion to see who did what)
+- [x] In `src/pages/council/AuditLog.tsx`, restructure each audit entry to show: [User Name] • [Notice/Premises] • [Action] • [Time] all on the main visible row, with any additional notes/comments shown below in subtle gray text
 
 ### Analytics Tab - Remove Unused Sections
 

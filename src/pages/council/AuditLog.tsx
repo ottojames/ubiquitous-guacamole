@@ -583,70 +583,71 @@ export default function AuditLog() {
           <div className="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
             <div className="divide-y divide-gray-200">
               {paginatedLogs.map((log) => (
-                <div key={log.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${getActionColor(log.action, log.severity)}`}>
-                          {getActionIcon(log.action)}
-                          {formatActionText(log.action)}
-                        </span>
-                        {log.resource_type && (
-                          <span className="text-sm font-semibold text-gray-900">
-                            {formatTableName(log.resource_type)}
-                          </span>
-                        )}
-                        {log.severity !== 'info' && (
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            log.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                          }`}>
-                            {log.severity}
-                          </span>
-                        )}
-                      </div>
+                <div key={log.id} className="p-5 hover:bg-gray-50 transition-colors">
+                  {/* Main row: [User Name] • [Notice/Premises] • [Action] • [Time] */}
+                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm">
+                    {/* User Name */}
+                    <span className="font-semibold text-gray-900">
+                      {formatUserName(log.user_email, log.user_id)}
+                    </span>
+                    <span className="text-gray-400">•</span>
 
-                      <div className="space-y-1 text-sm text-gray-600">
-                        {/* Show premises name if available for notice/representation */}
-                        {(log.resource_type === 'notice' || log.resource_type === 'representation') && premisesNames[log.resource_id] && (
-                          <p className="font-medium text-gray-900">
-                            {premisesNames[log.resource_id]}
-                          </p>
-                        )}
-                        <p>
-                          {formatUserName(log.user_email, log.user_id)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatRelativeTime(log.created_at)}
-                        </p>
-                      </div>
+                    {/* Notice/Premises Name */}
+                    <span className="font-medium text-gray-800">
+                      {(log.resource_type === 'notice' || log.resource_type === 'representation') && premisesNames[log.resource_id]
+                        ? premisesNames[log.resource_id]
+                        : formatTableName(log.resource_type || 'System')}
+                    </span>
+                    <span className="text-gray-400">•</span>
 
-                      {/* Show comment/note preview if available */}
-                      {(log.metadata?.comment_preview || log.metadata?.note || log.metadata?.comment) && (
-                        <p className="mt-2 text-sm text-gray-500 italic">
-                          "{log.metadata.comment_preview || log.metadata.note || log.metadata.comment}"
-                        </p>
-                      )}
+                    {/* Action */}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold inline-flex items-center gap-1 ${getActionColor(log.action, log.severity)}`}>
+                      {getActionIcon(log.action)}
+                      {formatActionText(log.action)}
+                    </span>
+                    <span className="text-gray-400">•</span>
 
-                      {/* Show human-readable details for updates */}
-                      {(log.new_values || log.old_values || log.metadata) && (
-                        <details className="mt-3">
-                          <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-700">
-                            View Details
-                          </summary>
-                          <div className="mt-2 p-3 bg-gray-50 rounded-xl">
-                            <div className="space-y-2">
-                              {formatDetailsContent(log).map((item, idx) => (
-                                <div key={idx} className="flex">
-                                  <span className="text-xs font-semibold text-gray-700 w-24">{item.key}:</span>
-                                  <span className="text-xs text-gray-600 flex-1">{item.value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </details>
-                      )}
-                    </div>
+                    {/* Time: exact + relative */}
+                    <span className="text-gray-600 text-xs">
+                      {formatDate(log.created_at)}
+                      <span className="text-gray-400 ml-1">({formatRelativeTime(log.created_at)})</span>
+                    </span>
+
+                    {/* Severity badge if not info */}
+                    {log.severity !== 'info' && (
+                      <span className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
+                        log.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {log.severity}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Notes/comments shown below in subtle gray text */}
+                  {(log.metadata?.comment_preview || log.metadata?.note || log.metadata?.comment) && (
+                    <p className="mt-2 text-sm text-gray-500 italic pl-0">
+                      "{log.metadata.comment_preview || log.metadata.note || log.metadata.comment}"
+                    </p>
+                  )}
+
+                  {/* View Details accordion */}
+                  {(log.new_values || log.old_values || log.metadata) && (
+                    <details className="mt-2">
+                      <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-700">
+                        View Details
+                      </summary>
+                      <div className="mt-2 p-3 bg-gray-50 rounded-xl">
+                        <div className="space-y-1">
+                          {formatDetailsContent(log).map((item, idx) => (
+                            <div key={idx} className="flex">
+                              <span className="text-xs font-semibold text-gray-700 w-24">{item.key}:</span>
+                              <span className="text-xs text-gray-600 flex-1">{item.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </details>
+                  )}
                 </div>
               ))}
             </div>
