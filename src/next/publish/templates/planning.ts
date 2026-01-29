@@ -1,5 +1,6 @@
 import type { NoticeBase } from "@/types/notice";
 import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type PlanningExtras = {
   category: "planning";
@@ -100,6 +101,7 @@ export function renderPlanningHtml(notice: NoticeBase): string {
   return renderHtmlFromText(renderPlanningText(notice));
 }
 
-export async function renderPlanningPdf(): Promise<Uint8Array> {
-  throw new Error("PDF rendering is server-only. TODO: move planning PDF generation to an API endpoint.");
+export async function renderPlanningPdf(notice: NoticeBase): Promise<Uint8Array> {
+  const options = extractPdfOptions(notice, 'planning');
+  return generatePdf(options);
 }

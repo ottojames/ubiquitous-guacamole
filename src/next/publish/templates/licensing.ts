@@ -1,5 +1,6 @@
 import type { NoticeBase } from "@/types/notice";
 import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type LicensingExtras = {
   category: "licensing";
@@ -114,6 +115,7 @@ export function renderLicensingHtml(notice: NoticeBase): string {
   return renderHtmlFromText(renderLicensingText(notice));
 }
 
-export async function renderLicensingPdf(): Promise<Uint8Array> {
-  throw new Error("PDF rendering is server-only. TODO: move licensing PDF generation to an API endpoint.");
+export async function renderLicensingPdf(notice: NoticeBase): Promise<Uint8Array> {
+  const options = extractPdfOptions(notice, 'licensing');
+  return generatePdf(options);
 }

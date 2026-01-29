@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getServiceSupabaseClient } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
 import { sendWebhookEvent } from '../services/webhooks.js';
+import { scheduleDeadlineReminders, cancelNoticeReminders } from '../services/deadlineReminders.js';
 
 const router = Router();
 
@@ -159,6 +160,7 @@ router.get('/notices/:noticeId/status', async (req, res) => {
 /**
  * POST /api/workflow/notices/:noticeId/transition
  * Moves a notice to a new workflow stage
+ * NOW WITH DEADLINE REMINDER SCHEDULING
  */
 router.post('/notices/:noticeId/transition', async (req, res) => {
   try {
@@ -211,6 +213,37 @@ router.post('/notices/:noticeId/transition', async (req, res) => {
     if (error) {
       console.error('[workflow/notices/:noticeId/transition] Transition error:', error);
       return res.status(400).json({ error: error.message || 'Failed to transition notice' });
+    }
+
+    // Get the updated workflow status to check for deadline
+    const { data: updatedStatus, error: updatedError } = await supabase
+      .from('notice_workflow_status')
+      .select(`
+        deadline_date,
+        current_stage:workflow_stages(name, has_deadline, deadline_name)
+      `)
+      .eq('notice_id', noticeId)
+      .single();
+
+    // Schedule deadline reminders if the new stage has a deadline
+    if (updatedStatus?.deadline_date && updatedStatus?.current_stage) {
+      const stage = updatedStatus.current_stage as any;
+      const stageName = stage.deadline_name || stage.name || 'Stage Deadline';
+      
+      // Cancel any existing reminders for this notice first
+      await cancelNoticeReminders(noticeId).catch(err => 
+        console.error('[workflow/transition] Cancel reminders error:', err)
+      );
+      
+      // Schedule new reminders for the deadline
+      scheduleDeadlineReminders(
+        noticeId,
+        firmId,
+        updatedStatus.deadline_date,
+        stageName
+      ).catch(err => console.error('[workflow/transition] Schedule reminders error:', err));
+      
+      console.log(`[workflow/transition] Scheduled reminders for notice ${noticeId}, deadline: ${updatedStatus.deadline_date}`);
     }
 
     // Fire webhook for workflow.stage_changed (async, don't block)

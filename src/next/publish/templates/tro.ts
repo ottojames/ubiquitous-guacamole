@@ -1,5 +1,6 @@
 import type { NoticeBase } from "@/types/notice";
 import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type TroExtras = {
   category: "tro";
@@ -104,6 +105,6 @@ export function renderTroHtml(notice: NoticeBase): string {
   return renderHtmlFromText(renderTroText(notice));
 }
 
-export async function renderTroPdf(): Promise<Uint8Array> {
+export async function renderTroPdf(notice: NoticeBase): Promise<Uint8Array> {
   throw new Error("PDF rendering is server-only. TODO: move TRO PDF generation to an API endpoint.");
 }

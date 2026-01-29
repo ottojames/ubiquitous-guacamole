@@ -1,5 +1,6 @@
 import type { NoticeBase } from "@/types/notice";
 import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type GamblingExtras = {
   category: "gambling";
@@ -174,6 +175,7 @@ export function renderGamblingHtml(notice: NoticeBase): string {
   return renderHtmlFromText(renderGamblingText(notice));
 }
 
-export async function renderGamblingPdf(): Promise<Uint8Array> {
-  throw new Error("PDF rendering is server-only. TODO: move gambling PDF generation to an API endpoint.");
+export async function renderGamblingPdf(notice: NoticeBase): Promise<Uint8Array> {
+  const options = extractPdfOptions(notice, 'gambling');
+  return generatePdf(options);
 }

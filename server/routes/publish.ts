@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getServiceSupabaseClient } from '../lib/supabase.js';
 import crypto from 'crypto';
 import { requireAuth, loadUserPermissions, requirePermission } from '../middleware/auth';
-import { sendNoticeConfirmation } from '../services/email';
+import { sendNoticeConfirmation, sendCouncilNotification } from '../services/email';
 
 const router = Router();
 
@@ -252,7 +252,101 @@ router.post('/notices/publish', requireAuth, async (req, res) => {
       firmName: firmName
     });
 
-    // TODO: Send notification to council department (requires council contact email)
+    // Send notification to council department
+    try {
+      // Fetch council contact email
+      const { data: councilOrg } = await supabase
+        .from('organizations')
+        .select('contact_email, name')
+        .eq('id', target_council_id)
+        .single();
+
+      // Fetch department name
+      const { data: deptData } = await supabase
+        .from('departments')
+        .select('name')
+        .eq('id', target_department_id)
+        .single();
+
+      const councilEmail = councilOrg?.contact_email;
+      const councilName = councilOrg?.name || 'Unknown Council';
+      const departmentName = deptData?.name || 'Unknown Department';
+      const premisesName = notice_data.premises?.name || '';
+      const premisesAddress = notice_data.premises?.address || '';
+      const noticeUrl = `${appUrl}/notices/${notice.id}`;
+
+      if (councilEmail) {
+        const subject = `New Notice Published: ${notice_type} - ${premisesName || premisesAddress || 'Application'}`;
+        
+        const bodyText = `
+New Notice Published
+
+A new ${notice_type} notice has been published by ${firmName}.
+
+Notice Details:
+- Type: ${notice_type}
+${premisesName ? `- Premises: ${premisesName}` : ''}
+${premisesAddress ? `- Address: ${premisesAddress}` : ''}
+- Published: ${new Date(notice.published_at).toLocaleDateString('en-GB')}
+- Deadline: ${notice.reps_deadline ? new Date(notice.reps_deadline).toLocaleDateString('en-GB') : 'TBD'}
+
+View the notice: ${noticeUrl}
+
+This notice was published via CivicNotices.
+        `;
+
+        const bodyHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><title>${subject}</title></head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">New Notice Published</h1>
+              </div>
+              <div style="background: white; padding: 30px; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 8px 8px;">
+                <p>A new <strong>${notice_type}</strong> notice has been published by <strong>${firmName}</strong>.</p>
+                
+                <div style="background: #f9fafb; border-left: 4px solid #059669; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                  <h3 style="margin: 0 0 10px;">Notice Details</h3>
+                  <p style="margin: 5px 0;"><strong>Type:</strong> ${notice_type}</p>
+                  ${premisesName ? `<p style="margin: 5px 0;"><strong>Premises:</strong> ${premisesName}</p>` : ''}
+                  ${premisesAddress ? `<p style="margin: 5px 0;"><strong>Address:</strong> ${premisesAddress}</p>` : ''}
+                  <p style="margin: 5px 0;"><strong>Published:</strong> ${new Date(notice.published_at).toLocaleDateString('en-GB')}</p>
+                  <p style="margin: 5px 0;"><strong>Deadline:</strong> ${notice.reps_deadline ? new Date(notice.reps_deadline).toLocaleDateString('en-GB') : 'TBD'}</p>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${noticeUrl}" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Notice</a>
+                </div>
+                
+                <p style="font-size: 14px; color: #6b7280;">This notice was published via CivicNotices and requires your attention for the ${departmentName} department.</p>
+              </div>
+              <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
+                <p>CivicNotices - Public Notice Management</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        await sendCouncilNotification({
+          to: councilEmail,
+          subject,
+          bodyText,
+          bodyHtml,
+          councilName,
+          departmentName
+        });
+
+        console.log('[notice-publish] Council notification sent to:', councilEmail);
+      } else {
+        console.log('[notice-publish] No council contact email found, skipping notification');
+      }
+    } catch (emailError) {
+      // Log but don't fail the request if council notification fails
+      console.error('[notice-publish] Failed to send council notification:', emailError);
+    }
 
     console.log('[notice-publish] Notice published successfully:', {
       id: notice.id,

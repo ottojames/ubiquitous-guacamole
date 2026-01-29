@@ -1,5 +1,6 @@
 import type { NoticeBase } from "@/types/notice";
 import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type ProbateExtras = {
   category: "probate";
@@ -30,6 +31,7 @@ export function renderProbateHtml(notice: NoticeBase): string {
   return renderHtmlFromText(renderProbateText(notice));
 }
 
-export async function renderProbatePdf(): Promise<Uint8Array> {
-  throw new Error("PDF rendering is server-only. TODO: move probate PDF generation to an API endpoint.");
+export async function renderProbatePdf(notice: NoticeBase): Promise<Uint8Array> {
+  const options = extractPdfOptions(notice, 'probate');
+  return generatePdf(options);
 }

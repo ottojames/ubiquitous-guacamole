@@ -1,5 +1,6 @@
 import type { NoticeBase } from "@/types/notice";
 import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type GvolExtras = {
   category: "gvol";
@@ -54,6 +55,6 @@ export function renderGvolHtml(notice: NoticeBase): string {
   return renderHtmlFromText(renderGvolText(notice));
 }
 
-export async function renderGvolPdf(): Promise<Uint8Array> {
+export async function renderGvolPdf(notice: NoticeBase): Promise<Uint8Array> {
   throw new Error("PDF rendering is server-only. TODO: move GVOL PDF generation to an API endpoint.");
 }

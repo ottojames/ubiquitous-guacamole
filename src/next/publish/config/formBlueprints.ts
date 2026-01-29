@@ -978,19 +978,24 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
       };
     }
     case "probate": {
+      // Probate notice workflow for Trustee Act 1925 s.27
+      // Requires: London Gazette publication + local newspaper(s) for each property with land
       const sections: SectionBlueprint[] = [
         {
           id: "estate",
           title: "Estate information",
+          description: "Details of the deceased as they will appear in the Gazette and newspaper notices.",
           fields: [
             field("DECEASED_NAME", {
-              label: "Deceased name",
+              label: "Deceased full name",
               required: true,
               span: 12,
+              hint: "As it should appear in the Gazette (e.g., 'John William Smith')",
             }),
             field("DECEASED_ALIAS", {
               label: "Also known as (optional)",
               span: 12,
+              hint: "Include maiden names, commonly used names, or other aliases",
             }),
             field("DECEASED_LAST_ADDRESS", {
               label: "Last known address",
@@ -998,58 +1003,76 @@ export function getFormBlueprint(definition: NoticeDefinition): FormBlueprint {
               rows: 3,
               required: true,
               span: 12,
+              hint: "Full address including postcode",
             }),
             field("DATE_OF_DEATH", {
               label: "Date of death",
-              type: "date",
-              required: true,
-              span: 12,
-            }),
-          ],
-        },
-        {
-          id: "representative",
-          title: "Personal representative / solicitor",
-          fields: [
-            field("PERSONAL_REPRESENTATIVE", {
-              label: "Personal representative",
-              span: 12,
-            }),
-            field("SOLICITOR_NAME", {
-              label: "Solicitor name",
-              span: 12,
-            }),
-            field("SOLICITOR_ADDRESS", {
-              label: "Service address",
-              type: "textarea",
-              rows: 3,
-              required: true,
-              span: 12,
-            }),
-            field("CLAIM_REFERENCE", {
-              label: "Reference (optional)",
-              span: 12,
-            }),
-          ],
-        },
-        {
-          id: "dates",
-          title: "Statutory dates",
-          fields: [
-            // Removed PUBLICATION_DATE as per FIX-004
-            field("DEADLINE_DATE", {
-              label: "Claims deadline",
               type: "date",
               required: true,
               span: 6,
             }),
           ],
         },
+        {
+          id: "representative",
+          title: "Personal representative / solicitor",
+          description: "Contact details for creditor claims under s.27.",
+          fields: [
+            field("PERSONAL_REPRESENTATIVE", {
+              label: "Personal representative name(s)",
+              span: 12,
+              hint: "Name(s) of executor(s) or administrator(s)",
+            }),
+            field("SOLICITOR_NAME", {
+              label: "Solicitor / firm name",
+              span: 12,
+              hint: "Acting solicitor's name or firm name",
+            }),
+            field("SOLICITOR_ADDRESS", {
+              label: "Address for claims",
+              type: "textarea",
+              rows: 3,
+              required: true,
+              span: 12,
+              hint: "Where creditors should send claims. Must be a valid postal address.",
+            }),
+            field("CLAIM_REFERENCE", {
+              label: "Your reference (optional)",
+              span: 6,
+              hint: "Reference creditors should quote when making claims",
+            }),
+          ],
+        },
+        {
+          id: "dates",
+          title: "Statutory dates",
+          description: "The claims deadline is automatically calculated as 2 months from publication (Trustee Act 1925 s.27).",
+          fields: [
+            field("DEADLINE_DATE", {
+              label: "Claims deadline",
+              type: "date",
+              required: true,
+              span: 6,
+              hint: "Minimum 2 months from publication. We recommend adding a buffer.",
+            }),
+          ],
+        },
+        {
+          id: "publication",
+          title: "Publication requirements",
+          description: "s.27 requires publication in The London Gazette. If the estate includes land, you must also advertise in a newspaper circulating in the district where the land is situated.",
+          fields: [
+            // These are informational - actual property management is done via the multi-property API
+          ],
+        },
       ];
 
       return {
         sections,
-        autoValues: [{ token: "NOTICE_TYPE", value: definition.label }],
+        autoValues: [
+          { token: "NOTICE_TYPE", value: definition.label },
+          { token: "ACT_TITLE", value: "Trustee Act 1925" },
+        ],
         deadlineRule: { base: "PUBLICATION_DATE", addMonths: 2 },
         atLeastOne: [
           {
