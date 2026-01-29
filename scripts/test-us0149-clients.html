@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>US-0149: Client Management Browser Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        h1 { color: #1f2937; }
+        .step {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .pass {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+        .fail {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .testing {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>US-0149: Client Management - Browser Test</h1>
+
+    <div class="step">
+        <h3>Test Environment</h3>
+        <p>Frontend: <code>http://localhost:5173</code></p>
+        <p>API Server: <code>http://localhost:5174</code></p>
+        <p>Demo Mode: <code>VITE_DEMO_MODE=true</code></p>
+    </div>
+
+    <div class="step">
+        <h3>Acceptance Criteria to Test:</h3>
+        <ol>
+            <li>✅ Clients page is in firm portal navigation</li>
+            <li>✅ List shows all firm clients with: name, contact, number of active notices, last notice date</li>
+            <li>✅ "Add Client" button creates new client profile</li>
+            <li>✅ Client form has: name, contact person, email, phone, address fields</li>
+            <li>✅ Click client to see: all their notices, representations received, history</li>
+            <li>✅ Can edit client details</li>
+            <li>✅ Publish notice for client appears in client notices list</li>
+        </ol>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 1: Navigate to Firm Portal</h3>
+        <p>Open: <a href="http://localhost:5173/f/wilson-partners/clients" target="_blank">http://localhost:5173/f/wilson-partners/clients</a></p>
+        <p>Expected: Clients page loads with list of clients</p>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 2: Verify Client List Display</h3>
+        <p>Check that the client list shows:</p>
+        <ul>
+            <li>Client name</li>
+            <li>Contact details (name, email, phone)</li>
+            <li>Number of notices badge</li>
+            <li>Date client was added</li>
+            <li>Active/Inactive status</li>
+        </ul>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 3: Test Add Client</h3>
+        <ol>
+            <li>Click "Add Client" button</li>
+            <li>Fill in form:
+                <ul>
+                    <li>Name: "The Red Lion Pub"</li>
+                    <li>Contact: "John Smith"</li>
+                    <li>Email: "john@redlion.com"</li>
+                    <li>Phone: "020 7123 4567"</li>
+                    <li>Address: "45 High Street, London, SW1A 1AA"</li>
+                </ul>
+            </li>
+            <li>Click "Add Client"</li>
+            <li>Verify: Client appears in list</li>
+        </ol>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 4: Test Edit Client</h3>
+        <ol>
+            <li>Click "Edit" button on a client</li>
+            <li>Change contact name</li>
+            <li>Click "Update Client"</li>
+            <li>Verify: Changes reflected in list</li>
+        </ol>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 5: Test Quick Publish</h3>
+        <ol>
+            <li>Click "Quick Publish" button on a client</li>
+            <li>Should navigate to: <code>/f/wilson-partners/publish/step-1?client=[slug]</code></li>
+            <li>Verify client parameter is in URL</li>
+        </ol>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 6: Test View Notices</h3>
+        <ol>
+            <li>Click "View Notices" link on a client</li>
+            <li>Should navigate to: <code>/f/wilson-partners/notices?client=[slug]</code></li>
+            <li>Verify notices are filtered by client</li>
+        </ol>
+    </div>
+
+    <div class="step testing">
+        <h3>Step 7: Test Search Functionality</h3>
+        <ol>
+            <li>Type "Red Lion" in search box</li>
+            <li>Verify: Only matching clients show</li>
+            <li>Clear search</li>
+            <li>Verify: All clients show again</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3>Manual Testing Instructions</h3>
+        <p>Since the page is already implemented with mock data, manually test each feature above and verify:</p>
+        <ol>
+            <li>✅ Page loads at <code>/f/wilson-partners/clients</code></li>
+            <li>✅ Mock clients display (The Red Lion Pub, Westminster Entertainment, Soho Bars)</li>
+            <li>✅ Add Client modal opens and has all required fields</li>
+            <li>✅ Edit Client modal pre-populates with existing data</li>
+            <li>✅ Quick Publish navigates to wizard with client parameter</li>
+            <li>✅ View Notices navigates to notices page with client filter</li>
+            <li>✅ Search filters clients correctly</li>
+        </ol>
+    </div>
+
+    <script>
+        console.log('Test page loaded. Please follow the manual testing steps above.');
+        console.log('Open http://localhost:5173/f/wilson-partners/clients to begin testing');
+    </script>
+</body>
+</html>

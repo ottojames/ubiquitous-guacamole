@@ -1,19 +1,34 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import AddressSearchBar, { type AddressSearchSubmitPayload } from '@/components/search/AddressSearchBar';
 import SearchResults from '@/components/home/SearchResults';
 import NoticesMapView from '@/components/search/NoticesMapView';
+import Pagination from '@/components/ui/Pagination';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/Footer';
 import { resolveToPostcodeOrNull } from '@/lib/address';
 import { getCouncilForPostcode } from '@/lib/councils';
 import { useNoticeSearch } from '@/hooks/useNoticeSearch';
 import type { NoticeBoundingBox, NoticeSearchItem } from '@/lib/notices';
 import { toast, useToastController } from '@/lib/ui/toast';
+import { TRAFFIC_AREAS } from '@/next/publish/config/trafficAreas';
+import { supabase } from '@/lib/supabase';
+import * as UI from '@/styles/ui';
 
-const TYPE_OPTIONS = ['Premises Licence', 'Traffic Order', 'Planning'];
-const STATUS_OPTIONS = ['Open', 'Closed'];
+const TYPE_OPTIONS = [
+  'Licensing Act 2003',
+  'Gambling Act 2005',
+  'Goods Vehicle Operator\'s Licence',
+  'Planning',
+  'Probate',
+  'Club Premises Certificate',
+  'Traffic Order'
+];
+// Database status values are: 'draft', 'submitted', 'published'
+// For now, just show published notices (no status filter UI)
+const STATUS_OPTIONS: string[] = [];
 
 function formatPostcodeForDisplay(compact?: string | null) {
   if (!compact) return null;
@@ -47,7 +62,10 @@ export default function NoticesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [addressValue, setAddressValue] = useState('');
   const [addressInlineError, setAddressInlineError] = useState<string | null>(null);
+  const [councils, setCouncils] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [searchedLocation, setSearchedLocation] = useState<{ latitude: number; longitude: number; postcode: string } | null>(null);
   const toastMessage = useToastController();
+  const mapSectionRef = useRef<HTMLDivElement>(null);
 
   const queryParam = (searchParams.get('query') ?? '').trim();
   const postcodeParam = sanitizePostcode(searchParams.get('postcode') ?? '');
@@ -56,10 +74,14 @@ export default function NoticesPage() {
   const statusFilter = (searchParams.get('status') ?? '').trim();
   const startFilter = (searchParams.get('start') ?? '').trim();
   const endFilter = (searchParams.get('end') ?? '').trim();
+  const trafficAreaFilter = (searchParams.get('traffic_area') ?? '').trim();
   const viewParam = (searchParams.get('view') ?? '').trim();
+  const sortParam = (searchParams.get('sort') ?? '').trim() || 'created_at.desc';
   const radiusParam = searchParams.get('radius_km');
   const bboxParamRaw = (searchParams.get('bbox') ?? '').trim();
   const zoomParamRaw = (searchParams.get('zoom') ?? '').trim();
+  const pageParam = searchParams.get('page');
+  const itemsPerPageParam = searchParams.get('per_page');
 
   const radiusValue = (() => {
     const numeric = Number(radiusParam);
@@ -67,6 +89,20 @@ export default function NoticesPage() {
       return Math.min(Math.max(Math.round(numeric), 1), 50);
     }
     return 5;
+  })();
+
+  // Pagination values
+  const currentPage = (() => {
+    const parsed = Number(pageParam);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  })();
+
+  const itemsPerPage = (() => {
+    const parsed = Number(itemsPerPageParam);
+    if (Number.isFinite(parsed) && [10, 25, 50, 100].includes(parsed)) {
+      return parsed;
+    }
+    return 25; // Default to 25 items per page
   })();
 
   const mapBoundingBox = useMemo(() => parseBoundingBoxParam(bboxParamRaw), [bboxParamRaw]);
@@ -78,12 +114,42 @@ export default function NoticesPage() {
   const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null);
   const [hoveredNoticeId, setHoveredNoticeId] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showAllMapResults, setShowAllMapResults] = useState(false);
 
-  const mapView = viewParam === 'map';
+  // Default to map view (only show list view if explicitly set)
+  const mapView = viewParam !== 'list';
 
   useEffect(() => {
     setAddressValue(queryParam);
   }, [queryParam]);
+
+  // Fetch councils for the dropdown
+  useEffect(() => {
+    const fetchCouncils = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('councils')
+          .select('id, name, slug')
+          .order('name');
+
+        if (error) {
+          console.error('[Notices] Failed to fetch councils:', error);
+          toast('Unable to load council filter. Please refresh the page.');
+          return;
+        }
+
+        if (data) {
+          setCouncils(data);
+        }
+      } catch (err) {
+        // Task 7.1: Handle unexpected errors gracefully
+        console.error('[Notices] Unexpected error fetching councils:', err);
+        toast('Unable to load council filter. Please refresh the page.');
+      }
+    };
+
+    fetchCouncils();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,7 +167,62 @@ export default function NoticesPage() {
     };
   }, [postcodeParam, queryParam, searchParams, setSearchParams]);
 
+  // Fetch coordinates for the searched postcode
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!postcodeParam) {
+      setSearchedLocation(null);
+      return;
+    }
+
+    const fetchCoordinates = async () => {
+      try {
+        const normalizedPostcode = postcodeParam.replace(/(.{1,4})(.{3})$/, '$1 $2');
+        const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(normalizedPostcode)}`);
+
+        if (!response.ok) {
+          console.warn('[Notices] Failed to fetch postcode coordinates:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        const result = data?.result;
+
+        if (!cancelled && result?.latitude && result?.longitude) {
+          setSearchedLocation({
+            latitude: result.latitude,
+            longitude: result.longitude,
+            postcode: normalizedPostcode,
+          });
+        }
+      } catch (error) {
+        console.warn('[Notices] Error fetching postcode coordinates:', error);
+      }
+    };
+
+    fetchCoordinates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postcodeParam]);
+
   const hasSearchTerm = Boolean(postcodeParam || councilParam || queryParam);
+
+  // Auto-scroll to map when switching to map view with search results
+  useEffect(() => {
+    if (mapView && mapSectionRef.current && hasSearchTerm) {
+      // Small delay to ensure the map has rendered
+      const timer = setTimeout(() => {
+        mapSectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [mapView, hasSearchTerm]);
 
   const { notices, loading, error, refetch } = useNoticeSearch({
     enabled: hasSearchTerm,
@@ -112,29 +233,25 @@ export default function NoticesPage() {
     status: statusFilter || undefined,
     start: startFilter || undefined,
     end: endFilter || undefined,
+    trafficArea: trafficAreaFilter || undefined,
+    sort: sortParam,
     radiusKm: radiusValue,
     bbox: mapBoundingBox ?? undefined,
     zoom: mapZoom,
     cluster: mapView,
   });
 
+  // API already filters by type, status, and dates - no need for client-side filtering
   const filteredResults = useMemo(() => {
-    return notices.filter((item) => {
-      if (typeFilter && item.noticeType !== typeFilter) return false;
-      if (statusFilter && item.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
-      if (startFilter) {
-        const from = new Date(startFilter);
-        const published = item.publicationDate ? new Date(item.publicationDate) : null;
-        if (!Number.isNaN(from.getTime()) && published && published < from) return false;
-      }
-      if (endFilter) {
-        const to = new Date(endFilter);
-        const published = item.publicationDate ? new Date(item.publicationDate) : null;
-        if (!Number.isNaN(to.getTime()) && published && published > to) return false;
-      }
-      return true;
-    });
-  }, [notices, typeFilter, statusFilter, startFilter, endFilter]);
+    return notices;
+  }, [notices]);
+
+  // Calculate paginated results for list view
+  const paginatedResults = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredResults.slice(startIndex, endIndex);
+  }, [filteredResults, currentPage, itemsPerPage]);
 
   useEffect(() => {
     if (activeNoticeId && !filteredResults.some((item) => item.id === activeNoticeId)) {
@@ -148,7 +265,7 @@ export default function NoticesPage() {
     }
   }, [hoveredNoticeId, filteredResults]);
 
-  const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || radiusParam);
+  const hasActiveFilters = Boolean(typeFilter || statusFilter || startFilter || endFilter || councilParam || trafficAreaFilter || radiusParam);
   const searchLabel = (formatPostcodeForDisplay(postcodeParam) ?? queryParam) || 'your filters';
 
   const updateParams = useCallback(
@@ -159,6 +276,16 @@ export default function NoticesPage() {
     },
     [searchParams, setSearchParams]
   );
+
+  // Reset to page 1 when filters change and current page exceeds total pages
+  useEffect(() => {
+    if (currentPage > 1) {
+      const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+      if (currentPage > totalPages) {
+        updateParams((params) => params.delete('page'), true);
+      }
+    }
+  }, [filteredResults.length, itemsPerPage, currentPage, updateParams]);
 
   const handleMapBoundsChange = useCallback(
     (bbox: NoticeBoundingBox, zoom: number) => {
@@ -206,8 +333,10 @@ export default function NoticesPage() {
         params.set('query', raw);
         if (resolvedPostcode) params.set('postcode', resolvedPostcode);
         else params.delete('postcode');
-        if (councilId) params.set('council', councilId);
-        else params.delete('council');
+        // Don't auto-filter by council since notices may not have council_id set
+        // if (councilId) params.set('council', councilId);
+        // else params.delete('council');
+        params.delete('council'); // Remove any existing council filter
         params.delete('radius_km');
       });
 
@@ -241,6 +370,13 @@ export default function NoticesPage() {
     }, true);
   }, [updateParams]);
 
+  const toggleTrafficArea = useCallback((areaId: string) => {
+    updateParams((params) => {
+      if (params.get('traffic_area') === areaId) params.delete('traffic_area');
+      else params.set('traffic_area', areaId);
+    }, true);
+  }, [updateParams]);
+
   const handleDateChange = useCallback((field: 'start' | 'end', value: string) => {
     updateParams((params) => {
       if (value) params.set(field, value);
@@ -258,6 +394,19 @@ export default function NoticesPage() {
     [updateParams]
   );
 
+  const setSort = useCallback(
+    (sort: string) => {
+      updateParams((params) => {
+        if (sort === 'created_at.desc') {
+          params.delete('sort'); // Default, no need to set
+        } else {
+          params.set('sort', sort);
+        }
+      }, true);
+    },
+    [updateParams]
+  );
+
   const clearFilters = useCallback(() => {
     updateParams((params) => {
       params.delete('type');
@@ -265,6 +414,7 @@ export default function NoticesPage() {
       params.delete('start');
       params.delete('end');
       params.delete('council');
+      params.delete('traffic_area');
       params.delete('radius_km');
     }, true);
   }, [updateParams]);
@@ -281,6 +431,31 @@ export default function NoticesPage() {
     refetch();
   }, [refetch]);
 
+  const handlePageChange = useCallback(
+    (page: number) => {
+      updateParams((params) => {
+        if (page === 1) {
+          params.delete('page');
+        } else {
+          params.set('page', String(page));
+        }
+      }, true);
+      // Scroll to top of results
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [updateParams]
+  );
+
+  const handleItemsPerPageChange = useCallback(
+    (newItemsPerPage: number) => {
+      updateParams((params) => {
+        params.set('per_page', String(newItemsPerPage));
+        params.delete('page'); // Reset to first page when changing items per page
+      }, true);
+    },
+    [updateParams]
+  );
+
   const FilterControls = ({
     layout = 'row',
     showClear = true,
@@ -291,17 +466,17 @@ export default function NoticesPage() {
     className?: string;
   }) => {
     const stack = layout === 'column';
-    const containerClass = `${stack ? 'flex flex-col gap-4' : 'flex flex-col gap-3'} ${className}`;
+    const containerClass = `${stack ? 'flex flex-col gap-3' : 'flex flex-col gap-3'} ${className}`;
     const chipBase =
-      'rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-150 backdrop-blur-sm shadow-[0_0_0_1px_rgba(14,23,42,0.04)]';
+      'rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-200 backdrop-blur-sm transform hover:scale-105 active:scale-95';
     const chipActive =
-      'border-transparent bg-gradient-to-r from-[#1d4ed8] to-[#2563eb] text-white shadow-[0_10px_24px_rgba(37,99,235,0.26)]';
+      'border-blue-600 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_2px_8px_rgba(37,99,235,0.3)]';
     const chipInactive =
-      'border-transparent bg-white/80 text-slate-600 hover:border-slate-200 hover:text-slate-900';
+      'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-400 hover:text-blue-700';
 
     return (
       <div className={containerClass}>
-        <div className={`flex flex-wrap items-center gap-2 ${stack ? '' : ''}`}>
+        <div className="flex flex-wrap items-center gap-2">
           {TYPE_OPTIONS.map((option) => {
             const active = typeFilter === option;
             return (
@@ -330,25 +505,104 @@ export default function NoticesPage() {
           })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-700">From</span>
-            <input
-              type="date"
-              value={startFilter}
-              onChange={(event) => handleDateChange('start', event.target.value)}
-              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs">
+              <span className="font-semibold text-slate-700 w-10">From</span>
+              <input
+                type="date"
+                value={startFilter}
+                onChange={(event) => handleDateChange('start', event.target.value)}
+                className={`${UI.input} h-9 flex-1 text-xs`}
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs">
+              <span className="font-semibold text-slate-700 w-10">To</span>
+              <input
+                type="date"
+                value={endFilter}
+                onChange={(event) => handleDateChange('end', event.target.value)}
+                className={`${UI.input} h-9 flex-1 text-xs`}
+              />
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-slate-700">Traffic Area</span>
+            <select
+              value={trafficAreaFilter}
+              onChange={(event) => {
+                const value = event.target.value;
+                updateParams((params) => {
+                  if (value) {
+                    params.set('traffic_area', value);
+                  } else {
+                    params.delete('traffic_area');
+                  }
+                }, true);
+              }}
+              className={`${UI.selectSmall}`}
+            >
+              <option value="">All Areas</option>
+              {TRAFFIC_AREAS.map((area) => (
+                <option key={area.id} value={area.id}>
+                  {area.name}
+                </option>
+              ))}
+            </select>
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-700">To</span>
-            <input
-              type="date"
-              value={endFilter}
-              onChange={(event) => handleDateChange('end', event.target.value)}
-              className="h-10 rounded-lg border border-slate-200/60 bg-white px-3 text-sm text-slate-700 shadow-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
+
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="font-semibold text-slate-700">Council</span>
+            <select
+              value={councilParam}
+              onChange={(event) => {
+                const value = event.target.value;
+                updateParams((params) => {
+                  if (value) {
+                    params.set('council', value);
+                  } else {
+                    params.delete('council');
+                  }
+                }, true);
+              }}
+              className={`${UI.selectSmall}`}
+            >
+              <option value="">All Councils</option>
+              {councils.map((council) => (
+                <option key={council.id} value={council.id}>
+                  {council.name}
+                </option>
+              ))}
+            </select>
           </label>
+
+          {postcodeParam && (
+            <label className="flex flex-col gap-1 text-xs">
+              <span className="font-semibold text-slate-700">Radius</span>
+              <select
+                value={radiusValue}
+                onChange={(event) => {
+                  updateParams((params) => {
+                    const value = event.target.value;
+                    if (value === '5') {
+                      params.delete('radius_km'); // 5km is default
+                    } else {
+                      params.set('radius_km', value);
+                    }
+                  }, true);
+                }}
+                className={`${UI.selectSmall}`}
+              >
+                <option value="1">1 km</option>
+                <option value="2">2 km</option>
+                <option value="5">5 km</option>
+                <option value="10">10 km</option>
+                <option value="20">20 km</option>
+                <option value="50">50 km</option>
+              </select>
+            </label>
+          )}
           {showClear && hasActiveFilters && (
             <button
               type="button"
@@ -388,6 +642,7 @@ export default function NoticesPage() {
                 onSubmit={handleAddressSubmit}
                 onFreeText={handleFreeText}
                 testIdPrefix="notices"
+                showGeolocation
               />
               {addressInlineError && (
                 <p role="alert" className="mt-2 text-sm font-medium text-rose-600">
@@ -422,6 +677,18 @@ export default function NoticesPage() {
                 >
                   Filters
                 </button>
+
+                {/* Sort dropdown */}
+                <select
+                  value={sortParam}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="rounded-full border border-slate-200/60 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                >
+                  <option value="created_at.desc">Most Recent</option>
+                  {postcodeParam && <option value="distance.asc">Nearest</option>}
+                  <option value="created_at.asc">Oldest</option>
+                </select>
+
                 <div className="flex rounded-full bg-slate-100/90 p-1 shadow-inner transition">
                   <button
                     type="button"
@@ -504,6 +771,7 @@ export default function NoticesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.28, ease: 'easeOut' }}
+                ref={mapSectionRef}
               >
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                   <section className="relative">
@@ -519,6 +787,7 @@ export default function NoticesPage() {
                         initialBounds={mapBoundingBox}
                         initialViewState={mapZoom ? { zoom: mapZoom } : undefined}
                         autoFitToNotices={!mapBoundingBox}
+                        searchedLocation={searchedLocation}
                         className="h-full"
                       />
                       <div className="pointer-events-none absolute left-6 top-6 z-10">
@@ -531,21 +800,24 @@ export default function NoticesPage() {
                     </div>
                   </section>
 
-                  <aside className="flex h-[340px] flex-col overflow-hidden rounded-2xl border border-white/50 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] backdrop-blur sm:h-[420px] md:h-[520px] lg:h-[70vh]">
-                    <div className="space-y-3 border-b border-slate-200/60 px-6 py-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-700">
+                  <aside className="flex h-[340px] flex-col overflow-hidden rounded-2xl border border-slate-200/40 bg-gradient-to-b from-white to-slate-50/30 shadow-[0_8px_24px_rgba(0,0,0,0.06)] backdrop-blur sm:h-[420px] md:h-[520px] lg:h-[70vh]">
+                    {/* Header Section - Enhanced */}
+                    <div className="space-y-3 border-b border-slate-200/60 bg-white px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xl font-bold text-slate-900 tracking-tight">
                             {loading
-                              ? 'Updating results…'
+                              ? 'Updating…'
                               : `${filteredResults.length} notice${filteredResults.length === 1 ? '' : 's'}`}
                           </p>
-                          <p className="text-xs text-slate-500">For {searchLabel}</p>
+                          <p className="text-xs text-slate-600 font-medium">
+                            For <span className="text-blue-600">{searchLabel}</span>
+                          </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => setFiltersOpen(true)}
-                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-900 lg:hidden"
+                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:shadow-md lg:hidden"
                         >
                           Filters
                         </button>
@@ -554,7 +826,7 @@ export default function NoticesPage() {
                         <FilterControls layout="column" className="w-full" />
                       </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 overflow-y-auto px-4 py-4">
                       <SearchResults
                         results={filteredResults}
                         query={searchLabel}
@@ -564,6 +836,10 @@ export default function NoticesPage() {
                         activeNoticeId={activeNoticeId}
                         onSelectNotice={handleListSelectNotice}
                         onHoverNotice={setHoveredNoticeId}
+                        layout="list"
+                        maxResults={showAllMapResults ? undefined : 10}
+                        showMoreButton={!showAllMapResults}
+                        onShowMore={() => setShowAllMapResults(true)}
                       />
                     </div>
                   </aside>
@@ -599,7 +875,7 @@ export default function NoticesPage() {
                   </div>
                   <div className="px-6 py-6">
                     <SearchResults
-                      results={filteredResults}
+                      results={paginatedResults}
                       query={searchLabel}
                       loading={loading}
                       loadingMessage="Loading notices…"
@@ -607,6 +883,15 @@ export default function NoticesPage() {
                       onSelectNotice={handleListSelectNotice}
                       onHoverNotice={setHoveredNoticeId}
                     />
+                    {!loading && filteredResults.length > 0 && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredResults.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                      />
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -677,6 +962,8 @@ export default function NoticesPage() {
           {toastMessage}
         </div>
       )}
+
+      <Footer />
     </div>
   );
 }

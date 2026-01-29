@@ -38,7 +38,8 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/getaddress/, ''),
         },
-        '/api': { target: 'http://localhost:5174', changeOrigin: true, secure: false },
+        // Use a regex pattern to match API routes but exclude /api-docs (SPA route)
+        '^/api(?!/docs)': { target: 'http://localhost:5174', changeOrigin: true, secure: false },
       },
     },
   };

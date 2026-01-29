@@ -24,7 +24,9 @@ describe('no merge markers', () => {
   files.forEach((file) => {
     it(`${file} has no conflict markers`, () => {
       const content = readFileSync(file, 'utf8');
-      expect(content).not.toMatch(/<<<<<<<|=======|>>>>>>>/);
+      // Match conflict markers that appear at start of line (the actual Git format)
+      // This avoids matching comment dividers like // ============
+      expect(content).not.toMatch(/^<{7}|^={7}|^>{7}/m);
     });
   });
 });

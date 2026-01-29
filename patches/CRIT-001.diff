@@ -1,0 +1,68 @@
+diff --git a/src/next/publish/templates/licensing.ts b/src/next/publish/templates/licensing.ts
+index fed58cf..b3193d3 100644
+--- a/src/next/publish/templates/licensing.ts
++++ b/src/next/publish/templates/licensing.ts
+@@ -28,7 +28,7 @@ The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_
+ 
+ Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
+ 
+-It is an offence to knowingly or recklessly make a false statement in connection with an application; a person guilty of such an offence is liable on summary conviction to a fine.`,
++It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+ 
+   "licensing-premises-variation": `LICENSING ACT 2003
+ APPLICATION TO VARY A PREMISES LICENCE
+@@ -40,7 +40,9 @@ Licensable activities/hours after variation: {{ACTIVITY_SCHEDULE}}.{{#if OPENING
+ 
+ The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+ 
+-Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
++Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
++
++It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+ 
+   "licensing-premises-review": `LICENSING ACT 2003
+ APPLICATION FOR REVIEW OF A PREMISES LICENCE
+@@ -51,7 +53,9 @@ Grounds for review: {{REVIEW_GROUNDS}}{{#if LICENSING_OBJECTIVES}} (relating to:
+ 
+ The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+ 
+-Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
++Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
++
++It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+ 
+   "licensing-club-new": `LICENSING ACT 2003
+ APPLICATION FOR A NEW CLUB PREMISES CERTIFICATE
+@@ -60,7 +64,9 @@ APPLICATION FOR A NEW CLUB PREMISES CERTIFICATE
+ 
+ The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+ 
+-Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
++Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
++
++It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+ 
+   "licensing-club-variation": `LICENSING ACT 2003
+ APPLICATION TO VARY A CLUB PREMISES CERTIFICATE
+@@ -69,7 +75,9 @@ APPLICATION TO VARY A CLUB PREMISES CERTIFICATE
+ 
+ The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+ 
+-Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
++Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
++
++It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+ 
+   "licensing-club-review": `LICENSING ACT 2003
+ APPLICATION FOR REVIEW OF A CLUB PREMISES CERTIFICATE
+@@ -78,7 +86,9 @@ APPLICATION FOR REVIEW OF A CLUB PREMISES CERTIFICATE
+ 
+ The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+ 
+-Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.`,
++Any representations must be made {{REPRESENTATION_METHOD}} to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}.
++
++It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+ };
+ 
+ function getLicensingContext(notice: NoticeBase): { variant: LicensingVariant; tokens: Record<string, string> } {

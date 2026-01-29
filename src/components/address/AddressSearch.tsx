@@ -387,7 +387,7 @@ export default function AddressSearch({
                     hi === refined.length ? 'bg-indigo-50' : ''
                   }`}
                   onMouseEnter={() => setHi(refined.length)}
-                  onMouseDown={(event) => {
+                  onClick={(event) => {
                     event.preventDefault();
                     setManualMode(true);
                     setOpen(false);

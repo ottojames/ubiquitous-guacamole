@@ -1,170 +1,379 @@
-import React, { useEffect, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Info } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { UploadCloud, ShieldCheck, Clock3 } from "lucide-react";
+
+export type UploadStatus = "idle" | "uploading" | "ocr" | "ready" | "error";
 
 export type UploadDropzoneProps = {
   onText: (text: string) => void;
   onMeta?: (meta: { engine?: string; [k: string]: unknown }) => void;
+  onStatusChange?: (status: UploadStatus) => void;
+  heading?: string;
+  description?: string;
 };
 
-export default function UploadDropzone({ onText, onMeta }: UploadDropzoneProps) {
-  const [state, setState] = useState<'idle'|'uploading'|'ocr'|'ready'|'error'>('idle');
-  const [elapsed, setElapsed] = useState(0);
-  const [error, setError] = useState('');
-  const [localText, setLocalText] = useState('');
-  const [lastFile, setLastFile] = useState<File | null>(null);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const pretty = (bytes: number) => bytes < 1024
-    ? `${bytes} B`
-    : bytes < 1024 * 1024
-    ? `${(bytes/1024).toFixed(1)} KB`
-    : `${(bytes/1024/1024).toFixed(2)} MB`;
+export default function UploadDropzone({ onText, onMeta, onStatusChange, heading, description }: UploadDropzoneProps) {
+  const [status, setStatus] = useState<UploadStatus>("idle");
+  const [error, setError] = useState("");
+  const [localText, setLocalText] = useState("");
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
-  const onDrop = async (files: File[]) => {
-    const file = files[0];
-    if (!file) return;
-    setError('');
-    setLastFile(file);
-    const t0 = performance.now();
+  useEffect(() => {
+    onStatusChange?.(status);
+  }, [status, onStatusChange]);
+
+  const prettyBytes = useMemo(
+    () =>
+      (bytes: number) =>
+        bytes < 1024
+          ? `${bytes} B`
+          : bytes < 1024 * 1024
+          ? `${(bytes / 1024).toFixed(1)} KB`
+          : `${(bytes / 1024 / 1024).toFixed(2)} MB`,
+    []
+  );
+
+  const startUpload = async (file: File) => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    setCurrentFile(file);
+    setStatus("uploading");
+    setError("");
+
     try {
-      setState('uploading');
-      // Test mode shortcut to keep RTL fast and deterministic
-      const isTest = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')
-        || (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.MODE === 'test');
+      const isTest =
+        (typeof process !== "undefined" && process.env?.NODE_ENV === "test") ||
+        (typeof import.meta !== "undefined" && (import.meta as any)?.env?.MODE === "test");
+
       if (isTest) {
-        setState('ocr');
-        await new Promise((r) => setTimeout(r, 10));
-        setLocalText('hello');
-        onText('hello');
-        onMeta?.({ engine: 'test' });
-        setState('ready');
-        setElapsed(performance.now() - t0);
+        setStatus("ocr");
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        setLocalText("hello");
+        onText("hello");
+        onMeta?.({ engine: "test" });
+        setStatus("ready");
         return;
       }
 
       const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      setState('ocr');
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json(); // { text, meta, error? }
-      const text = data?.text || '';
+      fd.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: fd,
+        signal: controller.signal,
+      });
+
+      setStatus("ocr");
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Upload failed");
+      }
+
+      const data = await response.json();
+      console.log('[UploadDropzone] ✅ Server response:', {
+        hasText: Boolean(data?.text),
+        hasOcrText: Boolean(data?.ocr_text),
+        textLength: (data?.text ?? data?.ocr_text ?? "").length,
+        cached: data?.meta?.cached,
+        info: data?.info,
+        fullResponse: data
+      });
+
+      const text = data?.text ?? data?.ocr_text ?? "";
+
+      // Show info message if file was cached
+      if (data?.meta?.cached) {
+        console.log('[UploadDropzone] ℹ️ Using cached result from previous upload');
+      }
+
+      if (!text || text.trim().length === 0) {
+        console.warn('[UploadDropzone] ⚠️ NO TEXT EXTRACTED - OCR returned empty');
+        setError("No text could be extracted from this document. Please complete the form fields manually.");
+        setLocalText("");
+        onText(""); // Call with empty string to trigger form display
+        onMeta?.(data?.meta || {});
+        setStatus("ready");
+        return;
+      }
+
+      console.log('[UploadDropzone] ✅ OCR extracted text:', {
+        textLength: text.length,
+        preview: text.substring(0, 150) + '...'
+      });
+
       setLocalText(text);
       onText(text);
       onMeta?.(data?.meta || {});
-      if (data?.error === 'OCR_EMPTY') {
+
+      if (data?.error === "OCR_EMPTY") {
         setError("We couldn't read this file. Build from details instead.");
+        setStatus("ready");
+      } else {
+        setStatus("ready");
       }
-      setState('ready');
-      setElapsed(performance.now() - t0);
-    } catch (e) {
-      setState('error');
-      setElapsed(performance.now() - t0);
-      setError('Upload failed. You can still edit everything manually.');
+
+      console.log('[UploadDropzone] ✅ Upload complete, status set to ready');
+    } catch (err) {
+      if ((err as DOMException)?.name === "AbortError") {
+        return;
+      }
+      setStatus("error");
+      setError("Upload failed. You can still edit everything manually.");
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
+  const onDrop = async (files: File[]) => {
+    const [file] = files;
+    if (!file) return;
+    await startUpload(file);
+  };
+
+  const { getRootProps, getInputProps, isDragActive, acceptedFiles, open } = useDropzone({
     multiple: false,
-    onDropAccepted: (files) => void onDrop(files),
+    noClick: true, // Disable default click handling, we'll handle it manually
+    noKeyboard: false,
+    onDrop: (files) => void onDrop(files),
     accept: {
-      'application/pdf': ['.pdf'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/rtf': ['.rtf'],
-      'text/rtf': ['.rtf'],
-      'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/tiff': ['.tif', '.tiff'],
+      "application/pdf": [".pdf"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/vnd.apple.pages": [".pages"],
+      "application/x-iwork-pages-sffpages": [".pages"],
+      "application/rtf": [".rtf"],
+      "text/rtf": [".rtf"],
+      "image/png": [".png"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/tiff": [".tif", ".tiff"],
     },
     maxSize: 25 * 1024 * 1024,
-    onDropRejected: () => setError('Unsupported file or file over 25MB.'),
+    onDropRejected: () => setError("We accept PDF, DOC, DOCX, Pages, RTF, PNG, JPG, or TIFF up to 25MB."),
   });
 
-  const statusLabel = state === 'ready'
-    ? 'Ready'
-    : state === 'error'
-    ? 'Failed'
-    : state === 'ocr'
-    ? 'OCR running…'
-    : state === 'uploading'
-    ? 'Uploading…'
-    : 'Idle';
+  const activeFile = acceptedFiles[0] || currentFile;
+  const statusLabel =
+    status === "ready"
+      ? "Ready"
+      : status === "error"
+      ? "Failed"
+      : status === "ocr"
+      ? "Running OCR…"
+      : status === "uploading"
+      ? "Uploading…"
+      : "Idle";
 
-  const retry = () => {
-    setState('idle');
-    setError('');
-    const input = rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null;
+  const handleReplace = () => {
+    const input = fileInputRef.current ?? (rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null);
     input?.click();
   };
 
-  const remove = () => {
-    setLastFile(null);
-    setState('idle');
-    setError('');
-    const input = rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null;
-    if (input) input.value = '';
+  const handleRemove = () => {
+    controllerRef.current?.abort();
+    setCurrentFile(null);
+    setStatus("idle");
+    setError("");
+    const input = fileInputRef.current ?? (rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null);
+    if (input) input.value = "";
+    onText("");
+    onMeta?.({});
+  };
+
+  const handleCancel = () => {
+    controllerRef.current?.abort();
+    setCurrentFile(null);
+    setStatus("idle");
+    setError("");
+    const input = fileInputRef.current ?? (rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null);
+    if (input) input.value = "";
   };
 
   return (
-    <div className="rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-      <div className="mb-2">
-        <h2 className="mb-2 text-base font-semibold">Upload & OCR</h2>
-        <p id="upload-help" className="mb-4 text-sm text-muted-foreground">PDF, DOCX, PNG or JPG (max 25 MB). OCR will appear below.</p>
-      </div>
+    <section className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:p-8">
       <div
-        {...getRootProps()}
-        ref={rootRef}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${isDragActive ? 'bg-blue-50 border-blue-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
-        aria-label="Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload"
-      >
-        <input
-          {...getInputProps()}
-          accept=".pdf,.doc,.docx,.rtf,.png,.jpg,.jpeg,.tif,.tiff"
-          aria-describedby="upload-help"
-          aria-live="polite"
-        />
-        <p className="text-sm text-slate-600">Drop PDF/DOCX/PNG/JPG (≤25MB) or click to upload</p>
-        <p className="mt-2 text-sm text-slate-600">OCR will appear below; you can still edit everything.</p>
-        <p className="mt-1 flex items-center justify-center gap-1 text-sm font-semibold text-gray-800">
-          <Info aria-hidden className="h-4 w-4 text-indigo-600" />
-          <span>You can fully edit the notice text in the next step.</span>
-        </p>
-        <div className="sr-only" aria-live="polite">Status: {state}</div>
-      </div>
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_100%_at_50%_0%,rgba(37,99,235,0.02)_0%,rgba(37,99,235,0)_50%)]"
+      />
+      <div className="relative space-y-6">
+        {(heading || description) && (
+          <div className="space-y-1.5">
+            {heading ? <h3 className="text-[15px] font-semibold tracking-tight text-slate-900">{heading}</h3> : null}
+            {description ? <p className="text-[13px] leading-relaxed text-slate-600">{description}</p> : null}
+          </div>
+        )}
 
-      {(acceptedFiles[0] || lastFile) && (
-        <div className="mt-3 flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
-          <span className="truncate">{(acceptedFiles[0] || lastFile)!.name} · {pretty((acceptedFiles[0] || lastFile)!.size)} · {statusLabel}</span>
-          <div className="flex gap-2">
-            {state === 'error' && <button className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white" onClick={retry}>Retry</button>}
-            <button className="rounded-md border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-white" onClick={remove}>Remove</button>
+        <div
+          {...getRootProps()}
+          onClick={() => {
+            // Find and click the file input directly
+            const input = rootRef.current?.querySelector('input[type="file"]') as HTMLInputElement | null;
+            if (input) {
+              input.click();
+            } else {
+              open();
+            }
+          }}
+          ref={rootRef}
+          data-testid="upload-dropzone"
+          className={`relative flex flex-col items-center justify-center gap-5 rounded-xl border-2 border-dashed px-8 py-10 text-center transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer ${
+            isDragActive
+              ? "border-blue-400 bg-blue-50/50 shadow-sm"
+              : "border-slate-300 bg-slate-50/40 hover:border-slate-400 hover:bg-slate-50/60"
+          }`}
+        >
+          <input
+            {...getInputProps()}
+            ref={fileInputRef}
+            accept=".pdf,.doc,.docx,.pages,.rtf,.png,.jpg,.jpeg,.tif,.tiff"
+            aria-describedby="upload-help"
+            aria-live="polite"
+            style={{ display: 'none' }}
+          />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+            <UploadCloud className="h-6 w-6" aria-hidden />
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[14px] font-semibold text-slate-900">Drag your notice or browse files</p>
+            <p className="text-[13px] leading-relaxed text-slate-600">
+              We'll extract the text and stage the details for review
+            </p>
+          </div>
+          <div className="sr-only" aria-live="polite">
+            Status: {status}
           </div>
         </div>
-      )}
 
-      {/* CN:GUARDRAIL-FINAL-START */}
-      {/* CN:SIGNOFF-START */}
-      {state === 'ready' ? (
-        <p className="mt-3 flex items-center gap-1 text-xs text-neutral-500">
-          <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-          Ready
-        </p>
-      ) : (
-        <div className="mt-3 text-xs text-slate-600">
-          Status: {statusLabel}
-          {elapsed && state !== 'idle' ? ` (${Math.round(elapsed)} ms)` : ''}
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200/60 bg-slate-50/40 px-3.5 py-2.5 text-[12px] text-slate-600">
+          <span id="upload-help">PDF, DOC, DOCX, Pages, RTF, PNG, JPG, TIFF • up to 25MB</span>
+          <span className="hidden h-3.5 w-px bg-slate-300 sm:block" aria-hidden />
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+            <span>Encrypted</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <Clock3 className="h-3.5 w-3.5 text-blue-600" aria-hidden />
+            <span>Completes in seconds</span>
+          </div>
+        </div>
+
+        {activeFile && (
+          <div className="space-y-3 rounded-xl border border-slate-200/70 bg-white p-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="truncate text-[13px] font-medium text-slate-900">{activeFile.name}</span>
+                <span className="shrink-0 text-[12px] text-slate-500">{statusLabel}</span>
+              </div>
+              <span className="text-[12px] text-slate-500">
+                {(activeFile.type && activeFile.type !== "") ? activeFile.type : "Unknown type"} · {prettyBytes(activeFile.size)}
+              </span>
+            </div>
+
+            {(status === "uploading" || status === "ocr") && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[12px] text-slate-600">
+                  <span>{status === "uploading" ? "Uploading…" : "Running OCR…"}</span>
+                </div>
+                <div className="relative h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <div className="absolute inset-0 animate-[pulse-band_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
+                </div>
+              </div>
+            )}
+
+            {status === "ready" && (
+              <p className="flex items-center gap-2 text-[12px] font-medium text-emerald-600">
+                <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Text extracted successfully
+              </p>
+            )}
+
+            {status === "error" && (
+              <p className="text-[12px] font-medium text-rose-600">{error}</p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3 text-[12px] font-medium text-slate-600">
+              {(status === "uploading" || status === "ocr") && (
+                <button type="button" className="transition hover:text-slate-900" onClick={handleCancel}>
+                  Cancel
+                </button>
+              )}
+              <button type="button" className="transition hover:text-slate-900" onClick={handleReplace}>
+                Replace file
+              </button>
+              <button type="button" className="transition hover:text-slate-900" onClick={handleRemove}>
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+
+        {error && status === "error" && (
+          <div className="rounded-xl border border-rose-200/70 bg-rose-50/50 px-4 py-3 space-y-3" role="alert" aria-live="assertive">
+            <div>
+              <p className="text-[13px] font-medium text-rose-900">Upload failed</p>
+              <p className="mt-1 text-[12px] text-rose-700">{error}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (currentFile) {
+                  startUpload(currentFile);
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-rose-700"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {error && status === "ready" && (
+          <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 px-4 py-3" role="status" aria-live="polite">
+            <p className="text-[13px] font-medium text-amber-900">⚠️ Limited text extraction</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-amber-700">{error}</p>
+          </div>
+        )}
+      </div>
+
+      <textarea data-testid="notice-editor" className="sr-only" aria-hidden value={localText} readOnly />
+
+      {/* Extracted Text Preview */}
+      {status === "ready" && (
+        <div className="mt-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[13px] font-semibold text-slate-900">Extracted Text Preview</h4>
+            <span className="text-[12px] text-slate-500">
+              {localText ? `${localText.length} characters` : 'No text extracted'}
+            </span>
+          </div>
+          <div className="rounded-xl border border-slate-200/70 bg-slate-50/40 p-4 max-h-64 overflow-y-auto">
+            {localText && localText.trim().length > 0 ? (
+              <pre className="text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap font-mono">
+                {localText}
+              </pre>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <svg className="h-12 w-12 text-slate-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-[13px] font-medium text-slate-600 mb-1">No text could be extracted</p>
+                <p className="text-[12px] text-slate-500">
+                  The document may be an image or scanned file. Please fill in the form manually below.
+                </p>
+              </div>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-500 italic">
+            {localText && localText.trim().length > 0
+              ? 'This preview is for reference only. Please fill in the required fields below using the form.'
+              : 'Use the "Load Sample Data" button below to quickly fill the form for demonstration purposes.'}
+          </p>
         </div>
       )}
-      {/* CN:SIGNOFF-END */}
-      {/* CN:GUARDRAIL-FINAL-END */}
-      {error && (
-        <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2" role="status" aria-live="polite">
-          {error}
-        </div>
-      )}
-      {/* Hidden but present editor for tests and manual adjustments elsewhere can bind into it */}
-      <textarea data-testid="notice-editor" className="sr-only" aria-hidden value={localText} onChange={() => {}} />
-    </div>
+    </section>
   );
 }

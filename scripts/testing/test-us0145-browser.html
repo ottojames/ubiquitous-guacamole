@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>US-0145 Browser Test</title>
+</head>
+<body>
+    <h1>US-0145: Firm Registration Wizard Browser Test</h1>
+
+    <h2>Test Steps:</h2>
+    <ol>
+        <li>Navigate to: <a href="http://localhost:5173/register/firm" target="_blank">http://localhost:5173/register/firm</a></li>
+        <li>Verify wizard appears (NOT redirect to homepage)</li>
+        <li>Click "Law Firm" button</li>
+        <li>Fill in:
+            <ul>
+                <li>Organization Name: Test Law Firm LLP</li>
+                <li>Domain: testlawfirm.com</li>
+                <li>Contact Email: contact@testlawfirm.com</li>
+                <li>Registration Number: OC123456</li>
+            </ul>
+        </li>
+        <li>Click "Next" to go to Practice Areas step</li>
+        <li>Select "Licensing" and "Planning" checkboxes</li>
+        <li>Click "Next" to go to subscription</li>
+        <li>Select subscription tier</li>
+        <li>Click "Next" to review</li>
+        <li>Complete registration</li>
+    </ol>
+
+    <h2>Expected Results:</h2>
+    <ul>
+        <li>✓ /register/firm route works (no homepage redirect)</li>
+        <li>✓ Multi-step wizard with progress indicators</li>
+        <li>✓ Step 2: Practice Areas with checkboxes for Licensing, Planning, Environmental Health, Highways, Building Control</li>
+        <li>✓ Selected practice areas saved to firm profile</li>
+        <li>✓ Firm created with practice areas: Licensing, Planning</li>
+        <li>✓ Dashboard shows only Licensing and Planning sections</li>
+    </ul>
+
+    <h2>Current Status:</h2>
+    <p>Implementation complete. Awaiting browser verification.</p>
+
+    <script>
+        // Open the registration page
+        window.open('http://localhost:5173/register/firm', '_blank');
+    </script>
+</body>
+</html>

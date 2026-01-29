@@ -1,0 +1,186 @@
+{
+  "name": "Birmingham City Council",
+  "type": "Metropolitan Borough",
+  "region": "West Midlands",
+  "website": "https://www.birmingham.gov.uk",
+  "address": {
+    "line1": "Council House",
+    "line2": "Victoria Square",
+    "city": "Birmingham",
+    "postcode": "B1 1BB"
+  },
+  "mainPhone": "0121 303 1111",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "personal-licence",
+        "taxi-licence",
+        "private-hire-licence",
+        "hackney-carriage"
+      ],
+      "email": "licensing@birmingham.gov.uk",
+      "phone": "0121 303 6007",
+      "address": {
+        "line1": "Licensing Department",
+        "line2": "Civic Centre",
+        "city": "Birmingham",
+        "postcode": "B1 2AP"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.birmingham.gov.uk/info/20081/licensing",
+      "publicRegister": "https://www.birmingham.gov.uk/info/20081/licensing/912/licensing_act_2003_public_register",
+      "gamblingRegister": "https://www.birmingham.gov.uk/info/20106/gambling/214/gambling_act_2005_public_register",
+      "officeHours": "Monday to Thursday 9am to 5pm, Friday 9am to 4:30pm",
+      "notes": "Largest local authority in the UK. Handles all premises licences under Licensing Act 2003 and Gambling Act 2005. Taxi and private hire applications should include application type in email subject line. Contact licensing@birmingham.gov.uk for enforcement matters."
+    },
+    {
+      "name": "Street Trading and Markets",
+      "handles": [
+        "street-trading-consent",
+        "market-stall-licence",
+        "casual-trading"
+      ],
+      "email": "marketstalls@birmingham.gov.uk",
+      "phone": "0121 303 0208",
+      "submissionMethod": "web-form",
+      "webForm": "https://www.birmingham.gov.uk/street-trading",
+      "notes": "Street trading requires consent. Food vendors must have food hygiene rating of 4 or 5. Bull Ring Markets (Open Market, Rag Market, Indoor Market) have separate stall licensing. Traders need Third Party Public Liability Insurance and Right to Work documentation."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area",
+        "pre-application-advice"
+      ],
+      "email": "planning.registration@birmingham.gov.uk",
+      "phone": "0121 303 1115",
+      "address": {
+        "line1": "Planning and Regeneration",
+        "line2": "Council House",
+        "line3": "Victoria Square",
+        "city": "Birmingham",
+        "postcode": "B1 1BB"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://eplanning.birmingham.gov.uk/Northgate/PlanningExplorer/GeneralSearch.aspx",
+      "additionalEmails": {
+        "landCharges": "land.charges@birmingham.gov.uk",
+        "buildingConsultancy": "building.consultancy@acivico.co.uk",
+        "landProperty": "land.property@birmingham.gov.uk"
+      },
+      "notes": "Applications submitted via the national Planning Portal. Use planning.registration@birmingham.gov.uk for responses to information requests or applications before 2006. Online search via Planning Explorer. NextGeneration Text (TypeTalk) available for hearing impaired."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation"
+      ],
+      "email": "building.consultancy@acivico.co.uk",
+      "alternativeEmail": "buildingconsultancy@acivicogroup.co.uk",
+      "phone": "0121 274 3464",
+      "alternativePhone": "0121 303 7091",
+      "address": {
+        "line1": "Acivico (Building Consultancy) Ltd",
+        "line2": "PO Box 2062, Louisa House",
+        "line3": "Quay Place",
+        "city": "Birmingham",
+        "postcode": "B1 2RA"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://acivicogroup.co.uk/application-forms/",
+      "publicRegister": "https://bcregister.acivicogroup.co.uk/BuildingControl/Home.aspx",
+      "notes": "Building control services provided by Acivico (Building Consultancy) Ltd, a wholly-owned company of Birmingham City Council. Currently experiencing substantial delays due to staff shortages. Alternative building control providers may be used."
+    },
+    {
+      "name": "Highways and Transport",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "section-278",
+        "streetworks-permit"
+      ],
+      "email": "transport.projects@birmingham.gov.uk",
+      "phone": null,
+      "address": {
+        "line1": "Assistant Director - Transport & Connectivity",
+        "line2": "Place, Prosperity & Sustainability Directorate",
+        "line3": "PO Box 14439",
+        "city": "Birmingham",
+        "postcode": "B2 2JE"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "viewLocation": {
+        "address": "Highways, 1 Lancaster Circus Queensway, Birmingham B4 7DQ",
+        "notes": "TRO documents can be viewed by appointment during normal working hours"
+      },
+      "additionalEmails": {
+        "privateDevelopments": "privatedevelopments@birmingham.gov.uk"
+      },
+      "consultationPortal": "https://www.birminghambeheard.org.uk",
+      "notes": "Traffic Regulation Orders (TROs) are legal documentation required to change the status of a highway. Section 278 related TRO matters handled by privatedevelopments@birmingham.gov.uk. Written objections can be posted to the PO Box address."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "health-safety-inspection",
+        "statutory-nuisance",
+        "noise-complaint",
+        "infection-control"
+      ],
+      "email": null,
+      "phone": "0121 303 6007",
+      "infectionControlPhone": "0121 303 9908",
+      "submissionMethod": "web-form",
+      "webForm": "https://www.birmingham.gov.uk/env-health-contact",
+      "additionalEmails": {
+        "pollution": "pollution.team@birmingham.gov.uk"
+      },
+      "notes": "Primary contact is via online forms. Food safety and hygiene ratings enforced across all Birmingham food businesses. Infection Control Team investigates food poisoning outbreaks - must have occurred in Birmingham or from Birmingham business. Pollution team handles noise from regulated entertainment."
+    },
+    {
+      "name": "Property Licensing",
+      "handles": [
+        "hmo-licence",
+        "selective-licence",
+        "property-licence"
+      ],
+      "email": "pl@birmingham.gov.uk",
+      "phone": null,
+      "submissionMethod": "portal",
+      "webForm": "https://birmingham.metastreet.co.uk/",
+      "publicRegister": "https://birmingham.metastreet.co.uk/public-register",
+      "notes": "Handles licensing of Houses in Multiple Occupation (HMOs) and selective property licensing. Public register maintained in accordance with Housing Act 2004. Contact pl@birmingham.gov.uk for full public register requests."
+    }
+  ],
+  "additionalResources": {
+    "licensingPublicRegister": "https://www.birmingham.gov.uk/info/20081/licensing/912/licensing_act_2003_public_register",
+    "gamblingPublicRegister": "https://www.birmingham.gov.uk/info/20106/gambling/214/gambling_act_2005_public_register",
+    "planningApplicationSearch": "https://eplanning.birmingham.gov.uk/Northgate/PlanningExplorer/GeneralSearch.aspx",
+    "publicConsultations": "https://www.birminghambeheard.org.uk",
+    "propertyLicensing": "https://birmingham.metastreet.co.uk/",
+    "buildingControlRegister": "https://bcregister.acivicogroup.co.uk/BuildingControl/Home.aspx",
+    "generalContactForm": "https://www.birmingham.gov.uk/info/50044/contact_us_form",
+    "usefulNumbers": "https://www.birmingham.gov.uk/info/20208/contact_us/229/useful_telephone_numbers"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Birmingham City Council website and public search results. Largest local authority in the UK serving over 1 million citizens. Building control outsourced to Acivico (wholly-owned council company) which is experiencing delays. Planning uses national Planning Portal with local ePlanning search system. TRO consultations published on Birmingham Be Heard platform. Multiple email domains used: @birmingham.gov.uk for council, @acivico.co.uk and @acivicogroup.co.uk for building control."
+}

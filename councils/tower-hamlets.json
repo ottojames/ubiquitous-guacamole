@@ -1,0 +1,433 @@
+{
+  "name": "London Borough of Tower Hamlets",
+  "type": "London Borough",
+  "region": "Greater London",
+  "website": "https://www.towerhamlets.gov.uk",
+  "address": {
+    "line1": "Tower Hamlets Town Hall",
+    "line2": "160 Whitechapel Road",
+    "city": "London",
+    "postcode": "E1 1BJ"
+  },
+  "mainPhone": "020 7364 5000",
+  "minicom": "020 7364 4853",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "gaming-machine-permit",
+        "temporary-event-notice"
+      ],
+      "email": "licensing@towerhamlets.gov.uk",
+      "phone": "020 7364 5008",
+      "fax": "020 7364 0863",
+      "address": {
+        "line1": "Licensing Team",
+        "line2": "Environmental Health & Trading Standards",
+        "line3": "Tower Hamlets Town Hall",
+        "line4": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "openingHours": "Mon-Fri 9am-5pm",
+      "submissionMethod": "online",
+      "webForm": "https://www.gov.uk/apply-for-a-licence/premises-licence/tower-hamlets",
+      "publicRegister": "https://alcohol-entertainment.towerhamlets.gov.uk/Civica-elr-3.2_live/",
+      "statementOfPolicy": {
+        "name": "Tower Hamlets Statement of Licensing Policy 2023-2028",
+        "effectiveDate": "2023-11-01",
+        "expiryDate": "2028-10-31"
+      },
+      "gamblingPolicy": {
+        "name": "Statement of Gambling Policy 2025-2028",
+        "effectiveDate": "2025-12-15"
+      },
+      "cumulativeImpactAreas": [
+        {
+          "name": "Brick Lane CIA",
+          "status": "active",
+          "notes": "Extended to cover south-eastern edge as of November 2024"
+        }
+      ],
+      "notes": "Handles Licensing Act 2003 and Gambling Act 2005 applications. 28-day public consultation period. Bethnal Green CIA was removed in November 2024 review. Applications must include payment - unpaid applications may be rejected. Full licensing register available for in-person viewing during office hours."
+    },
+    {
+      "name": "Street Trading & Markets",
+      "handles": [
+        "street-trading-licence",
+        "market-pitch",
+        "temporary-street-trading",
+        "permanent-street-trading"
+      ],
+      "email": "streetmarkets@towerhamlets.gov.uk",
+      "phone": "020 7364 1717",
+      "address": {
+        "line1": "Market Services",
+        "line2": "131 Commercial Street",
+        "city": "London",
+        "postcode": "E1 6BJ"
+      },
+      "openingHours": "Tue-Thu 10am-3pm",
+      "submissionMethod": "email",
+      "webForm": "https://streettrading.towerhamlets.gov.uk/sf/control/login",
+      "publicRegister": "https://streettrading.towerhamlets.gov.uk/sf/control/publicregister",
+      "markets": [
+        {
+          "name": "Brick Lane Market",
+          "location": "Brick Lane, E1",
+          "tradingDays": ["Sunday"],
+          "hours": "10am-3pm"
+        },
+        {
+          "name": "Columbia Road Flower Market",
+          "location": "Columbia Road, E2",
+          "tradingDays": ["Sunday"],
+          "hours": "8am-2pm"
+        },
+        {
+          "name": "Petticoat Lane Market",
+          "location": "Middlesex Street, E1",
+          "tradingDays": ["Sunday"],
+          "hours": "9am-3pm"
+        },
+        {
+          "name": "Petticoat Lane Street Food",
+          "location": "Wentworth Street, E1",
+          "tradingDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "hours": "8am-4pm"
+        },
+        {
+          "name": "Whitechapel Market",
+          "location": "Whitechapel Road, E1",
+          "tradingDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "hours": "8am-6pm"
+        },
+        {
+          "name": "Chrisp Street Market",
+          "location": "Chrisp Street, E14",
+          "tradingDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "hours": "8am-6pm"
+        },
+        {
+          "name": "Roman Road Market",
+          "location": "Roman Road, E3",
+          "tradingDays": ["Tuesday", "Thursday", "Saturday"],
+          "hours": "8am-6pm"
+        },
+        {
+          "name": "Roman Road Square Market",
+          "location": "Roman Road Square, E2 0RN",
+          "tradingDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "hours": "8am-6pm"
+        },
+        {
+          "name": "Watney Market",
+          "location": "Watney Street, E1",
+          "tradingDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "hours": "8:30am-6pm"
+        },
+        {
+          "name": "Bethnal Green Market",
+          "location": "Bethnal Green Road, E2",
+          "tradingDays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "hours": "8am-6pm"
+        }
+      ],
+      "notes": "Tower Hamlets operates 10 street markets with over 2,500 pitches. Two licence types available: temporary and permanent. Hot food trading expressions of interest accepted via email."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": {
+        "general": "planning@towerhamlets.gov.uk",
+        "developmentControl": "development.control@towerhamlets.gov.uk",
+        "applications": "planningandbuilding@towerhamlets.gov.uk",
+        "preApplication": "pre.applications@towerhamlets.gov.uk",
+        "localPlan": "localplan@towerhamlets.gov.uk"
+      },
+      "phone": "020 7364 5009",
+      "address": {
+        "line1": "Planning, Housing and Regeneration",
+        "line2": "Tower Hamlets Town Hall",
+        "line3": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "openingHours": "Mon-Fri 9am-5pm",
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://www.towerhamlets.gov.uk/lgnl/planning_and_building_control/planning_applications/search_and_comment_planning_applications.aspx",
+      "dutyPlannerService": "https://www.towerhamlets.gov.uk/lgnl/planning_and_building_control/planning_applications/Making_a_planning_application/pre-application_advice/duty_planning_officer_service.aspx",
+      "notes": "Applications submitted via national Planning Portal. Duty planning officer service available for general planning enquiries. Multiple email addresses for different purposes - use planningandbuilding@towerhamlets.gov.uk if unable to apply online."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation",
+        "dangerous-structures"
+      ],
+      "email": "buildingcontrol@towerhamlets.gov.uk",
+      "phone": "020 7364 5000",
+      "address": {
+        "line1": "Building Control",
+        "line2": "Tower Hamlets Town Hall",
+        "line3": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "openingHours": "Mon-Fri 9am-5pm (closed public holidays)",
+      "submissionMethod": "email",
+      "webForm": "https://www.towerhamlets.gov.uk/lgnl/planning_and_building_control/building_control/make_a_building_regulations_application/how_to_apply_for_building_regulations_approval.aspx",
+      "dutyOfficerService": "https://www.towerhamlets.gov.uk/lgnl/planning_and_building_control/building_control/duty_building_control_service.aspx",
+      "notes": "Ensures building work meets Building Regulations requirements. 24/7 response for dangerous structure reports. Duty building control officer advice service available. Handles new construction, conversions, alterations, and demolition work conditions."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "traffic-management-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "streetworks-permit"
+      ],
+      "email": {
+        "tmo": "TMO.Project@towerhamlets.gov.uk",
+        "streetworks": "Streetworks@towerhamlets.gov.uk"
+      },
+      "address": {
+        "line1": "TMO Team (2nd Floor)",
+        "line2": "Tower Hamlets Town Hall",
+        "line3": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "submissionMethod": "email",
+      "trafficOrdersPortal": "https://towerhamlets.traffweb.app/",
+      "alternativePortal": "https://www.towerhamletstraffweb.uk/",
+      "publicNotices": "https://www.towerhamlets.gov.uk/lgnl/transport_and_streets/Parking/Traffic-management-Orders/Traffic-Management-Order-Public-Notice.aspx",
+      "consultationPeriod": "21 days",
+      "notes": "Traffic Management Orders regulate parking and traffic. Objections must be submitted in writing within 21 days of public notice. TraffWeb system shows CPZ information, parking bays, and restrictions. Some temporary or experimental orders may not appear online."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "noise-complaint",
+        "statutory-nuisance",
+        "pollution",
+        "health-safety-inspection"
+      ],
+      "email": {
+        "general": "environmentalhealth@towerhamlets.gov.uk",
+        "foodSafety": "foodsafety@towerhamlets.gov.uk",
+        "healthSafety": "Healthand.Safety@towerhamlets.gov.uk"
+      },
+      "phone": {
+        "general": "020 7364 5000",
+        "licensing": "020 7364 5008",
+        "noiseHotline24hr": "020 7364 2332",
+        "noiseEmergency": "020 7364 5008"
+      },
+      "address": {
+        "line1": "Environmental Health & Trading Standards",
+        "line2": "Tower Hamlets Town Hall",
+        "line3": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "openingHours": "Mon-Fri 9am-5pm",
+      "submissionMethod": "web-form",
+      "webForm": "https://www.towerhamlets.gov.uk/lgnl/environment_and_waste/environmental_health/Noise-control/Noise-service.aspx",
+      "foodBusinessRegistration": "https://www.towerhamlets.gov.uk/lgnl/business/health_and_safety/food/food_business_registration.aspx",
+      "foodHygieneRatings": "https://ratings.food.gov.uk/authority-search-landing/530",
+      "reRatingFee": 187.00,
+      "notes": "Responsible for approximately 2,600 food businesses. Food hygiene re-inspection requests available for non-refundable fee of £187. 24-hour noise hotline (020 7364 2332) available for council tenants. Daytime noise response 9am-5pm. Responsible authority for licensing consultations."
+    },
+    {
+      "name": "HMO Licensing",
+      "handles": [
+        "hmo-licence",
+        "hmo-mandatory",
+        "hmo-additional",
+        "selective-licence"
+      ],
+      "email": "housinglicensing@towerhamlets.gov.uk",
+      "phone": "020 7364 5008",
+      "address": {
+        "line1": "Environmental Health & Trading Standards",
+        "line2": "Tower Hamlets Town Hall",
+        "line3": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://landlord-licensing.towerhamlets.gov.uk/PSH/ServiceRequests/Default/MyServicesLogin",
+      "schemes": {
+        "mandatory": {
+          "description": "5+ tenants from 2+ households sharing facilities",
+          "coverage": "Borough-wide",
+          "licenceDuration": "3 years",
+          "fees": {
+            "applicationOnline": 781.50,
+            "perHabitableRoom": 54.50
+          }
+        },
+        "additional": {
+          "description": "3-4 tenants from 2+ households sharing facilities",
+          "coverage": "Borough-wide",
+          "effectiveDate": "2024-04-01",
+          "expiryDate": "2029-03-31",
+          "licenceDuration": "5 years",
+          "fees": {
+            "applicationOnline": 756.00,
+            "perHabitableRoom": 54.50,
+            "instalmentSurcharge": 47.50
+          }
+        },
+        "selective": {
+          "description": "Single household or 2 unrelated sharers in designated areas",
+          "coverage": "Whitechapel, Weavers, Spitalfields & Banglatown wards (pre-May 2014 boundaries)",
+          "effectiveDate": "2021-10-01",
+          "expiryDate": "2026-09-30",
+          "licenceDuration": "5 years",
+          "fees": {
+            "applicationOnline": 747.00
+          }
+        }
+      },
+      "notes": "Mandatory HMO licences issued for 3 years (shorter than typical 5-year period). Additional licensing scheme covers entire borough from April 2024. Selective licences granted before April 2024 for properties now meeting Additional criteria can be converted at no extra cost. Extra charges apply for incomplete or postal applications."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "consumer-protection",
+        "business-advice",
+        "age-restricted-sales"
+      ],
+      "email": "Trading.Standards@towerhamlets.gov.uk",
+      "phone": "020 7364 5008",
+      "address": {
+        "line1": "Trading Standards Administration Section",
+        "line2": "Tower Hamlets Town Hall",
+        "line3": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      },
+      "submissionMethod": "email",
+      "notes": "Responsible authority for licensing consultations. Part of Environmental Health & Trading Standards department."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "Metropolitan Police Service Central East Licensing Team",
+      "email": "CEMailbox-.TowerHamletsLicensing@met.police.uk",
+      "phone": "07557 572 168",
+      "address": {
+        "line1": "Bethnal Green Police Station",
+        "line2": "12 Victoria Park Square",
+        "city": "London",
+        "postcode": "E2 9NZ"
+      }
+    },
+    "fireSafety": {
+      "name": "London Fire Brigade Fire Safety Regulation",
+      "email": "FSR-AdminSupport@london-fire.gov.uk",
+      "phone": "020 8555 1200 ext 89170",
+      "address": {
+        "line1": "Fire Safety Regulation Helpdesk",
+        "line2": "169 Union Street",
+        "city": "London",
+        "postcode": "SE1 0LL"
+      }
+    },
+    "environmentalHealth": {
+      "name": "Environmental Health & Trading Standards",
+      "email": "Healthand.Safety@towerhamlets.gov.uk",
+      "phone": "020 7364 5008",
+      "address": {
+        "line1": "Tower Hamlets Town Hall",
+        "line2": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      }
+    },
+    "planning": {
+      "name": "Planning Department",
+      "email": "Development.Control@towerhamlets.gov.uk",
+      "phone": "020 7364 5009",
+      "address": {
+        "line1": "Tower Hamlets Town Hall",
+        "line2": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      }
+    },
+    "childProtection": {
+      "name": "Child Protection - Licensing",
+      "email": "Licensing-ChildProtection@towerhamlets.gov.uk",
+      "phone": ["020 7364 2135", "020 7364 0677"],
+      "address": {
+        "line1": "Tower Hamlets Town Hall",
+        "line2": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      }
+    },
+    "tradingStandards": {
+      "name": "Trading Standards Administration Section",
+      "email": "Trading.Standards@towerhamlets.gov.uk",
+      "phone": "020 7364 5008",
+      "address": {
+        "line1": "Tower Hamlets Town Hall",
+        "line2": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      }
+    },
+    "publicHealth": {
+      "name": "Director of Public Health Tower Hamlets",
+      "email": "PublicHealthLicensing@towerhamlets.gov.uk",
+      "phone": "020 7364 7014",
+      "address": {
+        "line1": "Tower Hamlets Town Hall",
+        "line2": "160 Whitechapel Road",
+        "city": "London",
+        "postcode": "E1 1BJ"
+      }
+    },
+    "safeguardingPartnership": {
+      "name": "Tower Hamlets Safeguarding Children Partnership",
+      "website": "https://thscp.org.uk/",
+      "notes": "Led by three statutory partners: Local Authority, Health (ICB), and Police"
+    }
+  },
+  "additionalResources": {
+    "licensingPublicRegister": "https://alcohol-entertainment.towerhamlets.gov.uk/Civica-elr-3.2_live/",
+    "licensingApplicationsThisWeek": "https://www.towerhamlets.gov.uk/lgnl/business/licences/alcohol_and_entertainment/Licence_applications_received_this_week.aspx",
+    "planningApplicationSearch": "https://www.towerhamlets.gov.uk/lgnl/planning_and_building_control/planning_applications/search_and_comment_planning_applications.aspx",
+    "trafficOrdersPortal": "https://towerhamlets.traffweb.app/",
+    "hmoLicensingPortal": "https://landlord-licensing.towerhamlets.gov.uk/PSH/ServiceRequests/Default/MyServicesLogin",
+    "streetTradingRegister": "https://streettrading.towerhamlets.gov.uk/sf/control/publicregister",
+    "foodHygieneRatings": "https://ratings.food.gov.uk/authority-search-landing/530",
+    "consultations": "https://talk.towerhamlets.gov.uk",
+    "housingRepairs24hr": "0800 376 1637"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Tower Hamlets Council website, public search results, and official responsible authorities page. Council headquarters at Tower Hamlets Town Hall, 160 Whitechapel Road, E1 1BJ. Licensing email confirmed as licensing@towerhamlets.gov.uk. Statement of Licensing Policy 2023-2028 in effect with Cumulative Impact Assessment for Brick Lane (extended November 2024). Gambling Policy 2025-2028 effective from December 2025. Borough-wide Additional HMO Licensing from April 2024. Selective Licensing covers four wards until September 2026. Ten street markets operated including world-famous Brick Lane, Columbia Road, and Petticoat Lane. All responsible authority contacts verified from official council page."
+}

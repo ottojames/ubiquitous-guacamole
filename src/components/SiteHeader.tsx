@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import * as UI from '@/styles/ui';
 import { FileText, Menu, X } from 'lucide-react';
+import { NAV_LINKS } from '@/config/navigation';
 
 // Simple analytics stub to mirror Home page behaviour
 function track(event: string, payload: Record<string, unknown> = {}) {
@@ -10,6 +12,30 @@ function track(event: string, payload: Record<string, unknown> = {}) {
 export default function SiteHeader() {
   const [compact, setCompact] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle anchor links that need to work from any page
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Check if this is a hash link to the home page (e.g., /#for-councils)
+    if (href.startsWith('/#')) {
+      e.preventDefault();
+      const hash = href.slice(1); // Get "#for-councils"
+      const elementId = hash.slice(1); // Get "for-councils"
+
+      if (location.pathname === '/') {
+        // Already on home page - smooth scroll to the element
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else {
+        // Navigate to home page with hash using window.location for proper page load
+        // This ensures the Home page's useEffect runs and scrolls to the hash
+        window.location.href = '/' + hash;
+      }
+    }
+  }, [location.pathname]);
 
   // Hysteresis-free compact mode using IntersectionObserver on a sentinel
   useEffect(() => {
@@ -28,27 +54,25 @@ export default function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-gradient-to-r from-[#eef3ff] to-[#f8faff] backdrop-blur-md shadow-sm transition-shadow duration-200 ${
-        compact ? 'shadow-md' : ''
-      }`}
-      style={{ height: 'var(--headerH)' }}
+      className="sticky top-0 z-50 border-b border-white/10"
+      style={{
+        height: 'var(--headerH)',
+        background: 'linear-gradient(112deg, #d5dde8 0%, #e8ecf4 50%, #f4f6f9 100%)',
+      }}
     >
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6 lg:px-12">
+      <div className={`${UI.container} h-full`}>
+        <div className="h-full flex items-center justify-between">
           {/* Left: logo + desktop nav */}
           <div className="flex items-center gap-6">
             <a href="/" className="flex items-center text-slate-900 font-extrabold tracking-tight" style={{ letterSpacing: '-0.5px' }}>
               <span className={`transition-all ${compact ? 'text-lg' : 'text-xl'}`}>CivicNotices</span>
             </a>
             <nav className="hidden md:flex items-center gap-6">
-              {[
-                { href: '/#notices', label: 'Find notices' },
-                { href: '/#for-councils', label: 'For councils' },
-                { href: '/#pricing', label: 'Pricing' },
-                { href: '/#docs', label: 'Docs' },
-              ].map((link) => (
+              {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="text-sm text-slate-600 hover:text-slate-900 rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
                   {link.label}
@@ -59,7 +83,7 @@ export default function SiteHeader() {
 
           {/* Right: ghost + primary */}
           <div className="hidden md:flex items-center gap-3">
-            <a href="/#signin" className={`text-sm ${UI.btnSecondary} h-9 py-0`}>Sign in</a>
+            <a href="/login" className={`text-sm ${UI.btnSecondary} h-9 py-0`}>Sign in</a>
             <a href="/publish" onClick={() => track('publish_started', { audience: 'public' })} className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
               Publish a notice
             </a>
@@ -84,6 +108,7 @@ export default function SiteHeader() {
             </button>
           </div>
         </div>
+      </div>
 
       {/* Mobile sheet */}
       {mobileOpen && (
@@ -101,16 +126,14 @@ export default function SiteHeader() {
               </button>
             </div>
             <nav className="mt-6 flex flex-col gap-4">
-              {[
-                { href: '/#notices', label: 'Find notices' },
-                { href: '/#for-councils', label: 'For councils' },
-                { href: '/#pricing', label: 'Pricing' },
-                { href: '/#docs', label: 'Docs' },
-              ].map((link) => (
+              {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(e, link.href);
+                    setMobileOpen(false);
+                  }}
                   className="text-base text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded px-1 py-1"
                 >
                   {link.label}
@@ -118,7 +141,7 @@ export default function SiteHeader() {
               ))}
             </nav>
             <div className="mt-auto flex items-center gap-3">
-              <a href="/#signin" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
+              <a href="/login" className={`${UI.btnSecondary} h-9 py-0 text-sm`}>Sign in</a>
               <a href="/publish" onClick={() => { setMobileOpen(false); track('publish_started', { audience: 'public' }); }} className={`${UI.btnPrimary} h-11 py-0 text-sm`}>
                 Publish a notice
               </a>

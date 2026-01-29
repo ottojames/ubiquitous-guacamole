@@ -1,0 +1,295 @@
+{
+  "name": "London Borough of Islington",
+  "type": "London Borough",
+  "region": "Greater London",
+  "website": "https://www.islington.gov.uk",
+  "address": {
+    "line1": "222 Upper Street",
+    "city": "London",
+    "postcode": "N1 1XR"
+  },
+  "mainPhone": "020 7527 2000",
+  "openingHours": "Mon, Tue, Thu, Fri 9am-5pm; Wed 10am-5pm",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "sex-establishment",
+        "special-treatments"
+      ],
+      "email": "licensing@islington.gov.uk",
+      "phone": "020 7527 3031",
+      "address": {
+        "line1": "Licensing Team",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "publicRegister": "https://licensingsearch.islington.gov.uk",
+      "notes": "Handles Licensing Act 2003 and Gambling Act 2005 applications. 28-day public consultation period. Applications accepted as PDF or Word documents in a single email. Council no longer accepts cash or cheques for payments. Cumulative Impact Areas identified in licensing policy where new licences receive additional scrutiny."
+    },
+    {
+      "name": "Street Trading",
+      "handles": [
+        "street-trading-licence",
+        "market-pitch",
+        "casual-trading"
+      ],
+      "email": "street.trading@islington.gov.uk",
+      "phone": null,
+      "address": {
+        "line1": "Street Trading Service",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.islington.gov.uk/business/licences-permits-registration/trading-on-our-streets",
+      "notes": "Two licence types: Full market trading licence (permanent pitch, monthly fee) and Casual trader registration (pay-as-you-go). Illegal to trade or offer to sell goods/services on any public highway or within 7 metres without a licence. Interest registration available for waiting list (up to 6 months)."
+    },
+    {
+      "name": "Animal Welfare",
+      "handles": [
+        "animal-licence",
+        "dangerous-wild-animals",
+        "dog-breeding",
+        "pet-shop"
+      ],
+      "email": "animal.welfare@islington.gov.uk",
+      "phone": "020 7527 3171",
+      "address": {
+        "line1": "Animal Welfare",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Handles animal-related licences including pet shops, dog breeding establishments, and dangerous wild animals."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": "planning@islington.gov.uk",
+      "phone": "020 7527 2000",
+      "address": {
+        "line1": "Planning Service",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "dutyPlannerHours": "Tue & Thu 10am-1pm (phone appointments)",
+      "notes": "Applications submitted via national Planning Portal. Duty Planning Officer available for pre-booked telephone appointments Tue/Thu 10am-1pm. Formal pre-application advice service and Planning Performance Agreements available for major developments."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation",
+        "dangerous-structures"
+      ],
+      "email": "building.control@islington.gov.uk",
+      "phone": "020 7527 5999",
+      "address": {
+        "line1": "Building Control Services",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.islington.gov.uk/planning/building-control",
+      "notes": "ISO 9001:2015 certified management system (approved by Alcumus ISOQAR). Include building control application reference in all email correspondence. Online portal available for record searches and new applications."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "streetworks-permit",
+        "traffic-signals"
+      ],
+      "email": "environment@islington.gov.uk",
+      "streetworksEmail": "Streetworks@islington.gov.uk",
+      "parkingSuspensionsEmail": "parkingsuspensions@islington.gov.uk",
+      "phone": "020 7527 2000",
+      "address": {
+        "line1": "Environment",
+        "line2": "1 Cottage Road",
+        "city": "London",
+        "postcode": "N7 8TP"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.islington.gov.uk/roads/apply-highways-licence/road-closures",
+      "tmoRegister": "https://map.islington.gov.uk",
+      "roadClosureFee": 4770,
+      "notes": "Temporary Traffic Regulation Order (road closure) fee is £4,770 per licence. Applications required at least 6 weeks in advance; strategic routes require 8-12 weeks. TMO procedures follow Local Authorities' Traffic Orders (Procedure) (England and Wales) Regulations 1996. Proposals published in London Gazette and Islington Tribune."
+    },
+    {
+      "name": "Environmental Health - Commercial",
+      "handles": [
+        "food-premises-registration",
+        "health-safety",
+        "cooling-tower-notification",
+        "pollution-permit"
+      ],
+      "email": "commercial.envh@islington.gov.uk",
+      "pollutionEmail": "pollution@islington.gov.uk",
+      "phone": "020 7527 7272",
+      "address": {
+        "line1": "Commercial Environmental Health Service",
+        "line2": "Public Protection Division",
+        "line3": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Handles food premises registration, cooling tower notifications, environmental pollution permits, and business health and safety matters. Responsible authority for licensing consultations."
+    },
+    {
+      "name": "Environmental Health - Noise",
+      "handles": [
+        "noise-complaint",
+        "statutory-nuisance"
+      ],
+      "email": null,
+      "phone": "020 7527 7272",
+      "noisePatrolHours": "Sun-Thu 8pm-2am, Fri-Sat 10pm-4am",
+      "address": {
+        "line1": "Noise Service",
+        "line2": "Public Protection Division",
+        "line3": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://www.islington.gov.uk/community-safety/anti-social-behaviour/report-noise-and-neighbour-nuisance",
+      "notes": "Noise Patrol operates outside office hours. Officers will not visit without first speaking to complainant by phone. Council tenants should contact Estate Manager first. ASB reporting form available for electronic submissions."
+    },
+    {
+      "name": "Property Licensing",
+      "handles": [
+        "hmo-licence",
+        "hmo-mandatory",
+        "hmo-additional",
+        "selective-licence"
+      ],
+      "email": "property.licensing@islington.gov.uk",
+      "phone": "020 7527 3205",
+      "address": {
+        "line1": "Property Licensing Team, Third Floor",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://propertylicensing.islington.gov.uk",
+      "publicRegister": "https://propertylicensing.islington.gov.uk/public-register",
+      "fees": {
+        "hmoPerLetting": 335,
+        "hmoAccreditedDiscount": 50,
+        "selectiveLicence": 800,
+        "selectiveAccreditedDiscount": 75,
+        "paymentStructure": "Two instalments"
+      },
+      "selectiveLicensingWards": ["Finsbury Park", "Tollington", "Hillrise"],
+      "upcomingExpansion": ["Barnsbury", "Caledonian", "Tufnell Park", "Mildmay", "Highbury", "Junction", "Laycock"],
+      "notes": "Borough-wide additional HMO licensing scheme renewed 1 February 2026 (5-year term). Current selective licensing covers Finsbury Park, Tollington, Hillrise wards. Expansion to 7 additional wards approved but start date not yet confirmed. HMO fee is £335 per letting (e.g., £1,675 for 5-person shared house). Accredited landlords receive fee discounts."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "consumer-protection",
+        "scrap-metal-dealer",
+        "fireworks-licence",
+        "mail-forwarding-registration"
+      ],
+      "email": "trading.standards@islington.gov.uk",
+      "phone": "020 7527 2000",
+      "address": {
+        "line1": "Trading Standards",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Handles scrap metal dealer licences, fireworks licences, and mail forwarding business registrations. Consumer advice available via Citizens Advice Consumer Service."
+    },
+    {
+      "name": "Child Employment & Performance",
+      "handles": [
+        "child-employment-permit",
+        "child-performer-licence",
+        "chaperone-licence"
+      ],
+      "email": "pupilservices@islington.gov.uk",
+      "phone": null,
+      "address": {
+        "line1": "Pupil Services",
+        "line2": "222 Upper Street",
+        "city": "London",
+        "postcode": "N1 1XR"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Handles child employment permits, child performer licences, and chaperone permits for children in entertainment."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "Metropolitan Police - Central North BCU",
+      "email": null,
+      "phone": "101",
+      "notes": "Central North BCU covers Camden and Islington. BCU Commander: Chief Superintendent Andrew Carter. For licensing matters, contact via 101 or Islington Police Station."
+    },
+    "fire": {
+      "name": "London Fire Brigade",
+      "email": "FSR-AdminSupport@london-fire.gov.uk",
+      "phone": "020 8555 1200",
+      "address": "169 Union Street, London SE1 0LL",
+      "notes": "Fire Safety Regulation team handles licensing consultations."
+    },
+    "safeguarding": {
+      "name": "Children's Services Contact Team",
+      "phone": "020 7527 7400",
+      "notes": "Single point of contact for referrals and requests for services for vulnerable children and young people."
+    },
+    "publicHealth": {
+      "name": "Islington Public Health",
+      "notes": "Responsible authority for licensing under Licensing Act 2003."
+    },
+    "notes": "Licensing applications must be served on all responsible authorities on the same day as application. Safer Islington Partnership includes council, police, London Fire Brigade, health sector, probation, and voluntary/community sector representatives."
+  },
+  "additionalResources": {
+    "licensingPublicRegister": "https://licensingsearch.islington.gov.uk",
+    "propertyLicensingPortal": "https://propertylicensing.islington.gov.uk",
+    "propertyLicensingRegister": "https://propertylicensing.islington.gov.uk/public-register",
+    "planningSearch": "https://directory.islington.gov.uk/kb5/islington/directory/service.page?id=_7-ds4Fe5IU",
+    "trafficOrdersMap": "https://map.islington.gov.uk",
+    "generalEnquiries": "https://www.islington.gov.uk/contact-us",
+    "bslService": "BSL Live video calling service available"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Islington Council website and public search results. Council headquarters at 222 Upper Street, London N1 1XR. Licensing email confirmed as licensing@islington.gov.uk. Property licensing portal at propertylicensing.islington.gov.uk. Additional HMO licensing scheme renewed February 2026. Selective licensing expansion to 7 more wards approved but date not confirmed. Building Control ISO 9001:2015 certified. Taxi/private hire licensing handled by Transport for London, not Islington Council. Road closure TTRO fee is £4,770."
+}

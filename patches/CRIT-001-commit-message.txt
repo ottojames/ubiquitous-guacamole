@@ -1,0 +1,33 @@
+fix(licensing): add statutory false statement warnings to all 6 licensing templates (CRIT-001)
+
+STATUTORY COMPLIANCE FIX - Licensing Act 2003
+
+Issue:
+- 5 licensing templates completely missing false statement warning
+- 1 template (premises-new) had incomplete wording (missing "level 5 fine")
+
+Changes:
+- Fixed licensing-premises-new: Updated warning to include "level 5 fine" specification
+- Added complete warning to licensing-premises-variation
+- Added complete warning to licensing-premises-review
+- Added complete warning to licensing-club-new
+- Added complete warning to licensing-club-variation
+- Added complete warning to licensing-club-review
+
+All templates now include exact statutory wording per:
+- Licensing Act 2003, Schedule 3 Para 5
+- Licensing Act 2003 (Premises licences and club premises certificates) Regulations 2005, Reg 25(1)(d)
+
+Complete wording:
+"It is an offence to knowingly or recklessly make a false statement in connection with
+an application and the maximum fine for which a person is liable on summary conviction
+for the offence is a level 5 fine."
+
+Legal Risk Eliminated: Notices no longer procedurally defective due to missing/incomplete warnings.
+
+Files Changed:
+- src/next/publish/templates/licensing.ts (6 template updates)
+
+Testing: See patches/CRIT-001-validation.md
+
+Refs: CRIT-001, COMPLIANCE_VALIDATION_REPORT.md Lines 48-110

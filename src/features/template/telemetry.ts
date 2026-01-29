@@ -39,7 +39,7 @@ export function trackTemplateEvent(event: string, payload: Payload = {}): void {
     }
   }
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
+     
     console.debug('[template-event]', event, payload);
   }
 }

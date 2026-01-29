@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>US-0151: Browser Test for Consultation Countdown</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { color: #333; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .pass { background: #d4edda; border-color: #c3e6cb; }
+        .fail { background: #f8d7da; border-color: #f5c6cb; }
+        .pending { background: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .link { display: inline-block; margin: 10px 0; padding: 10px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>US-0151: Consultation Countdown - Browser Test</h1>
+
+    <div class="step pending">
+        <h2>Step 1: Check Firm Dashboard</h2>
+        <p>Navigate to the firm dashboard and verify the "Upcoming Deadlines" widget is present</p>
+        <a href="http://localhost:5173/f/wilson-partners/dashboard" target="_blank" class="link">Open Firm Dashboard</a>
+        <p>Expected:</p>
+        <ul>
+            <li>✓ "Upcoming Deadlines" widget visible on dashboard</li>
+            <li>✓ Shows notices sorted by soonest deadline first</li>
+            <li>✓ Each notice shows days remaining (e.g., "3 days", "10 days")</li>
+            <li>✓ Color coding: Red (<7 days), Amber (7-14 days), Green (>14 days)</li>
+        </ul>
+    </div>
+
+    <div class="step pending">
+        <h2>Step 2: Check Notices Page</h2>
+        <p>Navigate to the firm notices page and verify countdown badges on notice cards</p>
+        <a href="http://localhost:5173/f/wilson-partners/notices" target="_blank" class="link">Open Firm Notices</a>
+        <p>Expected:</p>
+        <ul>
+            <li>✓ Notice cards show countdown badge instead of just date</li>
+            <li>✓ Badge shows "X days remaining" format</li>
+            <li>✓ Color coding matches thresholds (red/amber/green)</li>
+            <li>✓ Expired notices show "Consultation closed" in gray</li>
+        </ul>
+    </div>
+
+    <div class="step pending">
+        <h2>Step 3: Create Test Notice</h2>
+        <p>Create a new notice with a consultation deadline</p>
+        <a href="http://localhost:5173/publish/step-1" target="_blank" class="link">Start Publish Wizard</a>
+        <p>Steps:</p>
+        <ol>
+            <li>Select "Premises Licence Application"</li>
+            <li>Choose "Enter details manually"</li>
+            <li>Fill in required fields (applicant, premises, etc.)</li>
+            <li>Note: Consultation deadline should be auto-calculated (e.g., 28 days)</li>
+            <li>Submit notice</li>
+            <li>On confirmation page, verify countdown is displayed</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>Implementation Status</h2>
+        <p><strong>Components Created/Modified:</strong></p>
+        <ul>
+            <li>✓ <code>src/components/notice/ConsultationCountdown.tsx</code> - Updated color thresholds</li>
+            <li>✓ <code>src/components/firm/UpcomingDeadlines.tsx</code> - New widget created</li>
+            <li>✓ <code>src/pages/firm/Notices.tsx</code> - Integrated countdown component</li>
+            <li>✓ <code>src/pages/firm/Dashboard.tsx</code> - Added UpcomingDeadlines widget</li>
+        </ul>
+        <p><strong>Color Thresholds Implemented:</strong></p>
+        <ul>
+            <li>🔴 Red: < 7 days remaining</li>
+            <li>🟡 Amber: 7-14 days remaining</li>
+            <li>🟢 Green: > 14 days remaining</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('US-0151 Browser Test Ready');
+        console.log('Please manually verify each step and note results');
+        console.log('Color coding thresholds:');
+        console.log('- Red: < 7 days');
+        console.log('- Amber: 7-14 days');
+        console.log('- Green: > 14 days');
+    </script>
+</body>
+</html>

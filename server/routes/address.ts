@@ -3,10 +3,26 @@ import { z } from 'zod';
 
 const router = Router();
 
-export type AddressItem = { id: string; label: string };
+export type AddressItem = { id: string; label: string; postcode?: string };
 type CachedResult = { expiresAt: number; items: AddressItem[] };
 const cache = new Map<string, CachedResult>();
 const TTL_MS = 2 * 60 * 1000;
+
+// Determine if mock mode is active based on ADDRESS_PROVIDER env var
+// Default to 'getaddress' in production - mock mode must be explicitly enabled
+function isMockMode(): boolean {
+  const provider = (process.env.ADDRESS_PROVIDER || 'getaddress').toLowerCase().trim();
+  return provider === 'mock';
+}
+
+// Log mock mode status on module load
+const mockModeActive = isMockMode();
+if (mockModeActive) {
+  console.log('[address-provider] ⚠️  MOCK MODE ACTIVE - ADDRESS_PROVIDER=mock');
+  console.log('[address-provider] Set ADDRESS_PROVIDER to a real provider (e.g., getaddress) for production');
+} else {
+  console.log(`[address-provider] Using provider: ${process.env.ADDRESS_PROVIDER || 'getaddress'}`);
+}
 
 const suggestSchema = z.object({
   suggestions: z.array(z.object({ id: z.string().optional(), address: z.string() })),
@@ -75,10 +91,91 @@ router.get('/addresses', async (req, res) => {
   const q = getQ(req.query.q);
   if (q.length < 2) return res.json({ items: [], source: 'none' });
 
-  const key = resolveKey();
-  if (!key) return res.json({ items: [], source: 'missing-key' });
+  // Check if mock mode is explicitly enabled via ADDRESS_PROVIDER=mock
+  if (isMockMode()) {
+    // Mock addresses for common UK postcodes - now with postcode field
+    const mockData: Record<string, AddressItem[]> = {
+      'sw1a 1aa': [
+        { id: 'mock-1', label: 'Buckingham Palace, Westminster, London, SW1A 1AA', postcode: 'SW1A 1AA' },
+        { id: 'mock-2', label: 'The Queens Gallery, Buckingham Palace Road, Westminster, London, SW1A 1AA', postcode: 'SW1A 1AA' },
+        { id: 'mock-3', label: 'Royal Mews, Buckingham Palace Road, Westminster, London, SW1A 1AA', postcode: 'SW1A 1AA' },
+      ],
+      'sw1a': [
+        { id: 'mock-4', label: 'Buckingham Palace, Westminster, London, SW1A 1AA', postcode: 'SW1A 1AA' },
+        { id: 'mock-5', label: '10 Downing Street, Westminster, London, SW1A 2AA', postcode: 'SW1A 2AA' },
+        { id: 'mock-6', label: 'HM Treasury, 1 Horse Guards Road, Westminster, London, SW1A 2HQ', postcode: 'SW1A 2HQ' },
+      ],
+      'w1a 1aa': [
+        { id: 'mock-7', label: 'BBC Broadcasting House, Portland Place, Marylebone, London, W1A 1AA', postcode: 'W1A 1AA' },
+        { id: 'mock-8', label: 'All Souls Church, Langham Place, Marylebone, London, W1A 1AA', postcode: 'W1A 1AA' },
+      ],
+      'w1a': [
+        { id: 'mock-9', label: 'BBC Broadcasting House, Portland Place, Marylebone, London, W1A 1AA', postcode: 'W1A 1AA' },
+        { id: 'mock-10', label: 'Langham Hotel, 1C Portland Place, Marylebone, London, W1A 1JA', postcode: 'W1A 1JA' },
+      ],
+      'ec1a': [
+        { id: 'mock-11', label: '1 St Bartholomews Hospital, West Smithfield, City of London, EC1A 7BE', postcode: 'EC1A 7BE' },
+        { id: 'mock-12', label: 'Smithfield Market, Charterhouse Street, City of London, EC1A 9PQ', postcode: 'EC1A 9PQ' },
+      ],
+      's325uy': [
+        { id: 'mock-13', label: 'The Pilot Inn, Station Road, Sheffield, S32 5UY', postcode: 'S32 5UY' },
+        { id: 'mock-14', label: '1 Station Road, Sheffield, S32 5UY', postcode: 'S32 5UY' },
+        { id: 'mock-15', label: 'Railway Cottages, Station Road, Sheffield, S32 5UY', postcode: 'S32 5UY' },
+      ],
+      'default': [
+        { id: 'mock-16', label: '123 High Street, London, W1A 1AA', postcode: 'W1A 1AA' },
+        { id: 'mock-17', label: '456 Main Road, Westminster, SW1A 2AA', postcode: 'SW1A 2AA' },
+        { id: 'mock-18', label: '789 Park Lane, Kensington, W8 1AA', postcode: 'W8 1AA' },
+      ]
+    };
 
-  const cacheKey = q.toLowerCase();
+    // Try to match the query to mock data
+    const queryLower = q.toLowerCase().replace(/\s+/g, '');
+    let items: AddressItem[] = [];
+
+    // Check for exact postcode match
+    for (const [key, addresses] of Object.entries(mockData)) {
+      if (key !== 'default' && queryLower.includes(key.replace(/\s+/g, ''))) {
+        items = addresses;
+        break;
+      }
+    }
+
+    // If no match, return default addresses with the query incorporated
+    if (items.length === 0) {
+      // Check if it looks like a postcode
+      const postcodeMatch = q.match(/([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})/i);
+      if (postcodeMatch) {
+        const postcode = normPC(postcodeMatch[0]) || q;
+        items = [
+          { id: 'mock-gen-1', label: `1 High Street, London, ${postcode}`, postcode: postcode },
+          { id: 'mock-gen-2', label: `2 Main Road, Westminster, ${postcode}`, postcode: postcode },
+          { id: 'mock-gen-3', label: `3 Church Lane, Kensington, ${postcode}`, postcode: postcode },
+        ];
+      } else if (q.length >= 3) {
+        // Generic address search
+        items = mockData.default;
+      }
+    }
+
+    return res.json({ items, source: 'mock' });
+  }
+
+  // Real provider mode - require API key
+  const key = resolveKey();
+  if (!key) {
+    console.error('[address-provider] ERROR: No API key configured but ADDRESS_PROVIDER is not "mock"');
+    console.error('[address-provider] Set GETADDRESS_API_KEY or ADDRESS_API_KEY, or set ADDRESS_PROVIDER=mock for development');
+    return res.status(500).json({
+      error: 'Address provider not configured. Set ADDRESS_PROVIDER=mock for development or provide GETADDRESS_API_KEY.',
+      source: 'error'
+    });
+  }
+
+  // Normalize postcode to uppercase if it looks like a postcode
+  const normalizedQuery = normPC(q) || q;
+
+  const cacheKey = normalizedQuery.toLowerCase();
   const now = Date.now();
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > now) {
@@ -86,7 +183,7 @@ router.get('/addresses', async (req, res) => {
   }
 
   try {
-    const payload = await fetchJson(GET_SUGGEST_URL(q, key));
+    const payload = await fetchJson(GET_SUGGEST_URL(normalizedQuery, key));
     const parsed = suggestSchema.safeParse(payload);
     if (!parsed.success) throw new Error('Invalid provider response');
     const items: AddressItem[] = parsed.data.suggestions.map((suggestion, index) => ({

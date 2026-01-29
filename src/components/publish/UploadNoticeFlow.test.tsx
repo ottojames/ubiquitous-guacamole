@@ -7,23 +7,41 @@ import { vi } from 'vitest';
 describe('UploadNoticeFlow gating', () => {
   it('disables Continue to Pay until required fields are filled', async () => {
     const originalFetch = global.fetch;
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        results: [
-          {
-            DPA: {
-              UPRN: '1',
-              ADDRESS: '1 High St, Town, BR1 1AA',
-              BUILDING_NUMBER: '1',
-              THOROUGHFARE_NAME: 'High St',
-              POST_TOWN: 'Town',
-              POSTCODE: 'BR1 1AA',
-            },
-          },
-        ],
-      }),
-    } as any);
+    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.includes('/autocomplete/')) {
+        return {
+          ok: true,
+          json: async () => ({
+            suggestions: [
+              { id: 'address-1', address: '1 High St, Town, BR1 1AA', postcode: 'BR1 1AA' },
+            ],
+          }),
+        } as any;
+      }
+      if (url.includes('/get/')) {
+        return {
+          ok: true,
+          json: async () => ({
+            postcode: 'BR1 1AA',
+            addresses: [
+              {
+                line_1: '1 High St',
+                line_2: '',
+                town_or_city: 'Town',
+                county: '',
+                udprn: '1',
+              },
+            ],
+          }),
+        } as any;
+      }
+
+      return {
+        ok: true,
+        json: async () => ({ results: [] }),
+      } as any;
+    });
     // @ts-ignore
     global.fetch = fetchMock;
 

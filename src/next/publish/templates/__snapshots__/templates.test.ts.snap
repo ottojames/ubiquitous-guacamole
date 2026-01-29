@@ -1,483 +1,435 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`Notice template renderers > renders gambling-agc-new 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR A NEW ADULT GAMING CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a new of a adult gaming centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd has applied to Sample Licensing Authority for an Adult Gaming Centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Proposed activities: Betting, Gaming machines (Category B2, B3, C, D). Proposed hours: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+The application can be inspected at Licensing Authority, Town Hall, Sampleton LS1 2BB during Mon–Fri, 9am–5pm. Any representations must be made in writing to Sample Licensing Authority at Licensing Authority, Town Hall, Sampleton LS1 2BB or licensing@sample.gov.uk by 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-agc-review 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR REVIEW OF AN ADULT GAMING CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a review of a adult gaming centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Police Licensing Unit has applied to Sample Licensing Authority for a review of the Adult Gaming Centre premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Grounds: Concerns regarding compliance with licence conditions..
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-agc-transfer 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO TRANSFER AN ADULT GAMING CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a transfer of a adult gaming centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Application has been made to Sample Licensing Authority to transfer the Adult Gaming Centre premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA from ABC Betting Plc to Sample Gaming Ltd.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-agc-variation 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO VARY AN ADULT GAMING CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a variation of a adult gaming centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd seeks to vary the Adult Gaming Centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Nature of variation: Add self-service betting terminals.. Hours/arrangements after variation: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-betting-new 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR A NEW BETTING PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a new of a betting premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd has applied to Sample Licensing Authority for a betting premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Proposed activities: Betting, Gaming machines (Category B2, B3, C, D). Proposed hours: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+The application can be inspected at Licensing Authority, Town Hall, Sampleton LS1 2BB during Mon–Fri, 9am–5pm. Any representations must be made in writing to Sample Licensing Authority at Licensing Authority, Town Hall, Sampleton LS1 2BB or licensing@sample.gov.uk by 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-betting-review 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR REVIEW OF A BETTING PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a review of a betting premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Police Licensing Unit has applied to Sample Licensing Authority for a review of the betting premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Grounds: Concerns regarding compliance with licence conditions..
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-betting-transfer 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO TRANSFER A BETTING PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a transfer of a betting premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Application has been made to Sample Licensing Authority to transfer the betting premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA from ABC Betting Plc to Sample Gaming Ltd.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-betting-variation 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO VARY A BETTING PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a variation of a betting premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd seeks to vary the betting premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Nature of variation: Add self-service betting terminals.. Hours/arrangements after variation: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-bingo-new 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR A NEW BINGO PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a new of a bingo premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd has applied to Sample Licensing Authority for a bingo premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Proposed activities: Betting, Gaming machines (Category B2, B3, C, D). Proposed hours: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+The application can be inspected at Licensing Authority, Town Hall, Sampleton LS1 2BB during Mon–Fri, 9am–5pm. Any representations must be made in writing to Sample Licensing Authority at Licensing Authority, Town Hall, Sampleton LS1 2BB or licensing@sample.gov.uk by 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-bingo-review 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR REVIEW OF A BINGO PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a review of a bingo premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Police Licensing Unit has applied to Sample Licensing Authority for a review of the bingo premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Grounds: Concerns regarding compliance with licence conditions..
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-bingo-transfer 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO TRANSFER A BINGO PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a transfer of a bingo premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Application has been made to Sample Licensing Authority to transfer the bingo premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA from ABC Betting Plc to Sample Gaming Ltd.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-bingo-variation 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO VARY A BINGO PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a variation of a bingo premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd seeks to vary the bingo premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Nature of variation: Add self-service betting terminals.. Hours/arrangements after variation: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-fec-new 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR A NEW FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a new of a family entertainment centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd has applied to Sample Licensing Authority for a Family Entertainment Centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Proposed activities: Betting, Gaming machines (Category B2, B3, C, D). Proposed hours: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+The application can be inspected at Licensing Authority, Town Hall, Sampleton LS1 2BB during Mon–Fri, 9am–5pm. Any representations must be made in writing to Sample Licensing Authority at Licensing Authority, Town Hall, Sampleton LS1 2BB or licensing@sample.gov.uk by 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-fec-review 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION FOR REVIEW OF A FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a review of a family entertainment centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Police Licensing Unit has applied to Sample Licensing Authority for a review of the Family Entertainment Centre premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Grounds: Concerns regarding compliance with licence conditions..
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-fec-transfer 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO TRANSFER A FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a transfer of a family entertainment centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Application has been made to Sample Licensing Authority to transfer the Family Entertainment Centre premises licence for Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA from ABC Betting Plc to Sample Gaming Ltd.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gambling-fec-variation 1`] = `
-"GAMBLING ACT 2005
-Notice of Application for a Premises Licence
+"GAMBLING ACT 2005, SCHEDULE 9
+APPLICATION TO VARY A FAMILY ENTERTAINMENT CENTRE PREMISES LICENCE
 
-Sample Gaming Ltd of 2 Casino Way, Sampleton, LS1 1AA has applied to Sample Licensing Authority for a variation of a family entertainment centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton, LS1 1AA.
+Sample Gaming Ltd seeks to vary the Family Entertainment Centre premises licence at Sample Betting Shop, 12 Market Street, Sampleton LS1 1AA. Nature of variation: Add self-service betting terminals.. Hours/arrangements after variation: Mon–Sun 09:00–22:00.
 
-The application seeks authorisation for the following:
-• Betting on sporting events
-• Provision of gaming machines
+Any representations must relate to one or more of the licensing objectives under the Gambling Act 2005: (a) preventing gambling from being a source of crime or disorder, being associated with crime or disorder, or being used to support crime; (b) ensuring that gambling is conducted in a fair and open way; (c) protecting children and other vulnerable persons from being harmed or exploited by gambling.
 
-Representations may be made in writing to the Licensing Authority at Town Hall, Sampleton, LS1 2BB or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at the offices of the Licensing Authority during normal working hours.
-
-Dated: 25 September 2025."
+Inspection and representation details as above. Deadline: 2026-02-25."
 `;
 
 exports[`Notice template renderers > renders gvol-new 1`] = `
-"GOODS VEHICLE OPERATOR’S LICENCE
+"GOODS VEHICLE (OPERATOR'S) LICENCE
 
-Sample Haulage Ltd of Logistics House, Manchester, M1 1AA is applying to the Traffic Commissioner for North Western Traffic Area for a new of an Operator’s Licence at Unit 5 Industrial Estate, Manchester, M1 1AA to keep:
-• 6 goods vehicles and 4 trailers.
+Sample Haulage Ltd trading as Sample Logistics of Logistics House, Manchester M1 1AA is applying for a Standard National operator's licence in the North Western Traffic Area.
 
-Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations in writing to: Hillcrest House, 386 Harehills Lane, Leeds LS9 6NF, by 30 October 2025.
-A copy of the representations must at the same time be sent to Sample Haulage Ltd at the address given above.
+Proposed operating centre: Unit 5 Industrial Estate, Manchester M1 1AA.
+Authorisation: 6 goods vehicles and 4 trailers.
 
-Dated: 25 September 2025."
+Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at Suite 4, Stone Cross Place, Stone Cross Lane North, Golborne, Warrington WA3 2SH by 2026-02-23.
+
+Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above."
 `;
 
 exports[`Notice template renderers > renders gvol-variation 1`] = `
-"GOODS VEHICLE OPERATOR’S LICENCE
+"GOODS VEHICLE (OPERATOR'S) LICENCE — VARIATION
 
-Sample Haulage Ltd of Logistics House, Manchester, M1 1AA is applying to the Traffic Commissioner for North Western Traffic Area for a variation of an Operator’s Licence at Unit 5 Industrial Estate, Manchester, M1 1AA to keep:
-• 6 goods vehicles and 4 trailers.
+Sample Haulage Ltd trading as Sample Logistics of Logistics House, Manchester M1 1AA has applied to vary the operator's licence in the North Western Traffic Area as follows: Increase authorisation by two vehicles at Unit 5 Industrial Estate..
 
-Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations in writing to: Hillcrest House, 386 Harehills Lane, Leeds LS9 6NF, by 30 October 2025.
-A copy of the representations must at the same time be sent to Sample Haulage Ltd at the address given above.
+Operating centre: Unit 5 Industrial Estate, Manchester M1 1AA.
+Authorisation after variation: 6 goods vehicles and 4 trailers.
 
-Dated: 25 September 2025."
+Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at Suite 4, Stone Cross Place, Stone Cross Lane North, Golborne, Warrington WA3 2SH by 2026-02-23.
+
+Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above."
 `;
 
 exports[`Notice template renderers > renders licensing-club-new 1`] = `
 "LICENSING ACT 2003
-Application for a Club Premises Certificate
+APPLICATION FOR A NEW CLUB PREMISES CERTIFICATE
 
-Sample Bars Ltd of 1 Demo Road, Sampleton, SW1A 1AA has applied to Sample Borough Council for a Club Premises Certificate at Sample Venue, 10 High Street, Sampleton, SW1A 1AA.
+Red Lion Hospitality Ltd has applied to Sampleton Borough Council for a club premises certificate at 45 Market Street, Sampleton, SP2 3BB for the following qualifying club activities: Sale of alcohol (on and off the premises), Live music, Late night refreshment. Proposed hours: Alcohol: Mon–Sun 11:00–23:00, Live Music: Fri–Sat 20:00–23:30, Late Night Refreshment: Fri–Sat 23:00–00:30.
 
-The application seeks authorisation for the following qualifying club activities:
-• Alcohol (on sales)
+The application can be inspected at Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA during Monday–Friday 9:00 AM – 5:00 PM or online at https://sampleton.gov.uk/licensing/register.
 
-Proposed hours of operation are:
-• Alcohol (on sales): Mon, Tue, Wed, Thu, Fri, Sat — 10:00 to 23:00
+Any representations must be made in writing to Sampleton Borough Council at Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA or licensing@sampleton.gov.uk by 2026-02-25. Representors must also serve a copy of their representations on each of the responsible authorities.
 
-Club activities restricted to members and bona fide guests.
-
-Representations may be made representations in writing to Civic Centre, Sampleton, AB1 2CD or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at Civic Centre, Sampleton.
-It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.
-Dated: 25 September 2025."
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine."
 `;
 
 exports[`Notice template renderers > renders licensing-club-review 1`] = `
 "LICENSING ACT 2003
-Application for the Review of a Club Premises Certificate
+APPLICATION FOR REVIEW OF A CLUB PREMISES CERTIFICATE
 
-Sample Bars Ltd has applied to Sample Borough Council for a review of the Club Premises Certificate for Sample Venue, 10 High Street, Sampleton, SW1A 1AA on the grounds of:
+Sampleton Police Licensing Unit has applied to Sampleton Borough Council for a review of the club premises certificate for 45 Market Street, Sampleton, SP2 3BB. Grounds: Prevention of crime and disorder, Prevention of public nuisance.
 
-Alleged failure to uphold the prevention of nuisance licensing objective.
+The application can be inspected at Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA during Monday–Friday 9:00 AM – 5:00 PM or online at https://sampleton.gov.uk/licensing/register.
 
-Any responsible authority or other person may make representations as detailed below.
-Representations may be made representations in writing to Civic Centre, Sampleton, AB1 2CD or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at Civic Centre, Sampleton.
-It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.
-Dated: 25 September 2025."
+Any representations must be made in writing to Sampleton Borough Council at Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA or licensing@sampleton.gov.uk by 2026-02-25. Representors must also serve a copy of their representations on each of the responsible authorities.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine."
 `;
 
 exports[`Notice template renderers > renders licensing-club-variation 1`] = `
 "LICENSING ACT 2003
-Application to Vary a Club Premises Certificate
+APPLICATION TO VARY A CLUB PREMISES CERTIFICATE
 
-Sample Bars Ltd of 1 Demo Road, Sampleton, SW1A 1AA has applied to Sample Borough Council to vary the Club Premises Certificate for Sample Venue, 10 High Street, Sampleton, SW1A 1AA as follows:
+Red Lion Hospitality Ltd seeks to vary the club premises certificate at 45 Market Street, Sampleton, SP2 3BB. Nature of variation: Extend alcohol sales on Friday and Saturday until 01:00. Hours/activities after variation: Alcohol: Mon–Sun 11:00–23:00, Live Music: Fri–Sat 20:00–23:30, Late Night Refreshment: Fri–Sat 23:00–00:30.
 
-Extend alcohol sales to 01:00 daily.
+The application can be inspected at Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA during Monday–Friday 9:00 AM – 5:00 PM or online at https://sampleton.gov.uk/licensing/register.
 
-Existing permitted club activities and hours remain unless varied above.
-Representations may be made representations in writing to Civic Centre, Sampleton, AB1 2CD or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at Civic Centre, Sampleton.
-It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.
-Dated: 25 September 2025."
+Any representations must be made in writing to Sampleton Borough Council at Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA or licensing@sampleton.gov.uk by 2026-02-25. Representors must also serve a copy of their representations on each of the responsible authorities.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine."
 `;
 
 exports[`Notice template renderers > renders licensing-premises-new 1`] = `
 "LICENSING ACT 2003
-Application for a Premises Licence
+APPLICATION FOR A NEW PREMISES LICENCE
 
-Notice is hereby given that Sample Bars Ltd of 1 Demo Road, Sampleton, SW1A 1AA has applied to Sample Borough Council for a Premises Licence in respect of Sample Venue, 10 High Street, Sampleton, SW1A 1AA.
+Notice is hereby given that Red Lion Hospitality Ltd trading as The Red Lion has applied to Sampleton Borough Council for a new premises licence for The Red Lion, 45 Market Street, Sampleton, SP2 3BB.
 
-The application seeks authorisation for the following licensable activities:
-• Alcohol (on sales)
+Licensable activities applied for: Sale of alcohol (on and off the premises), Live music, Late night refreshment.
+Proposed hours: Alcohol: Mon–Sun 11:00–23:00, Live Music: Fri–Sat 20:00–23:30, Late Night Refreshment: Fri–Sat 23:00–00:30. Opening hours: Mon–Thu 10:00–23:30, Fri–Sat 10:00–00:30, Sun 11:00–22:30.
 
-Proposed hours of operation are:
-• Alcohol (on sales): Mon, Tue, Wed, Thu, Fri, Sat — 10:00 to 23:00
+The application can be inspected at Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA during Monday–Friday 9:00 AM – 5:00 PM or online at https://sampleton.gov.uk/licensing/register.
 
-Alcohol will be supplied: on the premises.
-Designated Premises Supervisor (DPS): Jane Doe, Personal Licence issued by Sample Borough Council, No. DPS12345.
+Any representations must be made in writing to Sampleton Borough Council at Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA or licensing@sampleton.gov.uk by 2026-02-25. Representors must also serve a copy of their representations on each of the responsible authorities.
 
-Representations may be made representations in writing to Civic Centre, Sampleton, AB1 2CD or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at Civic Centre, Sampleton.
-It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.
-Dated: 25 September 2025."
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine."
 `;
 
 exports[`Notice template renderers > renders licensing-premises-review 1`] = `
 "LICENSING ACT 2003
-Application for the Review of a Premises Licence
+APPLICATION FOR REVIEW OF A PREMISES LICENCE
 
-Sample Bars Ltd has applied to Sample Borough Council for a review of the premises licence for Sample Venue, 10 High Street, Sampleton, SW1A 1AA on the grounds of:
+Sampleton Police Licensing Unit has applied to Sampleton Borough Council for a review of the premises licence for The Red Lion, 45 Market Street, Sampleton, SP2 3BB.
 
-Alleged failure to uphold the prevention of nuisance licensing objective.
+Grounds for review: Prevention of crime and disorder, Prevention of public nuisance (relating to: Prevention of crime and disorder; Prevention of public nuisance; Public safety).
 
-Any responsible authority or other person may make representations as detailed below.
-Representations may be made representations in writing to Civic Centre, Sampleton, AB1 2CD or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at Civic Centre, Sampleton.
-It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.
-Dated: 25 September 2025."
+The application can be inspected at Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA during Monday–Friday 9:00 AM – 5:00 PM or online at https://sampleton.gov.uk/licensing/register.
+
+Any representations must be made in writing to Sampleton Borough Council at Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA or licensing@sampleton.gov.uk by 2026-02-25. Representors must also serve a copy of their representations on each of the responsible authorities.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine."
 `;
 
 exports[`Notice template renderers > renders licensing-premises-variation 1`] = `
 "LICENSING ACT 2003
-Application to Vary a Premises Licence
+APPLICATION TO VARY A PREMISES LICENCE
 
-Sample Bars Ltd of 1 Demo Road, Sampleton, SW1A 1AA has applied to Sample Borough Council to vary the Premises Licence for Sample Venue, 10 High Street, Sampleton, SW1A 1AA as follows:
+Red Lion Hospitality Ltd has applied to Sampleton Borough Council to vary the premises licence at The Red Lion, 45 Market Street, Sampleton, SP2 3BB.
 
-Extend alcohol sales to 01:00 daily.
+Nature of variation: Extend alcohol sales on Friday and Saturday until 01:00.
+Licensable activities/hours after variation: Alcohol: Mon–Sun 11:00–23:00, Live Music: Fri–Sat 20:00–23:30, Late Night Refreshment: Fri–Sat 23:00–00:30. Opening hours: Mon–Thu 10:00–23:30, Fri–Sat 10:00–00:30, Sun 11:00–22:30.
 
-Existing permitted activities and hours remain unless varied above.
-Representations may be made representations in writing to Civic Centre, Sampleton, AB1 2CD or by email to licensing@sample.gov.uk no later than 23 October 2025.
-The application may be inspected at Civic Centre, Sampleton.
-It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.
-Dated: 25 September 2025."
+The application can be inspected at Sampleton Borough Council, Licensing Office, Civic Centre, High Street, Sampleton, SP1 1AA during Monday–Friday 9:00 AM – 5:00 PM or online at https://sampleton.gov.uk/licensing/register.
+
+Any representations must be made in writing to Sampleton Borough Council at Licensing Team, Sampleton Borough Council, Civic Centre, High Street, Sampleton, SP1 1AA or licensing@sampleton.gov.uk by 2026-02-25. Representors must also serve a copy of their representations on each of the responsible authorities.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine."
 `;
 
 exports[`Notice template renderers > renders planning-conservation 1`] = `
-"TOWN AND COUNTRY PLANNING ACTS
+"PLANNING (LISTED BUILDINGS AND CONSERVATION AREAS) ACT 1990
+APPLICATION REFERENCE: SCC/2025/1234 — CONSERVATION AREA
 
-Sample City Council has received the following application:
-Reference: SCC/2025/1234. Site: Riverside Way, Sample City, EC1A 1BB.
-Proposal: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
-Reason for press notice:
-• Major development - 10 or more dwellings
+Sample Developments Ltd has applied to Sample City Council for planning permission at Riverside Way, Sample City EC1A 1BB described as: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
 
-The application and plans may be inspected at Civic Offices, Sample City during normal office hours.
-Representations must be submitted by 25 October 2025 via https://planning.sample.gov.uk/applications/123456 or in writing to Civic Offices, Sample City, EC1A 2CC.
+This application affects a conservation area and has been notified to relevant heritage bodies and statutory consultees as required by the Planning (Listed Buildings and Conservation Areas) Act 1990.
 
-Dated: 25 September 2025."
+Details can be viewed at Civic Offices, Sample City EC1A 2CC or online at https://planning.sample.gov.uk/register. Comments must be submitted via the online portal to Sample City Council at Planning Department, Civic Offices, Sample City EC1A 2CC / planning@sample.gov.uk / https://planning.sample.gov.uk/applications/123456 by 2026-02-23."
 `;
 
 exports[`Notice template renderers > renders planning-departure 1`] = `
-"TOWN AND COUNTRY PLANNING ACTS
+"TOWN AND COUNTRY PLANNING ACT 1990
+APPLICATION REFERENCE: SCC/2025/1234 — DEPARTURE
 
-Sample City Council has received the following application:
-Reference: SCC/2025/1234. Site: Riverside Way, Sample City, EC1A 1BB.
-Proposal: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
-Reason for press notice:
-• Major development - 10 or more dwellings
+Sample Developments Ltd has applied to Sample City Council for planning permission at Riverside Way, Sample City EC1A 1BB described as: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
 
-The application and plans may be inspected at Civic Offices, Sample City during normal office hours.
-Representations must be submitted by 25 October 2025 via https://planning.sample.gov.uk/applications/123456 or in writing to Civic Offices, Sample City, EC1A 2CC.
-
-Dated: 25 September 2025."
+Details can be viewed at Civic Offices, Sample City EC1A 2CC or online at https://planning.sample.gov.uk/register. Comments must be submitted via the online portal to Sample City Council at Planning Department, Civic Offices, Sample City EC1A 2CC / planning@sample.gov.uk / https://planning.sample.gov.uk/applications/123456 by 2026-02-23."
 `;
 
 exports[`Notice template renderers > renders planning-eia 1`] = `
-"TOWN AND COUNTRY PLANNING ACTS
+"TOWN AND COUNTRY PLANNING (ENVIRONMENTAL IMPACT ASSESSMENT) REGULATIONS
+APPLICATION REFERENCE: SCC/2025/1234 — EIA DEVELOPMENT
 
-Sample City Council has received the following application:
-Reference: SCC/2025/1234. Site: Riverside Way, Sample City, EC1A 1BB.
-Proposal: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
-Reason for press notice:
-• Major development - 10 or more dwellings
+An application accompanied by an Environmental Statement has been made by Sample Developments Ltd to Sample City Council at Riverside Way, Sample City EC1A 1BB: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
 
-The application and plans may be inspected at Civic Offices, Sample City during normal office hours.
-Representations must be submitted by 25 October 2025 via https://planning.sample.gov.uk/applications/123456 or in writing to Civic Offices, Sample City, EC1A 2CC.
-
-Dated: 25 September 2025."
+The Environmental Statement and application documents may be inspected at Civic Offices, Sample City EC1A 2CC or online at https://planning.sample.gov.uk/register. Any representations must be submitted via the online portal by 2026-03-04."
 `;
 
 exports[`Notice template renderers > renders planning-listed 1`] = `
-"TOWN AND COUNTRY PLANNING ACTS
+"PLANNING (LISTED BUILDINGS AND CONSERVATION AREAS) ACT 1990
+APPLICATION REFERENCE: SCC/2025/1234 — LISTED BUILDING
 
-Sample City Council has received the following application:
-Reference: SCC/2025/1234. Site: Riverside Way, Sample City, EC1A 1BB.
-Proposal: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
-Reason for press notice:
-• Major development - 10 or more dwellings
+Sample Developments Ltd has applied to Sample City Council for planning permission at Riverside Way, Sample City EC1A 1BB described as: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
 
-The application and plans may be inspected at Civic Offices, Sample City during normal office hours.
-Representations must be submitted by 25 October 2025 via https://planning.sample.gov.uk/applications/123456 or in writing to Civic Offices, Sample City, EC1A 2CC.
+This application affects a listed building and has been notified to Historic England and other statutory consultees as required by the Planning (Listed Buildings and Conservation Areas) Act 1990.
 
-Dated: 25 September 2025."
+Details can be viewed at Civic Offices, Sample City EC1A 2CC or online at https://planning.sample.gov.uk/register. Comments must be submitted via the online portal to Sample City Council at Planning Department, Civic Offices, Sample City EC1A 2CC / planning@sample.gov.uk / https://planning.sample.gov.uk/applications/123456 by 2026-02-23."
 `;
 
 exports[`Notice template renderers > renders planning-major 1`] = `
-"TOWN AND COUNTRY PLANNING ACTS
+"TOWN AND COUNTRY PLANNING ACT 1990
+APPLICATION REFERENCE: SCC/2025/1234 — MAJOR DEVELOPMENT
 
-Sample City Council has received the following application:
-Reference: SCC/2025/1234. Site: Riverside Way, Sample City, EC1A 1BB.
-Proposal: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
-Reason for press notice:
-• Major development - 10 or more dwellings
+Sample Developments Ltd has applied to Sample City Council for planning permission at Riverside Way, Sample City EC1A 1BB described as: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
 
-The application and plans may be inspected at Civic Offices, Sample City during normal office hours.
-Representations must be submitted by 25 October 2025 via https://planning.sample.gov.uk/applications/123456 or in writing to Civic Offices, Sample City, EC1A 2CC.
-
-Dated: 25 September 2025."
+Details can be viewed at Civic Offices, Sample City EC1A 2CC or online at https://planning.sample.gov.uk/register. Comments must be submitted via the online portal to Sample City Council at Planning Department, Civic Offices, Sample City EC1A 2CC / planning@sample.gov.uk / https://planning.sample.gov.uk/applications/123456 by 2026-02-23."
 `;
 
 exports[`Notice template renderers > renders planning-prow 1`] = `
-"TOWN AND COUNTRY PLANNING ACTS
+"TOWN AND COUNTRY PLANNING ACT 1990
+APPLICATION REFERENCE: SCC/2025/1234 — PUBLIC RIGHT OF WAY
 
-Sample City Council has received the following application:
-Reference: SCC/2025/1234. Site: Riverside Way, Sample City, EC1A 1BB.
-Proposal: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
-Reason for press notice:
-• Major development - 10 or more dwellings
+Sample Developments Ltd has applied to Sample City Council for planning permission at Riverside Way, Sample City EC1A 1BB described as: Construction of a mixed-use development comprising 80 dwellings, retail space, and public realm improvements..
 
-The application and plans may be inspected at Civic Offices, Sample City during normal office hours.
-Representations must be submitted by 25 October 2025 via https://planning.sample.gov.uk/applications/123456 or in writing to Civic Offices, Sample City, EC1A 2CC.
-
-Dated: 25 September 2025."
+Details can be viewed at Civic Offices, Sample City EC1A 2CC or online at https://planning.sample.gov.uk/register. Comments must be submitted via the online portal to Sample City Council at Planning Department, Civic Offices, Sample City EC1A 2CC / planning@sample.gov.uk / https://planning.sample.gov.uk/applications/123456 by 2026-02-23."
 `;
 
 exports[`Notice template renderers > renders probate-trustee-s27 1`] = `
 "TRUSTEE ACT 1925, SECTION 27
-NOTICE TO CREDITORS AND OTHERS
+ESTATE OF John Sample (also known as Johnny Sample)
+Last address: 50 Sample Road, Sampleton SW1A 4AA — Date of death: 2025-12-14
 
-Re: John Sample (deceased), late of 25 Example Close, Sample City, WC1A 2AA, who died on 16 August 2025.
+NOTICE is hereby given pursuant to section 27 of the Trustee Act 1925 that any persons having claims against or an interest in the estate of the above-named deceased should send particulars of their claims to Jane Sample (Executor) / Sample Solicitors LLP at 100 Legal Street, Sampleton SW1A 2ZZ quoting reference JS/2025/EST not later than 2026-03-30.
 
-Creditors and others having claims against or an interest in the estate of the above named are required to send particulars in writing to Sample Solicitors LLP of 1 Legal Square, Sample City, WC1A 1AA on or before 27 November 2025, after which the estate may be distributed having regard only to the claims of which notice has been received.
+After this date the personal representatives will distribute the estate among the persons entitled thereto having regard only to the claims and interests of which they have had notice and will not be liable for the assets of the estate or any part thereof so distributed to any person of whose claims or interests they have not had notice at the time of distribution."
+`;
 
-Dated: 25 September 2025."
+exports[`Notice template renderers > renders tro-experimental 1`] = `
+"ROAD TRAFFIC REGULATION ACT 1984
+
+Sample County Council
+
+Sample County Council (High Street, Sample Town) (One-Way System) Experimental Order 2025
+
+EXPERIMENTAL TRAFFIC ORDER
+
+NOTICE IS HEREBY GIVEN that Sample County Council has made an Experimental Traffic Order.
+
+The effect of the Order will be to introduce a one-way traffic system on High Street, northbound only.
+
+Roads affected: High Street, Sample Town, between Market Place and Station Road.
+
+Reason: To test improvements to traffic flow and pedestrian safety.
+
+The Experimental Order will come into effect on 2026-02-11 and will operate for a period of 18 months.
+
+A copy of the Order and a map showing the roads to which it relates may be inspected at Highways Department, County Hall, Sample Town ST1 1AA during Monday to Friday, 9:00am to 5:00pm.
+
+Persons wishing to object to the experimental scheme becoming permanent should send the grounds of their objection in writing to in writing to the address below or by email by 2026-02-23. Address: Highways Department, County Hall, Sample Town ST1 1AA.
+
+The Council will consider all objections received during the experimental period before deciding whether to make the Order permanent (with or without modification).
+
+Dated 2026-02-02"
+`;
+
+exports[`Notice template renderers > renders tro-permanent 1`] = `
+"ROAD TRAFFIC REGULATION ACT 1984
+
+Sample County Council
+
+Sample County Council (High Street, Sample Town) (Prohibition of Waiting) Order 2025
+
+NOTICE IS HEREBY GIVEN that Sample County Council proposes to make the above Order.
+
+The effect of the Order will be to prohibit waiting at any time on both sides of High Street between its junctions with Market Place and Station Road.
+
+Roads affected: High Street, Sample Town, between Market Place and Station Road.
+
+Reason: To improve traffic flow and road safety.
+
+A copy of the proposed Order and a map showing the roads to which it relates, together with a statement of the Council's reasons for proposing to make the Order, may be inspected at Highways Department, County Hall, Sample Town ST1 1AA during Monday to Friday, 9:00am to 5:00pm.
+
+If you wish to object to the proposed Order you should send the grounds of your objection in writing to in writing to the address below or by email by 2026-02-23. Address: Highways Department, County Hall, Sample Town ST1 1AA.
+
+If no objections are received, or if objections received are subsequently withdrawn, Sample County Council may make the Order in the form proposed.
+
+Dated 2026-02-02"
+`;
+
+exports[`Notice template renderers > renders tro-temporary 1`] = `
+"ROAD TRAFFIC REGULATION ACT 1984
+
+Sample County Council
+
+Sample County Council (High Street, Sample Town) (Temporary Road Closure) Order 2025
+
+TEMPORARY TRAFFIC REGULATION ORDER
+
+NOTICE IS HEREBY GIVEN that Sample County Council has made a Temporary Order.
+
+The effect of the Order is to temporarily close High Street to all vehicular traffic.
+
+Roads affected: High Street, Sample Town, between Market Place and Station Road.
+
+Reason: To facilitate essential highway maintenance works.
+
+The Order will come into effect on 2026-02-11 and will remain in force until 2026-04-28.
+
+A copy of the Order may be inspected at Highways Department, County Hall, Sample Town ST1 1AA during Monday to Friday, 9:00am to 5:00pm.
+
+For further information please contact Sample County Council at traffic@sample.gov.uk.
+
+Dated 2026-02-02"
 `;

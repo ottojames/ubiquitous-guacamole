@@ -1,0 +1,146 @@
+diff --git a/src/next/publish/schema/gvol.ts b/src/next/publish/schema/gvol.ts
+index 2701fa9..fb49dae 100644
+--- a/src/next/publish/schema/gvol.ts
++++ b/src/next/publish/schema/gvol.ts
+@@ -6,6 +6,56 @@ export const GVOL_VARIANTS = ["gvol-new", "gvol-variation"] as const;
+ 
+ export type GvolVariant = (typeof GVOL_VARIANTS)[number];
+ 
++// UK Traffic Areas under Goods Vehicles (Licensing of Operators) Act 1995
++export const TRAFFIC_AREAS = [
++  "Eastern",
++  "North Eastern",
++  "North Western",
++  "Scottish",
++  "South Eastern & Metropolitan",
++  "Wales & Western",
++  "West Midlands",
++  "Yorkshire",
++] as const;
++
++export type TrafficArea = (typeof TRAFFIC_AREAS)[number];
++
++// Traffic Commissioner office addresses by area
++const TRAFFIC_COMMISSIONER_OFFICES: Record<TrafficArea, { address: string; email: string }> = {
++  "Eastern": {
++    address: "Eastbrook, Shaftesbury Road, Cambridge CB2 8DR",
++    email: "eastern@otc.gov.uk",
++  },
++  "North Eastern": {
++    address: "Hillcrest House, 386 Harehills Lane, Leeds LS9 6NF",
++    email: "north.eastern@otc.gov.uk",
++  },
++  "North Western": {
++    address: "Suite 4, Stone Cross Place, Stone Cross Lane North, Golborne, Warrington WA3 2SH",
++    email: "north.western@otc.gov.uk",
++  },
++  "Scottish": {
++    address: "Level 6, The Stamp Office, 10 Waterloo Place, Edinburgh EH1 3EG",
++    email: "scottish@otc.gov.uk",
++  },
++  "South Eastern & Metropolitan": {
++    address: "Ivy House, 3 Ivy Terrace, Eastbourne BN21 4QT",
++    email: "south.eastern@otc.gov.uk",
++  },
++  "Wales & Western": {
++    address: "38 George Road, Edgbaston, Birmingham B15 1PL",
++    email: "wales.western@otc.gov.uk",
++  },
++  "West Midlands": {
++    address: "38 George Road, Edgbaston, Birmingham B15 1PL",
++    email: "west.midlands@otc.gov.uk",
++  },
++  "Yorkshire": {
++    address: "Hillcrest House, 386 Harehills Lane, Leeds LS9 6NF",
++    email: "yorkshire@otc.gov.uk",
++  },
++};
++
+ const requiredString = (label: string) => z.string().trim().min(1, `${label} is required`);
+ 
+ const optionalString = () =>
+@@ -41,7 +91,9 @@ export const gvolNoticeSchema = z
+     APPLICANT_TRADING_AS: optionalString(),
+     APPLICANT_ADDRESS: requiredString("Applicant address"),
+     LICENCE_CATEGORY: requiredString("Licence category"),
+-    TRAFFIC_AREA_NAME: requiredString("Traffic area"),
++    TRAFFIC_AREA: z.enum(TRAFFIC_AREAS, {
++      errorMap: () => ({ message: "Select a valid Traffic Area" }),
++    }),
+     OPERATING_CENTRE_ADDRESS: requiredString("Operating centre address"),
+     NUMBER_OF_VEHICLES: digitsOnly("Number of vehicles"),
+     NUMBER_OF_TRAILERS: digitsOnly("Number of trailers"),
+@@ -49,9 +101,6 @@ export const gvolNoticeSchema = z
+     PUBLICATION_DATE: isoDateField("Publication date"),
+     DEADLINE_DATE: isoDateField("Objection deadline"),
+     REPRESENTATION_METHOD: requiredString("Representation method"),
+-    AUTHORITY_NAME: requiredString("Traffic Commissioner / Area office"),
+-    AUTHORITY_ADDRESS: requiredString("Representation address"),
+-    AUTHORITY_EMAIL: optionalString(),
+   })
+   .superRefine((value, ctx) => {
+     const isVariation = value.variant.includes("variation");
+@@ -76,6 +125,10 @@ function valueOrUndefined(value?: string | null): string | undefined {
+ }
+ 
+ export function mapGvolToNoticeBase(input: GvolNoticeInput): NoticeBase {
++  // Derive Traffic Commissioner office details from TRAFFIC_AREA enum
++  const trafficArea = input.TRAFFIC_AREA;
++  const commissionerOffice = TRAFFIC_COMMISSIONER_OFFICES[trafficArea];
++
+   const tokens: Record<string, string> = {
+     NOTICE_TYPE: valueOrEmpty(input.NOTICE_TYPE),
+     APPLICANT_NAME: valueOrEmpty(input.APPLICANT_NAME),
+@@ -83,7 +136,9 @@ export function mapGvolToNoticeBase(input: GvolNoticeInput): NoticeBase {
+     APPLICANT_TRADING_AS: valueOrEmpty(input.APPLICANT_TRADING_AS),
+     APPLICANT_ADDRESS: valueOrEmpty(input.APPLICANT_ADDRESS),
+     LICENCE_CATEGORY: valueOrEmpty(input.LICENCE_CATEGORY),
+-    TRAFFIC_AREA_NAME: valueOrEmpty(input.TRAFFIC_AREA_NAME),
++    TRAFFIC_AREA: trafficArea,
++    TRAFFIC_COMMISSIONER_OFFICE: commissionerOffice.address,
++    TRAFFIC_COMMISSIONER_EMAIL: commissionerOffice.email,
+     OPERATING_CENTRE_ADDRESS: valueOrEmpty(input.OPERATING_CENTRE_ADDRESS),
+     NUMBER_OF_VEHICLES: valueOrEmpty(input.NUMBER_OF_VEHICLES),
+     NUMBER_OF_TRAILERS: valueOrEmpty(input.NUMBER_OF_TRAILERS),
+@@ -91,9 +146,6 @@ export function mapGvolToNoticeBase(input: GvolNoticeInput): NoticeBase {
+     PUBLICATION_DATE: valueOrEmpty(input.PUBLICATION_DATE),
+     DEADLINE_DATE: valueOrEmpty(input.DEADLINE_DATE),
+     REPRESENTATION_METHOD: valueOrEmpty(input.REPRESENTATION_METHOD),
+-    AUTHORITY_NAME: valueOrEmpty(input.AUTHORITY_NAME),
+-    AUTHORITY_ADDRESS: valueOrEmpty(input.AUTHORITY_ADDRESS),
+-    AUTHORITY_EMAIL: valueOrEmpty(input.AUTHORITY_EMAIL),
+   };
+ 
+   return {
+diff --git a/src/next/publish/templates/gvol.ts b/src/next/publish/templates/gvol.ts
+index 09b2b1f..8d7a2e5 100644
+--- a/src/next/publish/templates/gvol.ts
++++ b/src/next/publish/templates/gvol.ts
+@@ -12,23 +12,23 @@ type GvolVariant = "gvol-new" | "gvol-variation";
+ const TEMPLATES: Record<GvolVariant, string> = {
+   "gvol-new": `GOODS VEHICLE (OPERATOR'S) LICENCE
+ 
+-{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} is applying for a {{LICENCE_CATEGORY}} operator's licence in the {{TRAFFIC_AREA_NAME}} Traffic Area.
++{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} is applying for a {{LICENCE_CATEGORY}} operator's licence in the {{TRAFFIC_AREA}} Traffic Area.
+ 
+ Proposed operating centre: {{OPERATING_CENTRE_ADDRESS}}.
+ Authorisation: {{NUMBER_OF_VEHICLES}} goods vehicles and {{NUMBER_OF_TRAILERS}} trailers.
+ 
+-Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to {{AUTHORITY_NAME}}, {{AUTHORITY_ADDRESS}} by {{DEADLINE_DATE}}.
++Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}.
+ 
+ Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above.`,
+ 
+   "gvol-variation": `GOODS VEHICLE (OPERATOR'S) LICENCE — VARIATION
+ 
+-{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} has applied to vary the operator's licence in the {{TRAFFIC_AREA_NAME}} Traffic Area as follows: {{GVOL_VARIATION_DETAILS}}.
++{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} has applied to vary the operator's licence in the {{TRAFFIC_AREA}} Traffic Area as follows: {{GVOL_VARIATION_DETAILS}}.
+ 
+ Operating centre: {{OPERATING_CENTRE_ADDRESS}}.
+ Authorisation after variation: {{NUMBER_OF_VEHICLES}} goods vehicles and {{NUMBER_OF_TRAILERS}} trailers.
+ 
+-Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to {{AUTHORITY_NAME}}, {{AUTHORITY_ADDRESS}} by {{DEADLINE_DATE}}.
++Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}.
+ 
+ Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above.`,
+ };

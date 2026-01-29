@@ -1,0 +1,199 @@
+{
+  "alerts": {
+    "critical": {
+      "api_down": {
+        "name": "API Service Down",
+        "condition": "api.health_check.status != 200",
+        "threshold": 1,
+        "window": "5m",
+        "action": "create_github_issue",
+        "severity": "critical",
+        "message": "API health check is failing. Immediate action required."
+      },
+      "database_connection_failed": {
+        "name": "Database Connection Lost",
+        "condition": "database.connection.status == 'failed'",
+        "threshold": 1,
+        "window": "1m",
+        "action": "create_github_issue",
+        "severity": "critical",
+        "message": "Cannot connect to database. Application is non-functional."
+      },
+      "infinite_recursion_detected": {
+        "name": "Infinite Recursion in RLS",
+        "condition": "errors.contains('infinite recursion detected')",
+        "threshold": 1,
+        "window": "1m",
+        "action": "run_ralph_fix",
+        "severity": "critical",
+        "message": "Infinite recursion detected in RLS policies. Running Ralph fix."
+      }
+    },
+    "warning": {
+      "high_error_rate": {
+        "name": "High Error Rate",
+        "condition": "error_rate > 5%",
+        "threshold": 5,
+        "window": "10m",
+        "action": "send_notification",
+        "severity": "warning",
+        "message": "Error rate exceeding 5%. Investigation needed."
+      },
+      "slow_queries": {
+        "name": "Database Performance Degradation",
+        "condition": "query_time.p95 > 1000ms",
+        "threshold": 10,
+        "window": "5m",
+        "action": "log_metrics",
+        "severity": "warning",
+        "message": "Database queries are running slowly."
+      },
+      "low_registration_success": {
+        "name": "Registration Success Rate Low",
+        "condition": "registration.success_rate < 95%",
+        "threshold": 1,
+        "window": "1h",
+        "action": "send_notification",
+        "severity": "warning",
+        "message": "Registration success rate below 95%."
+      }
+    },
+    "info": {
+      "schema_drift": {
+        "name": "Database Schema Drift Detected",
+        "condition": "schema.changes_detected == true",
+        "threshold": 1,
+        "window": "24h",
+        "action": "log_metrics",
+        "severity": "info",
+        "message": "Schema changes detected. Review needed."
+      }
+    }
+  },
+  "notification_channels": {
+    "github_issues": {
+      "enabled": true,
+      "labels": ["monitoring", "alert"],
+      "assignees": []
+    },
+    "slack": {
+      "enabled": false,
+      "webhook_url": "${SLACK_WEBHOOK_URL}",
+      "channel": "#civic-notices-alerts"
+    },
+    "email": {
+      "enabled": false,
+      "recipients": ["devops@civicnotices.co.uk"],
+      "smtp_config": "${SMTP_CONFIG}"
+    }
+  },
+  "metrics": {
+    "collection_interval": "60s",
+    "retention_period": "30d",
+    "aggregations": {
+      "error_rate": {
+        "type": "percentage",
+        "numerator": "count(errors)",
+        "denominator": "count(requests)",
+        "window": "5m"
+      },
+      "registration_success_rate": {
+        "type": "percentage",
+        "numerator": "count(registrations.success)",
+        "denominator": "count(registrations.total)",
+        "window": "1h"
+      },
+      "api_uptime": {
+        "type": "percentage",
+        "numerator": "count(health_checks.success)",
+        "denominator": "count(health_checks.total)",
+        "window": "24h"
+      },
+      "database_query_time": {
+        "type": "histogram",
+        "buckets": [10, 50, 100, 500, 1000, 5000],
+        "unit": "ms"
+      }
+    }
+  },
+  "dashboards": {
+    "system_health": {
+      "refresh_interval": "30s",
+      "widgets": [
+        {
+          "type": "status",
+          "title": "API Health",
+          "metric": "api.health_check.status"
+        },
+        {
+          "type": "status",
+          "title": "Database Connection",
+          "metric": "database.connection.status"
+        },
+        {
+          "type": "gauge",
+          "title": "Error Rate",
+          "metric": "error_rate",
+          "thresholds": {
+            "green": [0, 1],
+            "yellow": [1, 5],
+            "red": [5, 100]
+          }
+        },
+        {
+          "type": "gauge",
+          "title": "Registration Success",
+          "metric": "registration_success_rate",
+          "thresholds": {
+            "green": [95, 100],
+            "yellow": [80, 95],
+            "red": [0, 80]
+          }
+        }
+      ]
+    },
+    "performance": {
+      "refresh_interval": "60s",
+      "widgets": [
+        {
+          "type": "line_chart",
+          "title": "Query Response Time",
+          "metric": "database_query_time",
+          "aggregation": "p95",
+          "window": "1h"
+        },
+        {
+          "type": "bar_chart",
+          "title": "Slow Queries by Endpoint",
+          "metric": "slow_queries.by_endpoint",
+          "limit": 10
+        },
+        {
+          "type": "heatmap",
+          "title": "Error Distribution",
+          "metric": "errors.by_type",
+          "window": "24h"
+        }
+      ]
+    }
+  },
+  "automation": {
+    "ralph_fix": {
+      "enabled": true,
+      "triggers": [
+        "infinite_recursion_detected",
+        "column_not_found_error"
+      ],
+      "cooldown": "5m",
+      "max_attempts": 3
+    },
+    "auto_scaling": {
+      "enabled": false,
+      "metrics": {
+        "cpu_threshold": 80,
+        "memory_threshold": 85,
+        "request_rate_threshold": 1000
+      }
+    }
+  }
+}

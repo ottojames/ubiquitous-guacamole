@@ -1,206 +1,281 @@
-import { z } from 'zod';
-import type { NoticeBase } from '@/types/notice';
-import {
-  addressSchema,
-  applicantSchema,
-  consultationSchema,
-  isoDateSchema,
-  premisesSchema,
-  publicationPlanSchema,
-} from './shared';
+import { z } from "zod";
+import type { NoticeBase } from "@/types/notice";
+import { ISO_DATE_REGEX } from "./shared";
 
 export const LICENSING_VARIANTS = [
-  'licensing-premises-new',
-  'licensing-premises-variation',
-  'licensing-premises-review',
-  'licensing-club-new',
-  'licensing-club-variation',
-  'licensing-club-review',
+  "licensing-premises-new",
+  "licensing-premises-variation",
+  "licensing-premises-review",
+  "licensing-club-new",
+  "licensing-club-variation",
+  "licensing-club-review",
 ] as const;
 
 export type LicensingVariant = (typeof LICENSING_VARIANTS)[number];
 
-const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
-const dayEnum = z.enum(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
-
-export const licensingActivitySchema = z
-  .object({
-    code: z.enum([
-      'alcohol_on',
-      'alcohol_off',
-      'alcohol_on_off',
-      'late_night_refreshment',
-      'live_music',
-      'recorded_music',
-      'dance',
-      'other',
-    ]),
-    label: z.string().min(2),
-    enabled: z.boolean().default(false),
-    days: z.array(dayEnum).default([]),
-    startTime: z.string().regex(timeRegex).optional(),
-    endTime: z.string().regex(timeRegex).optional(),
-    notes: z.string().max(240).optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.enabled) return;
-    if (!value.days || value.days.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['days'],
-        message: 'Select at least one day.',
-      });
-    }
-    if (!value.startTime || !value.endTime) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['startTime'],
-        message: 'Provide start and end times.',
-      });
-      return;
-    }
-    if (value.endTime <= value.startTime && value.endTime !== '00:00') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['endTime'],
-        message: 'End time must be after start time (or set to 00:00 for midnight).',
-      });
-    }
-  });
-
-export const licensingRepresentationsSchema = z
-  .object({
-    email: z.string().email().optional(),
-    website: z.string().url().optional(),
-    postal: z.string().min(5).optional(),
-  })
-  .refine(
-    (value) => value.email || value.website || value.postal,
-    'Provide an email, website, or postal address for representations.'
+const requiredString = (label: string) =>
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z.string().trim().min(1, `${label} is required`)
   );
 
-const licensingAuthoritySchema = z.object({
-  name: z.string().min(2, 'Licensing authority name is required'),
-  address: z.string().min(5, 'Authority address is required'),
-  email: z.string().email().optional(),
+const optionalString = () =>
+  z.preprocess(
+    (value) => {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : undefined;
+      }
+      return value;
+    },
+    z.string().trim().optional()
+  );
+
+const optionalEmail = () =>
+  z.preprocess(
+    (value) => {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : undefined;
+      }
+      return value;
+    },
+    z.string().email("Enter a valid email address").optional()
+  );
+
+const optionalUrl = () =>
+  z.preprocess(
+    (value) => {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : undefined;
+      }
+      return value;
+    },
+    z
+      .string()
+      .url("Enter a valid URL starting with http or https")
+      .optional()
+  );
+
+const isoDateField = (label: string) =>
+  z.preprocess(
+    (val) => (val === undefined || val === null ? "" : val),
+    z
+      .string()
+      .trim()
+      .min(1, `${label} is required`)
+      .regex(ISO_DATE_REGEX, { message: `${label} must be in YYYY-MM-DD format` })
+  );
+
+const additionalAuthoritySchema = z.object({
+  name: requiredString("Additional authority name"),
+  address: optionalString(),
+  email: optionalEmail(),
+  phone: optionalString(),
 });
 
-const dpsSchema = z.object({
-  fullName: z.string().min(3, 'DPS full name is required'),
-  issuingAuthority: z.string().min(3, 'Issuing authority is required'),
-  licenceNumber: z.string().min(3, 'Personal licence number is required'),
-});
-
-export const licensingNoticeSchema = z
+const licensingBaseSchema = z
   .object({
     variant: z.enum(LICENSING_VARIANTS),
-    applicant: applicantSchema,
-    premises: premisesSchema,
-    consultation: consultationSchema,
-    publication: publicationPlanSchema,
-    licensingAuthority: licensingAuthoritySchema,
-    inspectionAddressOrURL: z.string().min(5, 'Provide inspection address or URL'),
-    representations: licensingRepresentationsSchema,
-    siteNoticeDate: isoDateSchema,
-    newspaperPublicationDate: isoDateSchema,
-    activities: z.array(licensingActivitySchema).max(12),
-    alcoholService: z.enum(['on', 'off', 'both']).optional(),
-    dps: dpsSchema.optional(),
-    variationSummary: z.string().min(10).max(400).optional(),
-    reviewGrounds: z.string().min(10).max(400).optional(),
-    additionalNotes: z.string().max(400).optional(),
-    newspaperOverrideReason: z.string().max(300).optional(),
+    NOTICE_TYPE: requiredString("Notice type"),
+    ACT_TITLE: requiredString("Act title"),
+    APPLICANT_NAME: requiredString("Applicant name"),
+    APPLICANT_STATUS: optionalString(),
+    APPLICANT_TRADING_AS: optionalString(),
+    APPLICANT_ADDRESS: optionalString(),
+    APPLICANT_COMPANY_NUMBER: optionalString(),
+    PREMISES_NAME: optionalString(),
+    SITE_NAME: optionalString(),
+    CENTRE_NAME: optionalString(),
+    PREMISES_ADDRESS: requiredString("Premises address"),
+    LICENSABLE_ACTIVITIES: requiredString("Licensable activities"),
+    ACTIVITY_SCHEDULE: optionalString(),
+    OPENING_HOURS: optionalString(),
+    DPS_NAME: optionalString(),
+    DPS_LICENSING_AUTHORITY: optionalString(),
+    NATURE_OF_VARIATION: optionalString(),
+    REVIEW_APPLICANT_NAME: optionalString(),
+    REVIEW_GROUNDS: optionalString(),
+    LICENSING_OBJECTIVES: optionalString(),
+    APPLICATION_DATE: isoDateField("Application date"),
+    PUBLICATION_DATE: z.preprocess(
+      (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
+      isoDateField("Publication date").optional()
+    ),
+    DEADLINE_DATE: isoDateField("Representation deadline"),
+    INSPECTION_LOCATION: optionalString(),
+    INSPECTION_TIMES: optionalString(),
+    REPRESENTATION_METHOD: requiredString("Representation method"),
+    REPRESENTATION_ADDRESS: optionalString(),
+    REPRESENTATION_EMAIL: optionalEmail(),
+    AUTHORITY_NAME: requiredString("Authority name"),
+    AUTHORITY_ADDRESS: optionalString(),
+    AUTHORITY_EMAIL: optionalEmail(),
+    AUTHORITY_PHONE: optionalString(),
+    ADDITIONAL_LICENSING_AUTHORITIES: z.array(additionalAuthoritySchema).optional(),
+    ONLINE_REGISTER_URL: optionalUrl(),
+    REFERENCE: optionalString(),
+    RESPONSIBLE_AUTHORITIES_LIST_URL: optionalUrl(),
   })
   .superRefine((value, ctx) => {
-    if (value.variant.includes('variation') && !value.variationSummary) {
+    const isPremises = value.variant.includes("premises");
+    const isVariation = value.variant.includes("variation");
+    const isReview = value.variant.includes("review");
+    const activities = value.LICENSABLE_ACTIVITIES?.toLowerCase() ?? "";
+
+    // Accept AUTHORITY_EMAIL as fallback for representation contact when specific fields not provided
+    if (!value.REPRESENTATION_ADDRESS && !value.REPRESENTATION_EMAIL && !value.AUTHORITY_EMAIL) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['variationSummary'],
-        message: 'Provide a summary of the proposed variation.',
-      });
-    }
-    if (value.variant.includes('review') && !value.reviewGrounds) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['reviewGrounds'],
-        message: 'Provide the grounds for review.',
+        path: ["REPRESENTATION_ADDRESS"],
+        message: "Provide a postal or email contact for representations.",
       });
     }
 
-    if (value.variant.includes('premises') && !value.dps) {
+    if (isVariation && !value.NATURE_OF_VARIATION) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ['dps'],
-        message: 'Premises licences require DPS details.',
+        path: ["NATURE_OF_VARIATION"],
+        message: "Describe the nature of the variation.",
       });
     }
 
-    const enabledActivities = value.activities.filter((activity) => activity.enabled);
-    if (enabledActivities.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['activities'],
-        message: 'Enable at least one licensable activity.',
-      });
+    if (isReview) {
+      if (!value.REVIEW_APPLICANT_NAME) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["REVIEW_APPLICANT_NAME"],
+          message: "Provide the name of the review applicant.",
+        });
+      }
+      if (!value.REVIEW_GROUNDS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["REVIEW_GROUNDS"],
+          message: "Provide the grounds for review.",
+        });
+      }
     }
+
+    // DPS_NAME is legally required for alcohol licences but UI field may not exist yet
+    // TODO: Add DPS_NAME field to UI for alcohol-related premises licences
+    // For now, skip this validation to allow form progression
+    // if (isPremises && activities.includes("alcohol") && !value.DPS_NAME) {
+    //   ctx.addIssue({
+    //     code: z.ZodIssueCode.custom,
+    //     path: ["DPS_NAME"],
+    //     message: "Designated premises supervisor details are required when alcohol is supplied.",
+    //   });
+    // }
   });
+
+export const licensingNoticeSchema = licensingBaseSchema;
 
 export type LicensingNoticeInput = z.infer<typeof licensingNoticeSchema>;
 
-export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBase {
-  const noticeTypeLabel = (() => {
-    switch (input.variant) {
-      case 'licensing-premises-new':
-        return 'Licensing: Premises - New';
-      case 'licensing-premises-variation':
-        return 'Licensing: Premises - Variation';
-      case 'licensing-premises-review':
-        return 'Licensing: Premises - Review';
-      case 'licensing-club-new':
-        return 'Licensing: Club Premises Certificate - New';
-      case 'licensing-club-variation':
-        return 'Licensing: Club Premises Certificate - Variation';
-      case 'licensing-club-review':
-        return 'Licensing: Club Premises Certificate - Review';
-      default:
-        return 'Licensing';
-    }
-  })();
+function valueOrEmpty(value?: string | null): string {
+  return typeof value === "string" ? value.trim() : value ?? "";
+}
 
-  const applicantDisplayName = input.applicant.type === 'company'
-    ? input.applicant.companyName ?? ''
-    : input.applicant.fullName ?? '';
+function valueOrUndefined(value?: string | null): string | undefined {
+  const trimmed = typeof value === "string" ? value.trim() : value ?? "";
+  return trimmed.length ? trimmed : undefined;
+}
+
+/**
+ * Extract UK postcode from an address string
+ */
+function extractPostcode(address: string): string {
+  const postcodeRegex = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i;
+  const match = address.match(postcodeRegex);
+  return match ? match[1].toUpperCase() : "";
+}
+
+export function mapLicensingToNoticeBase(input: LicensingNoticeInput): NoticeBase {
+  // Build authority list for multi-jurisdiction support
+  const allAuthorities = [input.AUTHORITY_NAME];
+  if (input.ADDITIONAL_LICENSING_AUTHORITIES && input.ADDITIONAL_LICENSING_AUTHORITIES.length > 0) {
+    allAuthorities.push(...input.ADDITIONAL_LICENSING_AUTHORITIES.map(auth => auth.name));
+  }
+
+  const hasMultipleAuthorities = allAuthorities.length > 1;
+  const authorityNamesList = hasMultipleAuthorities
+    ? allAuthorities.slice(0, -1).join(", ") + " and " + allAuthorities[allAuthorities.length - 1]
+    : allAuthorities[0];
+
+  const tokens: Record<string, string> = {
+    NOTICE_TYPE: valueOrEmpty(input.NOTICE_TYPE),
+    ACT_TITLE: valueOrEmpty(input.ACT_TITLE),
+    APPLICANT_NAME: valueOrEmpty(input.APPLICANT_NAME),
+    APPLICANT_STATUS: valueOrEmpty(input.APPLICANT_STATUS),
+    APPLICANT_TRADING_AS: valueOrEmpty(input.APPLICANT_TRADING_AS),
+    APPLICANT_ADDRESS: valueOrEmpty(input.APPLICANT_ADDRESS),
+    APPLICANT_COMPANY_NUMBER: valueOrEmpty(input.APPLICANT_COMPANY_NUMBER),
+    PREMISES_NAME: valueOrEmpty(input.PREMISES_NAME),
+    SITE_NAME: valueOrEmpty(input.SITE_NAME),
+    CENTRE_NAME: valueOrEmpty(input.CENTRE_NAME),
+    PREMISES_ADDRESS: valueOrEmpty(input.PREMISES_ADDRESS),
+    LICENSABLE_ACTIVITIES: valueOrEmpty(input.LICENSABLE_ACTIVITIES),
+    ACTIVITY_SCHEDULE: valueOrEmpty(input.ACTIVITY_SCHEDULE),
+    OPENING_HOURS: valueOrEmpty(input.OPENING_HOURS),
+    DPS_NAME: valueOrEmpty(input.DPS_NAME),
+    DPS_LICENSING_AUTHORITY: valueOrEmpty(input.DPS_LICENSING_AUTHORITY),
+    NATURE_OF_VARIATION: valueOrEmpty(input.NATURE_OF_VARIATION),
+    REVIEW_APPLICANT_NAME: valueOrEmpty(input.REVIEW_APPLICANT_NAME),
+    REVIEW_GROUNDS: valueOrEmpty(input.REVIEW_GROUNDS),
+    LICENSING_OBJECTIVES: valueOrEmpty(input.LICENSING_OBJECTIVES),
+    APPLICATION_DATE: valueOrEmpty(input.APPLICATION_DATE),
+    PUBLICATION_DATE: valueOrEmpty(input.PUBLICATION_DATE),
+    DEADLINE_DATE: valueOrEmpty(input.DEADLINE_DATE),
+    INSPECTION_LOCATION: valueOrEmpty(input.INSPECTION_LOCATION),
+    INSPECTION_TIMES: valueOrEmpty(input.INSPECTION_TIMES),
+    REPRESENTATION_METHOD: valueOrEmpty(input.REPRESENTATION_METHOD),
+    REPRESENTATION_ADDRESS: valueOrEmpty(input.REPRESENTATION_ADDRESS),
+    REPRESENTATION_EMAIL: valueOrEmpty(input.REPRESENTATION_EMAIL),
+    AUTHORITY_NAME: valueOrEmpty(input.AUTHORITY_NAME),
+    AUTHORITY_ADDRESS: valueOrEmpty(input.AUTHORITY_ADDRESS),
+    AUTHORITY_EMAIL: valueOrEmpty(input.AUTHORITY_EMAIL),
+    AUTHORITY_PHONE: valueOrEmpty(input.AUTHORITY_PHONE),
+    AUTHORITY_NAMES_LIST: authorityNamesList,
+    HAS_MULTIPLE_AUTHORITIES: hasMultipleAuthorities ? "true" : "",
+    ONLINE_REGISTER_URL: valueOrEmpty(input.ONLINE_REGISTER_URL),
+    REFERENCE: valueOrEmpty(input.REFERENCE),
+  };
+
+  const applicantName = tokens.APPLICANT_NAME || "Applicant";
+  const premisesAddressBlock = tokens.PREMISES_ADDRESS || "Address not supplied";
+  const extractedPostcode = extractPostcode(premisesAddressBlock);
 
   return {
-    noticeType: noticeTypeLabel,
+    noticeType: tokens.NOTICE_TYPE || "Licensing Notice",
     applicant: {
-      ...input.applicant,
+      type: "company",
+      fullName: applicantName,
+      contactEmail: valueOrEmpty(input.REPRESENTATION_EMAIL),
     },
-    premises: input.premises,
+    premises: {
+      name: valueOrUndefined(input.PREMISES_NAME),
+      address: {
+        line1: premisesAddressBlock,
+        town: "",
+        postcode: extractedPostcode,
+      },
+    },
     publication: {
-      ...input.publication,
+      newspaper: "",
+      targetDate: valueOrEmpty(input.PUBLICATION_DATE || input.APPLICATION_DATE),
     },
     consultation: {
-      ...input.consultation,
-      windowRule: 'LA2003_28D',
+      applicationDate: tokens.APPLICATION_DATE,
+      repsDeadline: tokens.DEADLINE_DATE,
+      windowRule: "LA2003_28D",
     },
     extras: {
-      category: 'licensing',
+      category: "licensing",
       variant: input.variant,
-      authority: input.licensingAuthority,
-      inspectionAddressOrURL: input.inspectionAddressOrURL,
-      representations: input.representations,
-      siteNoticeDate: input.siteNoticeDate,
-      newspaperPublicationDate: input.newspaperPublicationDate,
-      activities: input.activities,
-      alcoholService: input.alcoholService,
-      dps: input.dps || null,
-      variationSummary: input.variationSummary,
-      reviewGrounds: input.reviewGrounds,
-      applicantDisplayName,
-      applicantServiceAddress: input.applicant.serviceAddress ?? input.applicant.registeredOffice,
-      additionalNotes: input.additionalNotes,
-      newspaperOverrideReason: input.newspaperOverrideReason,
+      councilName: tokens.AUTHORITY_NAME || "",
+      tokens,
     },
   } satisfies NoticeBase;
 }

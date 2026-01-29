@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Info } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import FileDropOCR from '@/components/upload/FileDropOCR';
-import CouncilSelect, { type Council } from '@/components/CouncilSelect';
+import DynamicCouncilSelect from '@/components/DynamicCouncilSelect';
 // {/* CN:LICENSING-FINAL-START */}
 import PreviewNotice from '@/features/publish/PreviewNotice';
 import ComplianceCard from '@/components/publish/RightRail/ComplianceCard';
@@ -237,7 +237,7 @@ export default function UploadNoticeFlow() {
   /* CN:LICENSING-TEMPLATES-END */
   /* CN:TEMPLATES-PREVIEW-END */
 
-  const requiredOk =
+  const requiredOk = Boolean(
     draft.applicantName.trim() &&
     draft.premisesAddress.trim() &&
     draft.postcode.trim() &&
@@ -247,7 +247,7 @@ export default function UploadNoticeFlow() {
     draft.applicationDate.trim() &&
     /* CN:TEMPLATES-PREVIEW-START */
     /* CN:LICENSING-TEMPLATES-START */
-    summariesOk;
+    summariesOk);
     /* CN:LICENSING-TEMPLATES-END */
     /* CN:TEMPLATES-PREVIEW-END */
   /* CN:STEP2-LAYOUT-START */
@@ -810,6 +810,7 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
   const [councilEmailTouched, setCouncilEmailTouched] = React.useState(false);
   const [councilAddressTouched, setCouncilAddressTouched] = React.useState(false);
   const [representationsUrlTouched, setRepresentationsUrlTouched] = React.useState(false);
+  const [selectedCouncilId, setSelectedCouncilId] = React.useState<string | undefined>(undefined);
   const emailLocked = !!draft.isCouncilEmailLocked;
   const trimmedEmail = (draft.councilEmail ?? '').trim();
   const trimmedCouncilAddress = (draft.councilAddress ?? '').trim();
@@ -1221,45 +1222,47 @@ function NoticeDetailsSections(props: NoticeDetailsSectionsProps) {
             {/* CN:OFFICER-FINAL-END */}
           </div>
           <div className="col-span-12 md:col-span-6">
-            <CouncilSelect
-              id="councilName"
-              value={draft.councilName ?? ''}
-              inputRef={refs.councilName}
-              onChangeText={(name) => {
+            <DynamicCouncilSelect
+              value={selectedCouncilId}
+              onChange={(council) => {
                 setCouncilNameTouched(true);
-                lookedUpName.current = '';
-                lookedUpEmail.current = '';
-                lookedUpAddress.current = '';
-                onChange(
-                  {
-                    councilName: name,
-                    isCouncilEmailLocked: false,
-                  },
-                  { ensureUrn: true }
-                );
-              }}
-              onBlur={() => setCouncilNameTouched(true)}
-              onSelect={(council: Council) => {
-                lookedUpName.current = council.name;
-                lookedUpEmail.current = council.email || '';
-                lookedUpAddress.current = council.address || '';
-                onChange(
-                  {
-                    councilName: council.name,
-                    councilEmail: council.email || '',
-                    councilAddress:
-                      typeof council.address === 'string' ? council.address : draft.councilAddress,
-                    isCouncilEmailLocked: !!council.email,
-                  },
-                  { ensureUrn: true }
-                );
-                setCouncilNameTouched(true);
-                if (!council.email) setCouncilEmailTouched(true);
-                if (typeof council.address === 'string' && !council.address) {
-                  setCouncilAddressTouched(true);
+                if (council) {
+                  lookedUpName.current = council.name;
+                  lookedUpEmail.current = council.email || '';
+                  lookedUpAddress.current = council.address || '';
+                  onChange(
+                    {
+                      councilName: council.name,
+                      councilEmail: council.email || '',
+                      councilAddress:
+                        typeof council.address === 'string' ? council.address : draft.councilAddress,
+                      isCouncilEmailLocked: !!council.email,
+                    },
+                    { ensureUrn: true }
+                  );
+                  if (!council.email) setCouncilEmailTouched(true);
+                  if (typeof council.address === 'string' && !council.address) {
+                    setCouncilAddressTouched(true);
+                  }
+                  setSelectedCouncilId(council.id);
+                } else {
+                  // Council cleared
+                  lookedUpName.current = '';
+                  lookedUpEmail.current = '';
+                  lookedUpAddress.current = '';
+                  onChange(
+                    {
+                      councilName: '',
+                      councilEmail: '',
+                      isCouncilEmailLocked: false,
+                    },
+                    { ensureUrn: true }
+                  );
+                  setSelectedCouncilId(undefined);
                 }
               }}
               error={showCouncilNameError ? 'Council name is required.' : undefined}
+              required={true}
             />
             {lookedUpName.current && draft.councilName && draft.councilName !== lookedUpName.current && (
               <span className="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">

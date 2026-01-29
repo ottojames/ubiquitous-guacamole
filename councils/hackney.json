@@ -1,0 +1,364 @@
+{
+  "name": "London Borough of Hackney",
+  "type": "London Borough",
+  "region": "Greater London",
+  "website": "https://www.hackney.gov.uk",
+  "address": {
+    "line1": "Hackney Town Hall",
+    "line2": "Mare Street",
+    "city": "London",
+    "postcode": "E8 1EA"
+  },
+  "serviceCenter": {
+    "line1": "Hackney Service Centre",
+    "line2": "1 Hillman Street",
+    "city": "London",
+    "postcode": "E8 1DY"
+  },
+  "mainPhone": "020 8356 3000",
+  "outOfHoursEmergency": "020 8356 2710",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "sex-establishment",
+        "gaming-machine-permit"
+      ],
+      "email": "licensing@hackney.gov.uk",
+      "phone": "020 8356 4970",
+      "address": {
+        "line1": "Licensing Team",
+        "line2": "Hackney Service Centre",
+        "line3": "1 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1DY"
+      },
+      "openingHours": "Monday to Friday: 9am to 5pm",
+      "submissionMethod": "email",
+      "webForm": null,
+      "publicRegister": "https://map2.hackney.gov.uk/lbh-licensing-register/",
+      "preApplicationAdvice": {
+        "fee": "FREE",
+        "notes": "Funded by Greater London Authority's Business Friendly Licensing Fund. Contact Hackney Nights team for advice or site visit."
+      },
+      "fees": {
+        "premisesLicence": "100-635 (based on non-domestic rateable value)"
+      },
+      "processingTime": "Usually 2 months for final decision",
+      "policyDocument": {
+        "name": "Statement of Licensing Policy",
+        "effective": "1 August 2023",
+        "expires": "2028",
+        "revised": "April 2025 (includes Special Consideration Area)"
+      },
+      "notes": "Handles Licensing Act 2003 and Gambling Act 2005 applications. 28-day public consultation period. Weekly applications list available by email subscription. Payment by phone or payment link after email submission."
+    },
+    {
+      "name": "Street Trading & Markets",
+      "handles": [
+        "street-trading-licence",
+        "market-pitch",
+        "temporary-trading-licence"
+      ],
+      "email": "markets.service@hackney.gov.uk",
+      "phone": "020 8356 5300",
+      "address": {
+        "line1": "Markets and Street Trading Office",
+        "line2": "First Floor, 51-63 Ridley Road",
+        "city": "London",
+        "postcode": "E8 2NP"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://hackney.gov.uk/markets-apply-to-trade/",
+      "processingTime": {
+        "newApplications": "10 working days",
+        "renewals": "7 working days"
+      },
+      "markets": [
+        {
+          "name": "Ridley Road Market",
+          "days": "Monday to Saturday",
+          "hours": "Mon-Thu 6am-6pm, Fri-Sat 6am-7pm",
+          "notes": "Hackney's largest market"
+        },
+        {
+          "name": "Broadway Market",
+          "days": "Saturdays only",
+          "hours": "7:30am-7pm",
+          "notes": "107 permanent businesses"
+        },
+        {
+          "name": "Chatsworth Road Market",
+          "days": "Variable",
+          "notes": "50+ active traders, 83% occupancy"
+        },
+        {
+          "name": "Hoxton Street Market",
+          "days": "Variable"
+        },
+        {
+          "name": "Kingsland Market",
+          "days": "Variable"
+        },
+        {
+          "name": "Well Street Market",
+          "days": "Events only",
+          "notes": "Currently operates for events only"
+        }
+      ],
+      "tradingSites": ["Hoxton Street", "Narrow Way", "Clifton Street", "Leonard Street", "Old Street"],
+      "notes": "Licence types: Temporary (max 6 months, anyone 17+) and Permanent. Council operates 6 markets across the borough."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area",
+        "pre-application-advice"
+      ],
+      "email": "planning@hackney.gov.uk",
+      "preApplicationEmail": "planningvalidation@hackney.gov.uk",
+      "enforcementEmail": "planningenforcement@hackney.gov.uk",
+      "phone": "020 8356 8062",
+      "dutyPlannerHours": "10am-12pm and 2pm-4pm, Monday to Friday",
+      "address": {
+        "line1": "Development Management",
+        "line2": "2 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1FB"
+      },
+      "receptionAddress": {
+        "line1": "1 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1DY",
+        "hours": "9am-5pm Monday to Friday"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "notes": "Applications accepted via national Planning Portal or direct to council. Duty planner available for phone queries during specified hours."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation",
+        "dangerous-structures"
+      ],
+      "email": "buildingcontrol@hackney.gov.uk",
+      "phone": "020 8356 8124",
+      "managerPhone": "020 8356 2064",
+      "manager": "Tim Gillooly",
+      "address": {
+        "line1": "Building Control",
+        "line2": "Hackney Service Centre",
+        "line3": "1 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1DY"
+      },
+      "openingHours": "Monday to Friday 9am-5pm",
+      "inspectionDays": "Monday, Tuesday, Thursday",
+      "submissionMethod": "email",
+      "webForm": "https://hackney.gov.uk/building-control/",
+      "notes": "Domestic advice phone available. Inspections on Monday, Tuesday, and Thursday only."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "streetworks-permit",
+        "parking-suspension"
+      ],
+      "troEmail": "suresh.prajapati@hackney.gov.uk",
+      "troPhone": "020 8356 8374",
+      "streetWorksEmail": "streetworks@hackney.gov.uk",
+      "parkingSuspensionsEmail": "parking.suspensions@hackney.gov.uk",
+      "parkingSuspensionsPhone": "020 8356 8290",
+      "highwayInspectorsEmail": "Highway.Inspectors@hackney.gov.uk",
+      "submissionMethod": "web-form",
+      "traffWebPortal": "https://hackney.traffweb.app",
+      "publicConsultation": "https://hackney.traffweb.app/traffweb/2/PublicConsultation",
+      "notes": "TRO process requires completing conditions up to 6 weeks before work starts. Site meeting required. TraffWeb portal for consultations and applications."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "noise-complaint",
+        "statutory-nuisance",
+        "pollution",
+        "smoke-odour"
+      ],
+      "email": "environmental.health@hackney.gov.uk",
+      "pollutionEmail": "pollutionsupport@hackney.gov.uk",
+      "phone": "020 8356 4911",
+      "noisePhone": {
+        "officeHours": "020 8356 3000",
+        "outOfHours": "020 8356 4455"
+      },
+      "address": {
+        "line1": "Environmental Health",
+        "line2": "Hackney Service Centre",
+        "line3": "1 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1DY"
+      },
+      "submissionMethod": "web-form",
+      "noiseReporting": "https://noise.hackney.gov.uk",
+      "noiseSystem": "NoiseWorks",
+      "foodSafety": {
+        "registrationEmail": "technicalbusinesssupport@hackney.gov.uk",
+        "phone": "020 8356 4911",
+        "registration": "Free, no renewal required, submit 28 days before trading",
+        "ratingsSearch": "https://ratings.food.gov.uk/authority-search-landing/512"
+      },
+      "notes": "Noise complaints via NoiseWorks online system or phone. Office hours: Mon-Fri 9am-5pm. Out of hours noise complaints: 020 8356 4455. Responsible authority for licensing consultations."
+    },
+    {
+      "name": "HMO & Property Licensing",
+      "handles": [
+        "hmo-licence",
+        "hmo-mandatory",
+        "hmo-additional",
+        "selective-licence"
+      ],
+      "email": "property.licensing@hackney.gov.uk",
+      "phone": "020 8356 4866",
+      "address": {
+        "line1": "Property Licensing Team",
+        "line2": "Hackney Service Centre",
+        "line3": "1 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1DY"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://propertylicensing.hackney.gov.uk",
+      "publicRegister": "https://propertylicensing.hackney.gov.uk/public-register",
+      "currentSchemes": {
+        "mandatoryHMO": {
+          "status": "In force",
+          "fee": 950,
+          "accreditedFee": 875
+        }
+      },
+      "newSchemes": {
+        "effectiveDate": "1 May 2026",
+        "additionalHMO": {
+          "coverage": "Borough-wide",
+          "criteria": "All HMOs with 3+ people from 2+ households",
+          "fee": 1400
+        },
+        "selectiveLicensing": {
+          "coverage": "17 of 21 wards (76% of private rentals)",
+          "exemptWards": ["Haggerston", "Hoxton East and Shoreditch", "Hoxton West", "Woodberry Down"],
+          "singleHomeFee": 925
+        }
+      },
+      "notes": "Major licensing expansion from May 2026. New additional HMO and selective licensing schemes approved. 76% of private rentals will require selective licence. Online portal for applications and public register."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "consumer-protection",
+        "business-advice"
+      ],
+      "email": null,
+      "phone": "020 8356 4929",
+      "consumerHelpline": "0808 223 1133",
+      "welshHelpline": "0808 223 1144",
+      "alternativePhone": "03454 040506",
+      "address": {
+        "line1": "Trading Standards",
+        "line2": "Hackney Service Centre",
+        "line3": "1 Hillman Street",
+        "city": "London",
+        "postcode": "E8 1DY"
+      },
+      "dropInHours": "Wednesday & Friday 9:30am-12pm",
+      "submissionMethod": "phone",
+      "webForm": null,
+      "notes": "Consumer complaints routed through Citizens Advice Consumer Service. Local drop-in at Hackney Service Centre. Business advice available by phone (fee may apply)."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "Metropolitan Police - Hackney Licensing Unit",
+      "email": "hackneylicensing@met.police.uk",
+      "phone": "020 7275 3022",
+      "address": {
+        "line1": "Stoke Newington Police Station",
+        "line2": "33 Stoke Newington High Street",
+        "city": "London",
+        "postcode": "N16 8DS"
+      },
+      "clubsFocusDesk": "CO14@met.police.uk"
+    },
+    "fire": {
+      "name": "London Fire Brigade",
+      "boroughCommander": "James O'Neil",
+      "email": "james.oneil@london-fire.gov.uk",
+      "policyTeamEmail": "FSRpolicyteam@london-fire.gov.uk",
+      "address": {
+        "line1": "London Fire Brigade",
+        "line2": "169 Union Street",
+        "city": "London",
+        "postcode": "SE1 0LL"
+      },
+      "homeSafetyVisits": "0800 028 4428",
+      "notes": "Hackney is in the Eastern District (Foxtrot designation)"
+    },
+    "homeOffice": {
+      "name": "Home Office Immigration Enforcement",
+      "email": "alcohol@homeoffice.gsi.gov.uk",
+      "address": {
+        "line1": "40 Wellesley Road",
+        "city": "Croydon",
+        "postcode": "CR9 2BY"
+      }
+    },
+    "safeguarding": {
+      "name": "City of London & Hackney Safeguarding Children Partnership (CHSCP)",
+      "website": "https://chscp.org.uk",
+      "mashEmail": "MASH@hackney.gov.uk",
+      "mashPhone": "020 8356 5500",
+      "mashHours": "Monday to Friday 9am-5pm",
+      "outOfHoursEmergency": "020 8356 2710",
+      "headOfSafeguardingQA": {
+        "name": "Frida Lannemyr",
+        "email": "frida.lannemyr@hackney.gov.uk"
+      }
+    },
+    "publicHealth": {
+      "role": "Director of Public Health",
+      "function": "City and Hackney Public Health - examines impact of licensed premises using local data",
+      "notes": "Responsible authority under Licensing Act 2003"
+    },
+    "fullList": "https://hackney.gov.uk/premises-licence/ (Google Doc link available on page)"
+  },
+  "additionalResources": {
+    "licensingPublicRegister": "https://map2.hackney.gov.uk/lbh-licensing-register/",
+    "propertyLicensingPortal": "https://propertylicensing.hackney.gov.uk",
+    "propertyLicensingRegister": "https://propertylicensing.hackney.gov.uk/public-register",
+    "traffWebPortal": "https://hackney.traffweb.app",
+    "traffWebConsultations": "https://hackney.traffweb.app/traffweb/2/PublicConsultation",
+    "noiseReporting": "https://noise.hackney.gov.uk",
+    "foodHygieneRatings": "https://ratings.food.gov.uk/authority-search-landing/512",
+    "safeguardingPartnership": "https://chscp.org.uk",
+    "councilNews": "https://news.hackney.gov.uk"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-29",
+  "researchNotes": "Research conducted via Hackney Council website and public search results. Council headquarters at Hackney Town Hall, Mare Street E8 1EA. Service Centre at 1 Hillman Street E8 1DY handles most public-facing services. Licensing email confirmed as licensing@hackney.gov.uk. Statement of Licensing Policy 2023-2028, revised April 2025. Major property licensing expansion from May 2026 - additional HMO licensing borough-wide and selective licensing in 17 of 21 wards. FREE pre-application licensing advice funded by GLA. Taxi/private hire licensing handled by Transport for London, not Hackney Council directly."
+}

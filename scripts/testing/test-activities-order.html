@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Activities Ordering</title>
+</head>
+<body>
+    <h1>Testing FIX-005: Activity Field Ordering</h1>
+    <p>This test verifies that "Sale of alcohol - On & off the premises" appears at the TOP of the activities list.</p>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Navigate to: <a href="http://localhost:5173/publish/step-1" target="_blank">http://localhost:5173/publish/step-1</a></li>
+        <li>Select "Licensing" category</li>
+        <li>Select "New Premises Licence"</li>
+        <li>Click "Continue to Upload Method"</li>
+        <li>Verify "Use structured template" is selected by default</li>
+        <li>Click "Continue to Notice Details"</li>
+        <li>Look for the "Activities & hours" section</li>
+        <li>Verify the alcohol activities are in this order:
+            <ol>
+                <li><strong>Sale of alcohol – On & off the premises</strong> (should be FIRST)</li>
+                <li>Sale of alcohol – On the premises (on-sales)</li>
+                <li>Sale of alcohol – Off the premises (off-sales)</li>
+            </ol>
+        </li>
+    </ol>
+    
+    <h2>Expected Result:</h2>
+    <p style="background: #d4edda; padding: 10px; border-radius: 5px;">
+        ✅ "Sale of alcohol – On & off the premises" should appear at the TOP of the alcohol activities list
+    </p>
+</body>
+</html>

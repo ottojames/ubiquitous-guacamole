@@ -1,0 +1,79 @@
+{
+  "orchestrator": {
+    "askBeforeBuilding": true,
+    "showPlanFirst": true,
+    "maxIterations": 3,
+    "browserVerification": true,
+    "browser": "chromium",
+    "decisionThreshold": "medium",
+    "verbosity": "normal",
+    "alwaysAskWhenConfused": true,
+    "escalateAfterFailures": 3
+  },
+  "agents": {
+    "analyst": {
+      "enabled": true,
+      "model": "sonnet",
+      "maxQuestions": 4
+    },
+    "architect": {
+      "enabled": true,
+      "model": "sonnet",
+      "preferSimpleSolutions": true
+    },
+    "critic": {
+      "enabled": true,
+      "model": "sonnet",
+      "strictness": "high"
+    },
+    "coder": {
+      "enabled": true,
+      "model": "sonnet",
+      "noExtraFeatures": true
+    },
+    "fixer": {
+      "enabled": true,
+      "model": "sonnet",
+      "surgicalFixes": true
+    },
+    "tester": {
+      "enabled": true,
+      "model": "sonnet",
+      "runTypecheck": true,
+      "runLint": true,
+      "runTests": true
+    },
+    "browser": {
+      "enabled": true,
+      "model": "sonnet",
+      "screenshotOnSuccess": true,
+      "screenshotOnFailure": true,
+      "checkMobile": true,
+      "mobileWidth": 375
+    },
+    "userSim": {
+      "enabled": true,
+      "model": "sonnet",
+      "testEdgeCases": true
+    }
+  },
+  "pragmatismRules": [
+    "Working > Perfect - Ship something that works, improve later",
+    "Simple > Clever - If a junior dev can't understand it, simplify",
+    "Delete > Comment - Remove dead code, don't comment it out",
+    "Existing patterns > New patterns - Match the codebase",
+    "Browser says no = No - If it doesn't work in Chrome, it doesn't work",
+    "3 failures = Human - Don't spin forever, ask for help",
+    "Scope creep = Stop - If the task grows, pause and re-plan"
+  ],
+  "verification": {
+    "baseUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:5174",
+    "screenshotDir": "audit/screenshots",
+    "viewports": {
+      "mobile": { "width": 375, "height": 667 },
+      "tablet": { "width": 768, "height": 1024 },
+      "desktop": { "width": 1280, "height": 720 }
+    }
+  }
+}

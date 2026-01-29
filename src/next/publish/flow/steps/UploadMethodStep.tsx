@@ -1,25 +1,26 @@
-import React from 'react';
-import * as UI from '@/styles/ui';
-import type { NoticeDefinition } from '@/next/publish/config/noticeTypes';
+import React from "react";
+import * as UI from "@/styles/ui";
+import StickyRailLayout from "@/next/publish/flow/components/StickyRailLayout";
+import UploadOcrPane, { type UploadOcrPaneProps } from "@/next/publish/flow/components/UploadOcrPane";
+import type { NoticeDefinition } from "@/next/publish/config/noticeTypes";
+import { useSafeTransition } from "@/wizard/useSafeTransition";
 
-export type UploadMethod = 'notice' | 'template';
+export type UploadMethod = "notice" | "template";
 
-export type UploadMethodStepProps = {
-  definition: NoticeDefinition;
+type Props = {
+  definition: NoticeDefinition | null;
   method: UploadMethod | null;
-  onMethodChange: (method: UploadMethod) => void;
+  onMethodChange: (m: UploadMethod) => void;
   onBack: () => void;
   onContinue: () => void;
   continueDisabled?: boolean;
-  fromNoticeContent: React.ReactNode;
+  continuePending?: boolean;
+  uploadPaneProps: UploadOcrPaneProps;
   templateContent: React.ReactNode;
   rightRail?: React.ReactNode;
+  email: string;
+  onEmailChange: (email: string) => void;
 };
-
-const tabs: Array<{ key: UploadMethod; label: string; description: string }> = [
-  { key: 'notice', label: 'Upload from Notice', description: 'Drop your signed notice or supply text for OCR.' },
-  { key: 'template', label: 'Upload via Template', description: 'Generate the notice using our structured form.' },
-];
 
 export default function UploadMethodStep({
   definition,
@@ -28,77 +29,273 @@ export default function UploadMethodStep({
   onBack,
   onContinue,
   continueDisabled,
-  fromNoticeContent,
+  continuePending,
+  uploadPaneProps,
   templateContent,
   rightRail,
-}: UploadMethodStepProps) {
+  email,
+  onEmailChange,
+}: Props) {
+  const [emailError, setEmailError] = React.useState("");
+
+  const validateEmail = (value: string) => {
+    if (!value) {
+      setEmailError("Email is required for confirmation");
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  console.log('[UploadMethodStep] rightRail:', rightRail ? 'EXISTS' : 'NULL', 'method:', method);
+  const inferredDefaultMethod = React.useMemo<UploadMethod>(
+    () => "template",
+    [definition?.id]
+  );
+  const [active, setActive] = React.useState<UploadMethod>(method ?? inferredDefaultMethod);
+  const methodRef = React.useRef<UploadMethod | null>(method ?? null);
+  const { run: chooseMethod, pending: switching } = useSafeTransition(async (key: UploadMethod) => {
+    if (methodRef.current === key) return;
+    methodRef.current = key;
+    setActive(key);
+    onMethodChange(key);
+  });
+
+  React.useEffect(() => {
+    if (method) {
+      methodRef.current = method;
+      setActive(method);
+    } else {
+      methodRef.current = null;
+      setActive(inferredDefaultMethod);
+    }
+  }, [method, inferredDefaultMethod]);
+
+  // Auto-trigger method change on initial load if no method is set
+  React.useEffect(() => {
+    if (!method && inferredDefaultMethod && definition) {
+      console.log('[UploadMethodStep] Auto-triggering initial method:', inferredDefaultMethod);
+      chooseMethod(inferredDefaultMethod);
+    }
+  }, [method, inferredDefaultMethod, definition, chooseMethod]);
+
+  const toggle = (key: UploadMethod) => {
+    setActive(key);
+    if (key === "notice" && methodRef.current === null) return;
+    chooseMethod(key);
+  };
+
+  // Guard undefined definition access
+  const defLabel = definition?.label ?? "this notice type";
+
   return (
-    <section className={`${UI.card} p-0`} data-testid="upload-method-step">
-      <div
-        className={`grid gap-0 ${
-          rightRail ? 'md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : 'md:grid-cols-1'
-        }`}
-      >
-        <div className="space-y-6 p-6">
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-blue/80">Step 2 · Upload your notice</p>
-            <h2 className="text-base font-semibold text-brand-navy">{definition.label}</h2>
-            <p className="text-sm text-neutral-600">
-              Choose how you want to prepare this notice. You can upload an existing draft for OCR or build it via our template.
+    <section
+      className="mx-auto max-w-6xl space-y-10"
+      data-testid="upload-method-step"
+      aria-busy={continuePending || switching ? "true" : undefined}
+    >
+      {/* Glass Section Header Card */}
+      <header className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-12">
+        <div className="space-y-8">
+          <div className="space-y-4 text-center">
+            <h2 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 md:text-4xl">
+              Upload your notice
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600">
+              You can upload a signed notice or build from our structured template. We'll extract your text automatically.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Upload method">
-            {tabs.map((tab) => {
-              const isActive = method === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`${UI.btnSecondary} h-10 px-4 text-sm transition-colors duration-200 focus:ring-offset-0 focus:ring-offset-transparent ${
-                    isActive
-                      ? 'bg-white text-brand-navy font-semibold shadow-sm border-brand-blue/50'
-                      : 'bg-white/80 text-brand-navy/70 border-white/70 hover:bg-white'
-                  }`}
-                  data-testid={`upload-method-${tab.key}`}
-                  onClick={() => onMethodChange(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="rounded-xl border border-neutral-200 bg-white/80">
-            {method === 'notice' && <div role="tabpanel">{fromNoticeContent}</div>}
-            {method === 'template' && <div role="tabpanel">{templateContent}</div>}
-            {!method && (
-              <div className="p-10 text-center text-sm text-neutral-500" data-testid="upload-method-placeholder">
-                Select an option above to continue.
-              </div>
-            )}
-          </div>
-          <div className="flex items-center justify-between pt-2">
-            <button type="button" className={UI.btnSecondary} onClick={onBack} data-testid="upload-method-back">
-              Back
-            </button>
-            <button
-              type="button"
-              className={`${UI.btnPrimary} min-w-[150px]`}
-              onClick={onContinue}
-              disabled={continueDisabled ?? !method}
-              data-testid="upload-method-continue"
-            >
-              Continue
-            </button>
+
+          {/* Premium Segmented Control */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white p-1.5 shadow-sm ring-1 ring-slate-200">
+              <button
+                type="button"
+                onClick={() => toggle("template")}
+                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                  active === "template"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                aria-pressed={active === "template"}
+              >
+                Structured template
+              </button>
+              <button
+                type="button"
+                onClick={() => toggle("notice")}
+                className={`rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+                  active === "notice"
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                aria-pressed={active === "notice"}
+              >
+                Upload via File
+              </button>
+            </div>
           </div>
         </div>
-        {rightRail && (
-          <aside className="border-t border-neutral-200 bg-neutral-50/70 p-6 md:border-l md:border-t-0">
-            {rightRail}
-          </aside>
-        )}
+      </header>
+
+      {/* Contact Email Card */}
+      <div className="rounded-3xl border border-slate-200/60 bg-white/95 p-4 sm:p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+        <h3 className="mb-3 text-lg font-bold text-slate-900">Confirmation email</h3>
+        <p className="mb-6 text-sm text-slate-600">
+          We'll send your confirmation and receipt to this email address.
+        </p>
+        <div className="max-w-md">
+          <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+            Email address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => {
+              onEmailChange(e.target.value);
+              if (emailError) validateEmail(e.target.value);
+            }}
+            onBlur={() => validateEmail(email)}
+            placeholder="your.email@example.com"
+            className={`w-full rounded-xl border ${
+              emailError ? 'border-red-300 bg-red-50' : 'border-slate-300 bg-white'
+            } px-4 py-3 text-base text-slate-900 placeholder-slate-600 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+            disabled={continuePending}
+            aria-invalid={!!emailError}
+            aria-describedby={emailError ? "email-error" : undefined}
+            autoComplete="off"
+          />
+          {emailError && (
+            <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center gap-1" role="alert">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {emailError}
+            </p>
+          )}
+        </div>
       </div>
+
+      <StickyRailLayout
+        left={
+          <div className="relative space-y-8 pb-32">
+            {/* Upload Content */}
+            {active === "notice" ? (
+              <div className="space-y-6">
+                <UploadOcrPane
+                  {...uploadPaneProps}
+                  onSwitchToTemplate={() => toggle("template")}
+                />
+
+                {/* Reassurance Row */}
+                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Encrypted in transit
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    OCR completes in seconds
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    You can edit everything after upload
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6" data-testid="upload-template-panel">
+                <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:p-8">
+                  <div className="mb-6 space-y-1.5">
+                    <p className="text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+                      Structured fields
+                    </p>
+                    <p className="text-[13px] leading-relaxed text-slate-600">
+                      Tailored questions keep you compliant. Switch back to OCR at any point—your inputs are preserved.
+                    </p>
+                  </div>
+                  {templateContent}
+                </div>
+                <p className="text-[12px] leading-relaxed text-slate-500">
+                  Already have a signed notice? Choose Upload & OCR to extract the text automatically.
+                </p>
+              </div>
+            )}
+
+            {/* Premium Sticky Action Bar */}
+            <div className="sticky bottom-6 -mx-4 sm:-mx-0">
+              <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/95 shadow-[0_16px_48px_rgba(15,23,42,0.15)] backdrop-blur-2xl">
+                <div className="flex items-center justify-between gap-6 px-8 py-6">
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900"
+                    data-testid="upload-step-back"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                  </button>
+
+                  <div className="flex flex-1 items-center justify-end gap-6">
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-slate-900">
+                        {continueDisabled ? "Complete required fields" : "Looking good"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {continueDisabled
+                          ? "All mandatory fields must appear on the public notice."
+                          : "Ready to review your notice details."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onContinue}
+                      disabled={!!continueDisabled || continuePending || switching}
+                      className={`inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold shadow-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                        continueDisabled
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                          : 'bg-blue-600 text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] hover:bg-blue-700 hover:shadow-[0_12px_32px_rgba(37,99,235,0.45)] hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
+                      data-testid="upload-step-continue"
+                    >
+                      {continuePending ? (
+                        <>
+                          <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                          </svg>
+                          Working...
+                        </>
+                      ) : (
+                        <>
+                          Continue
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+        right={rightRail ?? null}
+      />
     </section>
   );
 }

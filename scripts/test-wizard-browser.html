@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wizard Test - US-0011</title>
+</head>
+<body>
+    <h1>Manual Browser Test for US-0011: Fix Wizard Step4 Upload</h1>
+
+    <h2>Test Instructions:</h2>
+    <ol>
+        <li>Open browser to <a href="http://localhost:5173/publish/step-1" target="_blank">http://localhost:5173/publish/step-1</a></li>
+        <li><strong>Step 1:</strong> Select "New Premises Licence" and click Continue</li>
+        <li><strong>Step 2:</strong>
+            <ul>
+                <li>Verify "Structured template" is selected by default</li>
+                <li>Enter email: test@example.com</li>
+                <li>Click Continue</li>
+            </ul>
+        </li>
+        <li><strong>Step 3:</strong> Fill in details:
+            <ul>
+                <li>Applicant Name: Test Applicant Ltd</li>
+                <li>Premises Name: The Test Tavern</li>
+                <li>Address Line 1: 123 Test Street</li>
+                <li>Town: Testington</li>
+                <li>Postcode: TE5 7ST</li>
+                <li>Council: Select Sampletonborough Council</li>
+                <li>Activities: Check "Sale of alcohol"</li>
+                <li>Click Continue</li>
+            </ul>
+        </li>
+        <li><strong>Step 4:</strong>
+            <ul>
+                <li>Review all details</li>
+                <li>Click "Submit" or "Confirm and Pay" button</li>
+                <li>Observe what happens</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2>Expected Results:</h2>
+    <ul>
+        <li>✅ Notice should be created in database</li>
+        <li>✅ Should redirect to confirmation page</li>
+        <li>✅ No errors should appear</li>
+    </ul>
+
+    <h2>Test Results:</h2>
+    <pre id="results">
+Testing API endpoint directly...
+    </pre>
+
+    <script>
+        // Test the API endpoint
+        fetch('http://localhost:5174/api/notices/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                notice_type: 'premises-licence',
+                contact_email: 'test@example.com',
+                applicant: {
+                    name: 'Browser Test Applicant',
+                    email: 'test@example.com'
+                },
+                premises: {
+                    name: 'Browser Test Premises',
+                    address: '456 Browser Street, Testville, TE5 7BR'
+                },
+                consultation: {
+                    repsDeadline: '2026-02-15'
+                },
+                extras: {
+                    activities: ['Sale of alcohol'],
+                    tokens: {
+                        APPLICANT_NAME: 'Browser Test Applicant',
+                        PREMISES_NAME: 'Browser Test Premises'
+                    }
+                }
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('results').textContent =
+                'API Test Result:\n' +
+                '✅ API endpoint working!\n' +
+                'Notice ID: ' + data.id + '\n' +
+                'Success: ' + data.success + '\n\n' +
+                'Now test the full wizard flow using the link above.';
+        })
+        .catch(error => {
+            document.getElementById('results').textContent =
+                'API Test Failed:\n' +
+                '❌ Error: ' + error.message + '\n\n' +
+                'Make sure the API server is running on port 5174';
+        });
+    </script>
+</body>
+</html>

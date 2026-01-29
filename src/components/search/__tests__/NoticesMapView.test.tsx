@@ -23,7 +23,7 @@ vi.mock('maplibre-gl', () => {
 });
 
 type HandlerBag = {
-  onMoveEnd?: () => void;
+  onMoveEnd?: (event: { viewState: { zoom: number } }) => void;
 };
 
 const mockHandlers: HandlerBag = {};

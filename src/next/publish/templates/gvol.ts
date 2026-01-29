@@ -1,72 +1,61 @@
-import type { NoticeBase } from '@/types/notice';
-import { formatAddressInline, formatDateLong } from './utils';
+import type { NoticeBase } from "@/types/notice";
+import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type GvolExtras = {
-  category: 'gvol';
+  category: "gvol";
   variant: string;
-  trafficArea: { id: string; name: string; address: string } | null;
-  applicationType: string;
-  vehicles: { maxVehicles: number; maxTrailers: number };
-  siteNoticeDate?: string;
+  tokens?: Record<string, string>;
 };
 
-function getExtras(notice: NoticeBase): GvolExtras {
-  const extras = notice.extras as Partial<GvolExtras>;
-  if (!extras || extras.category !== 'gvol') {
-    throw new Error('GVOL template requires GVOL extras');
+type GvolVariant = "gvol-new" | "gvol-variation";
+
+const TEMPLATES: Record<GvolVariant, string> = {
+  "gvol-new": `GOODS VEHICLE (OPERATOR'S) LICENCE
+
+{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} is applying for a {{LICENCE_CATEGORY}} operator's licence in the {{TRAFFIC_AREA}} Traffic Area.
+
+Proposed operating centre: {{OPERATING_CENTRE_ADDRESS}}.
+Authorisation: {{NUMBER_OF_VEHICLES}} goods vehicles and {{NUMBER_OF_TRAILERS}} trailers.
+
+Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}.
+
+Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above.`,
+
+  "gvol-variation": `GOODS VEHICLE (OPERATOR'S) LICENCE — VARIATION
+
+{{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} of {{APPLICANT_ADDRESS}} has applied to vary the operator's licence in the {{TRAFFIC_AREA}} Traffic Area as follows: {{GVOL_VARIATION_DETAILS}}.
+
+Operating centre: {{OPERATING_CENTRE_ADDRESS}}.
+Authorisation after variation: {{NUMBER_OF_VEHICLES}} goods vehicles and {{NUMBER_OF_TRAILERS}} trailers.
+
+Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations to the Traffic Commissioner at {{TRAFFIC_COMMISSIONER_OFFICE}} by {{DEADLINE_DATE}}.
+
+Representations must be made in writing. Representors must at the same time send a copy to the applicant at the address given above.`,
+};
+
+function getGvolContext(notice: NoticeBase): { variant: GvolVariant; tokens: Record<string, string> } {
+  const extras = (notice.extras ?? {}) as GvolExtras;
+  if (extras.category !== "gvol") {
+    throw new Error("GVOL template requires GVOL extras");
   }
-  return extras as GvolExtras;
-}
-
-function applicantName(notice: NoticeBase): string {
-  if (notice.applicant.type === 'company') return notice.applicant.companyName ?? '';
-  return notice.applicant.fullName ?? '';
-}
-
-function applicantServiceAddress(notice: NoticeBase): string {
-  return formatAddressInline(notice.applicant.serviceAddress || notice.applicant.registeredOffice || notice.premises?.address);
+  const variant = extras.variant as GvolVariant;
+  if (!variant || !(variant in TEMPLATES)) {
+    throw new Error(`Unsupported GVOL variant: ${extras.variant}`);
+  }
+  return { variant, tokens: extras.tokens ?? {} };
 }
 
 export function renderGvolText(notice: NoticeBase): string {
-  const extras = getExtras(notice);
-  const applicant = applicantName(notice);
-  const applicantAddress = applicantServiceAddress(notice);
-  const trafficArea = extras.trafficArea?.name ?? 'the Traffic Commissioner';
-  const trafficAreaAddress = extras.trafficArea?.address ?? 'the relevant Traffic Commissioner';
-  const operatingCentre = formatAddressInline(notice.premises?.address);
-  const vehicles = extras.vehicles;
-  const repsDeadline = formatDateLong(notice.consultation.repsDeadline);
-  const applicationDate = formatDateLong(notice.consultation.applicationDate);
-  const lines = [
-    'GOODS VEHICLE OPERATOR’S LICENCE',
-    '',
-    `${applicant} of ${applicantAddress} is applying to the Traffic Commissioner for ${trafficArea} for a ${extras.applicationType} of an Operator’s Licence at ${operatingCentre} to keep:`,
-    `• ${vehicles.maxVehicles} goods vehicles and ${vehicles.maxTrailers} trailers.`,
-    '',
-    `Owners or occupiers of land (including buildings) near the operating centre who believe that their use or enjoyment of that land would be affected may make representations in writing to: ${trafficAreaAddress}, by ${repsDeadline}.`,
-    `A copy of the representations must at the same time be sent to ${applicant} at the address given above.`,
-    '',
-    `Dated: ${applicationDate}.`,
-  ];
-  return lines.join('\n');
+  const { variant, tokens } = getGvolContext(notice);
+  return renderNoticeTemplate(TEMPLATES[variant], tokens);
 }
 
 export function renderGvolHtml(notice: NoticeBase): string {
-  const text = renderGvolText(notice).split(/\n+/);
-  const parts: string[] = [];
-  for (const line of text) {
-    if (!line.trim()) continue;
-    if (line.startsWith('•')) {
-      parts.push(`<ul><li>${line.replace(/^•\s*/, '')}</li></ul>`);
-    } else if (line === 'GOODS VEHICLE OPERATOR’S LICENCE') {
-      parts.push(`<h1>${line}</h1>`);
-    } else {
-      parts.push(`<p>${line}</p>`);
-    }
-  }
-  return parts.join('\n');
+  return renderHtmlFromText(renderGvolText(notice));
 }
 
-export async function renderGvolPdf(_notice: NoticeBase): Promise<Uint8Array> {
-  throw new Error('PDF rendering is server-only. TODO: move GVOL PDF generation to an API endpoint.');
+export async function renderGvolPdf(notice: NoticeBase): Promise<Uint8Array> {
+  const options = extractPdfOptions(notice, 'gvol');
+  return generatePdf(options);
 }

@@ -1,0 +1,230 @@
+{
+  "name": "Manchester City Council",
+  "type": "Metropolitan Borough",
+  "region": "Greater Manchester",
+  "website": "https://www.manchester.gov.uk",
+  "address": {
+    "line1": "Town Hall",
+    "line2": "Albert Square",
+    "city": "Manchester",
+    "postcode": "M60 2LA"
+  },
+  "mainPhone": "0161 234 5000",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence"
+      ],
+      "email": "premises.licensing@manchester.gov.uk",
+      "phone": "0161 234 5004",
+      "address": {
+        "line1": "Licensing Unit",
+        "line2": "Level 1, Town Hall Extension",
+        "line3": "Albert Square",
+        "city": "Manchester",
+        "postcode": "M60 2LA"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.manchester.gov.uk/licensing",
+      "publicRegister": "https://www.manchester.gov.uk/info/500217/licence_-_public_registers/4640/public_registers",
+      "notes": "Handles Licensing Act 2003 (alcohol, entertainment, late night refreshment) and Gambling Act 2005 premises. Register viewable by appointment 9am-5pm. Statement of Licensing Policy 2021-26 available. Out of hours (after 8pm): 0161 234 5004 for emergency noise or premises trading issues."
+    },
+    {
+      "name": "Street Trading",
+      "handles": [
+        "street-trading-licence",
+        "street-trading-consent",
+        "market-stall"
+      ],
+      "email": "premises.licensing@manchester.gov.uk",
+      "phone": "0161 234 5004",
+      "address": {
+        "line1": "Licensing Unit",
+        "line2": "Level 1, Town Hall Extension",
+        "city": "Manchester",
+        "postcode": "M60 2LA"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://www.manchester.gov.uk/xfp/form/1947",
+      "notes": "Two types: Street Trader Licence (City Centre/Inner Ring Road) and Street Trader Consent (remaining streets). Some prohibited streets where no trading allowed. Need to consider parking restrictions and land ownership before applying."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": "planning@manchester.gov.uk",
+      "phone": "0161 234 4516",
+      "address": {
+        "line1": "Planning Department",
+        "line2": "PO Box 463",
+        "line3": "Town Hall",
+        "city": "Manchester",
+        "postcode": "M60 3NY"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://www.gov.uk/search-register-planning-decisions/manchester",
+      "notes": "Applications submitted via national Planning Portal. Planning Committee contact: 0161 234 3235 (Members Services). Planning and Highways Committee meets regularly for major applications."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation"
+      ],
+      "email": "building.control@manchester.gov.uk",
+      "phone": "0161 234 4490",
+      "fax": "0161 274 0031",
+      "address": {
+        "line1": "Building Control",
+        "line2": "PO Box 532",
+        "line3": "Town Hall",
+        "city": "Manchester",
+        "postcode": "M60 2LA"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.submitaplan.com/building-control/manchester-city-council",
+      "notes": "Currently experiencing substantial delays due to staff shortages. Alternative building control providers may be considered. Office hours: 9am-4pm Monday to Friday."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure"
+      ],
+      "email": "highwaynetworkmanagement@manchester.gov.uk",
+      "phone": "0161 234 5000",
+      "submissionMethod": "web-form",
+      "webForm": "https://www.manchester.gov.uk/xfp/form/1987",
+      "publicRegister": "https://www.manchester.gov.uk/directory/79/traffic_regulation_order_notices",
+      "notes": "TRO/TTRO applications. Minimum charge for event road closures: £167. Road closures for works: minimum £2,522. Six week lead-in period for TTRO applications. Over 18 months requires London Gazette publication."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "noise-complaint",
+        "health-safety-inspection",
+        "statutory-nuisance"
+      ],
+      "email": null,
+      "phone": "0161 234 5004",
+      "address": {
+        "line1": "Regulatory & Enforcement Services",
+        "line2": "1 Hammerstone Road",
+        "city": "Manchester",
+        "postcode": "M18 8EQ"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://www.manchester.gov.uk/xfp/form/1882",
+      "notes": "No public email - contact via online form only. Response within two working days. Handles flytipping, noise, pests, air pollution, litter, food safety, graffiti."
+    },
+    {
+      "name": "Public Protection",
+      "handles": [
+        "licensing-consultation",
+        "noise-from-premises"
+      ],
+      "email": null,
+      "phone": "0161 234 4854",
+      "alternativePhone": "0161 952 8200",
+      "address": {
+        "line1": "Public Protection",
+        "line2": "1 Hammerstone Road",
+        "city": "Manchester",
+        "postcode": "M18 8EQ"
+      },
+      "submissionMethod": "phone",
+      "webForm": null,
+      "notes": "Responsible authority for licensing consultations. Alternative phone 0161 952 8200 for Local Authority/hospital/university applications."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "trading-standards",
+        "consumer-protection"
+      ],
+      "email": "trading_standards@manchester.gov.uk",
+      "phone": "0161 234 1555",
+      "address": {
+        "line1": "Trading Standards",
+        "line2": "1 Hammerstone Road",
+        "line3": "Gorton",
+        "city": "Manchester",
+        "postcode": "M18 8EQ"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Responsible authority for licensing matters. Handles consumer protection and trading regulations."
+    },
+    {
+      "name": "Property Licensing",
+      "handles": [
+        "hmo-licence",
+        "selective-licence"
+      ],
+      "email": "hmolicensingenquiry@manchester.gov.uk",
+      "phone": "0161 234 5000",
+      "submissionMethod": "portal",
+      "webForm": "https://propertylicensing.manchester.gov.uk/",
+      "notes": "HMO licensing mandatory for 5+ persons, 2+ households. Processing target: 60 days. Selective Licensing Scheme 3 covers parts of Cheetham, Crumpsall, Harpurhey, Longsight, Miles Platting & Newton Heath, Moss Side (May 2025-May 2030). HMO fee from £1,321 (5 occupants). Selective fee from £798."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "Greater Manchester Police - Central Licensing",
+      "email": "centrallicensing@gmp.police.uk",
+      "phone": "0161 856 3363",
+      "address": "Level 1, Town Hall Extension, Lloyd Street, Manchester M2 5DB"
+    },
+    "fire": {
+      "northManchester": {
+        "name": "Greater Manchester Fire and Rescue Service - North",
+        "phone": "0161 608 5310",
+        "address": "Manchester Central Fire Station, Thompson Street, Manchester M4 5FP",
+        "covers": "M1-M4, M8-M9, M11-M13, M18, M25"
+      },
+      "southManchester": {
+        "name": "Greater Manchester Fire and Rescue Service - South",
+        "phone": "0161 908 5410",
+        "address": "Withington Central Fire Station, Wilmslow Road, Manchester M20 4AW",
+        "covers": "M14-M16, M19-M23, M40, M90"
+      }
+    },
+    "safeguarding": {
+      "name": "Manchester Safeguarding Partnership",
+      "email": "manchestersafeguardingpartnership@manchester.gov.uk",
+      "phone": "0161 234 3330",
+      "address": "Level 4, Town Hall Extension, PO Box 532, Manchester M60 2LA"
+    },
+    "publicHealth": {
+      "name": "Public Health Authority",
+      "email": "dast@manchester.gov.uk",
+      "address": "PO Box 532, Town Hall, Manchester M60 2LA"
+    }
+  },
+  "additionalResources": {
+    "licensingPublicRegister": "https://www.manchester.gov.uk/info/500217/licence_-_public_registers/4640/public_registers",
+    "planningApplicationSearch": "https://www.gov.uk/search-register-planning-decisions/manchester",
+    "trafficRegulationOrders": "https://www.manchester.gov.uk/directory/79/traffic_regulation_order_notices",
+    "propertyLicensing": "https://propertylicensing.manchester.gov.uk/",
+    "reportIssues": "https://www.manchester.gov.uk/xfp/form/1882"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Manchester City Council website and public search results. Town Hall Extension is main location for licensing services. Building control experiencing delays due to staff shortages. Environmental Health prefers online contact forms over email. Property licensing includes HMO mandatory licensing and Selective Licensing Scheme 3 (2025-2030)."
+}

@@ -1,12 +1,9 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import '@/styles/map.css';
+import "../../styles/map.css";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import MapGL, {
-  Layer,
-  Popup,
-  Source,
+import MapGL, {Layer, Marker, Popup, Source,
   type LayerProps,
   type MapLayerMouseEvent,
   type MapRef,
@@ -44,7 +41,7 @@ type GeoJSONSourceWithClusters = maplibregl.GeoJSONSource & {
     clusterId: number,
     limit: number,
     offset: number
-  ) => maplibregl.MapboxGeoJSONFeature[];
+  ) => maplibregl.MapGeoJSONFeature[];
 };
 
 type NoticesMapViewProps = {
@@ -60,6 +57,7 @@ type NoticesMapViewProps = {
   autoFitToNotices?: boolean;
   mapStyleUrl?: string;
   className?: string;
+  searchedLocation?: { latitude: number; longitude: number; postcode?: string } | null;
 };
 
 const DEFAULT_VIEW_STATE: ViewState = {
@@ -272,6 +270,7 @@ function NoticesMapViewComponent({
   autoFitToNotices = true,
   mapStyleUrl,
   className = '',
+  searchedLocation,
 }: NoticesMapViewProps) {
   const mapRef = useRef<MapRef | null>(null);
   const controlsAddedRef = useRef(false);
@@ -290,6 +289,11 @@ function NoticesMapViewComponent({
   const [mapLoading, setMapLoading] = useState(true);
   const [hoveredCluster, setHoveredCluster] = useState<HoveredClusterState | null>(null);
   const [pingedNoticeId, setPingedNoticeId] = useState<string | null>(null);
+  const isAnimatingRef = useRef(false);
+  const animationTimeoutRef = useRef<number | null>(null);
+  const lastAnimatedNoticeRef = useRef<string | null>(null);
+  const isZoomingRef = useRef(false);
+  const zoomEndTimeoutRef = useRef<number | null>(null);
 
   const noticeLookup = useMemo(() => {
     return new Map(notices.map((notice) => [notice.id, notice]));
@@ -366,7 +370,33 @@ function NoticesMapViewComponent({
         window.clearTimeout(moveEndTimeoutRef.current);
         moveEndTimeoutRef.current = null;
       }
+      if (zoomEndTimeoutRef.current) {
+        window.clearTimeout(zoomEndTimeoutRef.current);
+        zoomEndTimeoutRef.current = null;
+      }
     };
+  }, []);
+
+  // Handle zoom start - set flag to prevent bounds changes during active zooming
+  const handleZoomStart = useCallback(() => {
+    isZoomingRef.current = true;
+    // Clear any pending zoom end timeout
+    if (zoomEndTimeoutRef.current) {
+      window.clearTimeout(zoomEndTimeoutRef.current);
+      zoomEndTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Handle zoom end - wait for user to stop zooming before allowing bounds changes
+  const handleZoomEnd = useCallback(() => {
+    // Debounce the zoom end - only mark as not zooming after user stops for 500ms
+    if (zoomEndTimeoutRef.current) {
+      window.clearTimeout(zoomEndTimeoutRef.current);
+    }
+    zoomEndTimeoutRef.current = window.setTimeout(() => {
+      isZoomingRef.current = false;
+      zoomEndTimeoutRef.current = null;
+    }, 500);
   }, []);
 
   const handleMoveEnd = useCallback(() => {
@@ -377,6 +407,25 @@ function NoticesMapViewComponent({
     const boundsKey = `bounds:${formatBoundsKey(bbox)}`;
     lastViewportBoundsKeyRef.current = boundsKey;
     const zoom = mapRef.current.getZoom();
+
+    console.log('[NoticesMapView] 📍 handleMoveEnd fired:', {
+      zoom: zoom?.toFixed(2),
+      isAnimating: isAnimatingRef.current,
+      isZooming: isZoomingRef.current,
+      userAdjusted: userAdjustedViewportRef.current,
+    });
+
+    // CRITICAL: Block during programmatic animations - check FIRST
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔ BLOCKED by animation flag');
+      return;
+    }
+
+    // CRITICAL: Block during active zooming to prevent jitter
+    if (isZoomingRef.current) {
+      console.log('[NoticesMapView] ⛔ BLOCKED by active zooming');
+      return;
+    }
 
     if (suppressNextMoveEndRef.current) {
       suppressNextMoveEndRef.current = false;
@@ -389,10 +438,17 @@ function NoticesMapViewComponent({
     if (moveEndTimeoutRef.current) {
       window.clearTimeout(moveEndTimeoutRef.current);
     }
+
     moveEndTimeoutRef.current = window.setTimeout(() => {
       moveEndTimeoutRef.current = null;
+      // Triple-check: NEVER call bounds change during animation
+      if (isAnimatingRef.current) {
+        console.log('[NoticesMapView] ⛔ BLOCKED in timeout');
+        return;
+      }
+      console.log('[NoticesMapView] ✅ Calling onBoundsChange');
       onBoundsChange(bbox, zoom);
-    }, 220);
+    }, 1000); // Increased delay to 1000ms to prevent jitter during rapid zoom
   }, [onBoundsChange]);
 
   const getClusterSource = useCallback((): GeoJSONSourceWithClusters | null => {
@@ -406,13 +462,14 @@ function NoticesMapViewComponent({
   }, []);
 
   const resolveClusterMeta = useCallback(
-    (clusterId: number, longitude: number, latitude: number): HoveredClusterState | null => {
+    async (clusterId: number, longitude: number, latitude: number): Promise<HoveredClusterState | null> => {
       const source = getClusterSource();
       if (!source) return null;
 
-      let leaves: maplibregl.MapboxGeoJSONFeature[] = [];
+      let leaves: Array<{ properties?: Record<string, unknown> | null }> = [];
       try {
-        leaves = source.getClusterLeaves(clusterId, 25, 0);
+        // IMPORTANT: getClusterLeaves returns a Promise!
+        leaves = (await source.getClusterLeaves(clusterId, 25, 0)) as Array<{ properties?: Record<string, unknown> | null }>;
       } catch (error) {
         console.warn('[NoticesMapView] failed to inspect cluster leaves', error);
       }
@@ -434,7 +491,7 @@ function NoticesMapViewComponent({
         councilName = topCouncil ? `${topCouncil[0]} + more` : 'Multiple councils';
       } else if (leaves.length) {
         const sampleId = leaves[0].properties?.noticeId;
-        const sample = sampleId ? noticeLookup.get(sampleId) : null;
+        const sample = typeof sampleId === 'string' ? noticeLookup.get(sampleId) : null;
         if (sample?.councilName) councilName = sample.councilName;
       }
 
@@ -450,59 +507,183 @@ function NoticesMapViewComponent({
   );
 
   const handleClick = useCallback(
-    (event: MapLayerMouseEvent) => {
-      const features = event.features ?? [];
-      if (!mapRef.current) return;
+    async (event: MapLayerMouseEvent) => {
+      console.log('[NoticesMapView] Click event triggered', {
+        featuresCount: event.features?.length,
+        lngLat: event.lngLat
+      });
 
-      const clusterFeature = features.find((feature) => feature.layer.id === CLUSTER_LAYER_ID);
-      if (clusterFeature) {
-        const source = getClusterSource();
-        if (!source) return;
-        const clusterId = clusterFeature.properties?.cluster_id;
-        if (typeof clusterId !== 'number') return;
-        try {
-          const expansionZoom = Math.min(source.getClusterExpansionZoom(clusterId), 18);
-          mapRef.current.flyTo({
-            center: clusterFeature.geometry.coordinates as [number, number],
-            zoom: expansionZoom,
-            duration: 600,
-          });
-        } catch (error) {
-          console.warn('[NoticesMapView] unable to expand cluster', error);
-        }
+      const features = event.features ?? [];
+      if (!mapRef.current) {
+        console.warn('[NoticesMapView] No map ref');
         return;
       }
 
-      const noticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
-      if (!noticeFeature) return;
-      const noticeId = noticeFeature.properties?.noticeId;
-      if (typeof noticeId !== 'string') return;
-      setActiveNotice(noticeId);
+      // Check for notice pin clicks first (higher priority)
+      const clickedNoticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
+      if (clickedNoticeFeature) {
+        const noticeId = clickedNoticeFeature.properties?.noticeId;
+        if (typeof noticeId === 'string') {
+          console.log('[NoticesMapView] 🎯🎯🎯 PIN CLICKED ON MAP:', noticeId);
+
+          // Just set the active notice - the useEffect will handle the zoom
+          setActiveNotice(noticeId);
+          return;
+        }
+      }
+
+      const clusterFeature = features.find((feature) => feature.layer.id === CLUSTER_LAYER_ID);
+      console.log('[NoticesMapView] Cluster feature found:', !!clusterFeature);
+
+      if (clusterFeature) {
+        console.log('[NoticesMapView] Cluster feature details:', {
+          layerId: clusterFeature.layer.id,
+          properties: clusterFeature.properties,
+          geometry: clusterFeature.geometry
+        });
+
+        const source = getClusterSource();
+        if (!source) {
+          console.error('[NoticesMapView] ❌ Cluster source not found');
+          return;
+        }
+        console.log('[NoticesMapView] ✓ Cluster source found');
+
+        const clusterId = clusterFeature.properties?.cluster_id;
+        if (typeof clusterId !== 'number') {
+          console.error('[NoticesMapView] ❌ Invalid cluster ID', clusterFeature.properties);
+          return;
+        }
+        console.log('[NoticesMapView] ✓ Valid cluster ID:', clusterId);
+
+        // Validate coordinates before using them
+        const geom = clusterFeature.geometry;
+        const rawCoords = geom && 'coordinates' in geom ? geom.coordinates : undefined;
+        if (!Array.isArray(rawCoords) || rawCoords.length < 2) {
+          console.error('[NoticesMapView] ❌ Invalid cluster coordinates:', rawCoords);
+          return;
+        }
+
+        const [lng, lat] = rawCoords;
+        if (typeof lng !== 'number' || typeof lat !== 'number' || !Number.isFinite(lng) || !Number.isFinite(lat)) {
+          console.error('[NoticesMapView] ❌ Cluster has NaN coordinates:', { lng, lat });
+          return;
+        }
+
+        if (lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+          console.error('[NoticesMapView] ❌ Cluster coordinates out of bounds:', { lng, lat });
+          return;
+        }
+        console.log('[NoticesMapView] ✓ Valid coordinates:', { lng, lat });
+
+        try {
+          // IMPORTANT: getClusterExpansionZoom returns a Promise!
+          const expansionZoom = await source.getClusterExpansionZoom(clusterId);
+          const currentZoom = mapRef.current.getZoom();
+          const targetZoom = Math.min(Math.max(expansionZoom, currentZoom + 2), 18);
+
+          console.log('[NoticesMapView] 🎯 Cluster clicked - zooming in:', {
+            clusterId,
+            coordinates: [lng, lat],
+            currentZoom,
+            expansionZoom,
+            targetZoom,
+          });
+
+          // CRITICAL: Clear any pending bounds change callbacks
+          if (moveEndTimeoutRef.current) {
+            window.clearTimeout(moveEndTimeoutRef.current);
+            moveEndTimeoutRef.current = null;
+            console.log('[NoticesMapView] Cleared pending bounds change callback');
+          }
+
+          // CRITICAL: Clear any existing animation timeout to prevent premature clearing
+          if (animationTimeoutRef.current) {
+            window.clearTimeout(animationTimeoutRef.current);
+            animationTimeoutRef.current = null;
+            console.log('[NoticesMapView] Cleared previous animation timeout');
+          }
+
+          // Set animation flag to prevent bounds change during zoom
+          isAnimatingRef.current = true;
+          console.log('[NoticesMapView] 🔒 Animation flag SET (cluster)');
+
+          // Use flyTo with validated coordinates
+          mapRef.current.flyTo({
+            center: [lng, lat],
+            zoom: targetZoom,
+            duration: 1000,
+            essential: true,
+          });
+
+          // Clear animation flag after EXTENDED duration (10 seconds total)
+          animationTimeoutRef.current = window.setTimeout(() => {
+            isAnimatingRef.current = false;
+            animationTimeoutRef.current = null;
+            lastAnimatedNoticeRef.current = null; // Clear for consistency
+            console.log('[NoticesMapView] 🔓 Animation flag CLEARED (cluster)');
+          }, 10000);
+
+          console.log('[NoticesMapView] ✅ flyTo called successfully');
+        } catch (error) {
+          console.error('[NoticesMapView] ❌ Error during zoom:', error);
+          isAnimatingRef.current = false;
+        }
+        return;
+      }
     },
     [getClusterSource, setActiveNotice]
   );
 
   const handleMouseMove = useCallback(
     (event: MapLayerMouseEvent) => {
+      // BLOCK all hover interactions during animations
+      if (isAnimatingRef.current) {
+        console.log('[NoticesMapView] ⛔ Hover blocked during animation');
+        return;
+      }
+
       const features = event.features ?? [];
       if (!mapRef.current) return;
       const canvas = mapRef.current.getCanvas?.();
       const clusterFeature = features.find((feature) => feature.layer.id === CLUSTER_LAYER_ID);
-      const noticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
+      const hoveredNoticeFeature = features.find((feature) => feature.layer.id === NOTICE_POINTS_LAYER_ID);
 
       if (clusterFeature) {
         const clusterId = clusterFeature.properties?.cluster_id;
         if (typeof clusterId === 'number') {
-          const [longitude, latitude] = clusterFeature.geometry.coordinates as [number, number];
-          const meta = resolveClusterMeta(clusterId, longitude, latitude);
-          setHoveredCluster(meta);
+          const hoverGeom = clusterFeature.geometry;
+          const rawCoords = hoverGeom && 'coordinates' in hoverGeom ? hoverGeom.coordinates : undefined;
+          if (Array.isArray(rawCoords) && rawCoords.length >= 2) {
+            const [longitude, latitude] = rawCoords as [number, number];
+            // Validate coordinates before using them
+            if (
+              typeof longitude === 'number' &&
+              typeof latitude === 'number' &&
+              Number.isFinite(longitude) &&
+              Number.isFinite(latitude) &&
+              longitude >= -180 &&
+              longitude <= 180 &&
+              latitude >= -90 &&
+              latitude <= 90
+            ) {
+              // Don't await - just let it resolve in the background
+              resolveClusterMeta(clusterId, longitude, latitude).then(meta => {
+                if (meta) setHoveredCluster(meta);
+              }).catch(err => {
+                console.warn('[NoticesMapView] Error resolving cluster meta on hover:', err);
+              });
+            } else {
+              console.warn('[NoticesMapView] Invalid cluster coordinates on hover:', { longitude, latitude });
+            }
+          }
         }
         if (canvas) canvas.style.cursor = 'pointer';
         return;
       }
 
-      if (noticeFeature) {
-        const noticeId = noticeFeature.properties?.noticeId;
+      if (hoveredNoticeFeature) {
+        const noticeId = hoveredNoticeFeature.properties?.noticeId;
         if (typeof noticeId === 'string') {
           if (lastHoverNoticeRef.current !== noticeId) {
             onHoverNoticeChange?.(noticeId);
@@ -536,6 +717,12 @@ function NoticesMapViewComponent({
   }, [onHoverNoticeChange]);
 
   useEffect(() => {
+    // BLOCK hover state changes during animations
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔ Hover state change blocked during animation');
+      return;
+    }
+
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
 
@@ -621,21 +808,105 @@ function NoticesMapViewComponent({
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !mergedActiveId) return;
+
+    // CRITICAL: Skip if we're already animating to this same notice (prevents re-render loops!)
+    if (lastAnimatedNoticeRef.current === mergedActiveId && isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⏭️ Skipping - already animating to this notice:', mergedActiveId);
+      return;
+    }
+
     const notice = noticeLookup.get(mergedActiveId);
     if (!notice) return;
     if (typeof notice.longitude !== 'number' || typeof notice.latitude !== 'number') return;
 
     const currentZoom = mapRef.current.getZoom();
-    const targetZoom = Math.max(currentZoom ?? DEFAULT_VIEW_STATE.zoom, 13);
-    suppressNextMoveEndRef.current = true;
+
+    // NEVER zoom out - ALWAYS either zoom in or stay at current zoom
+    // Target: zoom 18 (street level detail)
+    // But if already more zoomed in than 18, STAY THERE
+    const targetZoom = Math.max(currentZoom, 18);
+
+    console.log('[NoticesMapView] 🎯🎯🎯 CENTERING ON PIN:', {
+      noticeId: mergedActiveId,
+      premisesName: notice.premisesName,
+      currentZoom: currentZoom?.toFixed(2),
+      targetZoom: targetZoom.toFixed(2),
+      zoomDifference: (targetZoom - currentZoom).toFixed(2),
+      action: targetZoom > currentZoom ? '🔼 ZOOM IN' : '📍 CENTER ONLY',
+      coords: [notice.longitude, notice.latitude],
+      lastAnimated: lastAnimatedNoticeRef.current,
+    });
+
+    // Mark this notice as the one we're animating to
+    lastAnimatedNoticeRef.current = mergedActiveId;
+
+    // CRITICAL: Mark this as a user adjustment to prevent auto-fit from interfering
+    userAdjustedViewportRef.current = true;
+    console.log('[NoticesMapView] 📌 Marked as user-adjusted viewport');
+
+    // CRITICAL: Set animation protection HERE so it works for BOTH map clicks AND sidebar clicks
+    // Clear any pending bounds change callbacks
+    if (moveEndTimeoutRef.current) {
+      window.clearTimeout(moveEndTimeoutRef.current);
+      moveEndTimeoutRef.current = null;
+      console.log('[NoticesMapView] Cleared pending bounds change callback (from useEffect)');
+    }
+
+    // Clear any existing animation timeout to prevent premature clearing
+    if (animationTimeoutRef.current) {
+      window.clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = null;
+      console.log('[NoticesMapView] Cleared previous animation timeout (from useEffect)');
+    }
+
+    // Set animation flag to block ALL competing updates during zoom
+    isAnimatingRef.current = true;
+    console.log('[NoticesMapView] 🔒 Animation flag SET (from useEffect)');
+
+    // Do the flyTo animation
+    console.log('[NoticesMapView] 🚀 Animating to pin with flyTo:', {
+      center: [notice.longitude, notice.latitude],
+      zoom: targetZoom,
+      duration: 800,
+    });
+
     mapRef.current.flyTo({
       center: [notice.longitude, notice.latitude],
       zoom: targetZoom,
-      duration: 600,
+      duration: 800,
+      essential: true,
     });
+
+    // Add a listener to track when the animation completes
+    const checkFinalZoom = () => {
+      setTimeout(() => {
+        if (mapRef.current) {
+          const finalZoom = mapRef.current.getZoom();
+          console.log('[NoticesMapView] ✅ Animation completed. Final zoom:', finalZoom?.toFixed(2), 'Expected:', targetZoom.toFixed(2));
+          if (Math.abs(finalZoom - targetZoom) > 0.1) {
+            console.error('[NoticesMapView] ❌❌❌ ZOOM MISMATCH! Something changed the zoom after flyTo!');
+          }
+        }
+      }, 1000); // Check 1 second after flyTo starts
+    };
+    checkFinalZoom();
+
+    // Keep the flag set for EXTENDED duration (10 seconds total) to prevent ANY bouncing
+    animationTimeoutRef.current = window.setTimeout(() => {
+      isAnimatingRef.current = false;
+      animationTimeoutRef.current = null;
+      lastAnimatedNoticeRef.current = null; // Clear so we can re-animate to the same notice later
+      console.log('[NoticesMapView] 🔓 Animation flag CLEARED (from useEffect)');
+    }, 10000);
   }, [mapReady, mergedActiveId, noticeLookup]);
 
   useEffect(() => {
+    // CRITICAL: BLOCK auto-fit during animations to prevent snap-back!
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔⛔⛔ AUTO-FIT BLOCKED DURING ANIMATION');
+      return;
+    }
+
     if (!mapReady || !mapRef.current) return;
     if (!initialBounds && (!autoFitToNotices || !featureCoordinates.length)) return;
 
@@ -736,7 +1007,37 @@ function NoticesMapViewComponent({
     }
   }, [initialViewState, mapReady]);
 
+  // Zoom to searched location when provided
   useEffect(() => {
+    // CRITICAL: BLOCK during animations to prevent interference with pin clicks
+    if (isAnimatingRef.current) {
+      console.log('[NoticesMapView] ⛔ Searched location zoom blocked during animation');
+      return;
+    }
+
+    if (!mapReady || !mapRef.current || !searchedLocation) return;
+
+    const { latitude, longitude } = searchedLocation;
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+
+    // Only zoom if we don't have a bbox (user-adjusted view) or if it's the initial load
+    if (!initialBounds && !userAdjustedViewportRef.current) {
+      suppressNextMoveEndRef.current = true;
+      mapRef.current.flyTo({
+        center: [longitude, latitude],
+        zoom: 14, // Close zoom to see the searched location clearly
+        duration: 1000,
+        essential: true,
+      });
+    }
+  }, [searchedLocation, mapReady, initialBounds]);
+
+  useEffect(() => {
+    // BLOCK cluster updates during animations for smooth transitions
+    if (isAnimatingRef.current) {
+      return;
+    }
+
     if (!hoveredCluster || !mapReady || !mapRef.current) return;
     const map = mapRef.current.getMap();
     const renderedClusters = map.queryRenderedFeatures(undefined, { layers: [CLUSTER_LAYER_ID] });
@@ -766,10 +1067,19 @@ function NoticesMapViewComponent({
         interactiveLayerIds={[CLUSTER_LAYER_ID, NOTICE_POINTS_LAYER_ID]}
         onLoad={handleLoad}
         onMoveEnd={handleMoveEnd}
+        onZoomStart={handleZoomStart}
+        onZoomEnd={handleZoomEnd}
         onClick={handleClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ width: '100%', height: '100%' }}
+        dragRotate={false}
+        touchZoomRotate={false}
+        touchPitch={false}
+        maxZoom={18}
+        minZoom={5}
+        scrollZoom={true}
+        dragPan={true}
       >
         <Source
           id={SOURCE_ID}
@@ -816,38 +1126,85 @@ function NoticesMapViewComponent({
             maxWidth="300px"
           >
             <div className="space-y-3 rounded-xl bg-white/95 p-4 text-sm shadow-lg ring-1 ring-black/5">
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-wide text-slate-400">
+              <div className="space-y-1.5">
+                <p className="text-xs uppercase tracking-wide text-slate-400 font-semibold">
                   {activeNotice.noticeType}
                 </p>
-                <h3 className="text-base font-semibold text-slate-900">
-                  {activeNotice.premisesName || activeNotice.noticeType}
+                <h3 className="text-base font-semibold text-slate-900 leading-tight">
+                  {activeNotice.premisesName || 'Notice'}
                 </h3>
-                <p className="text-xs text-slate-500">{formatAddress(activeNotice.premisesAddress)}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{formatAddress(activeNotice.premisesAddress)}</p>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-slate-500">
-                  {formatShortDate(activeNotice.publicationDate) ? (
-                    <>
-                      <span className="font-medium text-slate-600">Published </span>
-                      {formatShortDate(activeNotice.publicationDate)}
-                    </>
-                  ) : (
-                    <span className="font-medium text-slate-600">Publication date</span>
-                  )}
+
+              <div className="space-y-2 pt-1 border-t border-slate-100">
+                <div className="flex items-start justify-between text-xs">
+                  <span className="text-slate-500">Published:</span>
+                  <span className="font-medium text-slate-700">
+                    {formatShortDate(activeNotice.publicationDate) || '—'}
+                  </span>
                 </div>
+                {activeNotice.repsDeadline && (
+                  <div className="flex items-start justify-between text-xs">
+                    <span className="text-slate-500">Deadline:</span>
+                    <span className="font-medium text-slate-700">
+                      {formatShortDate(activeNotice.repsDeadline)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
                 <a
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700"
-                  href={activeNotice.viewUrl ?? `/notices/${activeNotice.id}`}
-                  target="_blank"
-                  rel="noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors cursor-pointer"
+                  href={`/notices/${activeNotice.id}`}
                 >
-                  View notice
+                  View Notice
                   <span aria-hidden="true">→</span>
                 </a>
+                {activeNotice.repsDeadline && (
+                  <a
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+                    href={`/notices/${activeNotice.id}#representations`}
+                  >
+                    Make Representation
+                  </a>
+                )}
               </div>
             </div>
           </Popup>
+        )}
+
+        {/* Searched location pin marker */}
+        {searchedLocation && (
+          <Marker
+            longitude={searchedLocation.longitude}
+            latitude={searchedLocation.latitude}
+            anchor="bottom"
+          >
+            <div className="relative">
+              {/* Pin marker */}
+              <svg
+                width="32"
+                height="40"
+                viewBox="0 0 32 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="drop-shadow-lg"
+              >
+                <path
+                  d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24c0-8.837-7.163-16-16-16z"
+                  fill="#EF4444"
+                />
+                <circle cx="16" cy="16" r="6" fill="white" />
+              </svg>
+              {/* Postcode label */}
+              {searchedLocation.postcode && (
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white shadow-md">
+                  {searchedLocation.postcode}
+                </div>
+              )}
+            </div>
+          </Marker>
         )}
       </MapGL>
 
@@ -878,7 +1235,10 @@ function arePropsEqual(prev: NoticesMapViewProps, next: NoticesMapViewProps) {
     prev.mapStyleUrl === next.mapStyleUrl &&
     prev.initialViewState?.zoom === next.initialViewState?.zoom &&
     prev.initialViewState?.latitude === next.initialViewState?.latitude &&
-    prev.initialViewState?.longitude === next.initialViewState?.longitude
+    prev.initialViewState?.longitude === next.initialViewState?.longitude &&
+    prev.searchedLocation?.latitude === next.searchedLocation?.latitude &&
+    prev.searchedLocation?.longitude === next.searchedLocation?.longitude &&
+    prev.searchedLocation?.postcode === next.searchedLocation?.postcode
   );
 }
 

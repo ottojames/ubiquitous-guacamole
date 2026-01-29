@@ -18,6 +18,20 @@ export function sanitiseNoticeText(raw: string): string {
   // Lower-case emails for display consistency while leaving source data untouched.
   t = t.replace(/\b([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})\b/gi, (match) => match.toLowerCase());
 
+  // Remove duplicate consecutive paragraphs/blocks (OCR sometimes extracts text twice)
+  // Split into paragraphs and remove consecutive duplicates
+  const paragraphs = t.split(/\n\n+/);
+  const deduped: string[] = [];
+  let prev = '';
+  for (const para of paragraphs) {
+    const normalized = para.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (normalized && normalized !== prev) {
+      deduped.push(para);
+      prev = normalized;
+    }
+  }
+  t = deduped.join('\n\n');
+
   return t;
 }
 

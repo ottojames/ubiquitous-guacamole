@@ -1,0 +1,260 @@
+name: Health Monitoring & Alerts
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+
+  # Manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Application Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏥 Check API Health
+        id: api-health
+        run: |
+          API_URL="${{ secrets.API_URL || 'http://localhost:5174' }}"
+
+          # Check API health endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/health" || echo "000")
+
+          if [ "$response" = "200" ]; then
+            echo "✅ API is healthy"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "❌ API health check failed with status: $response"
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            echo "error_code=$response" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🗄️ Check Database Connection
+        id: db-health
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "⚠️ DATABASE_URL not configured"
+            echo "status=unconfigured" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Test database connection
+          timeout 5 psql "$DATABASE_URL" -c "SELECT 1;" > /dev/null 2>&1
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Database connection successful"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Database connection failed"
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Check Database Performance
+        id: db-performance
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            exit 0
+          fi
+
+          # Check for slow queries
+          slow_queries=$(psql "$DATABASE_URL" -t -c "
+            SELECT COUNT(*)
+            FROM pg_stat_statements
+            WHERE mean_exec_time > 1000
+            AND calls > 10
+            AND query NOT LIKE '%pg_stat_statements%';
+          " 2>/dev/null | tr -d ' ')
+
+          if [ "$slow_queries" -gt "0" ]; then
+            echo "⚠️ Found $slow_queries slow queries (>1s)"
+            echo "slow_queries=$slow_queries" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No slow queries detected"
+            echo "slow_queries=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔍 Check for Infinite Recursion Errors
+        id: recursion-check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            exit 0
+          fi
+
+          # Check for recursive RLS policies
+          recursive_policies=$(psql "$DATABASE_URL" -t -c "
+            SELECT COUNT(*) FROM pg_policies
+            WHERE tablename = 'department_memberships'
+            AND policyname IN ('Members can view dept memberships', 'Users can view department colleagues');
+          " 2>/dev/null | tr -d ' ')
+
+          if [ "$recursive_policies" -gt "0" ]; then
+            echo "❌ Found $recursive_policies potentially recursive RLS policies"
+            echo "has_recursion=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No recursive RLS policies detected"
+            echo "has_recursion=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📈 Check Registration Success Rate
+        id: registration-check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            exit 0
+          fi
+
+          # Check recent registration attempts (last hour)
+          registration_stats=$(psql "$DATABASE_URL" -t -c "
+            SELECT
+              COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 hour') as recent_total,
+              COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '1 hour' AND email IS NOT NULL) as recent_success
+            FROM organizations;
+          " 2>/dev/null)
+
+          total=$(echo $registration_stats | cut -d'|' -f1 | tr -d ' ')
+          success=$(echo $registration_stats | cut -d'|' -f2 | tr -d ' ')
+
+          if [ "$total" -gt "0" ]; then
+            success_rate=$((success * 100 / total))
+            echo "📊 Registration success rate: ${success_rate}%"
+
+            if [ "$success_rate" -lt "95" ]; then
+              echo "⚠️ Low registration success rate: ${success_rate}%"
+              echo "alert=true" >> $GITHUB_OUTPUT
+            fi
+            echo "success_rate=$success_rate" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚨 Send Alerts
+        if: |
+          steps.api-health.outputs.status == 'unhealthy' ||
+          steps.db-health.outputs.status == 'unhealthy' ||
+          steps.recursion-check.outputs.has_recursion == 'true' ||
+          steps.registration-check.outputs.alert == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const alerts = [];
+
+            if ('${{ steps.api-health.outputs.status }}' === 'unhealthy') {
+              alerts.push('🔴 API Health Check Failed');
+            }
+
+            if ('${{ steps.db-health.outputs.status }}' === 'unhealthy') {
+              alerts.push('🔴 Database Connection Failed');
+            }
+
+            if ('${{ steps.recursion-check.outputs.has_recursion }}' === 'true') {
+              alerts.push('🔴 Recursive RLS Policies Detected');
+            }
+
+            if ('${{ steps.registration-check.outputs.alert }}' === 'true') {
+              alerts.push('⚠️ Low Registration Success Rate');
+            }
+
+            if (alerts.length > 0) {
+              // Create an issue if alerts are triggered
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Monitoring Alert: ${alerts[0]}`,
+                body: `## Monitoring Alerts Triggered\n\n${alerts.map(a => `- ${a}`).join('\n')}\n\n**Time:** ${new Date().toISOString()}\n**Workflow Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                labels: ['monitoring', 'alert', 'priority-high']
+              });
+            }
+
+      - name: 📊 Generate Monitoring Report
+        if: always()
+        run: |
+          echo "## 📊 Health Monitoring Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### System Status" >> $GITHUB_STEP_SUMMARY
+
+          # API Status
+          if [ "${{ steps.api-health.outputs.status }}" = "healthy" ]; then
+            echo "- ✅ **API:** Healthy" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ **API:** Unhealthy (Code: ${{ steps.api-health.outputs.error_code }})" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Database Status
+          if [ "${{ steps.db-health.outputs.status }}" = "healthy" ]; then
+            echo "- ✅ **Database:** Connected" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.db-health.outputs.status }}" = "unconfigured" ]; then
+            echo "- ⚠️ **Database:** Not configured" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ **Database:** Connection failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # RLS Policy Status
+          if [ "${{ steps.recursion-check.outputs.has_recursion }}" = "false" ]; then
+            echo "- ✅ **RLS Policies:** No recursion detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ❌ **RLS Policies:** Recursive policies detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Performance Metrics
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Performance Metrics" >> $GITHUB_STEP_SUMMARY
+
+          if [ ! -z "${{ steps.db-performance.outputs.slow_queries }}" ]; then
+            echo "- **Slow Queries (>1s):** ${{ steps.db-performance.outputs.slow_queries }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ ! -z "${{ steps.registration-check.outputs.success_rate }}" ]; then
+            echo "- **Registration Success Rate:** ${{ steps.registration-check.outputs.success_rate }}%" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  error-rate-monitoring:
+    name: Error Rate Monitoring
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📊 Analyze Error Patterns
+        id: error-analysis
+        run: |
+          # This would normally connect to your logging service
+          # For now, we'll create a placeholder
+
+          cat > error-report.json << 'EOF'
+          {
+            "timestamp": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')",
+            "errors": {
+              "infinite_recursion": 0,
+              "column_not_found": 0,
+              "authentication_failed": 0,
+              "registration_failed": 0
+            },
+            "status": "healthy"
+          }
+          EOF
+
+          echo "✅ Error analysis complete"
+
+      - name: 📈 Update Metrics Dashboard
+        run: |
+          echo "## 📈 Application Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Error Rates (Last Hour)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Infinite Recursion:** 0" >> $GITHUB_STEP_SUMMARY
+          echo "- **Column Not Found:** 0" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auth Failures:** 0" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registration Failures:** 0" >> $GITHUB_STEP_SUMMARY

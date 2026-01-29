@@ -18,6 +18,7 @@ import {
   mapPlanningToNoticeBase,
 } from './planning';
 import { probateNoticeSchema, mapProbateToNoticeBase } from './probate';
+import { TRO_VARIANTS, troNoticeSchema, mapTroToNoticeBase } from './tro';
 
 export type BuilderSchema = z.ZodTypeAny;
 
@@ -87,6 +88,18 @@ for (const definition of NOTICE_DEFINITIONS) {
       mapToNoticeBase: (input) => {
         const parsed = probateNoticeSchema.parse(input);
         return mapProbateToNoticeBase(parsed);
+      },
+    });
+    continue;
+  }
+  if (TRO_VARIANTS.includes(definition.id as any)) {
+    registry.set(definition.id, {
+      definitionId: definition.id,
+      category: 'tro',
+      schema: troNoticeSchema,
+      mapToNoticeBase: (input) => {
+        const parsed = troNoticeSchema.parse({ ...(input as object), variant: definition.id });
+        return mapTroToNoticeBase(parsed);
       },
     });
     continue;

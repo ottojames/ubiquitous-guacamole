@@ -17,6 +17,7 @@ type Props = {
   label?: string;
   placeholder?: string;
   id?: string;
+  name?: string;
   required?: boolean;
   error?: string;
 };
@@ -34,6 +35,7 @@ export default function CouncilSelect({
   label = 'Council name',
   placeholder = 'Search councils…',
   id = 'council-name',
+  name,
   required = true,
   error,
 }: Props) {
@@ -129,6 +131,7 @@ export default function CouncilSelect({
         <input
           ref={resolvedInputRef}
           id={id}
+          name={name}
           type="text"
           className={`w-full rounded-2xl border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
             error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'

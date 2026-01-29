@@ -633,9 +633,15 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
   if (typeof fetch === 'undefined') return [];
   try {
     const url = `/api/addresses?q=${encodeURIComponent(query)}`;
+    debugLog('[address] builtInAddressFallback fetching', { url, query });
     const response = await fetch(url, { signal });
-    if (!response.ok) return [];
+    debugLog('[address] builtInAddressFallback response', { status: response.status, ok: response.ok });
+    if (!response.ok) {
+      debugLog('[address] builtInAddressFallback failed', { status: response.status });
+      return [];
+    }
     const payload = await response.json().catch(() => null);
+    debugLog('[address] builtInAddressFallback payload', { hasPayload: !!payload, payload: JSON.stringify(payload).substring(0, 200) });
     const items = Array.isArray(payload?.results)
       ? payload.results
       : Array.isArray(payload?.items)
@@ -643,9 +649,36 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
         : Array.isArray(payload)
           ? payload
           : [];
-    return (items as any[])
+    debugLog('[address] builtInAddressFallback items', { count: items.length });
+    const suggestions = (items as any[])
       .map((item, index): AddressSuggestion | null => {
         if (!item || typeof item !== 'object') return null;
+
+        // Backend returns { id, label, postcode? } format
+        if (item.label && typeof item.label === 'string') {
+          const parts = item.label.split(',').map((p: string) => p.trim());
+          // Use postcode from item if available, otherwise extract from label
+          const postcodeFromLabel = parts.find((p: string) => normalisePostcode(p));
+          const postcode = item.postcode || postcodeFromLabel;
+          const line1 = parts[0] || '';
+          const town = parts[parts.length - 1] || '';
+
+          if (!line1) return null;
+
+          return {
+            id: String(item.id ?? `builtin-${index}`),
+            uprn: item.uprn ? String(item.uprn) : undefined,
+            line1,
+            line2: undefined,
+            town,
+            postcode: normalisePostcode(postcode || '') || '',
+            country: 'UK',
+            label: item.label,
+            source: 'fallback',
+          };
+        }
+
+        // Fallback to old format if label doesn't exist
         const line1 = normaliseLine(item.line1);
         const town = normaliseLine(item.town);
         const postcode = normalisePostcode(item.postcode) ?? '';
@@ -665,7 +698,10 @@ async function builtInAddressFallback(query: string, signal?: AbortSignal): Prom
         };
       })
       .filter(Boolean) as AddressSuggestion[];
+    debugLog('[address] builtInAddressFallback returning', { count: suggestions.length });
+    return suggestions;
   } catch (error: any) {
+    debugLog('[address] builtInAddressFallback error', { error: error?.message, name: error?.name });
     if (error?.name === 'AbortError') return [];
     return [];
   }
@@ -734,7 +770,9 @@ export async function fetchAddressSuggestions(
     debugInfo.primary.status = 'skipped';
     debugInfo.fallback.status = 'skipped';
 
+    debugLog('[address] calling builtInAddressFallback', { query: normalizedQuery });
     const builtin = await builtInAddressFallback(normalizedQuery, signal);
+    debugLog('[address] builtInAddressFallback returned', { count: builtin.length });
     if (builtin.length) {
       debugLog('[address] fetchAddressSuggestions using built-in fallback', {
         query: normalizedQuery,
@@ -906,6 +944,21 @@ export async function resolveToPostcodeOrNull(
     return compressPostcode(suggestion.postcode);
   }
 
+  // If we have a GetAddress suggestion with an ID, resolve it first
+  if (suggestion?.id && !suggestion?.postcode) {
+    try {
+      const response = await fetch(`/api/address/resolve?id=${encodeURIComponent(suggestion.id)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.result?.postcode) {
+          return compressPostcode(data.result.postcode);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to resolve address:', error);
+    }
+  }
+
   const text = typeof inputOrSuggestion === 'string'
     ? inputOrSuggestion
     : suggestion?.label ?? [suggestion?.line1, suggestion?.town].filter(Boolean).join(', ');
@@ -1018,7 +1071,7 @@ function safeToSuggestion(it: any): AddressSuggestion | null {
   let line1 = normaliseLine(it?.line1 ?? it?.address_line_1 ?? it?.ADDRESS_LINE_1);
   const line2 = normaliseOptional(it?.line2 ?? it?.address_line_2 ?? it?.ADDRESS_LINE_2);
   let town = normaliseLine(it?.town ?? it?.post_town ?? it?.city);
-  const postcode = normalisePostcode(it?.postcode ?? it?.post_code ?? it?.POSTCODE ?? it?.postal_code) ?? '';
+  let postcode = normalisePostcode(it?.postcode ?? it?.post_code ?? it?.POSTCODE ?? it?.postal_code) ?? '';
 
   const explicitLabel =
     typeof it?.label === 'string'
@@ -1031,6 +1084,18 @@ function safeToSuggestion(it: any): AddressSuggestion | null {
 
   const label = explicitLabel?.trim() || buildLabel({ ...it, line1, line2, town, postcode });
   if (!label) return null;
+
+  // If we don't have a postcode, try to extract it from the label
+  if (!postcode && label) {
+    const parts = label.split(',').map((p: string) => p.trim());
+    for (const part of parts) {
+      const extractedPostcode = normalisePostcode(part);
+      if (extractedPostcode) {
+        postcode = extractedPostcode;
+        break;
+      }
+    }
+  }
 
   if (!line1) {
     line1 = label.split(',')[0]?.trim() || '';

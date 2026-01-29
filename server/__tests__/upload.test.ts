@@ -34,7 +34,7 @@ describe('upload handler (unit)', () => {
     expect(result.error).toBe('OCR_EMPTY');
   });
 
-  it('detects duplicate uploads via sha256', async () => {
+  it('detects duplicate uploads via sha256 and returns cached text', async () => {
     const file = {
       originalname: 'dup.pdf',
       buffer: Buffer.from('same'),
@@ -44,7 +44,9 @@ describe('upload handler (unit)', () => {
     const first = await handleUploadCore(file, {}, {}, {} as any);
     expect(first.ok).toBe(true);
     const second = await handleUploadCore(file, {}, {}, {} as any);
-    expect(second.ok).toBe(false);
-    expect((second as any).error.code).toBe('DUPLICATE');
+    // Duplicate detection returns cached result successfully (not an error)
+    expect(second.ok).toBe(true);
+    expect(second.text).toBe(first.text);
+    expect(second.meta.cached).toBe(true);
   });
 });

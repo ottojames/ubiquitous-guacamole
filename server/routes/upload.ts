@@ -1,9 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { createClient } from "@supabase/supabase-js";
+import { getServiceSupabaseClient } from "../lib/supabase.js";
 import { createHash } from "node:crypto";
 import slugify from "slugify";
 import { extractTextFromBuffer } from "../utils/extractText";
+import { cleanupNoticeText } from "../utils/cleanupNoticeText";
 
 const upload = (multer as any)({
   storage: multer.memoryStorage(),
@@ -13,11 +14,16 @@ const upload = (multer as any)({
       "application/pdf",
       "image/png",
       "image/jpeg",
+      "image/jpg",
       "image/tiff",
+      "image/tif",
       "text/plain",
       "application/rtf",
-      "application/msword", // .doc (we’ll 415 later in extractor)
+      "text/rtf",
+      "application/msword", // .doc (we'll 415 later in extractor)
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/vnd.apple.pages", // .pages
+      "application/x-iwork-pages-sffpages", // .pages (alternate MIME)
     ];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else {
@@ -29,7 +35,7 @@ const upload = (multer as any)({
 
 const router = Router();
 const PAGE_LIMIT = Number(process.env.PAGE_LIMIT || 4);
-const seenHashes = new Map<string, string>();
+const seenHashes = new Map<string, { path: string; text: string; meta: any }>();
 
 // Simple in-memory rate limiter: 20/min per IP
 const hits = new Map<string, { count: number; reset: number }>();
@@ -79,8 +85,14 @@ export async function handleUploadCore(
         file.originalname,
         file.mimetype
       );
-      ocr_text = text;
+      // Apply AI-powered text cleanup to fix capitalization, postcodes, etc.
+      // while preserving legal wording
+      ocr_text = cleanupNoticeText(text);
       meta = m;
+      console.log('[upload] Text cleanup applied:', {
+        originalLength: text.length,
+        cleanedLength: ocr_text.length,
+      });
     } catch (err: any) {
       const status = err?.status || 500;
       if (status === 415) {
@@ -90,7 +102,7 @@ export async function handleUploadCore(
             code: "UNSUPPORTED_TYPE",
             message:
               err?.message ||
-              "Unsupported file. Upload PDF, DOCX, RTF, TXT, or an image (PNG/JPG/TIFF).",
+              "Unsupported file. Upload PDF, DOC, DOCX, Pages, RTF, TXT, or an image (PNG/JPG/TIFF).",
           },
         };
       }
@@ -119,19 +131,25 @@ export async function handleUploadCore(
     };
   }
 
+  // Check for duplicate and return cached text if available
   if (seenHashes.has(sha256)) {
+    const cached = seenHashes.get(sha256)!;
+    console.log('[upload] 🔄 Duplicate detected, returning cached text:', {
+      textLength: cached.text.length,
+      path: cached.path
+    });
+
     return {
-      ok: false,
-      error: {
-        code: "DUPLICATE",
-        message: "Duplicate notice uploaded",
-        existing: seenHashes.get(sha256),
-      },
-      meta: mimeMeta,
+      ok: true,
+      text: cached.text,
+      ocr_text: cached.text,
+      meta: { ...mimeMeta, ...cached.meta, cached: true },
+      info: "This file was already processed. Returning cached result.",
     };
   }
 
-  seenHashes.set(sha256, path);
+  // Store hash with text and meta for future duplicate uploads
+  seenHashes.set(sha256, { path, text: ocr_text, meta });
 
   if (!hasSupabase) {
     if (!ocr_text.trim()) {
@@ -151,10 +169,7 @@ export async function handleUploadCore(
     };
   }
 
-  const supabase = createClient(
-    env.SUPABASE_URL!,
-    env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = getServiceSupabaseClient();
 
   const uploaded = await supabase.storage
     .from(bucket)
@@ -232,7 +247,7 @@ router.post("/", (req, res) => {
         ok: false,
         code: "UNSUPPORTED_TYPE",
         message:
-          "Unsupported file. Upload PDF, DOCX, RTF, TXT, or an image (PNG/JPG/TIFF).",
+          "Unsupported file. Upload PDF, DOC, DOCX, Pages, RTF, TXT, or an image (PNG/JPG/TIFF).",
       });
     }
 

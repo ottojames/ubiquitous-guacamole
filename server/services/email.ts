@@ -1,0 +1,1912 @@
+import { Resend } from 'resend';
+
+// Lazy initialization - only create Resend client when actually sending emails
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
+
+export interface NoticeConfirmationData {
+  noticeId: string;
+  noticeType: string;
+  premisesName?: string;
+  premisesAddress?: string;
+  applicantName?: string;
+  noticeText: string;
+  viewUrl: string;
+  trackingUrl?: string;
+}
+
+export interface RepresentationConfirmationData {
+  representationId: string;
+  noticeType: string;
+  premisesName?: string;
+  premisesAddress?: string;
+  stance: 'support' | 'object' | 'comment';
+  submitterName: string;
+  submitterEmail: string;
+  deadline?: string;
+  noticeUrl: string;
+}
+
+export interface DeadlineReminderData {
+  noticeId: string;
+  noticeType: string;
+  premisesName?: string;
+  premisesAddress?: string;
+  deadline: string;
+  hoursRemaining: number;
+  noticeUrl: string;
+  recipientEmail: string;
+}
+
+export interface SubscriptionVerificationData {
+  verificationToken: string;
+  postcode: string;
+  radius: number;
+}
+
+export interface AlertEmailData {
+  notices: Array<{
+    id: string;
+    noticeType: string;
+    premisesName?: string;
+    premisesAddress?: string;
+    distance: number;
+    viewUrl: string;
+  }>;
+  postcode: string;
+  radius: number;
+  unsubscribeToken: string;
+}
+
+export interface DailySummaryData {
+  councilName: string;
+  date: string;
+  newRepresentations: {
+    noticeId: string;
+    noticeType: string;
+    premisesName?: string;
+    representationCount: number;
+    supportCount: number;
+    objectCount: number;
+    commentCount: number;
+    unreadCount: number;
+    noticeUrl: string;
+  }[];
+  totalNew: number;
+}
+
+export interface TeamInvitationData {
+  firmName: string;
+  inviterName: string;
+  inviterEmail: string;
+  role: 'admin' | 'member';
+  loginUrl: string;
+}
+
+export interface CouncilDepartmentInvitationData {
+  councilName: string;
+  departmentName: string;
+  inviterEmail: string;
+  role: 'department_admin' | 'editor' | 'viewer';
+  invitationToken: string;
+  acceptUrl: string;
+}
+
+export interface RepresentationNotificationData {
+  representationId: string;
+  noticeId: string;
+  noticeType: string;
+  premisesName?: string;
+  premisesAddress?: string;
+  stance: 'support' | 'objection' | 'comment';
+  submitterName: string;
+  contentPreview: string;
+  noticeUrl: string;
+  dashboardUrl: string;
+  councilName: string;
+}
+
+/**
+ * Send team invitation email
+ */
+export async function sendTeamInvitation(
+  to: string,
+  data: TeamInvitationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] RESEND_API_KEY not configured, skipping team invitation email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const roleDescription = data.role === 'admin'
+      ? 'administrator with full access to manage the firm'
+      : 'member with the ability to publish notices';
+
+    const subject = `You've been invited to join ${data.firmName} on CivicNotices`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header h1 { color: white; margin: 0; font-size: 24px; }
+          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+          .greeting { font-size: 18px; color: #111827; margin-bottom: 20px; }
+          .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
+          .role-badge { display: inline-block; background: #ede9fe; color: #6b21a8; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+          .button { display: inline-block; background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+          .button:hover { background: #5568d3; }
+          .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎉 Team Invitation</h1>
+          </div>
+          <div class="content">
+            <p class="greeting">Hello!</p>
+
+            <p><strong>${data.inviterName}</strong> has invited you to join <strong>${data.firmName}</strong> on CivicNotices.</p>
+
+            <div class="info-box">
+              <p style="margin: 0;"><strong>Your Role:</strong> <span class="role-badge">${data.role}</span></p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #6b7280;">You'll be joining as a ${roleDescription}.</p>
+            </div>
+
+            <p>CivicNotices is a platform for publishing and managing legal notices. As a member of ${data.firmName}, you'll be able to:</p>
+
+            <ul style="color: #4b5563;">
+              ${data.role === 'admin' ? `
+                <li>Publish notices on behalf of your firm</li>
+                <li>Manage team members and permissions</li>
+                <li>Update firm settings and profile</li>
+                <li>View billing and subscription details</li>
+              ` : `
+                <li>Publish notices on behalf of your firm</li>
+                <li>View and manage notice submissions</li>
+                <li>Access firm resources and templates</li>
+              `}
+            </ul>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.loginUrl}" class="button">Sign In to Get Started</a>
+            </div>
+
+            <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+              If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+            </p>
+          </div>
+          <div class="footer">
+            <p>CivicNotices - Modern Legal Notice Publishing</p>
+            <p style="font-size: 12px; color: #9ca3af;">This invitation was sent by ${data.inviterEmail}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Team Invitation - CivicNotices
+
+Hello!
+
+${data.inviterName} has invited you to join ${data.firmName} on CivicNotices.
+
+Your Role: ${data.role}
+You'll be joining as a ${roleDescription}.
+
+CivicNotices is a platform for publishing and managing legal notices. As a member of ${data.firmName}, you'll be able to:
+
+${data.role === 'admin' ? `
+- Publish notices on behalf of your firm
+- Manage team members and permissions
+- Update firm settings and profile
+- View billing and subscription details
+` : `
+- Publish notices on behalf of your firm
+- View and manage notice submissions
+- Access firm resources and templates
+`}
+
+Sign in to get started: ${data.loginUrl}
+
+If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+
+---
+CivicNotices - Modern Legal Notice Publishing
+This invitation was sent by ${data.inviterEmail}
+    `;
+
+    console.log('[Email] Sending team invitation to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Team invitation sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send team invitation:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Send council department invitation email with magic link
+ */
+export async function sendCouncilDepartmentInvitation(
+  to: string,
+  data: CouncilDepartmentInvitationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] RESEND_API_KEY not configured, skipping council invitation email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const roleDescriptions: Record<string, string> = {
+      'department_admin': 'Department Administrator with full access to manage the department',
+      'editor': 'Editor with the ability to create and edit notices',
+      'viewer': 'Viewer with read-only access to department notices'
+    };
+
+    const roleLabels: Record<string, string> = {
+      'department_admin': 'Department Admin',
+      'editor': 'Editor',
+      'viewer': 'Viewer'
+    };
+
+    const subject = `You've been invited to join ${data.departmentName} at ${data.councilName} on CivicNotices`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header h1 { color: white; margin: 0; font-size: 24px; }
+          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; }
+          .greeting { font-size: 18px; color: #111827; margin-bottom: 20px; }
+          .info-box { background: #f0fdf4; border-left: 4px solid #059669; padding: 15px; margin: 20px 0; border-radius: 4px; }
+          .role-badge { display: inline-block; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+          .button { display: inline-block; background: #059669; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+          .button:hover { background: #047857; }
+          .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+          .note { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 20px 0; border-radius: 4px; font-size: 14px; color: #92400e; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Council Portal Invitation</h1>
+          </div>
+          <div class="content">
+            <p class="greeting">Hello!</p>
+
+            <p>You've been invited to join <strong>${data.departmentName}</strong> at <strong>${data.councilName}</strong> on CivicNotices.</p>
+
+            <div class="info-box">
+              <p style="margin: 0;"><strong>Your Role:</strong> <span class="role-badge">${roleLabels[data.role]}</span></p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #065f46;">${roleDescriptions[data.role]}</p>
+            </div>
+
+            <p>CivicNotices is a platform for managing public notices. As a member of ${data.departmentName}, you'll be able to:</p>
+
+            <ul style="color: #4b5563;">
+              ${data.role === 'department_admin' ? `
+                <li>View and respond to public representations</li>
+                <li>Manage department notices and settings</li>
+                <li>Invite and manage team members</li>
+                <li>Access department analytics and reports</li>
+              ` : data.role === 'editor' ? `
+                <li>View and respond to public representations</li>
+                <li>Create and edit department notices</li>
+                <li>Access department resources</li>
+              ` : `
+                <li>View public representations on notices</li>
+                <li>Access department notices and resources</li>
+              `}
+            </ul>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.acceptUrl}" class="button">Accept Invitation</a>
+            </div>
+
+            <div class="note">
+              <strong>Note:</strong> This invitation link will expire in 7 days. If you already have a CivicNotices account, you'll be added to the department automatically. Otherwise, you'll be prompted to create an account.
+            </div>
+
+            <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+              If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+            </p>
+          </div>
+          <div class="footer">
+            <p>CivicNotices - Public Notice Management</p>
+            <p style="font-size: 12px; color: #9ca3af;">This invitation was sent by ${data.inviterEmail}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const text = `
+Council Portal Invitation - CivicNotices
+
+Hello!
+
+You've been invited to join ${data.departmentName} at ${data.councilName} on CivicNotices.
+
+Your Role: ${roleLabels[data.role]}
+${roleDescriptions[data.role]}
+
+CivicNotices is a platform for managing public notices. As a member of ${data.departmentName}, you'll be able to:
+
+${data.role === 'department_admin' ? `
+- View and respond to public representations
+- Manage department notices and settings
+- Invite and manage team members
+- Access department analytics and reports
+` : data.role === 'editor' ? `
+- View and respond to public representations
+- Create and edit department notices
+- Access department resources
+` : `
+- View public representations on notices
+- Access department notices and resources
+`}
+
+Accept your invitation: ${data.acceptUrl}
+
+Note: This invitation link will expire in 7 days. If you already have a CivicNotices account, you'll be added to the department automatically. Otherwise, you'll be prompted to create an account.
+
+If you have any questions, feel free to reach out to ${data.inviterEmail} or contact our support team.
+
+---
+CivicNotices - Public Notice Management
+This invitation was sent by ${data.inviterEmail}
+    `;
+
+    console.log('[Email] Sending council department invitation to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Council department invitation sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send council department invitation:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
+ * Send confirmation email after notice is published
+ */
+export async function sendNoticeConfirmation(
+  to: string,
+  data: NoticeConfirmationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const subject = `Your notice has been published - ${data.noticeType}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>${subject}</title>
+  <!--[if mso]>
+  <style>
+    * { font-family: sans-serif !important; }
+  </style>
+  <![endif]-->
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!--<![endif]-->
+</head>
+<body style="margin: 0; padding: 0; width: 100%; word-break: break-word; -webkit-font-smoothing: antialiased; background-color: #f6f9fc;">
+  <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all;">
+    Your notice has been published successfully on CivicNotices
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center" style="padding: 0 20px;">
+
+        <!-- Main Container -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px; text-align: center; background-color: #ffffff; border-radius: 12px 12px 0 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="width: 56px; height: 56px; background-color: #0066ff; border-radius: 12px; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 28px; line-height: 56px; font-weight: bold;">✓</span>
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin: 24px 0 8px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 24px; font-weight: 600; color: #0a0a0a; letter-spacing: -0.02em; line-height: 1.3;">
+                Notice Published
+              </h1>
+              <p style="margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 15px; color: #737373; line-height: 1.5;">
+                Your notice is now live and visible to the public
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <div style="height: 1px; background-color: #e5e5e5;"></div>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 40px;">
+
+              <!-- Notice Details Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 8px; padding: 24px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 16px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 13px; font-weight: 600; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Notice Details
+                    </p>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #737373; padding-right: 16px; width: 120px;">Type</td>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.noticeType}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ${data.premisesName ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #737373; padding-right: 16px; width: 120px;">Premises</td>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${data.premisesAddress ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #737373; padding-right: 16px; width: 120px; vertical-align: top;">Address</td>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesAddress}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${data.applicantName ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #737373; padding-right: 16px; width: 120px;">Applicant</td>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.applicantName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 12px 0;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #737373; padding-right: 16px; width: 120px; vertical-align: top;">Notice ID</td>
+                              <td style="font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 13px; color: #0a0a0a; font-weight: 500; text-align: right; word-break: break-all;">${data.noticeId}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.viewUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 15px; font-weight: 600; line-height: 1.5;">
+                      View Published Notice →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              ${data.trackingUrl ? `
+              <!-- Tracking Link -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 6px; padding: 16px 20px; margin: 24px 0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af;">
+                      📊 Track Representations
+                    </p>
+                    <p style="margin: 0 0 12px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #1e3a8a; line-height: 1.6;">
+                      Use this private link to view representations submitted on your notice. Keep it secure - anyone with this link can view representations.
+                    </p>
+                    <a href="${data.trackingUrl}" style="display: inline-block; background-color: #3b82f6; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 500; line-height: 1.5;">
+                      View Representations →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
+              <!-- Info Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 6px; padding: 16px 20px; margin: 24px 0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #92400e;">
+                      What happens next?
+                    </p>
+                    <p style="margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #78350f; line-height: 1.6;">
+                      Your notice is now searchable on CivicNotices. If you've arranged newspaper publication, you'll receive separate confirmation from the publisher.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 4px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #a3a3a3; line-height: 1.5;">
+                CivicNotices
+              </p>
+              <p style="margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #a3a3a3; line-height: 1.5;">
+                This is an automated notification. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Your notice has been published - ${data.noticeType}
+
+Thank you for publishing your notice with CivicNotices. Your notice is now live and visible to the public.
+
+Notice Summary:
+- Notice Type: ${data.noticeType}
+${data.premisesName ? `- Premises: ${data.premisesName}` : ''}
+${data.premisesAddress ? `- Address: ${data.premisesAddress}` : ''}
+${data.applicantName ? `- Applicant: ${data.applicantName}` : ''}
+- Notice ID: ${data.noticeId}
+
+View your published notice: ${data.viewUrl}
+
+${data.trackingUrl ? `📊 Track Representations
+Use this private link to view representations submitted on your notice:
+${data.trackingUrl}
+
+Keep this link secure - anyone with this link can view representations.
+
+` : ''}What happens next?
+Your notice is now live on CivicNotices and searchable by the public. If you've arranged for newspaper publication, you'll receive separate confirmation from the publisher.
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending confirmation to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    // Check if there's an error in the result
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return {
+        success: false,
+        error: result.error.message || 'Failed to send email'
+      };
+    }
+
+    console.log('[Email] Sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send confirmation:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send confirmation email after representation is submitted
+ */
+export async function sendRepresentationConfirmation(
+  data: RepresentationConfirmationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const stanceLabels = {
+      support: 'Support',
+      object: 'Objection',
+      comment: 'Comment'
+    };
+    const stanceColors = {
+      support: '#16a34a',
+      object: '#dc2626',
+      comment: '#2563eb'
+    };
+
+    const subject = `Your ${stanceLabels[data.stance].toLowerCase()} has been received - ${data.noticeType}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>${subject}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f6f9fc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center" style="padding: 0 20px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px; text-align: center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="width: 56px; height: 56px; background-color: ${stanceColors[data.stance]}; border-radius: 12px; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 28px; line-height: 56px;">✓</span>
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin: 24px 0 8px; font-size: 24px; font-weight: 600; color: #0a0a0a;">
+                ${stanceLabels[data.stance]} Received
+              </h1>
+              <p style="margin: 0; font-size: 15px; color: #737373;">
+                Thank you for your submission
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 0 40px;"><div style="height: 1px; background-color: #e5e5e5;"></div></td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 40px;">
+
+              <p style="margin: 0 0 24px; font-size: 15px; color: #0a0a0a; line-height: 1.6;">
+                Hi ${data.submitterName},
+              </p>
+
+              <p style="margin: 0 0 24px; font-size: 15px; color: #0a0a0a; line-height: 1.6;">
+                We've successfully received your ${stanceLabels[data.stance].toLowerCase()} regarding the ${data.noticeType} notice${data.premisesName ? ` for <strong>${data.premisesName}</strong>` : ''}.
+              </p>
+
+              <!-- Details Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 16px; font-size: 13px; font-weight: 600; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Submission Details
+                    </p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Reference</td>
+                              <td style="font-family: 'Menlo', monospace; font-size: 13px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.representationId}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Type</td>
+                              <td style="font-size: 14px; color: ${stanceColors[data.stance]}; font-weight: 600; text-align: right;">${stanceLabels[data.stance]}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Notice Type</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.noticeType}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ${data.premisesAddress ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px; vertical-align: top;">Address</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesAddress}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${data.deadline ? `
+                      <tr>
+                        <td style="padding: 12px 0;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Deadline</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.deadline}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 24px; font-size: 15px; color: #0a0a0a; line-height: 1.6;">
+                Your submission will be reviewed by the licensing authority and considered as part of the decision-making process.
+              </p>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.noticeUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+                      View Notice →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              ${data.deadline ? `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #eff6ff; border-left: 3px solid #2563eb; border-radius: 6px; padding: 16px 20px; margin: 24px 0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #1e40af;">
+                      What happens next?
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #1e3a8a; line-height: 1.6;">
+                      The consultation period ends on <strong>${data.deadline}</strong>. After this date, the licensing authority will review all representations and make a decision.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #a3a3a3;">CivicNotices</p>
+              <p style="margin: 0; font-size: 12px; color: #a3a3a3;">
+                This is an automated notification. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Your ${stanceLabels[data.stance]} has been received
+
+Hi ${data.submitterName},
+
+We've successfully received your ${stanceLabels[data.stance].toLowerCase()} regarding the ${data.noticeType} notice${data.premisesName ? ` for ${data.premisesName}` : ''}.
+
+Submission Details:
+- Reference: ${data.representationId}
+- Type: ${stanceLabels[data.stance]}
+- Notice Type: ${data.noticeType}
+${data.premisesAddress ? `- Address: ${data.premisesAddress}` : ''}
+${data.deadline ? `- Deadline: ${data.deadline}` : ''}
+
+Your submission will be reviewed by the licensing authority and considered as part of the decision-making process.
+
+View the notice: ${data.noticeUrl}
+
+${data.deadline ? `The consultation period ends on ${data.deadline}. After this date, the licensing authority will review all representations and make a decision.` : ''}
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending representation confirmation to:', data.submitterEmail);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [data.submitterEmail],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Representation confirmation sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send representation confirmation:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send notification email to council staff when a new representation is submitted
+ */
+export async function sendRepresentationNotificationToCouncil(
+  to: string,
+  data: RepresentationNotificationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping council notification email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const stanceLabels = {
+      support: 'Support',
+      objection: 'Objection',
+      comment: 'Comment'
+    };
+    const stanceColors = {
+      support: '#16a34a',
+      objection: '#dc2626',
+      comment: '#2563eb'
+    };
+    const stanceBgColors = {
+      support: '#dcfce7',
+      objection: '#fee2e2',
+      comment: '#dbeafe'
+    };
+
+    const subject = `New ${stanceLabels[data.stance]} Received - ${data.premisesName || data.noticeType}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>${subject}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f6f9fc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center" style="padding: 0 20px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px; text-align: center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="width: 56px; height: 56px; background-color: ${stanceColors[data.stance]}; border-radius: 12px; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 28px; line-height: 56px;">${data.stance === 'support' ? '👍' : data.stance === 'objection' ? '👎' : '💬'}</span>
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin: 24px 0 8px; font-size: 24px; font-weight: 600; color: #0a0a0a;">
+                New ${stanceLabels[data.stance]} Received
+              </h1>
+              <p style="margin: 0; font-size: 15px; color: #737373;">
+                A member of the public has submitted a representation
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 0 40px;"><div style="height: 1px; background-color: #e5e5e5;"></div></td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 40px;">
+
+              <!-- Stance Badge -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <span style="display: inline-block; background-color: ${stanceBgColors[data.stance]}; color: ${stanceColors[data.stance]}; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                      ${stanceLabels[data.stance]}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Notice Details Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 16px; font-size: 13px; font-weight: 600; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Notice Details
+                    </p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Notice Type</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.noticeType}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ${data.premisesName ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Premises</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${data.premisesAddress ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px; vertical-align: top;">Address</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesAddress}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 12px 0;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 140px;">Submitted By</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.submitterName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Representation Preview -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f9ff; border-left: 3px solid #0ea5e9; border-radius: 6px; padding: 16px 20px; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #0369a1; text-transform: uppercase; letter-spacing: 0.05em;">
+                      Representation Preview
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #0c4a6e; line-height: 1.6; font-style: italic;">
+                      "${data.contentPreview}"
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Buttons -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.dashboardUrl}" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; margin-right: 12px;">
+                      View in Dashboard
+                    </a>
+                    <a href="${data.noticeUrl}" style="display: inline-block; background-color: #e5e7eb; color: #374151; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+                      View Public Notice
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 24px 0 0; font-size: 14px; color: #6b7280; line-height: 1.6; text-align: center;">
+                You can review and respond to this representation from your ${data.councilName} dashboard.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #a3a3a3;">CivicNotices</p>
+              <p style="margin: 0; font-size: 12px; color: #a3a3a3;">
+                This is an automated notification for ${data.councilName}.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+New ${stanceLabels[data.stance]} Received
+
+A member of the public has submitted a representation on a notice.
+
+Notice Details:
+- Notice Type: ${data.noticeType}
+${data.premisesName ? `- Premises: ${data.premisesName}` : ''}
+${data.premisesAddress ? `- Address: ${data.premisesAddress}` : ''}
+- Submitted By: ${data.submitterName}
+- Stance: ${stanceLabels[data.stance]}
+
+Representation Preview:
+"${data.contentPreview}"
+
+View in Dashboard: ${data.dashboardUrl}
+View Public Notice: ${data.noticeUrl}
+
+You can review and respond to this representation from your ${data.councilName} dashboard.
+
+---
+CivicNotices - Automated notification for ${data.councilName}
+    `;
+
+    console.log('[Email] Sending representation notification to council:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Representation notification sent to council successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send representation notification to council:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send deadline reminder email
+ */
+export async function sendDeadlineReminder(
+  data: DeadlineReminderData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const subject = `Reminder: ${data.hoursRemaining}h until deadline - ${data.noticeType}`;
+    const urgencyColor = data.hoursRemaining <= 24 ? '#dc2626' : '#f59e0b';
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>${subject}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f6f9fc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center" style="padding: 0 20px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px; text-align: center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="width: 56px; height: 56px; background-color: ${urgencyColor}; border-radius: 12px; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 28px; line-height: 56px;">⏰</span>
+                  </td>
+                </tr>
+              </table>
+              <h1 style="margin: 24px 0 8px; font-size: 24px; font-weight: 600; color: #0a0a0a;">
+                Deadline Approaching
+              </h1>
+              <p style="margin: 0; font-size: 15px; color: #737373;">
+                ${data.hoursRemaining} hours remaining to make your representation
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 0 40px;"><div style="height: 1px; background-color: #e5e5e5;"></div></td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 40px;">
+
+              <p style="margin: 0 0 24px; font-size: 15px; color: #0a0a0a; line-height: 1.6;">
+                This is a reminder that the consultation period for the following notice is closing soon:
+              </p>
+
+              <!-- Notice Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 120px;">Notice Type</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.noticeType}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ${data.premisesName ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 120px;">Premises</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesName}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      ${data.premisesAddress ? `
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 120px; vertical-align: top;">Address</td>
+                              <td style="font-size: 14px; color: #0a0a0a; font-weight: 500; text-align: right;">${data.premisesAddress}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      ` : ''}
+                      <tr>
+                        <td style="padding: 12px 0;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size: 14px; color: #737373; width: 120px;">Deadline</td>
+                              <td style="font-size: 14px; color: ${urgencyColor}; font-weight: 600; text-align: right;">${data.deadline}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 24px; font-size: 15px; color: #0a0a0a; line-height: 1.6;">
+                If you wish to make a representation (support, objection, or comment), please do so before the deadline.
+              </p>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.noticeUrl}" style="display: inline-block; background-color: ${urgencyColor}; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+                      Make Representation →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 6px; padding: 16px 20px; margin: 24px 0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.6;">
+                      <strong>Important:</strong> Representations submitted after the deadline may not be considered by the licensing authority.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #a3a3a3;">CivicNotices</p>
+              <p style="margin: 0; font-size: 12px; color: #a3a3a3;">
+                This is an automated reminder. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Deadline Reminder: ${data.hoursRemaining}h remaining
+
+This is a reminder that the consultation period for the following notice is closing soon:
+
+Notice Details:
+- Type: ${data.noticeType}
+${data.premisesName ? `- Premises: ${data.premisesName}` : ''}
+${data.premisesAddress ? `- Address: ${data.premisesAddress}` : ''}
+- Deadline: ${data.deadline}
+
+If you wish to make a representation (support, objection, or comment), please do so before the deadline.
+
+Make your representation: ${data.noticeUrl}
+
+IMPORTANT: Representations submitted after the deadline may not be considered by the licensing authority.
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending deadline reminder to:', data.recipientEmail);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [data.recipientEmail],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Deadline reminder sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send deadline reminder:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send daily summary email to council officers
+ */
+export async function sendDailySummary(
+  to: string,
+  data: DailySummaryData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    const subject = `Daily Summary: ${data.totalNew} new representation${data.totalNew !== 1 ? 's' : ''} - ${data.councilName}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>${subject}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f6f9fc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center" style="padding: 0 20px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px;">
+              <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 600; color: #0a0a0a;">
+                Daily Representation Summary
+              </h1>
+              <p style="margin: 0; font-size: 15px; color: #737373;">
+                ${data.councilName} • ${data.date}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 0 40px;"><div style="height: 1px; background-color: #e5e5e5;"></div></td>
+          </tr>
+
+          <!-- Summary Stats -->
+          <tr>
+            <td style="padding: 32px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 24px;">
+                <tr>
+                  <td align="center">
+                    <p style="margin: 0 0 8px; font-size: 48px; font-weight: 700; color: #ffffff; line-height: 1;">
+                      ${data.totalNew}
+                    </p>
+                    <p style="margin: 0; font-size: 15px; font-weight: 500; color: #ffffff; opacity: 0.9;">
+                      New Representation${data.totalNew !== 1 ? 's' : ''} Received
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          ${data.newRepresentations.length > 0 ? `
+          <!-- Notice List -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              <p style="margin: 0 0 16px; font-size: 13px; font-weight: 600; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.05em;">
+                Breakdown by Notice
+              </p>
+
+              ${data.newRepresentations.map(notice => `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #0a0a0a;">
+                      ${notice.premisesName || notice.noticeType}
+                    </p>
+                    <p style="margin: 0 0 16px; font-size: 13px; color: #737373;">
+                      ${notice.noticeType}
+                    </p>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+                      <tr>
+                        <td style="width: 33.33%; padding: 8px 0;">
+                          <p style="margin: 0 0 4px; font-size: 24px; font-weight: 700; color: #16a34a;">
+                            ${notice.supportCount}
+                          </p>
+                          <p style="margin: 0; font-size: 12px; color: #737373;">
+                            Support
+                          </p>
+                        </td>
+                        <td style="width: 33.33%; padding: 8px 0; border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5; text-align: center;">
+                          <p style="margin: 0 0 4px; font-size: 24px; font-weight: 700; color: #dc2626;">
+                            ${notice.objectCount}
+                          </p>
+                          <p style="margin: 0; font-size: 12px; color: #737373;">
+                            Objections
+                          </p>
+                        </td>
+                        <td style="width: 33.33%; padding: 8px 0; text-align: right;">
+                          <p style="margin: 0 0 4px; font-size: 24px; font-weight: 700; color: #2563eb;">
+                            ${notice.commentCount}
+                          </p>
+                          <p style="margin: 0; font-size: 12px; color: #737373;">
+                            Comments
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+
+                    ${notice.unreadCount > 0 ? `
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                      <tr>
+                        <td>
+                          <p style="margin: 0; font-size: 13px; font-weight: 600; color: #92400e;">
+                            ${notice.unreadCount} unread
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                    ` : ''}
+
+                    <a href="${notice.noticeUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600;">
+                      View Representations →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              `).join('')}
+            </td>
+          </tr>
+          ` : `
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              <p style="margin: 0; font-size: 15px; color: #737373; text-align: center;">
+                No new representations were received in the last 24 hours.
+              </p>
+            </td>
+          </tr>
+          `}
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #a3a3a3;">CivicNotices</p>
+              <p style="margin: 0; font-size: 12px; color: #a3a3a3;">
+                This is an automated daily summary. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Daily Representation Summary
+${data.councilName} • ${data.date}
+
+${data.totalNew} New Representation${data.totalNew !== 1 ? 's' : ''} Received
+
+${data.newRepresentations.length > 0 ? `
+Breakdown by Notice:
+
+${data.newRepresentations.map(notice => `
+${notice.premisesName || notice.noticeType}
+${notice.noticeType}
+
+Support: ${notice.supportCount} | Objections: ${notice.objectCount} | Comments: ${notice.commentCount}
+${notice.unreadCount > 0 ? `${notice.unreadCount} unread` : ''}
+
+View representations: ${notice.noticeUrl}
+`).join('\n---\n')}
+` : 'No new representations were received in the last 24 hours.'}
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending daily summary to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Daily summary sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send daily summary:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send subscription verification email
+ */
+export async function sendSubscriptionVerification(
+  to: string,
+  data: SubscriptionVerificationData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] Resend not configured. Skipping subscription verification email.');
+      return { success: true };
+    }
+
+    const verifyUrl = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/api/subscriptions/verify/${data.verificationToken}`;
+
+    const subject = 'Verify your CivicNotices alert subscription';
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); overflow: hidden; margin: 20px auto;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: 600;">
+                Confirm Your Email Alerts
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="font-size: 16px; color: #333; line-height: 1.6; margin: 0 0 24px;">
+                You're almost set to receive email alerts when new notices are published near <strong>${data.postcode}</strong>.
+              </p>
+
+              <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 24px 0;">
+                <h3 style="margin: 0 0 12px; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Your Alert Settings
+                </h3>
+                <p style="margin: 8px 0; font-size: 15px; color: #333;">
+                  <strong>Location:</strong> ${data.postcode}<br>
+                  <strong>Radius:</strong> ${data.radius}km<br>
+                  <strong>Frequency:</strong> As notices are published
+                </p>
+              </div>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${verifyUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Verify Email Address
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 14px; color: #666; line-height: 1.6; margin: 24px 0 0;">
+                If you didn't request this, you can safely ignore this email. We won't send you any alerts until you verify your email address.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; text-align: center; border-top: 1px solid #e5e5e5; background: #f8f9fa;">
+              <p style="margin: 0; font-size: 13px; color: #888;">
+                CivicNotices - Public notices made accessible<br>
+                This is an automated email. Please do not reply.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+Verify your CivicNotices alert subscription
+
+You're almost set to receive email alerts when new notices are published near ${data.postcode}.
+
+Your Alert Settings:
+- Location: ${data.postcode}
+- Radius: ${data.radius}km
+- Frequency: As notices are published
+
+Click here to verify your email address: ${verifyUrl}
+
+If you didn't request this, you can safely ignore this email.
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending subscription verification to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Subscription verification sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send subscription verification:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send alert email with new notices
+ */
+export async function sendAlertEmail(
+  to: string,
+  data: AlertEmailData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('[Email] Resend not configured. Skipping alert email.');
+      return { success: true };
+    }
+
+    const unsubscribeUrl = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/api/subscriptions/unsubscribe/${data.unsubscribeToken}`;
+
+    const subject = `${data.notices.length} new notice${data.notices.length !== 1 ? 's' : ''} near ${data.postcode}`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); overflow: hidden; margin: 20px auto;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: 600;">
+                New Notices Near You
+              </h1>
+              <p style="margin: 8px 0 0; font-size: 16px; color: rgba(255,255,255,0.9);">
+                ${data.notices.length} notice${data.notices.length !== 1 ? 's' : ''} within ${data.radius}km of ${data.postcode}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px;">
+
+              <!-- Notices List -->
+              ${data.notices.map(notice => `
+              <div style="border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+                <h3 style="margin: 0 0 8px; font-size: 18px; color: #333;">
+                  ${notice.premisesName || notice.noticeType}
+                </h3>
+                <p style="margin: 0 0 12px; font-size: 14px; color: #666;">
+                  ${notice.noticeType} • ${notice.distance.toFixed(1)}km away
+                </p>
+                ${notice.premisesAddress ? `
+                <p style="margin: 0 0 16px; font-size: 14px; color: #666;">
+                  📍 ${notice.premisesAddress}
+                </p>
+                ` : ''}
+                <a href="${notice.viewUrl}" style="display: inline-block; background-color: #0066ff; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                  View Notice →
+                </a>
+              </div>
+              `).join('')}
+
+              <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e5e5; text-align: center;">
+                <p style="margin: 0 0 12px; font-size: 13px; color: #888;">
+                  Don't want these alerts?
+                </p>
+                <a href="${unsubscribeUrl}" style="color: #888; font-size: 13px; text-decoration: underline;">
+                  Unsubscribe from alerts
+                </a>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; text-align: center; border-top: 1px solid #e5e5e5; background: #f8f9fa;">
+              <p style="margin: 0; font-size: 13px; color: #888;">
+                CivicNotices - Public notices made accessible<br>
+                You're receiving this because you subscribed to alerts for ${data.postcode}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    const text = `
+New Notices Near You
+
+${data.notices.length} notice${data.notices.length !== 1 ? 's' : ''} within ${data.radius}km of ${data.postcode}
+
+${data.notices.map(notice => `
+${notice.premisesName || notice.noticeType}
+${notice.noticeType} • ${notice.distance.toFixed(1)}km away
+${notice.premisesAddress ? `📍 ${notice.premisesAddress}` : ''}
+View: ${notice.viewUrl}
+`).join('\n---\n')}
+
+Don't want these alerts? Unsubscribe: ${unsubscribeUrl}
+
+You're receiving this because you subscribed to alerts for ${data.postcode}
+
+Best regards,
+The CivicNotices Team
+    `;
+
+    console.log('[Email] Sending alert email to:', to);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+      text,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Alert email sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send alert email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export interface CouncilNotificationEmailContent {
+  to: string | null;
+  subject: string;
+  bodyText: string;
+  bodyHtml: string;
+  councilName: string;
+  departmentName: string;
+}
+
+/**
+ * Send a notification email to a council department
+ */
+export async function sendCouncilNotification(
+  content: CouncilNotificationEmailContent
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!content.to) {
+      console.warn('[Email] No recipient email provided, skipping council notification');
+      return { success: false, error: 'No recipient email provided' };
+    }
+
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping council notification email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    console.log('[Email] Sending council notification to:', content.to, 'for', content.councilName, '-', content.departmentName);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [content.to],
+      subject: content.subject,
+      html: content.bodyHtml,
+      text: content.bodyText,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Council notification sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send council notification:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}

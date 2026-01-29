@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 
 import {
   canQuery,
@@ -7,6 +7,7 @@ import {
   addressDebugEnabled,
   type AddressSuggestion,
 } from '@/lib/address';
+import { useGeolocation, reverseGeocodeToPostcode } from '@/hooks/useGeolocation';
 
 export type AddressSearchSubmitPayload = {
   query: string;
@@ -23,9 +24,13 @@ type AddressSearchBarProps = {
   disabled?: boolean;
   autoFocus?: boolean;
   testIdPrefix?: string;
+  oneClickSelect?: boolean; // Enable one-click address selection
+  showGeolocation?: boolean; // Show "Use current location" button
+  onGeolocationSubmit?: (postcode: string, coords: { latitude: number; longitude: number }) => void;
 };
 
 const DEFAULT_HINT = 'Pick an address to view statutory notices nearby.';
+const ONE_CLICK_HINT = 'Start typing an address or postcode, then click to search instantly.';
 
 export function AddressSearchBar({
   value,
@@ -33,17 +38,30 @@ export function AddressSearchBar({
   onSubmit,
   onFreeText,
   placeholder = 'Enter an address or postcode',
-  hint = DEFAULT_HINT,
+  hint,
   disabled,
   autoFocus,
   testIdPrefix = 'address',
+  oneClickSelect = false,
+  showGeolocation = false,
+  onGeolocationSubmit,
 }: AddressSearchBarProps) {
+  // Use appropriate hint based on mode
+  const effectiveHint = hint ?? (oneClickSelect ? ONE_CLICK_HINT : DEFAULT_HINT);
   const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [fetchError, setFetchError] = React.useState<string | null>(null);
   const [isFocused, setIsFocused] = React.useState(false);
   const [menuVisible, setMenuVisible] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(-1);
+
+  // Geolocation state
+  const {
+    loading: geoLoading,
+    error: geoError,
+    getCurrentPosition,
+    clearError: clearGeoError,
+  } = useGeolocation();
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const abortRef = React.useRef<AbortController | null>(null);
@@ -203,6 +221,10 @@ export function AddressSearchBar({
       const query = suggestion?.label ?? value;
       resetSuggestions();
       onSubmit({ query: query.trim(), suggestion });
+      // Blur the input to ensure dropdown closes
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
     },
     [onSubmit, resetSuggestions, value]
   );
@@ -247,6 +269,31 @@ export function AddressSearchBar({
     },
     [activeIndex, resetSuggestions, submitSearch, suggestions]
   );
+
+  const handleUseLocation = React.useCallback(async () => {
+    clearGeoError();
+    const position = await getCurrentPosition();
+    if (!position) return;
+
+    // Reverse geocode to get postcode
+    const postcode = await reverseGeocodeToPostcode(position.latitude, position.longitude);
+
+    if (postcode) {
+      // Update the input value with the postcode
+      onValueChange(postcode);
+
+      // If a custom handler is provided, use it
+      if (onGeolocationSubmit) {
+        onGeolocationSubmit(postcode, position);
+      } else {
+        // Otherwise, trigger the normal search with the postcode
+        onSubmit({ query: postcode });
+      }
+    } else {
+      // If we couldn't get a postcode, fall back to showing coordinates
+      setFetchError('Could not determine your postcode. Please enter it manually.');
+    }
+  }, [clearGeoError, getCurrentPosition, onGeolocationSubmit, onSubmit, onValueChange]);
 
   return (
     <form className="space-y-2" onSubmit={handleSubmit} role="search" aria-label="Search statutory notices by address">
@@ -315,24 +362,43 @@ export function AddressSearchBar({
               {!loading && fetchError && (
                 <li className="px-3 py-2 text-sm text-rose-600">{fetchError}</li>
               )}
-              {!loading && !fetchError && suggestions.map((suggestion, index) => (
-                <li
-                  key={`${suggestion.id}-${index}`}
-                  id={`${listboxId}-option-${index}`}
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  data-testid={`${testIdPrefix}-suggest-item`}
-                  className={`cursor-pointer px-3 py-2 text-sm text-slate-800 ${
-                    index === activeIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-muted/60'
-                  }`}
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    submitSearch(suggestion);
-                  }}
-                >
-                  {suggestion.label}
-                </li>
-              ))}
+              {!loading && !fetchError && suggestions.map((suggestion, index) => {
+                const parts = suggestion.label.split(',').map(p => p.trim());
+                const firstLine = parts[0] || suggestion.label;
+                const restOfAddress = parts.slice(1).join(', ');
+
+                return (
+                  <li
+                    key={`${suggestion.id}-${index}`}
+                    id={`${listboxId}-option-${index}`}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                    data-testid={`${testIdPrefix}-suggest-item`}
+                    className={`cursor-pointer px-4 py-3 text-sm transition-colors duration-150 ${
+                      index === activeIndex
+                        ? 'bg-blue-50 text-blue-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    } ${index > 0 ? 'border-t border-slate-100' : ''}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();  // Prevent blur event from firing
+                    }}
+                    onClick={() => {
+                      submitSearch(suggestion);
+                    }}
+                  >
+                    <div className="flex flex-col gap-0.5 text-left">
+                      <span className={`block font-semibold ${index === activeIndex ? 'text-blue-900' : 'text-slate-900'}`}>
+                        {firstLine}
+                      </span>
+                      {restOfAddress && (
+                        <span className={`block text-xs ${index === activeIndex ? 'text-blue-700' : 'text-slate-500'}`}>
+                          {restOfAddress}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
               {showEmptyState && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">No suggestions</li>
               )}
@@ -347,7 +413,7 @@ export function AddressSearchBar({
                   role="option"
                   aria-selected={false}
                   className="cursor-pointer px-3 py-2 text-sm text-blue-700 hover:bg-muted/60"
-                  onPointerDown={(event) => {
+                  onMouseDown={(event) => {
                     event.preventDefault();
                     resetSuggestions();
                     onFreeText(freeTextQuery);
@@ -359,16 +425,38 @@ export function AddressSearchBar({
             </ul>
           )}
         </div>
-        <button
-          type="submit"
-          data-testid={`${testIdPrefix}-search-btn`}
-          disabled={disabled}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-base font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 md:h-12 md:w-auto"
-        >
-          Search
-        </button>
+        {showGeolocation && (
+          <button
+            type="button"
+            data-testid={`${testIdPrefix}-location-btn`}
+            onClick={handleUseLocation}
+            disabled={disabled || geoLoading}
+            aria-label="Use current location"
+            title="Use current location"
+            className="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-blue-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {geoLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+            ) : (
+              <MapPin className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        )}
+        {!oneClickSelect && (
+          <button
+            type="submit"
+            data-testid={`${testIdPrefix}-search-btn`}
+            disabled={disabled}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-base font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 md:h-12 md:w-auto"
+          >
+            Search
+          </button>
+        )}
       </div>
-      {hint && <p className="text-xs text-slate-500">{hint}</p>}
+      {geoError && (
+        <p role="alert" className="text-xs text-rose-600">{geoError}</p>
+      )}
+      {effectiveHint && <p className="text-xs text-slate-500">{effectiveHint}</p>}
     </form>
   );
 }

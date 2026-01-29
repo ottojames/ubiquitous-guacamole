@@ -21,6 +21,7 @@ export type NoticeSearchItem = {
   premisesName?: string | null;
   premisesAddress?: NoticeAddressSummary;
   premisesPostcode?: string | null;
+  councilName?: string | null;
   repsDeadline?: string | null;
   applicationDate?: string | null;
   publicationDate?: string | null;
@@ -28,6 +29,7 @@ export type NoticeSearchItem = {
   viewUrl?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  distance?: number | null; // Distance in kilometers
 };
 
 export type NoticeSearchParams = {
@@ -38,6 +40,7 @@ export type NoticeSearchParams = {
   status?: string;
   start?: string;
   end?: string;
+  trafficArea?: string;
   radiusKm?: number;
   latitude?: number;
   longitude?: number;
@@ -58,6 +61,7 @@ export function buildNoticeSearchQuery(params: NoticeSearchParams = {}): string 
   if (params.status) sp.set('status', params.status);
   if (params.start) sp.set('start', params.start);
   if (params.end) sp.set('end', params.end);
+  if (params.trafficArea) sp.set('traffic_area', params.trafficArea);
   if (typeof params.radiusKm === 'number' && Number.isFinite(params.radiusKm)) {
     sp.set('radius_km', String(params.radiusKm));
   }
@@ -121,4 +125,100 @@ export async function createDraftNotice(payload: DraftNoticeInput) {
   }
 
   return res.json() as Promise<{ id: string }>;
+}
+
+export type SubmitNoticePayload = {
+  id?: string;
+  notice_type: string;
+  status?: string;
+  applicant: Record<string, unknown>;
+  premises?: Record<string, unknown>;
+  consultation?: Record<string, unknown>;
+  publication?: Record<string, unknown>;
+  extras?: Record<string, unknown>;
+  latitude?: number | null;
+  longitude?: number | null;
+  organization_id?: string | null;
+  department_id?: string | null;
+  contact_email?: string;
+};
+
+export async function submitNotice(payload: SubmitNoticePayload) {
+  const target = `${API_BASE}/api/notices/submit`;
+  const res = await fetch(target, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Submit notice failed ${res.status}`);
+  }
+
+  return res.json() as Promise<{ id: string; success: boolean }>;
+}
+
+/**
+ * Phase 5: Direct Publishing Flow
+ * Publishes a notice that goes live immediately (no approval required)
+ */
+export type PublishNoticePayload = {
+  target_council_id: string;
+  target_department_id: string;
+  notice_data: {
+    description?: string;
+    premises?: Record<string, unknown>;
+    applicant?: Record<string, unknown>;
+    consultation?: Record<string, unknown>;
+    licensing?: Record<string, unknown>;
+    extras?: Record<string, unknown>;
+  };
+  notice_type: string;
+  title: string;
+  client_id?: string;
+  billing_amount?: number;
+};
+
+export type PublishNoticeResponse = {
+  notice: {
+    id: string;
+    title: string;
+    notice_type: string;
+    status: string;
+    published_at: string;
+    representation_deadline: string;
+    expires_at: string;
+    council_name: string;
+    billing_amount: number;
+    billing_status: string;
+  };
+  magicLink: string;
+  message: string;
+};
+
+export async function publishNotice(
+  payload: PublishNoticePayload,
+  authToken: string
+): Promise<PublishNoticeResponse> {
+  const target = `${API_BASE}/api/notices/publish`;
+  const res = await fetch(target, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Publish notice failed ${res.status}`);
+  }
+
+  return res.json() as Promise<PublishNoticeResponse>;
 }

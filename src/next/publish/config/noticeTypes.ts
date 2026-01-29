@@ -1,4 +1,4 @@
-export type NoticeCategoryId = 'licensing' | 'gambling' | 'gvol' | 'planning' | 'probate';
+export type NoticeCategoryId = 'licensing' | 'gambling' | 'gvol' | 'planning' | 'probate' | 'tro';
 
 export type NoticeDefinition = {
   id: string;
@@ -352,6 +352,39 @@ const definitions: NoticeDefinition[] = [
     label: 'Trustee Act 1925 s.27',
     noticeType: 'Probate: Trustee Act 1925 s.27',
     templateKey: 'probate_trustee_s27_v1',
+    version: 1,
+  },
+  {
+    id: 'tro-permanent',
+    category: 'tro',
+    categoryLabel: 'Traffic Regulation Orders',
+    group: 'Traffic Regulation Order',
+    variant: 'Permanent',
+    label: 'TRO — Permanent',
+    noticeType: 'TRO: Permanent Order',
+    templateKey: 'tro_v1',
+    version: 1,
+  },
+  {
+    id: 'tro-temporary',
+    category: 'tro',
+    categoryLabel: 'Traffic Regulation Orders',
+    group: 'Traffic Regulation Order',
+    variant: 'Temporary',
+    label: 'TRO — Temporary',
+    noticeType: 'TRO: Temporary Order',
+    templateKey: 'tro_v1',
+    version: 1,
+  },
+  {
+    id: 'tro-experimental',
+    category: 'tro',
+    categoryLabel: 'Traffic Regulation Orders',
+    group: 'Traffic Regulation Order',
+    variant: 'Experimental',
+    label: 'TRO — Experimental',
+    noticeType: 'TRO: Experimental Order',
+    templateKey: 'tro_v1',
     version: 1,
   },
 ];

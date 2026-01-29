@@ -1,0 +1,214 @@
+{
+  "name": "London Borough of Camden",
+  "type": "London Borough",
+  "region": "Greater London",
+  "website": "https://www.camden.gov.uk",
+  "address": {
+    "line1": "5 Pancras Square",
+    "line2": "Kings Cross",
+    "city": "London",
+    "postcode": "N1C 4AG"
+  },
+  "mainPhone": "020 7974 4444",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "sex-establishment",
+        "gaming-machine-permit"
+      ],
+      "email": "licensing@camden.gov.uk",
+      "phone": "020 7974 4444",
+      "enforcementPhone": "020 7974 6767",
+      "address": {
+        "line1": "Licensing Team",
+        "line2": "5 Pancras Square",
+        "city": "London",
+        "postcode": "N1C 4AG"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "publicRegister": "https://www.camden.gov.uk/search-the-public-register",
+      "preApplicationFees": {
+        "small": 153.00,
+        "medium": 275.40,
+        "large": 581.40
+      },
+      "notes": "Handles Licensing Act 2003 and Gambling Act 2005 applications. 28-day public consultation period. Pre-application advice service available. Appointments available Mon-Fri 9am-5pm at 5 Pancras Square. Statement of Licensing Policy 2025-2030 in effect until 30 January 2027."
+    },
+    {
+      "name": "Street Trading",
+      "handles": [
+        "street-trading-licence",
+        "market-pitch"
+      ],
+      "email": "marketsteam@camden.gov.uk",
+      "applicationsEmail": "marketapplications@camden.gov.uk",
+      "phone": "020 7974 3864",
+      "address": {
+        "line1": "Street Trading Team",
+        "line2": "5 Pancras Square",
+        "city": "London",
+        "postcode": "N1C 4AG"
+      },
+      "submissionMethod": "email",
+      "webForm": null,
+      "notes": "Operates 8 council-run street markets and 48 miscellaneous trading sites. Annual and casual licences available. Licensed under London Local Authorities Act 1990 (as amended). Does not operate private markets such as Camden Lock. Quarterly Markets Newsletter available via email subscription."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area"
+      ],
+      "email": null,
+      "phone": "020 7974 5613",
+      "address": {
+        "line1": "Development Management",
+        "line2": "Camden Town Hall Extension",
+        "line3": "Argyle Street",
+        "city": "London",
+        "postcode": "WC1H 8EQ"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "openingHours": "Mon-Wed & Fri 9am-5pm, Thu 9am-7pm",
+      "notes": "Applications submitted via national Planning Portal. Development Management handles planning permission, listed building consent, advertisement display, and provides information/advice service."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation",
+        "dangerous-structures"
+      ],
+      "email": "building.control@camden.gov.uk",
+      "phone": "020 7974 2387",
+      "headOfService": "Nasser Rad",
+      "address": {
+        "line1": "Building Control",
+        "line2": "5 Pancras Square",
+        "city": "London",
+        "postcode": "N1C 4AG"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.camden.gov.uk/building-control",
+      "notes": "Ensures building work meets Building Regulations requirements including structural safety, fire safety, thermal/sound insulation, drainage, and disabled access. Also handles reports of dangerous structures."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "streetworks-permit"
+      ],
+      "email": null,
+      "phone": {
+        "parking": ["020 7974 5958", "020 7974 5146", "020 7974 5141", "020 7974 5957", "020 7974 3053"],
+        "roadSafety": ["020 7974 2066", "020 7974 7899", "020 7974 2221"],
+        "signage": "020 7974 5929",
+        "busPriority": ["020 7974 5736", "020 7974 5936", "020 7974 5951"],
+        "planningAdvice": ["020 7974 5138", "020 7974 3314"]
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://www.camden.gov.uk/traffic-management-orders",
+      "recentProposals": "https://www.camden.gov.uk/recently-advertised-proposals",
+      "streetWorksRegister": "https://opendata.camden.gov.uk/Transport/Street-Works-Register-Camden/hb3v-f3s2",
+      "notes": "Traffic Engineering handles road safety schemes, parking management, disabled bays, CPZs. Streetworks Team coordinates road/street works, crane operations, and road closures. Recently advertised proposals viewable online with public comment facility."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "food-safety",
+        "noise-complaint",
+        "statutory-nuisance",
+        "pollution",
+        "smoke-odour"
+      ],
+      "email": "noiseteam@camden.gov.uk",
+      "phone": "020 7974 4444",
+      "address": {
+        "line1": "Environment Service",
+        "line2": "5 Pancras Square",
+        "city": "London",
+        "postcode": "N1C 4AG"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://www.camden.gov.uk/noise",
+      "foodComplaints": "https://www.camden.gov.uk/report-food-problem",
+      "notes": "Noise complaints email is noiseteam@camden.gov.uk for case updates. Online reporting requires Camden Account registration. Personal details kept confidential from businesses when making complaints. Responsible authority for licensing consultations."
+    },
+    {
+      "name": "HMO Licensing",
+      "handles": [
+        "hmo-licence",
+        "hmo-mandatory",
+        "hmo-additional"
+      ],
+      "email": "hmolicensing@camden.gov.uk",
+      "phone": "020 7974 5969",
+      "address": {
+        "line1": "Private Sector Housing HMO Licensing Team",
+        "line2": "5 Pancras Square",
+        "city": "London",
+        "postcode": "N1C 4AG"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.camden.gov.uk/houses-multiple-occupation",
+      "publicRegister": "https://opendata.camden.gov.uk/Housing/HMO-Licensing-Register/x43g-c2rf",
+      "fees": {
+        "standard": 1531,
+        "accreditedDiscount": 100
+      },
+      "notes": "Borough-wide additional HMO licensing scheme started 8 December 2025, runs until December 2030. Criminal offence to operate licensable HMO without licence. Queries about licensing requirements, application process, and form issues handled by this team."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "consumer-protection",
+        "business-advice"
+      ],
+      "email": null,
+      "phone": "020 7974 4444",
+      "consumerHelpline": "0808 223 1133",
+      "welshHelpline": "0808 223 1144",
+      "relayUK": "18001 0808 223 1133",
+      "address": {
+        "line1": "Trading Standards",
+        "line2": "5 Pancras Square",
+        "city": "London",
+        "postcode": "N1C 4AG"
+      },
+      "submissionMethod": "phone",
+      "webForm": null,
+      "notes": "Consumer advice provided via Citizens Advice Consumer Service (government-funded partnership). Trading Standards provides advice to Camden-based businesses and new businesses setting up in Camden. Appointments available Mon-Fri 9am-5pm."
+    }
+  ],
+  "responsibleAuthorities": {
+    "notes": "Responsible authorities include Police, Fire Brigade, and council teams (Community Safety). Tasking Group meets fortnightly to monitor licensing intelligence. Partnership protocol emphasizes coordinated, intelligence-led approach for evening/night-time economy."
+  },
+  "additionalResources": {
+    "licensingPublicRegister": "https://www.camden.gov.uk/search-the-public-register",
+    "planningApplicationSearch": "https://www.camden.gov.uk/planning-building-development",
+    "trafficProposals": "https://www.camden.gov.uk/recently-advertised-proposals",
+    "streetWorksRegister": "https://opendata.camden.gov.uk/Transport/Street-Works-Register-Camden/hb3v-f3s2",
+    "hmoRegister": "https://opendata.camden.gov.uk/Housing/HMO-Licensing-Register/x43g-c2rf",
+    "reportIssues": "https://www.camden.gov.uk/report-an-issue",
+    "consultations": "https://consultations.wearecamden.org"
+  },
+  "verified": false,
+  "lastUpdated": "2026-01-28",
+  "researchNotes": "Research conducted via Camden Council website and public search results. Council headquarters at 5 Pancras Square, Kings Cross. Licensing email confirmed as licensing@camden.gov.uk. Statement of Licensing Policy 2025-2030 in effect. HMO additional licensing scheme renewed December 2025 for 5 years. Taxi/private hire licensing handled by Transport for London, not Camden Council directly."
+}

@@ -1,259 +1,121 @@
-import type { NoticeBase, Address } from '@/types/notice';
-import { formatAddressInline, formatDateLong, formatBulletList } from './utils';
-
-type LicensingActivity = {
-  code: string;
-  label: string;
-  enabled: boolean;
-  days?: string[];
-  startTime?: string;
-  endTime?: string;
-  notes?: string;
-};
+import type { NoticeBase } from "@/types/notice";
+import { renderNoticeTemplate, renderHtmlFromText } from "./engine";
+import { generatePdf, extractPdfOptions } from "./pdfService";
 
 type LicensingExtras = {
-  category: 'licensing';
+  category: "licensing";
   variant: string;
-  authority: { name: string; address: string; email?: string };
-  inspectionAddressOrURL: string;
-  representations: { email?: string; website?: string; postal?: string };
-  siteNoticeDate?: string;
-  newspaperPublicationDate?: string;
-  activities: LicensingActivity[];
-  alcoholService?: 'on' | 'off' | 'both';
-  dps?: { fullName: string; issuingAuthority: string; licenceNumber: string } | null;
-  variationSummary?: string;
-  reviewGrounds?: string;
-  applicantDisplayName?: string;
-  applicantServiceAddress?: Address | null;
-  additionalNotes?: string;
+  tokens?: Record<string, string>;
 };
 
-function getExtras(notice: NoticeBase): LicensingExtras {
-  const extras = (notice.extras || {}) as Partial<LicensingExtras>;
-  if (extras.category !== 'licensing') {
-    throw new Error('Licensing template requires licensing extras');
+type LicensingVariant =
+  | "licensing-premises-new"
+  | "licensing-premises-variation"
+  | "licensing-premises-review"
+  | "licensing-club-new"
+  | "licensing-club-variation"
+  | "licensing-club-review";
+
+const TEMPLATES: Record<LicensingVariant, string> = {
+  "licensing-premises-new": `LICENSING ACT 2003
+APPLICATION FOR A NEW PREMISES LICENCE
+
+Notice is hereby given that {{APPLICANT_NAME}}{{#if APPLICANT_TRADING_AS}} trading as {{APPLICANT_TRADING_AS}}{{/if}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a new premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
+
+Licensable activities applied for: {{LICENSABLE_ACTIVITIES}}.
+Proposed hours: {{ACTIVITY_SCHEDULE}}.{{#if OPENING_HOURS}} Opening hours: {{OPENING_HOURS}}.{{/if}}
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+
+Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}. Representors must also serve a copy of their representations on each of the responsible authorities{{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+
+  "licensing-premises-variation": `LICENSING ACT 2003
+APPLICATION TO VARY A PREMISES LICENCE
+
+{{APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} to vary the premises licence at {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
+
+Nature of variation: {{NATURE_OF_VARIATION}}.
+Licensable activities/hours after variation: {{ACTIVITY_SCHEDULE}}.{{#if OPENING_HOURS}} Opening hours: {{OPENING_HOURS}}.{{/if}}
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+
+Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}. Representors must also serve a copy of their representations on each of the responsible authorities{{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+
+  "licensing-premises-review": `LICENSING ACT 2003
+APPLICATION FOR REVIEW OF A PREMISES LICENCE
+
+{{REVIEW_APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a review of the premises licence for {{PREMISES_NAME}}{{#if PREMISES_NAME}}, {{/if}}{{PREMISES_ADDRESS}}.
+
+Grounds for review: {{REVIEW_GROUNDS}}{{#if LICENSING_OBJECTIVES}} (relating to: {{LICENSING_OBJECTIVES}}){{/if}}.
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+
+Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}. Representors must also serve a copy of their representations on each of the responsible authorities{{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+
+  "licensing-club-new": `LICENSING ACT 2003
+APPLICATION FOR A NEW CLUB PREMISES CERTIFICATE
+
+{{APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a club premises certificate at {{PREMISES_ADDRESS}} for the following qualifying club activities: {{LICENSABLE_ACTIVITIES}}. Proposed hours: {{ACTIVITY_SCHEDULE}}.
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+
+Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}. Representors must also serve a copy of their representations on each of the responsible authorities{{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+
+  "licensing-club-variation": `LICENSING ACT 2003
+APPLICATION TO VARY A CLUB PREMISES CERTIFICATE
+
+{{APPLICANT_NAME}} seeks to vary{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently with {{AUTHORITY_NAMES_LIST}}{{/if}} the club premises certificate at {{PREMISES_ADDRESS}}. Nature of variation: {{NATURE_OF_VARIATION}}. Hours/activities after variation: {{ACTIVITY_SCHEDULE}}.
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+
+Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}. Representors must also serve a copy of their representations on each of the responsible authorities{{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+
+  "licensing-club-review": `LICENSING ACT 2003
+APPLICATION FOR REVIEW OF A CLUB PREMISES CERTIFICATE
+
+{{REVIEW_APPLICANT_NAME}} has applied{{#if HAS_MULTIPLE_AUTHORITIES}} concurrently{{/if}} to {{AUTHORITY_NAMES_LIST}} for a review of the club premises certificate for {{PREMISES_ADDRESS}}. Grounds: {{REVIEW_GROUNDS}}.
+
+The application can be inspected at {{INSPECTION_LOCATION}} during {{INSPECTION_TIMES}}{{#if ONLINE_REGISTER_URL}} or online at {{ONLINE_REGISTER_URL}}{{/if}}.
+
+Any representations must be made in writing to {{AUTHORITY_NAME}} at {{REPRESENTATION_ADDRESS}}{{#if REPRESENTATION_EMAIL}} or {{REPRESENTATION_EMAIL}}{{/if}} by {{DEADLINE_DATE}}. Representors must also serve a copy of their representations on each of the responsible authorities{{#if RESPONSIBLE_AUTHORITIES_LIST_URL}} (the list is available at {{RESPONSIBLE_AUTHORITIES_LIST_URL}} or from the licensing authority){{/if}}.
+
+It is an offence to knowingly or recklessly make a false statement in connection with an application and the maximum fine for which a person is liable on summary conviction for the offence is a level 5 fine.`,
+};
+
+function getLicensingContext(notice: NoticeBase): { variant: LicensingVariant; tokens: Record<string, string> } {
+  const extras = (notice.extras ?? {}) as LicensingExtras;
+  if (extras.category !== "licensing") {
+    throw new Error("Licensing template requires licensing extras");
   }
-  return extras as LicensingExtras;
-}
-
-function buildActivitiesList(activities: LicensingActivity[]): string[] {
-  const enabled = activities.filter((activity) => activity.enabled);
-  if (enabled.length === 0) return ['No licensable activities recorded.'];
-  return enabled.map((activity) => {
-    const label = activity.label;
-    const notes = activity.notes ? ` (${activity.notes})` : '';
-    return `${label}${notes}`;
-  });
-}
-
-function buildActivitiesHoursTable(activities: LicensingActivity[]): string[] {
-  const enabled = activities.filter((activity) => activity.enabled);
-  if (enabled.length === 0) return ['No hours supplied.'];
-  return enabled.map((activity) => {
-    const days = (activity.days || []).join(', ');
-    const hours = activity.startTime && activity.endTime ? `${activity.startTime} to ${activity.endTime}` : 'Hours not provided';
-    return `${activity.label}: ${days || 'Days not provided'} — ${hours}`;
-  });
-}
-
-function alcoholServiceText(service?: 'on' | 'off' | 'both'): string {
-  switch (service) {
-    case 'on':
-      return 'on the premises';
-    case 'off':
-      return 'off the premises';
-    case 'both':
-      return 'on and off the premises';
-    default:
-      return 'as per the application';
+  const variant = extras.variant as LicensingVariant;
+  if (!variant || !(variant in TEMPLATES)) {
+    throw new Error(`Unsupported licensing variant: ${extras.variant}`);
   }
-}
-
-function buildRepresentationsText(authority: LicensingExtras['authority'], reps: LicensingExtras['representations'], deadline: string): string {
-  const fragments: string[] = [];
-  if (reps.postal) {
-    fragments.push(`representations in writing to ${reps.postal}`);
-  } else {
-    fragments.push(`representations in writing to ${authority.address}`);
-  }
-  if (reps.email) {
-    fragments.push(`or by email to ${reps.email}`);
-  }
-  if (reps.website) {
-    fragments.push(`or online at ${reps.website}`);
-  }
-  const joined = fragments.join(' ');
-  const deadlineText = formatDateLong(deadline);
-  return `${joined} no later than ${deadlineText}.`;
-}
-
-function applicantDisplayName(notice: NoticeBase, extras: LicensingExtras): string {
-  if (extras.applicantDisplayName) return extras.applicantDisplayName;
-  if (notice.applicant.type === 'company') return notice.applicant.companyName ?? '';
-  return notice.applicant.fullName ?? '';
-}
-
-function applicantServiceAddress(notice: NoticeBase, extras: LicensingExtras): string {
-  const address = extras.applicantServiceAddress || notice.applicant.serviceAddress || notice.applicant.registeredOffice || notice.premises?.address;
-  return formatAddressInline(address);
-}
-
-function contentForVariant(notice: NoticeBase): { heading: string; subheading: string; lines: string[] } {
-  const extras = getExtras(notice);
-  const authority = extras.authority;
-  const applicantName = applicantDisplayName(notice, extras);
-  const applicantAddress = applicantServiceAddress(notice, extras);
-  const premisesName = notice.premises?.name || 'the premises';
-  const premisesAddress = formatAddressInline(notice.premises?.address);
-  const deadline = notice.consultation.repsDeadline || '';
-  const inspection = extras.inspectionAddressOrURL || 'the licensing authority during normal office hours';
-  const representations = buildRepresentationsText(authority, extras.representations, deadline);
-  const activitiesList = buildActivitiesList(extras.activities);
-  const activitiesTable = buildActivitiesHoursTable(extras.activities);
-  const alcoholText = alcoholServiceText(extras.alcoholService);
-  const applicationDate = formatDateLong(notice.consultation.applicationDate);
-
-  const commonFooter = [
-    `Representations may be made ${representations}`.trim(),
-    `The application may be inspected at ${inspection}.`,
-    'It is an offence under Section 158 of the Licensing Act 2003 to knowingly or recklessly make a false statement in connection with an application. The maximum fine on summary conviction is unlimited.',
-    `Dated: ${applicationDate}.`,
-  ];
-
-  if (extras.variant.includes('premises-new')) {
-    return {
-      heading: 'LICENSING ACT 2003',
-      subheading: 'Application for a Premises Licence',
-      lines: [
-        `Notice is hereby given that ${applicantName} of ${applicantAddress} has applied to ${authority.name} for a Premises Licence in respect of ${premisesName}, ${premisesAddress}.`,
-        '',
-        'The application seeks authorisation for the following licensable activities:',
-        formatBulletList(activitiesList),
-        '',
-        'Proposed hours of operation are:',
-        formatBulletList(activitiesTable),
-        '',
-        `Alcohol will be supplied: ${alcoholText}.`,
-        extras.dps
-          ? `Designated Premises Supervisor (DPS): ${extras.dps.fullName}, Personal Licence issued by ${extras.dps.issuingAuthority}, No. ${extras.dps.licenceNumber}.`
-          : 'Designated Premises Supervisor (DPS): details as stated in the application.',
-        '',
-        ...commonFooter,
-      ],
-    };
-  }
-
-  if (extras.variant.includes('premises-variation')) {
-    return {
-      heading: 'LICENSING ACT 2003',
-      subheading: 'Application to Vary a Premises Licence',
-      lines: [
-        `${applicantName} of ${applicantAddress} has applied to ${authority.name} to vary the Premises Licence for ${premisesName}, ${premisesAddress} as follows:`,
-        '',
-        extras.variationSummary ?? 'Variation summary not provided.',
-        '',
-        'Existing permitted activities and hours remain unless varied above.',
-        ...commonFooter,
-      ],
-    };
-  }
-
-  if (extras.variant.includes('premises-review')) {
-    return {
-      heading: 'LICENSING ACT 2003',
-      subheading: 'Application for the Review of a Premises Licence',
-      lines: [
-        `${applicantName} has applied to ${authority.name} for a review of the premises licence for ${premisesName}, ${premisesAddress} on the grounds of:`,
-        '',
-        extras.reviewGrounds ?? 'Grounds for review not provided.',
-        '',
-        'Any responsible authority or other person may make representations as detailed below.',
-        ...commonFooter,
-      ],
-    };
-  }
-
-  if (extras.variant.includes('club-new')) {
-    return {
-      heading: 'LICENSING ACT 2003',
-      subheading: 'Application for a Club Premises Certificate',
-      lines: [
-        `${applicantName} of ${applicantAddress} has applied to ${authority.name} for a Club Premises Certificate at ${premisesName}, ${premisesAddress}.`,
-        '',
-        'The application seeks authorisation for the following qualifying club activities:',
-        formatBulletList(activitiesList),
-        '',
-        'Proposed hours of operation are:',
-        formatBulletList(activitiesTable),
-        '',
-        extras.additionalNotes || 'Qualifying club activities will be carried on in accordance with the club rules.',
-        '',
-        ...commonFooter,
-      ],
-    };
-  }
-
-  if (extras.variant.includes('club-variation')) {
-    return {
-      heading: 'LICENSING ACT 2003',
-      subheading: 'Application to Vary a Club Premises Certificate',
-      lines: [
-        `${applicantName} of ${applicantAddress} has applied to ${authority.name} to vary the Club Premises Certificate for ${premisesName}, ${premisesAddress} as follows:`,
-        '',
-        extras.variationSummary ?? 'Variation summary not provided.',
-        '',
-        'Existing permitted club activities and hours remain unless varied above.',
-        ...commonFooter,
-      ],
-    };
-  }
-
-  if (extras.variant.includes('club-review')) {
-    return {
-      heading: 'LICENSING ACT 2003',
-      subheading: 'Application for the Review of a Club Premises Certificate',
-      lines: [
-        `${applicantName} has applied to ${authority.name} for a review of the Club Premises Certificate for ${premisesName}, ${premisesAddress} on the grounds of:`,
-        '',
-        extras.reviewGrounds ?? 'Grounds for review not provided.',
-        '',
-        'Any responsible authority or other person may make representations as detailed below.',
-        ...commonFooter,
-      ],
-    };
-  }
-
-  throw new Error(`Unsupported licensing variant: ${extras.variant}`);
+  const tokens = extras.tokens ?? {};
+  return { variant, tokens };
 }
 
 export function renderLicensingText(notice: NoticeBase): string {
-  const content = contentForVariant(notice);
-  const lines = [content.heading, content.subheading, '', ...content.lines];
-  return lines.join('\n');
+  const { variant, tokens } = getLicensingContext(notice);
+  const template = TEMPLATES[variant];
+  return renderNoticeTemplate(template, tokens);
 }
 
 export function renderLicensingHtml(notice: NoticeBase): string {
-  const content = contentForVariant(notice);
-  const lines = [content.subheading, '', ...content.lines];
-  const htmlParts: string[] = [`<h1>${content.heading}</h1>`];
-  for (const line of lines) {
-    if (!line || !line.trim()) continue;
-    if (line.includes('•')) {
-      const items = line
-        .split(/\n+/)
-        .map((item) => item.replace(/^•\s*/, '').trim())
-        .filter(Boolean);
-      if (items.length) {
-        htmlParts.push(`<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>`);
-      }
-      continue;
-    }
-    htmlParts.push(`<p>${line}</p>`);
-  }
-  return htmlParts.join('\n');
+  return renderHtmlFromText(renderLicensingText(notice));
 }
 
-export async function renderLicensingPdf(_notice: NoticeBase): Promise<Uint8Array> {
-  throw new Error('PDF rendering is server-only. TODO: move licensing PDF generation to an API endpoint.');
+export async function renderLicensingPdf(notice: NoticeBase): Promise<Uint8Array> {
+  const options = extractPdfOptions(notice, 'licensing');
+  return generatePdf(options);
 }

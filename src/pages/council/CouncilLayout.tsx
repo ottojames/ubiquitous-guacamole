@@ -1,0 +1,463 @@
+import { useEffect, useState, useMemo } from 'react';
+import { Outlet, useNavigate, useParams, Link, useLocation } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { isDemoModeEnabled, DEMO_ACCOUNTS } from '@/lib/demoMode';
+import { CouncilProvider, CouncilDepartment } from '@/contexts/CouncilContext';
+import { roleHasPermission, PERMISSIONS, RoleName, PermissionName } from '@/types/permissions';
+
+// Using CouncilDepartment from CouncilContext
+type Department = CouncilDepartment;
+
+export default function CouncilLayout() {
+  const { orgSlug, deptSlug } = useParams<{ orgSlug: string; deptSlug: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, session, loading: authLoading, signOut: authSignOut, loadPermissions } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
+  const [department, setDepartment] = useState<Department | null>(null);
+  const [userRole, setUserRole] = useState<string>('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    // Wait for auth to finish loading before loading department data
+    if (!authLoading) {
+      loadDepartmentData();
+    }
+  }, [orgSlug, deptSlug, authLoading, session]);
+
+  const loadDepartmentData = async () => {
+    try {
+      // Use session from UnifiedAuthContext instead of direct supabase.auth.getSession() call
+
+      // Demo mode check - only allow demo account bypass when VITE_DEMO_MODE=true
+      const demoAccountEmails = isDemoModeEnabled()
+        ? [...DEMO_ACCOUNTS.council.map(acc => acc.email.toLowerCase()), ...DEMO_ACCOUNTS.firm.map(acc => acc.email.toLowerCase())]
+        : [];
+
+      const isAuthenticatedDemoAccount = session && session.user.email && demoAccountEmails.includes(session.user.email.toLowerCase());
+
+      // Demo mode paths for showcase - only active when demo mode is enabled
+      const demoPaths = isDemoModeEnabled() ? [
+        { org: 'sample-borough', dept: 'licensing', orgName: 'Sample Borough Council', deptName: 'Licensing Department' },
+        { org: 'westminster', dept: 'licensing', orgName: 'Westminster Council', deptName: 'Westminster Licensing' },
+        { org: 'bristol-council', dept: 'licensing', orgName: 'Bristol Council', deptName: 'Licensing' },
+        { org: 'bristol-council', dept: 'planning', orgName: 'Bristol Council', deptName: 'Planning' },
+        { org: 'bristol-council', dept: 'traffic', orgName: 'Bristol Council', deptName: 'Traffic & Highways' },
+        { org: 'westminster-city-of-council', dept: 'licensing', orgName: 'Westminster (City of) Council', deptName: 'Licensing' },
+        { org: 'westminster-city-of-council', dept: 'planning', orgName: 'Westminster (City of) Council', deptName: 'Planning' },
+        { org: 'westminster-city-of-council', dept: 'highways', orgName: 'Westminster (City of) Council', deptName: 'Highways' },
+        { org: 'sampletonborough', dept: 'licensing', orgName: 'Sampletonborough Council', deptName: 'Licensing Department' },
+      ] : [];
+
+      const demoPath = (!session || isAuthenticatedDemoAccount) && demoPaths.find(p => orgSlug === p.org && deptSlug === p.dept);
+
+      if (demoPath) {
+        // Try to load real department data first for demo
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id, name, slug')
+          .eq('slug', orgSlug)
+          .single();
+
+        if (orgData) {
+          const { data: deptData } = await supabase
+            .from('departments')
+            .select('id, name, slug, type')
+            .eq('organization_id', orgData.id)
+            .eq('slug', deptSlug)
+            .single();
+
+          if (deptData) {
+            // Use real data for demo
+            setDepartment({
+              ...deptData,
+              organization: orgData
+            } as Department);
+            setUserRole('org_admin');
+            await loadPermissions(deptData.id, 'org_admin');
+            setDataLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to mock data if database lookup fails
+        const mockDepartment = {
+          id: `demo-${orgSlug}-${deptSlug}`,
+          name: demoPath.deptName,
+          slug: deptSlug!,
+          type: deptSlug === 'licensing' ? 'licensing' : deptSlug === 'planning' ? 'planning' : 'traffic',
+          organization: {
+            id: `demo-${orgSlug}-org`,
+            name: demoPath.orgName,
+            slug: orgSlug
+          }
+        };
+
+        setDepartment(mockDepartment as Department);
+        setUserRole('org_admin');
+        await loadPermissions(mockDepartment.id, 'org_admin');
+        setDataLoading(false);
+        return;
+      }
+
+      // Real authenticated user flow
+      // Note: CouncilProtectedRoute already verified the user is authenticated,
+      // but we keep this check as a fallback safety net
+      if (!session) {
+        navigate('/auth/council-login');
+        return;
+      }
+
+      // CRITICAL FIX: Skip department_memberships query for demo accounts
+      if (isAuthenticatedDemoAccount) {
+        console.log('Demo account detected in CouncilLayout, using mock data to avoid 500 error');
+        // For authenticated demo accounts, provide mock data without querying department_memberships
+        const mockDepartment = {
+          id: `demo-${orgSlug}-${deptSlug}`,
+          name: orgSlug === 'westminster' ? 'Westminster Licensing' : 'Sampletonborough Licensing',
+          slug: deptSlug!,
+          type: 'licensing',
+          organization: {
+            id: `demo-${orgSlug}-org`,
+            name: orgSlug === 'westminster' ? 'Westminster Council' : 'Sampletonborough Council',
+            slug: orgSlug
+          }
+        };
+
+        setDepartment(mockDepartment as Department);
+        setUserRole('org_admin');
+        await loadPermissions(mockDepartment.id, 'org_admin');
+        setDataLoading(false);
+        return;
+      }
+
+      // First, look up organization by slug
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('id, name, slug')
+        .eq('slug', orgSlug)
+        .single();
+
+      if (orgError || !orgData) {
+        throw new Error(`Organization not found: ${orgSlug}`);
+      }
+
+      // Then look up department by organization ID + department slug
+      const { data: deptData, error: deptError } = await supabase
+        .from('departments')
+        .select(`
+          id,
+          name,
+          slug,
+          type
+        `)
+        .eq('organization_id', orgData.id)
+        .eq('slug', deptSlug)
+        .single();
+
+      if (deptError) throw deptError;
+      if (!deptData) throw new Error('Department not found');
+
+      // Combine the data
+      const fullDeptData = {
+        ...deptData,
+        organization: {
+          id: orgData.id,
+          name: orgData.name,
+          slug: orgData.slug
+        }
+      };
+
+      // Check user has access to this department
+      const { data: membership, error: membershipError } = await supabase
+        .from('department_memberships')
+        .select('role, department_id')
+        .eq('user_id', session.user.id)
+        .eq('department_id', fullDeptData.id)
+        .single();
+
+      if (membershipError && membershipError.code !== 'PGRST116') {
+        throw membershipError;
+      }
+
+      // Also check org-level access
+      const { data: orgMembership } = await supabase
+        .from('organization_memberships')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('organization_id', fullDeptData.organization.id)
+        .single();
+
+      if (!membership && !orgMembership) {
+        throw new Error('You do not have access to this department');
+      }
+
+      const role = orgMembership?.role || membership?.role || 'viewer';
+
+      console.log('[CouncilLayout] Setting department:', {
+        id: fullDeptData.id,
+        name: fullDeptData.name,
+        slug: fullDeptData.slug,
+        type: fullDeptData.type,
+        organizationId: fullDeptData.organization?.id,
+        organizationName: fullDeptData.organization?.name,
+        role
+      });
+
+      setDepartment(fullDeptData as Department);
+      setUserRole(role);
+
+      // Load permissions for authenticated user
+      await loadPermissions(fullDeptData.id);
+
+      setDataLoading(false);
+
+      // Update last accessed
+      if (membership) {
+        await supabase
+          .from('department_memberships')
+          .update({ last_accessed_at: new Date().toISOString() })
+          .eq('user_id', session.user.id)
+          .eq('department_id', fullDeptData.id);
+      }
+    } catch (err) {
+      console.error('Failed to load department:', err);
+      // Redirect to department picker where user can select a valid department
+      navigate('/switch-department', {
+        state: { error: err instanceof Error ? err.message : 'Failed to load department' }
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await authSignOut();
+    navigate('/auth/council-login');
+  };
+
+  const formatRoleName = (role: string) => {
+    return role.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const isActivePath = (path: string) => {
+    return location.pathname.includes(path);
+  };
+
+  // Define all nav items with their required permissions
+  const allNavItems: Array<{
+    path: string;
+    label: string;
+    icon: string;
+    requiredPermission?: PermissionName;
+  }> = [
+    { path: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+    { path: 'pending', label: 'Pending', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', requiredPermission: PERMISSIONS.NOTICES_UPDATE },
+    { path: 'notices', label: 'Notices', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', requiredPermission: PERMISSIONS.NOTICES_READ },
+    { path: 'representations', label: 'Representations', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z', requiredPermission: PERMISSIONS.REPRESENTATIONS_READ },
+    { path: 'analytics', label: 'Analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', requiredPermission: PERMISSIONS.NOTICES_READ },
+    { path: 'templates', label: 'Templates', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z', requiredPermission: PERMISSIONS.TEMPLATES_READ },
+    { path: 'team', label: 'Team', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', requiredPermission: PERMISSIONS.TEAM_READ },
+    { path: 'billing', label: 'Billing', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', requiredPermission: PERMISSIONS.BILLING_MANAGE },
+    { path: 'settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', requiredPermission: PERMISSIONS.SETTINGS_READ },
+    { path: 'audit', label: 'Audit Log', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', requiredPermission: PERMISSIONS.AUDIT_READ }
+  ];
+
+  // Filter nav items based on user's role and permissions
+  const navItems = useMemo(() => {
+    // Handle legacy role names that may come from database (owner, department_admin, editor, viewer)
+    // Map them to the RoleName type used by roleHasPermission
+    const normalizedRole = ((): RoleName => {
+      const lowerRole = userRole.toLowerCase();
+      if (lowerRole === 'owner' || lowerRole === 'org_admin') return 'org_admin';
+      if (lowerRole === 'department_admin' || lowerRole === 'dept_admin') return 'dept_admin';
+      if (lowerRole === 'editor' || lowerRole === 'officer') return 'officer';
+      return 'viewer';
+    })();
+
+    return allNavItems.filter(item => {
+      // Dashboard is always visible
+      if (!item.requiredPermission) return true;
+      // Check if user's role has the required permission
+      return roleHasPermission(normalizedRole, item.requiredPermission);
+    });
+  }, [userRole]);
+
+  // Show loading spinner while auth is loading or data is loading
+  if (authLoading || dataLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!department) {
+    return null;
+  }
+
+  const basePath = `/c/${orgSlug}/${deptSlug}`;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-40 ${
+          sidebarOpen ? 'w-64' : 'w-20'
+        }`}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200">
+          {sidebarOpen ? (
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 truncate">
+                {department.name}
+              </h2>
+              <p className="text-sm text-gray-600 truncate">
+                {department.organization.name}
+              </p>
+              <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                {formatRoleName(userRole)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">
+                  {department.name.charAt(0)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="p-4 space-y-2">
+          {navItems.map((item) => {
+            const fullPath = `${basePath}/${item.path}`;
+            const isActive = isActivePath(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                to={fullPath}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d={item.icon} />
+                </svg>
+                {sidebarOpen && (
+                  <span className="font-semibold">{item.label}</span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+          {sidebarOpen ? (
+            <div className="space-y-2">
+              <Link
+                to="/switch-department"
+                className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-xl text-center font-semibold"
+              >
+                Switch Department
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-xl font-semibold"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Link
+                to="/switch-department"
+                className="flex items-center justify-center p-2 text-gray-700 hover:bg-gray-100 rounded-xl"
+                title="Switch Department"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center justify-center p-2 text-gray-700 hover:bg-gray-100 rounded-xl w-full"
+                title="Sign Out"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="mt-2 w-full flex items-center justify-center p-2 text-gray-700 hover:bg-gray-100 rounded-xl"
+            title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            <svg
+              className={`w-5 h-5 transition-transform ${sidebarOpen ? '' : 'rotate-180'}`}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main
+        className={`transition-all duration-300 ${
+          sidebarOpen ? 'ml-64' : 'ml-20'
+        }`}
+      >
+        <div className="p-6">
+          <CouncilProvider
+            department={department}
+            userRole={userRole}
+            organizationSlug={orgSlug || ''}
+            departmentSlug={deptSlug || ''}
+          >
+            <Outlet context={{ department, userRole }} />
+          </CouncilProvider>
+        </div>
+      </main>
+    </div>
+  );
+}

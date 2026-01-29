@@ -43,7 +43,7 @@ export default function TemplatePreviewRail() {
         representationDeadline={notice.representationDeadline}
         consultationDays={28}
       />
-      <CostCard cost={49.99} canSubmit={step >= 3} label={step >= 4 ? 'Processing…' : undefined} />
+      <CostCard cost={50} canSubmit={step >= 3} label={step >= 4 ? 'Processing…' : undefined} />
     </div>
   );
 }

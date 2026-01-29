@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Export for Idox Feature</title>
+</head>
+<body>
+  <h1>US-0129: Export for Idox - Manual Browser Test</h1>
+
+  <h2>Browser Testing Steps:</h2>
+  <ol>
+    <li>Open browser to <a href="http://localhost:5173/" target="_blank">http://localhost:5173/</a></li>
+    <li>Click "Council Portal" button</li>
+    <li>If Demo Mode enabled: Select "Westminster - Licensing Department"</li>
+    <li>Navigate to "Representations" from the sidebar</li>
+    <li>Verify "Export for Idox" button is visible (indigo background, white text)</li>
+    <li>Apply a filter (e.g., select "Reviewed" from dropdown)</li>
+    <li>Click "Export for Idox" button</li>
+    <li>Verify CSV downloads with filename: idox-representations-[date].csv</li>
+    <li>Open CSV and verify columns:
+      <ul>
+        <li>Representation ID</li>
+        <li>Notice Reference</li>
+        <li>Submitter Name</li>
+        <li>Submitter Email</li>
+        <li>Stance</li>
+        <li>Representation Text</li>
+        <li>Date Submitted</li>
+        <li>Reviewed Status</li>
+        <li>Reviewed By</li>
+        <li>Reviewed Date</li>
+        <li>Assigned To</li>
+        <li>Application Type</li>
+        <li>Premises Name</li>
+        <li>Premises Address</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Implementation Details:</h2>
+  <ul>
+    <li>✅ Added exportForIdox() function in Representations.tsx</li>
+    <li>✅ Function uses filteredRepresentations (respects current filters)</li>
+    <li>✅ All Idox-required fields included in CSV</li>
+    <li>✅ "Export for Idox" button added with indigo styling</li>
+    <li>✅ Button positioned next to existing "Export to CSV" button</li>
+  </ul>
+
+  <script>
+    console.log('Test script loaded. Follow the manual steps above.');
+    console.log('Dev server should be running with: VITE_DEMO_MODE=true npm run dev');
+  </script>
+</body>
+</html>

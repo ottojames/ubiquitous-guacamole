@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Debug Test</title>
+    <script>
+        function checkUploadZone() {
+            console.log('=== Upload Zone Debug ===');
+
+            // Find the dropzone
+            const dropzone = document.querySelector('[role="button"][aria-label*="Drag a file"]');
+            console.log('Dropzone found:', !!dropzone);
+
+            if (dropzone) {
+                // Check if it has click handler
+                const hasClickHandler = dropzone.onclick !== null;
+                console.log('Has onclick:', hasClickHandler);
+
+                // Check computed styles
+                const styles = window.getComputedStyle(dropzone);
+                console.log('Pointer events:', styles.pointerEvents);
+                console.log('Cursor:', styles.cursor);
+                console.log('Position:', styles.position);
+
+                // Find the file input
+                const fileInput = dropzone.querySelector('input[type="file"]');
+                console.log('File input found:', !!fileInput);
+
+                if (fileInput) {
+                    console.log('File input visible:', fileInput.offsetWidth > 0 && fileInput.offsetHeight > 0);
+                    console.log('File input accepts:', fileInput.accept);
+                }
+
+                // Test manual click
+                console.log('Attempting manual click on dropzone...');
+                dropzone.click();
+            }
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(checkUploadZone, 2000);
+        });
+    </script>
+</head>
+<body>
+    <h1>Open Browser Console and navigate to http://localhost:5173/publish/step-2</h1>
+    <p>Then paste this script into the console:</p>
+    <pre id="script"></pre>
+    <script>
+        document.getElementById('script').textContent = checkUploadZone.toString() + '\n\ncheckUploadZone();';
+    </script>
+</body>
+</html>
