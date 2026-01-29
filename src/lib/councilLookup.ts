@@ -1,4 +1,11 @@
 import { listAuthorityPacks, type AuthorityPack } from './authorityPacks';
+import type { NoticeCategoryId } from '@/next/publish/config/noticeTypes';
+import {
+  getDepartmentForCategory,
+  getResponsibleCouncilTier,
+  generateDepartmentEmail,
+  type DepartmentType
+} from '@/data/departments';
 
 /**
  * Error codes for postcode lookup failures
@@ -74,6 +81,36 @@ export interface CouncilLookupResultExtended extends CouncilLookupResult {
   countyCode: string | null;
   countyName: string | null;
   isTwoTier: boolean;
+}
+
+/**
+ * Contact information for a council department
+ */
+export interface DepartmentContactInfo {
+  /** Department type (licensing, planning, highways, etc.) */
+  departmentType: DepartmentType;
+  /** Department display name */
+  departmentName: string;
+  /** Council name (district or county depending on notice type) */
+  councilName: string;
+  /** Which tier this council is */
+  councilTier: 'district' | 'county' | 'unitary';
+  /** Department email (specific if known, generated if not) */
+  email: string;
+  /** Phone number if known */
+  phone?: string;
+  /** Online submission portal URL if known */
+  webPortal?: string;
+  /** Postal address if known */
+  postalAddress?: string;
+  /** Whether the location is in a two-tier council area */
+  isTwoTier: boolean;
+  /** District council name (always populated) */
+  districtName: string;
+  /** County council name (only if two-tier) */
+  countyName: string | null;
+  /** GSS code of the responsible council */
+  gssCode: string;
 }
 
 /**
@@ -211,4 +248,82 @@ function findMatchingAuthorityPack(districtName: string): AuthorityPack | undefi
     // Check if pack name contains district or vice versa
     return packName.includes(normalisedDistrict) || normalisedDistrict.includes(packName);
   });
+}
+
+/**
+ * Guess the email domain from a council name.
+ * Uses common UK council domain patterns.
+ */
+function guessDomainFromCouncilName(councilName: string): string {
+  // Normalize: "City of Edinburgh" -> "edinburgh"
+  const normalized = councilName
+    .toLowerCase()
+    .replace(/^city of /i, '')
+    .replace(/^borough of /i, '')
+    .replace(/^royal borough of /i, '')
+    .replace(/ (city |borough |district |county )?council$/i, '')
+    .replace(/\s+/g, '')
+    .trim();
+
+  // Common patterns: name.gov.uk
+  return `${normalized}.gov.uk`;
+}
+
+/**
+ * Look up department contact information for a notice type at a postcode.
+ * Handles two-tier routing (e.g., TRO notices go to county in two-tier areas).
+ *
+ * @param postcode - UK postcode
+ * @param noticeCategory - The notice category ID (e.g., 'licensing', 'tro')
+ * @returns Department contact information for the responsible council
+ * @throws {PostcodeLookupError} If postcode lookup fails
+ */
+export async function lookupDepartmentContactAsync(
+  postcode: string,
+  noticeCategory: NoticeCategoryId
+): Promise<DepartmentContactInfo> {
+  // 1. Look up the postcode to get council info
+  const lookup = await lookupCouncilByPostcodeAsync(postcode);
+
+  // 2. Get the department for this notice category
+  const department = getDepartmentForCategory(noticeCategory);
+
+  // 3. Determine which council tier is responsible
+  const responsibleTier = getResponsibleCouncilTier(noticeCategory, lookup.isTwoTier);
+
+  // 4. Determine the responsible council name and domain
+  let councilName: string;
+  let councilTier: 'district' | 'county' | 'unitary';
+  let gssCode: string;
+
+  if (responsibleTier === 'county' && lookup.isTwoTier && lookup.countyName) {
+    // TRO/highways notices in two-tier areas go to county
+    councilName = lookup.countyName;
+    councilTier = 'county';
+    gssCode = lookup.countyCode!;
+  } else {
+    // All other notices go to district/unitary
+    councilName = lookup.councilName;
+    councilTier = lookup.isTwoTier ? 'district' : 'unitary';
+    gssCode = lookup.districtCode;
+  }
+
+  // 5. Generate contact info
+  const domain = guessDomainFromCouncilName(councilName);
+  const email = generateDepartmentEmail(department.id, domain);
+
+  return {
+    departmentType: department.id,
+    departmentName: department.name,
+    councilName,
+    councilTier,
+    email,
+    phone: undefined,
+    webPortal: lookup.councilWebsite || undefined,
+    postalAddress: lookup.councilAddress || undefined,
+    isTwoTier: lookup.isTwoTier,
+    districtName: lookup.councilName,
+    countyName: lookup.countyName,
+    gssCode,
+  };
 }

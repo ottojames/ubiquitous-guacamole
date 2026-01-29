@@ -898,5 +898,5 @@ Declining in availability but still offered:
 
 - [x] Create `/src/data/councils.ts` with TypeScript interfaces for council data structure.
 - [x] Create `/src/data/departments.ts` with department types and which notice types each handles.
-- [ ] Wire council lookup to return department contacts based on notice type.
-- [ ] Run npm run typecheck to verify all implementations work correctly.
+- [x] Wire council lookup to return department contacts based on notice type.
+- [x] Run npm run typecheck to verify all implementations work correctly.
