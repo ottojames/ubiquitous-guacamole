@@ -812,3 +812,33 @@ New tasks in PRD.md for Phase 1 implementation after research completion.
 
 ---
 
+## Iteration 38 - Wire council lookup to return department contacts based on notice type
+**Status**: PASS
+**Agent Flow**: Explore → Plan → Coder → Tester (typecheck + lint)
+**Files Changed**: src/lib/councilLookup.ts, PRD.md
+**What Happened**: Added new function `lookupDepartmentContactAsync(postcode, noticeCategory)` that:
+1. Calls `lookupCouncilByPostcodeAsync(postcode)` to get council info
+2. Uses `getDepartmentForCategory(category)` to find responsible department
+3. Uses `getResponsibleCouncilTier(category, isTwoTier)` for two-tier routing
+4. Routes TRO/highways notices to county council in two-tier areas
+5. Generates department-specific email using domain derived from council name
+6. Returns `DepartmentContactInfo` with full contact details
+
+**New Exports:**
+- `DepartmentContactInfo` interface
+- `lookupDepartmentContactAsync(postcode: string, noticeCategory: NoticeCategoryId): Promise<DepartmentContactInfo>`
+
+**Key Design Decisions:**
+- Reuses existing functions from `@/data/departments` for consistency
+- Domain guessing: strips "City of", "Borough of", etc. prefixes and adds `.gov.uk`
+- Returns both district and county names for UI to display full context
+- Includes GSS code for database matching
+
+**Learnings:**
+- Two-tier routing critical for TRO notices - must go to county council
+- Council name normalization: "City of Edinburgh" → "edinburgh.gov.uk"
+- DepartmentType imported from `@/data/departments`, NoticeCategoryId from `@/next/publish/config/noticeTypes`
+- All existing infrastructure was in place - just needed the glue function
+
+---
+
