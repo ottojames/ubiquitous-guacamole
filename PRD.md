@@ -18,7 +18,7 @@
 - [x] Research Camden Council — departments, contacts, methods. Create `/councils/camden.json`
 - [x] Research Islington Council — departments, contacts, methods. Create `/councils/islington.json`
 - [x] Research Tower Hamlets Council — departments, contacts, methods. Create `/councils/tower-hamlets.json`
-- [ ] Research Hackney Council — departments, contacts, methods. Create `/councils/hackney.json`
+- [x] Research Hackney Council — departments, contacts, methods. Create `/councils/hackney.json`
 - [ ] Research Southwark Council — departments, contacts, methods. Create `/councils/southwark.json`
 
 ---
@@ -197,6 +197,29 @@ Create each council file in `/councils/` with this structure:
   - Child Protection: Licensing-ChildProtection@towerhamlets.gov.uk
   - Council address: Tower Hamlets Town Hall, 160 Whitechapel Road, London E1 1BJ
   - Main phone: 020 7364 5000
+
+### London Borough of Hackney
+- **Type**: London Borough
+- **Website**: https://www.hackney.gov.uk
+- **File**: `/councils/hackney.json`
+- **Departments Researched**: 8 (Licensing, Street Trading & Markets, Planning, Building Control, Highways, Environmental Health, HMO & Property Licensing, Trading Standards)
+- **Key Findings**:
+  - Licensing email: licensing@hackney.gov.uk, phone 020 8356 4970
+  - FREE pre-application advice funded by Greater London Authority's Business Friendly Licensing Fund
+  - Statement of Licensing Policy 2023-2028 (revised April 2025 to include Special Consideration Area)
+  - Public Licensing Register: https://map2.hackney.gov.uk/lbh-licensing-register/
+  - Street Trading/Markets: markets.service@hackney.gov.uk, operates 6 markets including Ridley Road, Broadway, Chatsworth Road
+  - Planning: planning@hackney.gov.uk, phone 020 8356 8062, duty planner 10am-12pm and 2pm-4pm
+  - Building Control: buildingcontrol@hackney.gov.uk, phone 020 8356 8124, inspections Mon/Tue/Thu only
+  - Highways/TRO: suresh.prajapati@hackney.gov.uk, TraffWeb portal at hackney.traffweb.app
+  - Environmental Health: environmental.health@hackney.gov.uk, NoiseWorks system at noise.hackney.gov.uk
+  - Property Licensing: property.licensing@hackney.gov.uk, portal at propertylicensing.hackney.gov.uk
+  - MAJOR EXPANSION May 2026: Additional HMO licensing borough-wide + Selective licensing in 17 of 21 wards (76% of private rentals)
+  - Exempt wards from selective licensing: Haggerston, Hoxton East and Shoreditch, Hoxton West, Woodberry Down
+  - Responsible authorities: Met Police (hackneylicensing@met.police.uk), LFB (james.oneil@london-fire.gov.uk), CHSCP (MASH@hackney.gov.uk)
+  - Council headquarters: Hackney Town Hall, Mare Street, E8 1EA
+  - Service Centre: 1 Hillman Street, E8 1DY (handles most public-facing services)
+  - Main phone: 020 8356 3000, Out of hours emergency: 020 8356 2710
 
 ---
 
