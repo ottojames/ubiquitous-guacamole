@@ -106,5 +106,6 @@ export function renderTroHtml(notice: NoticeBase): string {
 }
 
 export async function renderTroPdf(notice: NoticeBase): Promise<Uint8Array> {
-  throw new Error("PDF rendering is server-only. TODO: move TRO PDF generation to an API endpoint.");
+  const options = extractPdfOptions(notice, 'tro');
+  return generatePdf(options);
 }

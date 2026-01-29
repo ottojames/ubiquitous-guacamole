@@ -279,3 +279,30 @@ Full Trustee Act 1925 s.27 compliance workflow for deceased estate notices.
 - `npm run build` — ✅ Compiles successfully
 - All imports resolve correctly
 - Follows existing code patterns
+
+### Frontend PDF Templates — FULLY FIXED
+
+**Previous Issue:** Frontend templates (licensing.ts, gambling.ts, planning.ts, tro.ts, gvol.ts, probate.ts) threw errors: "PDF rendering is server-only. TODO: move to API endpoint"
+
+**Solution:** Created client-side service that calls the existing `/api/pdf/generate` endpoint.
+
+**New File:** `src/next/publish/templates/pdfService.ts`
+- `generatePdf(options)` — Calls API, returns Uint8Array
+- `downloadPdf(options, filename)` — Triggers browser download
+- `extractPdfOptions(notice, category)` — Extracts options from NoticeBase
+
+**Updated Files:**
+- `src/next/publish/templates/licensing.ts`
+- `src/next/publish/templates/gambling.ts`
+- `src/next/publish/templates/planning.ts`
+- `src/next/publish/templates/tro.ts`
+- `src/next/publish/templates/gvol.ts`
+- `src/next/publish/templates/probate.ts`
+
+All `renderXxxPdf()` functions now:
+1. Accept `NoticeBase` parameter
+2. Extract tokens and metadata via `extractPdfOptions()`
+3. Call `generatePdf()` which fetches from `/api/pdf/generate`
+4. Return PDF as `Uint8Array`
+
+**TypeScript:** ✅ Compiles successfully
