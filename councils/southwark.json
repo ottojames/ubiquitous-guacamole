@@ -1,0 +1,448 @@
+{
+  "name": "London Borough of Southwark",
+  "type": "London Borough",
+  "region": "Greater London",
+  "website": "https://www.southwark.gov.uk",
+  "address": {
+    "line1": "Southwark Council",
+    "line2": "160 Tooley Street",
+    "city": "London",
+    "postcode": "SE1 2QH"
+  },
+  "postalAddress": {
+    "line1": "PO Box 64529",
+    "city": "London",
+    "postcode": "SE1P 5LX"
+  },
+  "mainPhone": "020 7525 5000",
+  "departments": [
+    {
+      "name": "Licensing",
+      "handles": [
+        "premises-licence",
+        "alcohol-variation",
+        "alcohol-review",
+        "gambling-premises",
+        "gambling-variation",
+        "late-night-refreshment",
+        "entertainment-licence",
+        "sex-establishment",
+        "personal-licence"
+      ],
+      "email": "licensing@southwark.gov.uk",
+      "phone": "020 7525 2000",
+      "address": {
+        "line1": "Regulatory Services",
+        "line2": "3rd Floor Hub 1",
+        "line3": "PO Box 64529",
+        "city": "London",
+        "postcode": "SE1P 5LX"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://app.southwark.gov.uk/licensing/",
+      "publicRegister": "https://app.southwark.gov.uk/premises/granted/results",
+      "policyDocument": {
+        "name": "Statement of Licensing Policy",
+        "effective": "2021",
+        "expires": "2026",
+        "url": "https://services.southwark.gov.uk/assets/attach/7473/Statement-of-Licensing-Policy-2021-2026.pdf",
+        "draftPolicyUrl": "https://engage.southwark.gov.uk (2026-2031 draft available)"
+      },
+      "gamblingPolicy": {
+        "name": "Statement of Gambling Licensing Policy",
+        "effective": "2018",
+        "adoptedDate": "28 November 2018"
+      },
+      "notes": "Handles Licensing Act 2003 and Gambling Act 2005 applications. Online portal automatically sends applications to responsible authorities. 28-day public consultation period for premises licences."
+    },
+    {
+      "name": "Street Trading & Markets",
+      "handles": [
+        "street-trading-licence",
+        "market-pitch",
+        "temporary-trading-licence"
+      ],
+      "email": "streettrading@southwark.gov.uk",
+      "phone": "020 7525 6000",
+      "address": {
+        "line1": "SAST House",
+        "line2": "47-53 Dawes Street",
+        "city": "London",
+        "postcode": "SE17 1EL"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://www.southwark.gov.uk/business-and-licences/markets-and-street-trading",
+      "markets": [
+        {
+          "name": "Borough Market",
+          "address": "8 Southwark Street, London SE1 1TL",
+          "days": "Tuesday to Sunday (closed Monday)",
+          "type": "Private - fine food and gourmet market",
+          "notes": "5 minutes from London Bridge station. Wholesale and retail."
+        },
+        {
+          "name": "Camberwell Green Park Market",
+          "days": "Saturday (Farmers Market), opportunity for Mon-Fri/Sunday",
+          "type": "Council-run",
+          "notes": "Purpose-built hardstanding area"
+        }
+      ],
+      "notes": "Council operates several markets. Contact to discuss availability, advise commodity, setup and power requirements. Read market policy before applying. Privately operated markets require licence via same email."
+    },
+    {
+      "name": "Planning",
+      "handles": [
+        "planning-application",
+        "planning-major",
+        "listed-building-consent",
+        "conservation-area",
+        "pre-application-advice"
+      ],
+      "email": "Planning.Enquiries@southwark.gov.uk",
+      "phone": "020 7525 5403",
+      "address": {
+        "line1": "5th Floor Hub 2",
+        "line2": "Southwark Council",
+        "line3": "PO Box 64529",
+        "city": "London",
+        "postcode": "SE1P 5LX"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://www.planningportal.co.uk/applications",
+      "publicRegister": "https://www.southwark.gov.uk/planning-environment-and-building-control/planning/view-planning-register-and-comment-planning",
+      "preApplicationAdvice": {
+        "available": true,
+        "notes": "Pre-application advice service helps identify issues early"
+      },
+      "fees": {
+        "postOrEmailSurcharge": 100,
+        "notes": "Extra 100 charge for applications sent by post or email instead of online"
+      },
+      "notes": "Planning register available online for search and comments. Email alerts available for your area. Pre-application advice recommended."
+    },
+    {
+      "name": "Building Control",
+      "handles": [
+        "building-regulations",
+        "full-plans",
+        "building-notice",
+        "regularisation",
+        "dangerous-structures"
+      ],
+      "email": "building.control@southwark.gov.uk",
+      "phone": "020 7525 5582",
+      "address": {
+        "line1": "Southwark Council",
+        "line2": "160 Tooley Street",
+        "line3": "PO Box 64529",
+        "city": "London",
+        "postcode": "SE1P 5LX"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://forms.southwark.gov.uk/ShowForm.asp?fm_fid=1547",
+      "buildingSafetyPlatform": "https://buildingsafety.southwark.gov.uk/",
+      "dangerousStructures": {
+        "reportUrl": "https://www.southwark.gov.uk/planning-environment-and-building-control/building-regulations/report-dangerous-structure",
+        "notes": "24-hour service for dangerous structures. Works with police, LFB, HSE, Environment Agency."
+      },
+      "notes": "Include case reference and site address when contacting. Report structural issues via email. Building Safety Programme for high-rise buildings post-Grenfell."
+    },
+    {
+      "name": "Highways",
+      "handles": [
+        "traffic-regulation-order",
+        "traffic-management-order",
+        "temporary-traffic-order",
+        "road-closure",
+        "streetworks-permit",
+        "skip-licence",
+        "scaffolding-licence",
+        "hoarding-licence"
+      ],
+      "highwaysEmail": "highways@southwark.gov.uk",
+      "trafficOrdersEmail": "traffic.orders@southwark.gov.uk",
+      "highwaysLicensingEmail": "highwayslicensing@southwark.gov.uk",
+      "address": {
+        "line1": "Southwark Council",
+        "line2": "160 Tooley Street",
+        "city": "London",
+        "postcode": "SE1 2QH"
+      },
+      "submissionMethod": "email",
+      "webForm": "https://forms.southwark.gov.uk/ShowForm.asp?fm_fid=1081",
+      "viewCurrentTMOs": "https://www.southwark.gov.uk/parking-streets-and-transport/road-closures/traffic-management-orders-tmos/view-current-tmos",
+      "processingTime": {
+        "temporaryTrafficOrder": "12 weeks minimum before works",
+        "emergencyRoadClosure": "2637 fee"
+      },
+      "notes": "TMOs are legal documents managing roads/traffic/parking. Email traffic.orders@southwark.gov.uk for all traffic orders. Include scheme area, street name, or restriction examples. Skips, containers, cranes, scaffolding, hoarding, building materials licences available."
+    },
+    {
+      "name": "Environmental Health",
+      "handles": [
+        "noise-complaint",
+        "statutory-nuisance",
+        "pollution",
+        "contaminated-land",
+        "air-quality",
+        "water-quality"
+      ],
+      "environmentalProtectionEmail": "environmental.protection@southwark.gov.uk",
+      "noiseEmail": "noiseandnuisance@southwark.gov.uk",
+      "generalEmail": "environment@southwark.gov.uk",
+      "phone": "020 7525 5777",
+      "address": {
+        "line1": "Southwark Council",
+        "line2": "160 Tooley Street",
+        "city": "London",
+        "postcode": "SE1 2QH"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://forms.southwark.gov.uk/ShowForm.asp?fm_fid=786",
+      "noiseService": {
+        "rapidResponseTeam": "Every day 8am-4am",
+        "responseTime": "Within 1 hour",
+        "phone": "020 7525 5777"
+      },
+      "notes": "Rapid response team for noise issues. Covers noise, vibration, dust, contaminated land, water quality, radiation. All complaints confidential."
+    },
+    {
+      "name": "Food Safety",
+      "handles": [
+        "food-business-registration",
+        "food-safety-inspection",
+        "food-hygiene"
+      ],
+      "email": "food@southwark.gov.uk",
+      "phone": "020 7525 2000",
+      "address": {
+        "line1": "3rd Floor Hub 1",
+        "line2": "PO Box 64529",
+        "city": "London",
+        "postcode": "SE1P 5LX"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://forms.southwark.gov.uk/showform.asp?fm_fid=733",
+      "registration": {
+        "fee": "Free",
+        "deadline": "Submit registration before opening",
+        "notes": "No registration refused but must complete form correctly. Offence to give false information."
+      },
+      "notes": "Register each premises separately if in multiple council areas. Name/address/type of business on public register. Notify of change of proprietor, nature of business, or address."
+    },
+    {
+      "name": "HMO & Property Licensing",
+      "handles": [
+        "hmo-licence",
+        "hmo-mandatory",
+        "hmo-additional",
+        "selective-licence"
+      ],
+      "email": "resi@southwark.gov.uk",
+      "address": {
+        "line1": "Private Sector Housing Enforcement Team",
+        "line2": "Southwark Council",
+        "city": "London",
+        "postcode": "SE1P 5LX"
+      },
+      "submissionMethod": "portal",
+      "webForm": "https://southwark.metastreet.co.uk/",
+      "schemes": {
+        "mandatoryHMO": {
+          "status": "In force",
+          "criteria": "HMOs with 5+ people from 2+ households",
+          "fee": 1575,
+          "additionalBedroomFee": 105,
+          "duration": "5 years"
+        },
+        "additionalHMO": {
+          "status": "In force",
+          "effectiveDate": "1 March 2022",
+          "coverage": "Borough-wide",
+          "criteria": "HMOs with 3-4 people (not all related) sharing facilities, or Section 257 HMOs",
+          "fee": 1365.10,
+          "duration": "5 years"
+        },
+        "selectiveLicensing": {
+          "status": "In force",
+          "effectiveDate": "November 2023",
+          "coverage": "19 wards",
+          "wards": [
+            "Newington",
+            "Champion Hill",
+            "Faraday",
+            "St Giles",
+            "Goose Green",
+            "North Walworth",
+            "Nunhead & Queens Road",
+            "Old Kent Road",
+            "Peckham",
+            "Camberwell Green",
+            "Chaucer",
+            "Dulwich Hill",
+            "Dulwich Wood",
+            "London Bridge & West Bermondsey",
+            "Peckham Rye",
+            "Rotherhithe",
+            "Rye Lane",
+            "South Bermondsey",
+            "Surrey Docks"
+          ],
+          "fee": 945,
+          "duration": "5 years"
+        }
+      },
+      "goldStandardCharter": {
+        "available": true,
+        "benefit": "Fee discount for landlords who sign up"
+      },
+      "penalties": {
+        "prosecution": "Unlimited fine",
+        "civilPenalty": "Up to 30000"
+      },
+      "notes": "86.3% of private rentals had hazards (fire safety, disrepair, overcrowding). 43,000 privately rented homes in borough. Licences last 5 years."
+    },
+    {
+      "name": "Trading Standards",
+      "handles": [
+        "consumer-protection",
+        "fake-goods",
+        "scams",
+        "underage-sales",
+        "business-advice"
+      ],
+      "phone": "020 7525 2000",
+      "address": {
+        "line1": "Trading Standards",
+        "line2": "3rd Floor, Hub 1",
+        "line3": "PO Box 64529",
+        "city": "London",
+        "postcode": "SE1P 5LX"
+      },
+      "submissionMethod": "web-form",
+      "webForm": "https://www.southwark.gov.uk/form/trading-standards-contact-form",
+      "consumerAdvice": {
+        "provider": "Citizens Advice",
+        "notes": "Report trading standards issues to Citizens Advice who share with relevant teams"
+      },
+      "notes": "Report fake, illicit or unsafe goods, scams and underage sales. Not every report can be pursued or investigated."
+    },
+    {
+      "name": "Anti-Social Behaviour",
+      "handles": [
+        "asb-complaint",
+        "noise-asb"
+      ],
+      "email": "sasbu@southwark.gov.uk",
+      "phone": "020 7525 5777",
+      "submissionMethod": "email",
+      "notes": "Southwark Antisocial Behaviour Unit handles ASB related to noise and nuisance."
+    }
+  ],
+  "responsibleAuthorities": {
+    "police": {
+      "name": "Metropolitan Police - Central South BCU",
+      "likelyEmail": "SouthwarkLicensing@met.police.uk",
+      "website": "https://www.met.police.uk/area/your-area/met/southwark/",
+      "notes": "Contact details in Appendix A of Statement of Licensing Policy. Email format typically [borough]Licensing@met.police.uk based on other London boroughs."
+    },
+    "fire": {
+      "name": "London Fire Brigade",
+      "email": "FSR-AdminSupport@london-fire.gov.uk",
+      "policyTeamEmail": "FSRpolicyteam@london-fire.gov.uk",
+      "address": {
+        "line1": "Fire Safety Regulation",
+        "line2": "London Fire Brigade",
+        "line3": "169 Union Street",
+        "city": "London",
+        "postcode": "SE1 0LL"
+      },
+      "phone": "020 8555 1200"
+    },
+    "safeguarding": {
+      "name": "Southwark Safeguarding Partnership",
+      "website": "https://safeguarding.southwark.gov.uk",
+      "mashEmail": "MASH@southwark.gov.uk",
+      "mashPhone": "020 7525 1921",
+      "mashHours": "9am-5pm",
+      "outOfHoursEmergency": "020 7525 5000",
+      "policeChildAbuse": "020 7230 3700"
+    },
+    "publicHealth": {
+      "role": "Director of Public Health",
+      "notes": "Added as Responsible Authority. Health bodies may hold information other RAs do not."
+    },
+    "fullList": "Appendix A of Statement of Licensing Policy 2021-2026"
+  },
+  "cumulativeImpactAreas": {
+    "status": "In force",
+    "areas": [
+      {
+        "name": "Borough and Bankside CIA",
+        "reason": "Alcohol related crime/disorder statistics and alcohol related hospital admissions data"
+      },
+      {
+        "name": "Camberwell CIA"
+      },
+      {
+        "name": "Peckham CIA",
+        "terminalHours": {
+          "restaurantsAndCafes": {
+            "sunToThurs": "12am (midnight)",
+            "friSat": "1am"
+          },
+          "pubsWineBars": {
+            "sunToThurs": "11pm",
+            "friSat": "12am (midnight)"
+          },
+          "nightclubs": {
+            "monToThurs": "1am",
+            "friSat": "3am",
+            "sunday": "12am (midnight)"
+          },
+          "cinemasTheatres": {
+            "allDays": "2am"
+          }
+        }
+      }
+    ],
+    "policy": "Automatic presumption that applications will be refused unless applicant demonstrates they will not add to negative cumulative impact",
+    "notes": "Maps in Appendix B of licensing policy. Applicants must explain arrangements if applying for hours outside recommended policy hours."
+  },
+  "specialInitiatives": [
+    {
+      "name": "Southwark Women's Safety Charter",
+      "notes": "Encourages socially responsible licensed operations"
+    },
+    {
+      "name": "Ask for Angela",
+      "notes": "Safety initiative in licensed premises"
+    },
+    {
+      "name": "Night-Time Economy Team",
+      "notes": "Police and Council team providing visible policing and working with venue operators"
+    }
+  ],
+  "additionalResources": {
+    "licensingPortal": "https://app.southwark.gov.uk/licensing/",
+    "premisesRegister": "https://app.southwark.gov.uk/premises/granted/results",
+    "personalLicenceRegister": "https://app.southwark.gov.uk/licensing/licencepersonal.asp",
+    "propertyLicensingPortal": "https://southwark.metastreet.co.uk/",
+    "buildingSafetyPlatform": "https://buildingsafety.southwark.gov.uk/",
+    "planningRegister": "https://www.southwark.gov.uk/planning-environment-and-building-control/planning/view-planning-register-and-comment-planning",
+    "trafficOrdersPage": "https://www.southwark.gov.uk/transport-and-roads/traffic-orders-licensing-strategies-and-regulation/traffic-management-orders",
+    "noiseComplaints": "https://forms.southwark.gov.uk/ShowForm.asp?fm_fid=786",
+    "foodBusinessRegistration": "https://forms.southwark.gov.uk/showform.asp?fm_fid=733",
+    "marketInformation": "https://www.southwark.gov.uk/business-and-licences/markets-and-street-trading",
+    "licensingPolicyPDF": "https://services.southwark.gov.uk/assets/attach/7473/Statement-of-Licensing-Policy-2021-2026.pdf",
+    "gamblingPolicy": "https://www.southwark.gov.uk/business/licences/licensing-and-gambling-act-policy"
+  },
+  "nearestStation": "London Bridge",
+  "distanceToStation": "516 yards",
+  "accessibilityNotes": "Building fully accessible with disabled toilets on all floors and lifts to every level",
+  "congestionZone": true,
+  "parkingNotes": "Limited parking in surrounding area. Cycle lanes on Tooley Street.",
+  "verified": false,
+  "lastUpdated": "2026-01-29",
+  "researchNotes": "Research conducted via Southwark Council website, search results, and public documents. Main offices at 160 Tooley Street SE1 2QH. Postal address PO Box 64529 SE1P 5LX. Statement of Licensing Policy 2021-2026 in force, draft 2026-2031 in consultation. Three Cumulative Impact Areas: Borough and Bankside, Camberwell, Peckham. Comprehensive property licensing: mandatory HMO, additional HMO (borough-wide since March 2022), selective licensing (19 wards since November 2023). 43,000 privately rented homes in borough. Police licensing email not directly confirmed - recommend contacting licensing@southwark.gov.uk for Appendix A responsible authority details. Borough Market located in Southwark. Gold Standard Charter offers fee discounts for landlords."
+}

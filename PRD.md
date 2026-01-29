@@ -19,7 +19,7 @@
 - [x] Research Islington Council — departments, contacts, methods. Create `/councils/islington.json`
 - [x] Research Tower Hamlets Council — departments, contacts, methods. Create `/councils/tower-hamlets.json`
 - [x] Research Hackney Council — departments, contacts, methods. Create `/councils/hackney.json`
-- [ ] Research Southwark Council — departments, contacts, methods. Create `/councils/southwark.json`
+- [x] Research Southwark Council — departments, contacts, methods. Create `/councils/southwark.json`
 
 ---
 
@@ -220,6 +220,31 @@ Create each council file in `/councils/` with this structure:
   - Council headquarters: Hackney Town Hall, Mare Street, E8 1EA
   - Service Centre: 1 Hillman Street, E8 1DY (handles most public-facing services)
   - Main phone: 020 8356 3000, Out of hours emergency: 020 8356 2710
+
+### London Borough of Southwark
+- **Type**: London Borough
+- **Website**: https://www.southwark.gov.uk
+- **File**: `/councils/southwark.json`
+- **Departments Researched**: 10 (Licensing, Street Trading & Markets, Planning, Building Control, Highways, Environmental Health, Food Safety, HMO & Property Licensing, Trading Standards, Anti-Social Behaviour)
+- **Key Findings**:
+  - Licensing email: licensing@southwark.gov.uk, phone 020 7525 2000
+  - Online licensing portal at app.southwark.gov.uk/licensing/ with public register
+  - Statement of Licensing Policy 2021-2026 in effect (2026-2031 draft in consultation)
+  - **Three Cumulative Impact Areas**: Borough and Bankside, Camberwell, Peckham (presumption of refusal)
+  - Peckham CIA has specific terminal hours (e.g., pubs 11pm Sun-Thu, nightclubs 3am Fri-Sat)
+  - Street Trading: streettrading@southwark.gov.uk, office at SAST House, Dawes Street SE17 1EL
+  - Planning: Planning.Enquiries@southwark.gov.uk, phone 020 7525 5403, £100 surcharge for non-online submissions
+  - Building Control: building.control@southwark.gov.uk, phone 020 7525 5582, 24-hour dangerous structures service
+  - Highways: highways@southwark.gov.uk, traffic.orders@southwark.gov.uk for TMOs (12 weeks notice required)
+  - Environmental Health: environment@southwark.gov.uk, noiseandnuisance@southwark.gov.uk, Rapid Response 8am-4am
+  - Property Licensing portal at southwark.metastreet.co.uk
+  - **Comprehensive licensing schemes**: Mandatory HMO (£1,575), Additional HMO borough-wide since March 2022 (£1,365.10), Selective Licensing in 19 wards since November 2023 (£945)
+  - 43,000 privately rented homes in borough, 86.3% had hazards
+  - Responsible authorities: Met Police Central South BCU, LFB (FSR-AdminSupport@london-fire.gov.uk), Safeguarding (MASH@southwark.gov.uk)
+  - Special initiatives: Women's Safety Charter, Ask for Angela, Night-Time Economy Team
+  - Council address: 160 Tooley Street, London SE1 2QH
+  - Postal address: PO Box 64529, London SE1P 5LX
+  - Main phone: 020 7525 5000
 
 ---
 
