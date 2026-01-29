@@ -505,340 +505,270 @@ New PRD.md with Council Portal fixes - 13 total tasks across Team Tab, Audit Log
 
 ---
 
-## Session 7 - 2026-01-28 (Council Landscape Research)
+## Session 7 - 2026-01-28 (Council Research - Instance 3)
 
 ### Initial State
-New PRD.md for Instance 2: Council Landscape Research - 6 research tasks.
+New PRD.md for council-specific research. Instance 3 focuses on researching individual councils and creating JSON files in /councils/.
 
 ---
 
-## Iteration 30 - Research UK council types and counts
+## Iteration 1 - Research Westminster City Council
 **Status**: PASS
-**Agent Flow**: Research (WebSearch)
-**Files Changed**: PRD.md
-**What Happened**: Researched and documented complete UK council structure:
-- **Total: 382 UK local authorities**
-- England: 317 (21 county, 164 district, 62 unitary, 36 metropolitan, 32 London boroughs, 2 sui generis)
-- Scotland: 32 unitary councils
-- Wales: 22 unitary (11 county, 11 county borough)
-- Northern Ireland: 11 councils
-
-Additional documentation:
-- Two-tier vs single-tier system explanation
-- The 6 metropolitan counties with all 36 boroughs listed
-- Complete Scotland council list (32)
-- Upcoming 2025-2028 restructuring (abolition of two-tier areas)
-- Sources from House of Commons Library, GOV.UK, Wikipedia, LGiU
-
+**Task Type**: Research
+**Files Created**: councils/westminster.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Westminster City Council via web search and website fetches:
+1. **Licensing**: licensing@westminster.gov.uk, phone 020 7641 6500, portal at licensing.westminster.gov.uk
+   - UK's largest licensing authority (9,000+ applications/year)
+   - Handles premises licences, gambling, entertainment, late night refreshment
+2. **Street Trading**: streettradinglicensing@westminster.gov.uk, phone 020 7641 7010
+   - Handles market pitches and street trading licences
+3. **Planning**: No direct email, uses national Planning Portal (planningportal.co.uk)
+   - Search and comment system available online
+4. **Building Control**: DistrictSurveyors@westminster.gov.uk, phone 020 7641 6500
+   - Online application system for full plans, building notice, regularisation
+5. **Highways**: No email found, phone 020 7641 2000
+   - TMO portal at westminstertransportationservices.co.uk
+   - Permit scheme since Jan 2010
+6. **Health & Safety**: healthandsafety@westminster.gov.uk, phone 020 7641 6000
+   - Covers food safety, statutory nuisance
 **Learnings**:
-- England has complex mix of two-tier (county+district) and single-tier (unitary/metro/London)
-- Scotland and Wales are fully unitary since 1996
-- Major restructuring planned: all two-tier areas becoming unitaries by 2027-28
-- Metropolitan boroughs ARE unitary authorities (county councils abolished 1986)
-- For public notices: two-tier areas need routing to correct tier (planning→district, highways→county)
+- Westminster uses Idox platform for licensing (licensing.westminster.gov.uk)
+- Planning applications go through national portal, not council-specific
+- Some departments (Highways) only have phone contact, no email
+- Council address: 64 Victoria Street, London SW1E 6QP
 
 ---
 
-## Iteration 31 - Research UK council directory sources
+
+## Iteration 2 - Research Birmingham City Council
 **Status**: PASS
-**Agent Flow**: Research (WebSearch)
-**Files Changed**: PRD.md
-**What Happened**: Researched and documented authoritative UK council directory sources:
-
-**Official Government Sources:**
-- ONS Geoportal: Primary source for GSS codes, April 2025 dataset available
-- data.gov.uk: Mirror of ONS data with API access
-- GOV.UK Find Local Council: User-facing service with undocumented API
-- Planning Data (planning.data.gov.uk): England focus, experimental API
-- MHCLG Open Data: **Warning - shutting down March 2025**
-
-**Membership Bodies:**
-- LGA (local.gov.uk): England + Wales, 339 councils
-- COSLA (cosla.gov.uk): Scotland, 32 councils
-- WLGA (wlga.gov.uk): Wales, 22 councils
-- NILGA (nilga.org): Northern Ireland, 11 councils
-
-**Community Datasets:**
-- mySociety uk_local_authority_names_and_codes: Highly recommended for development
-- MapIt: Postcode → council lookup API
-
-**Recommended Approach:**
-1. Use ONS Geoportal April 2025 as canonical source for names/codes
-2. Supplement with mySociety dataset for name variations
-3. Store locally, update annually
-
-**GSS Code Format Documented:**
-- E06 = Unitary, E07 = District, E08 = Metro, E09 = London
-- E10 = County, S12 = Scottish, W06 = Welsh, N09 = NI
-
+**Task Type**: Research
+**Files Created**: councils/birmingham.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Birmingham City Council via web search:
+1. **Licensing**: licensing@birmingham.gov.uk, phone 0121 303 6007
+   - Handles premises licences (Licensing Act 2003), gambling (Gambling Act 2005), taxi/private hire
+   - Address: Licensing Department, Civic Centre, Birmingham B1 2AP
+   - Office hours: Mon-Thu 9am-5pm, Fri 9am-4:30pm
+2. **Street Trading/Markets**: marketstalls@birmingham.gov.uk, phone 0121 303 0208
+   - Bull Ring Markets (Open Market, Rag Market, Indoor Market)
+   - Food vendors need hygiene rating 4 or 5
+3. **Planning**: planning.registration@birmingham.gov.uk, phone 0121 303 1115
+   - Uses national Planning Portal for submissions
+   - Local search via eplanning.birmingham.gov.uk
+   - Additional emails: land.charges@, land.property@
+4. **Building Control**: building.consultancy@acivico.co.uk
+   - Outsourced to Acivico (wholly-owned council company)
+   - Currently experiencing substantial delays due to staff shortages
+   - Forms at acivicogroup.co.uk/application-forms/
+5. **Highways/Transport**: transport.projects@birmingham.gov.uk
+   - TRO documents viewable at 1 Lancaster Circus Queensway, B4 7DQ
+   - Section 278: privatedevelopments@birmingham.gov.uk
+   - Consultations at birminghambeheard.org.uk
+6. **Environmental Health**: No email, phone 0121 303 6007
+   - Online forms at birmingham.gov.uk/env-health-contact
+   - pollution.team@birmingham.gov.uk for noise from entertainment
+7. **Property Licensing**: pl@birmingham.gov.uk
+   - HMO licensing portal at birmingham.metastreet.co.uk
 **Learnings**:
-- ONS Geoportal is the authoritative source for GSS codes (statistical geography)
-- mySociety dataset is best for development (maps between coding schemes)
-- MHCLG Open Data Communities shutting down March 2025 - avoid dependency
-- GOV.UK Local Authorities API exists but is undocumented and unversioned
-- No central source for council contact info - must scrape individual council websites
+- Birmingham is the largest UK local authority (1M+ citizens)
+- Building control outsourced to Acivico (separate email domains)
+- Multiple email domains: @birmingham.gov.uk, @acivico.co.uk, @acivicogroup.co.uk
+- Council address: Council House, Victoria Square, Birmingham B1 1BB
+- Main phone: 0121 303 1111
 
 ---
 
-## Iteration 32 - Research postcode → council lookup methods
+## Iteration 3 - Research Manchester City Council
 **Status**: PASS
-**Agent Flow**: Research (WebSearch, WebFetch)
-**Files Changed**: PRD.md
-**What Happened**: Researched and documented comprehensive postcode → council lookup methods:
-
-**Options Evaluated:**
-1. **Postcodes.io** (Recommended): Free, no auth, no rate limits, returns admin_district + admin_county + GSS codes
-2. **GOV.UK Local Authorities API**: Free but undocumented, unversioned, rate limited, "may change without notice"
-3. **MapIt**: £22/mo (free for non-profit), requires API key, tiered rate limits
-4. **ONS NSPL Dataset**: Free download, offline use, ~300MB quarterly CSV
-
-**Key Findings:**
-- Postcodes.io is backed by ONS NSPL data, updated quarterly
-- Two-tier areas return `admin_district` (e.g., "Guildford") + `admin_county` (e.g., "Surrey")
-- Unitary areas return `admin_district` only, `admin_county` is null
-- ~1.2% of UK addresses (387,000) are in different LA than postcode centroid - unavoidable limitation
-
-**Implementation Recommendation:**
-- Phase 1 (MVP): Use Postcodes.io API directly
-- Phase 2 (Scale): Self-host NSPL dataset in PostgreSQL
-
+**Task Type**: Research
+**Files Created**: councils/manchester.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Manchester City Council via web search and website fetches:
+1. **Licensing**: premises.licensing@manchester.gov.uk, phone 0161 234 5004
+   - Handles Licensing Act 2003 and Gambling Act 2005 premises
+   - Address: Licensing Unit, Level 1, Town Hall Extension, Manchester M60 2LA
+   - Register viewable by appointment 9am-5pm
+   - Out of hours (after 8pm): 0161 234 5004
+2. **Street Trading**: premises.licensing@manchester.gov.uk, phone 0161 234 5004
+   - Two types: Street Trader Licence (City Centre) and Street Trader Consent (elsewhere)
+   - Web form at manchester.gov.uk/xfp/form/1947
+3. **Planning**: planning@manchester.gov.uk, phone 0161 234 4516
+   - Uses national Planning Portal
+   - Address: PO Box 463, Town Hall, Manchester M60 3NY
+4. **Building Control**: building.control@manchester.gov.uk, phone 0161 234 4490
+   - Experiencing substantial delays due to staff shortages
+   - Office hours: 9am-4pm Monday to Friday
+5. **Highways**: highwaynetworkmanagement@manchester.gov.uk
+   - TRO/TTRO applications via web form
+   - Event road closures: minimum £167, works closures: minimum £2,522
+   - Six week lead-in for TTRO applications
+6. **Environmental Health**: No email, online forms only
+   - Phone: 0161 234 5004
+   - Address: 1 Hammerstone Road, Manchester M18 8EQ
+7. **Public Protection**: phone 0161 234 4854
+   - Responsible authority for licensing consultations
+8. **Trading Standards**: trading_standards@manchester.gov.uk, phone 0161 234 1555
+   - Address: 1 Hammerstone Road, Gorton, Manchester M18 8EQ
+9. **Property Licensing**: hmolicensingenquiry@manchester.gov.uk
+   - Portal at propertylicensing.manchester.gov.uk
+   - HMO mandatory for 5+ persons, 2+ households
+   - Selective Licensing Scheme 3 (May 2025-May 2030): Cheetham, Crumpsall, Harpurhey, Longsight, Miles Platting & Newton Heath, Moss Side
 **Learnings**:
-- Postcodes.io is the clear winner for free postcode → council lookup
-- GOV.UK API is not intended for third-party production use
-- MapIt pricing starts at £22/mo - only worth it if you need their additional features
-- For two-tier routing, must check both `admin_district` and `admin_county` fields
-- GSS codes (E09000033 format) are consistent across all services
+- Manchester uses Town Hall Extension for licensing services
+- Building control also experiencing staff shortages (like Birmingham)
+- Environmental Health prefers online forms over email (similar pattern to other large councils)
+- Comprehensive responsible authorities list available on website
+- Council address: Town Hall, Albert Square, Manchester M60 2LA
+- Main phone: 0161 234 5000
 
 ---
 
-## Iteration 33 - Research council department structures
+## Iteration 5 - Research Liverpool City Council
 **Status**: PASS
-**Agent Flow**: Research (WebSearch)
-**Files Changed**: PRD.md
-**What Happened**: Researched and documented comprehensive UK council department structures:
-
-**Key Departments Documented:**
-1. **Licensing Department** (District/Unitary): Premises licences, gambling, taxis
-2. **Planning Department** (District/Unitary): Applications, listed buildings, TPOs
-3. **Highways Department** (County in two-tier): TROs, road closures, parking
-4. **Environmental Health** (District/Unitary): Contaminated land, nuisances
-5. **Building Control** (District/Unitary): Demolition, dangerous structures
-6. **Electoral Services** (All tiers): Elections, boundaries
-7. **Legal/Democratic Services** (All tiers): Path orders, CPOs, PSPOs
-
-**Organisational Structure:**
-- Councils typically organised into 4 directorates: Place, Communities, Resources, People
-- Licensing usually under Communities/Regulatory Services
-- Planning/Highways usually under Place
-- Functions vary in name but have consistent responsibilities
-
-**Two-Tier Responsibility Split:**
-- District: Licensing, Planning (general), Environmental Health, Building Control
-- County: Highways, Planning (minerals/waste), Education, Social Care
-
-**Critical for Civic Notices:**
-- Must route to correct tier in two-tier areas
-- Postcode lookup returns district; check `admin_county` for highways routing
-- Shared services exist (e.g., Worcestershire Regulatory Services covers 6 districts)
-
+**Task Type**: Research
+**Files Created**: councils/liverpool.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Liverpool City Council via web search and website fetches:
+1. **Licensing**: licensingact2003@liverpool.gov.uk, phone 0151 233 3015
+   - Uses LALPAC system for all licensing applications and register searches
+   - Handles Licensing Act 2003 and Gambling Act 2005 premises
+   - Address: Cunard Building, Water Street, L3 1AH
+2. **Taxi/Private Hire**: Portal only, phone 0151 233 3015
+   - No longer accepts email submissions - documents will not be processed
+   - All applications via online licensing portal
+3. **HMO/Selective Licensing**: privatesector.housing@liverpool.gov.uk
+   - Selective Licensing Scheme (2022-2027) covers 16 wards
+   - Approximately 80% of private rentals in Liverpool (45,000 of 55,000)
+   - Fee: £550 per property (discounts available)
+4. **Street Trading**: Currently not granting new licences
+   - Only accepting applications for Waterloo Place
+   - Three consent types: Daily (£66.24+), Long-term (£892.09), Football ground
+5. **Planning**: planning@liverpool.gov.uk, phone 0151 233 3021
+   - Area-specific emails: planning.dccitycentre@, planning.dcnorth@, planning.dcsouth@
+   - Uses national Planning Portal
+6. **Building Control**: planningandbuildingcontrol@liverpool.gov.uk, phone 0151 233 3021
+   - Part of Merseyside LABC partnership
+   - Building Control partner scheme for frequent applicants
+7. **Highways/TRO**: phone 0151 233 3001
+   - TTRO requires confirmed start date and PAA number
+   - TROs viewable at Traffic Penalty Tribunal database
+8. **Environmental Health**: Environmental.Health@liverpool.gov.uk
+   - Also responsible authority for licensing consultations
+9. **Responsible Authorities**:
+   - Police: licensing.unit@merseyside.pnn.police.uk (Rose Hill, Cazneau Street)
+   - Fire: ProtectionLicencesLiverpool@merseyfire.gov.uk (Bootle HQ)
+   - Safeguarding: Tracy.Moore@liverpool.gov.uk
 **Learnings**:
-- Same function has different names across councils (Licensing vs Public Protection)
-- Newspaper publication still required for most statutory notices despite digital transformation
-- Two-tier routing is critical for notice delivery accuracy
-- Building Control notices mostly direct service (not newspaper)
+- Liverpool uses LALPAC system (different from Idox used by some other councils)
+- All council departments based at Cunard Building, Water Street
+- Taxi licensing has stopped accepting email submissions - portal only
+- Street trading licences currently restricted - not granting new ones
+- Selective Licensing covers majority of city (16 wards, 80% of rentals)
+- Main phone: 0151 233 3000
+- Licensing: 0151 233 3015
+- Planning/Building Control: 0151 233 3021
+- Highways: 0151 233 3001
 
 ---
 
-## Iteration 34 - Research contact email patterns across councils
+## Iteration 4 - Research Leeds City Council
 **Status**: PASS
-**Agent Flow**: Research (WebSearch)
-**Files Changed**: PRD.md
-**What Happened**: Researched and documented comprehensive UK council contact email patterns:
-
-**Domain Patterns:**
-- Principal authorities use `@[councilname].gov.uk`
-- Parish/Town councils must use `-pc` or `-tc` suffix
-- Scotland and Wales follow same pattern
-- Some legacy domains exist but .gov.uk is best practice
-
-**Department Email Patterns Documented:**
-| Department | Primary Pattern | Alternatives |
-|------------|----------------|--------------|
-| Licensing | `licensing@` | `licensing.team@` |
-| Planning | `planning@` | `planning.registration@`, `cynllun.plan@` (Welsh) |
-| Highways | `highways@` | `streetworks@`, `trafficorders@`, `temporary.road.closures@` |
-| Environmental Health | `envhealth@` | `environmentalhealth@`, `environmental.health@` |
-| Building Control | `buildingcontrol@` | `building.control@`, `building.standards@` (Scotland) |
-| Electoral | `electoralservices@` | `elections@` |
-| Democratic | `democratic.services@` | `democracy@`, `committee@` |
-| Customer Services | `customerservices@` | `customer.services@`, `enquiries@` |
-
-**Verified Examples (20+ councils):**
-- Birmingham, Westminster, Greenwich, Cambridge, Manchester, Glasgow, Edinburgh, Cardiff, etc.
-
-**Implementation Recommendations:**
-- Primary pattern: `[department]@[council_domain].gov.uk`
-- Fallback with/without periods
-- Country-specific handling for Scotland/Wales
-- Data model suggestion with verification timestamps
-
-**Learnings:**
-- No central directory exists for council department emails
-- Staff turnover means specific contacts change frequently
-- Pattern matching enables ~80% accuracy for programmatic email generation
-- Always provide council website fallback URL
-- Welsh councils may accept both English and Welsh department prefixes
-
----
-
-## Iteration 35 - Research submission methods councils accept
-**Status**: PASS
-**Agent Flow**: Research (WebSearch, WebFetch)
-**Files Changed**: PRD.md
-**What Happened**: Researched and documented comprehensive UK council submission methods:
-
-**Submission Channels Documented:**
-1. **Online Portals**: Planning Portal, GOV.UK Forms, Council self-service (Granicus/govService, Abavus)
-2. **Email**: Universal fallback, PDF attachments, may require phone payment
-3. **Postal/Paper**: Still accepted but discouraged; 2025 admin surcharges emerging (Lambeth, Derby)
-4. **In-Person**: Declining, appointment-based, limited hours
-
-**Key Findings:**
-- No single national submission portal exists
-- Edinburgh is digital-only; Three Rivers is multi-channel equal treatment
-- Paper surcharges starting 2025 to push digital adoption
-- Email remains universal fallback across all councils
-- Statutory newspaper publication still legally required for most public notices
-- Public Notice Portal aggregates from newspapers, doesn't accept direct submissions
-
-**Platform Landscape:**
-- Granicus/govService: ~1/3 of UK councils
-- GOV.UK Pay: Free, PCI DSS compliant, recommended
-- GOV.UK One Login: Expanding to councils 2025-2027
-
-**Recommendations for Civic Notices:**
-- Phase 1: Email + Planning Portal integration
-- Phase 2: Newspaper partnerships for publication
-- Phase 3: Granicus API + council white-label
-
-**Learnings:**
-- Application submission (to council) and notice publication (newspaper) are separate workflows
-- Most councils prefer online but none require it exclusively except Edinburgh
-- TRO reform pending to digitalise publication requirements
-- Public Notice Portal is aggregation-only, not a submission platform
-
----
-
-## Council Landscape Research - COMPLETE
-
-**PRD**: Instance 2 - Council Landscape Research
-**Total Tasks**: 6
-**Completed**: 6 (100%)
-
-### All Research Tasks:
-1. ✅ UK council types and counts (382 total, 317 England, 32 Scotland, 22 Wales, 11 NI)
-2. ✅ Directory sources (ONS Geoportal, mySociety, LGA/COSLA/WLGA/NILGA)
-3. ✅ Postcode lookup (Postcodes.io recommended - free, no auth, comprehensive)
-4. ✅ Department structures (Licensing, Planning, Highways, etc. with two-tier routing)
-5. ✅ Contact email patterns (licensing@, planning@, highways@, etc.)
-6. ✅ Submission methods (Online, Email, Post, In-Person with digital maturity spectrum)
-
-### Commits Made:
-- `f551d89f` - docs: update progress.txt with iteration 34 summary
-- `5b937963` - research: complete council contact email patterns documentation
-- `368fcc0a` - docs: update progress.txt with iteration 33 summary
-- `9c0ee8bb` - research: complete council department structures documentation
-- `9626c32b` - docs: update progress.txt with iteration 32 summary
-- `46139801` - research: complete council submission methods documentation
-
-All 6 research tasks complete. PRD.md fully documented and ready for merge to main.
-
----
-
-## Session 8 - 2026-01-28 (Phase 1: Implement Postcode Lookup)
-
-### Initial State
-New tasks in PRD.md for Phase 1 implementation after research completion.
-
----
-
-## Iteration 36 - Update councilLookup.ts with postcodes.io API
-**Status**: PASS
-**Agent Flow**: Direct implementation
-**Files Changed**: src/lib/councilLookup.ts, PRD.md
-**What Happened**: Implemented postcodes.io API lookup:
-1. Added `lookupCouncilByPostcodeAsync()` - new async function that calls postcodes.io API
-2. Returns extended result with: districtCode, countyCode, countyName, isTwoTier flag
-3. Kept existing `lookupCouncilByPostcode()` synchronous for backward compatibility
-4. Added `findMatchingAuthorityPack()` helper to match API results to local authority packs
-5. Added TypeScript interfaces: `PostcodeApiResult`, `CouncilLookupResult`, `CouncilLookupResultExtended`
-
-**Key Design Decisions:**
-- Backward compatibility: Existing sync function unchanged, new async function added
-- Two-tier handling: `isTwoTier` boolean + `countyName`/`countyCode` for routing decisions
-- GSS codes: Exposes `districtCode` and `countyCode` for database matching
-
+**Task Type**: Research
+**Files Created**: councils/leeds.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched Leeds City Council via web search and website fetches:
+1. **Entertainment Licensing**: entertainment.licensing@leeds.gov.uk, phone 0113 378 5029
+   - Handles Licensing Act 2003 and Gambling Act 2005 premises
+   - Address: Civic Hall, Leeds LS1 1UR
+   - 10 working day notice display, 28 day objection period
+2. **Taxi/Private Hire**: taxiprivatehire.licensing@leeds.gov.uk, phone 0113 378 1570
+   - Drop-in 9am-12pm, appointments 1pm-3pm
+   - Staff training every third Tuesday until 10am
+3. **HMO Licensing**: hmo.team@leeds.gov.uk, phone 0113 535 1369
+   - Address: Knowsthorpe Gate, Leeds LS9 0NP
+4. **Selective Licensing**: ESWSelective.licensing@leeds.gov.uk, phone 0113 535 1369
+   - Scheme starts 9 Feb 2026 to 8 Feb 2031
+   - Covers parts of 6 wards (Armley, Beeston & Holbeck, etc.)
+   - Penalty: unlimited fine or civil penalty up to £30,000
+5. **Markets/Street Trading**: markets@leeds.gov.uk, phone 0113 378 1950
+   - Events: market.events@leeds.gov.uk
+   - City centre pitches have waiting list
+6. **Street Cafe**: streetcafes@leeds.gov.uk
+   - £500 annual fee, valid until 31 March
+7. **Planning**: phone 0113 222 4409
+   - Uses national Planning Portal (no direct email)
+   - Address: Merrion House, Leeds LS2 8BB
+8. **Building Control**: building.control@leeds.gov.uk, phone 0113 378 6006
+   - Address: 9th Floor Merrion House, Leeds LS2 8BB
+   - Experiencing delays due to staff shortages
+9. **Highways/TRO**: legal.development@leeds.gov.uk
+   - TraffWeb system at leeds.traffweb.app
+   - Public consultations available online
+10. **Environmental Health**: env.health@leeds.gov.uk, phone 0113 378 5959
+    - Address: Seacroft Ring Road Depot, Leeds LS14 1NZ
+    - Out of hours noise: 0113 376 0337 (5pm-3:30am)
+11. **Child Performance**: via web form
+12. **Animal Welfare**: via web form
+**Responsible Authorities**:
+- West Yorkshire Police: Ca.licensing@westyorkshire.pnn.police.uk, Elland Road
+- West Yorkshire Fire: fire.safety@westyorksfire.gov.uk, Birkenshaw
+- Safeguarding: LSCP.info@leeds.gov.uk
+- Trading Standards: West Yorkshire Joint Services
 **Learnings**:
-- When making a sync function async, provide both versions to avoid breaking existing consumers
-- Postcodes.io returns `admin_county: null` for unitary authorities - use this to detect two-tier
-- TypeScript interfaces help document the API response structure
+- Leeds separates Entertainment Licensing from Taxi/Private Hire (different emails/phones)
+- Selective Licensing scheme starting Feb 2026 is newer than Manchester's
+- Building control staff shortages pattern continues (like Birmingham, Manchester)
+- TraffWeb system for Traffic Orders is unique to Leeds
+- Environmental Health has direct email (unlike Manchester)
+- Council uses Merrion House for multiple departments (Building Control, Planning, Safeguarding)
+- Council address: Civic Hall, Calverley Street, Leeds LS1 1UR
+- Main phone: 0113 222 4444
 
 ---
 
-## Iteration 37 - Add proper error handling for postcode lookup failures
+## Iteration 6 - Research Camden Council
 **Status**: PASS
-**Agent Flow**: Direct implementation
-**Files Changed**: src/lib/councilLookup.ts, PRD.md
-**What Happened**: Added comprehensive error handling for postcode lookup:
-1. Created `PostcodeLookupError` class with typed error codes
-2. Added error codes: `INVALID_POSTCODE`, `POSTCODE_NOT_FOUND`, `POSTCODE_TERMINATED`, `NETWORK_ERROR`, `API_ERROR`
-3. Added `POSTCODE_ERROR_MESSAGES` mapping for user-friendly messages
-4. Added `isValidPostcodeFormat()` for basic validation before API call
-5. Updated `lookupCouncilByPostcodeAsync()` to throw `PostcodeLookupError` on failures
-6. Added `lookupCouncilByPostcodeSafe()` - returns null instead of throwing (for backward compat)
-7. Wrapped fetch in try/catch to handle network errors
-
-**Key Design Decisions:**
-- Throwing errors (not returning null) allows callers to distinguish error types
-- Provide `lookupCouncilByPostcodeSafe()` for callers who prefer null over try/catch
-- User-friendly messages exported for UI display
-- Validate format before API call to avoid unnecessary network requests
-
+**Task Type**: Research
+**Files Created**: councils/camden.json
+**Files Changed**: PRD.md (marked task complete, added research summary)
+**What Happened**: Researched London Borough of Camden via web search:
+1. **Licensing**: licensing@camden.gov.uk, phone 020 7974 4444
+   - Enforcement phone: 020 7974 6767
+   - Handles Licensing Act 2003 and Gambling Act 2005 applications
+   - Pre-application advice: Small £153, Medium £275.40, Large £581.40
+   - Statement of Licensing Policy 2025-2030 in effect until 30 January 2027
+   - Address: 5 Pancras Square, Kings Cross, London N1C 4AG
+2. **Street Trading**: marketsteam@camden.gov.uk, phone 020 7974 3864
+   - Applications email: marketapplications@camden.gov.uk
+   - 8 council-run markets and 48 trading sites
+   - Excludes private markets (e.g., Camden Lock)
+3. **Planning**: phone 020 7974 5613, uses national Planning Portal
+   - Development Management at Camden Town Hall Extension, Argyle Street WC1H 8EQ
+   - Hours: Mon-Wed & Fri 9am-5pm, Thu 9am-7pm
+4. **Building Control**: building.control@camden.gov.uk, phone 020 7974 2387
+   - Head of Building Control: Nasser Rad
+   - Handles dangerous structures
+5. **Highways**: No email, multiple phone numbers by function
+   - Parking: 020 7974 5958/5146/5141/5957/3053
+   - Road safety: 020 7974 2066/7899/2221
+   - Traffic proposals viewable online with public comment
+6. **Environmental Health**: noiseteam@camden.gov.uk for noise complaints
+   - Online reporting requires Camden Account registration
+7. **HMO Licensing**: hmolicensing@camden.gov.uk, phone 020 7974 5969
+   - Borough-wide additional scheme started Dec 2025 (runs to Dec 2030)
+   - Fee: £1,531 (£100 discount for accredited landlords)
+8. **Trading Standards**: Via Citizens Advice Consumer Service (0808 223 1133)
+   - Partnership model rather than direct council contact
 **Learnings**:
-- UK postcode regex: `/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i`
-- fetch() throws on network errors (offline, DNS, timeout) - must wrap in try/catch
-- postcodes.io returns 404 for invalid postcodes, but also returns 200 with status=404 in body
-- Provide both throwing and non-throwing variants for different caller preferences
+- Camden headquarters at 5 Pancras Square, Kings Cross (modern building)
+- Taxi/private hire licensing handled by Transport for London, not borough councils
+- Environmental Health prefers online forms but has noiseteam@ email for case updates
+- HMO licensing renewed December 2025 for another 5 years
+- Highways has no email - must use phone, categorised by function
+- Trading Standards routed through Citizens Advice (like some other councils)
+- Council address: 5 Pancras Square, Kings Cross, London N1C 4AG
+- Main phone: 020 7974 4444
 
 ---
-
-## Iteration 38 - Wire council lookup to return department contacts based on notice type
-**Status**: PASS
-**Agent Flow**: Explore → Plan → Coder → Tester (typecheck + lint)
-**Files Changed**: src/lib/councilLookup.ts, PRD.md
-**What Happened**: Added new function `lookupDepartmentContactAsync(postcode, noticeCategory)` that:
-1. Calls `lookupCouncilByPostcodeAsync(postcode)` to get council info
-2. Uses `getDepartmentForCategory(category)` to find responsible department
-3. Uses `getResponsibleCouncilTier(category, isTwoTier)` for two-tier routing
-4. Routes TRO/highways notices to county council in two-tier areas
-5. Generates department-specific email using domain derived from council name
-6. Returns `DepartmentContactInfo` with full contact details
-
-**New Exports:**
-- `DepartmentContactInfo` interface
-- `lookupDepartmentContactAsync(postcode: string, noticeCategory: NoticeCategoryId): Promise<DepartmentContactInfo>`
-
-**Key Design Decisions:**
-- Reuses existing functions from `@/data/departments` for consistency
-- Domain guessing: strips "City of", "Borough of", etc. prefixes and adds `.gov.uk`
-- Returns both district and county names for UI to display full context
-- Includes GSS code for database matching
-
-**Learnings:**
-- Two-tier routing critical for TRO notices - must go to county council
-- Council name normalization: "City of Edinburgh" → "edinburgh.gov.uk"
-- DepartmentType imported from `@/data/departments`, NoticeCategoryId from `@/next/publish/config/noticeTypes`
-- All existing infrastructure was in place - just needed the glue function
-
----
-

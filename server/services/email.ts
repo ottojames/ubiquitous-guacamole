@@ -1860,3 +1860,53 @@ The CivicNotices Team
     return { success: false, error: error.message };
   }
 }
+
+export interface CouncilNotificationEmailContent {
+  to: string | null;
+  subject: string;
+  bodyText: string;
+  bodyHtml: string;
+  councilName: string;
+  departmentName: string;
+}
+
+/**
+ * Send a notification email to a council department
+ */
+export async function sendCouncilNotification(
+  content: CouncilNotificationEmailContent
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!content.to) {
+      console.warn('[Email] No recipient email provided, skipping council notification');
+      return { success: false, error: 'No recipient email provided' };
+    }
+
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('REPLACE')) {
+      console.warn('[Email] Resend API key not configured, skipping council notification email');
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    console.log('[Email] Sending council notification to:', content.to, 'for', content.councilName, '-', content.departmentName);
+
+    const result = await getResendClient().emails.send({
+      from: 'CivicNotices <onboarding@resend.dev>',
+      to: [content.to],
+      subject: content.subject,
+      html: content.bodyHtml,
+      text: content.bodyText,
+    });
+
+    if (result.error) {
+      console.error('[Email] Resend API returned error:', result.error);
+      return { success: false, error: result.error.message || 'Failed to send email' };
+    }
+
+    console.log('[Email] Council notification sent successfully:', result);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('[Email] Failed to send council notification:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
