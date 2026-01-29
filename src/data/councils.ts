@@ -50,11 +50,14 @@ export type DepartmentType =
  * Council contact information for a specific department
  */
 export interface CouncilDepartment {
+  name?: string; // Display name for the department
   type: DepartmentType;
   email?: string; // Specific department email if known
   phone?: string;
   postalAddress?: string;
-  webPortal?: string; // Online submission URL
+  webPortal?: string;
+  webForm?: string | null;
+  notes?: string | null; // Online submission URL
 }
 
 /**
@@ -243,4 +246,47 @@ export function getResponsibleCouncil(
 
   // For all other notices (licensing, planning, etc.), return the district
   return match.districtCouncil || match.council;
+}
+
+// ============================================================================
+// Aliases for councilNotification.ts compatibility
+// ============================================================================
+
+export type Council = CouncilDefinition;
+
+export interface DepartmentEmail {
+  email: string;
+  departmentName: string;
+  contactName?: string;
+}
+
+/**
+ * Get a council by ID
+ */
+export function getCouncil(councilId: string): CouncilDefinition | null {
+  // This would normally query a database or council registry
+  // For now, return null as councils are looked up dynamically
+  return null;
+}
+
+/**
+ * Get the appropriate department for a notice type at a council
+ */
+export function getCouncilDepartment(
+  councilId: string,
+  noticeType: string
+): CouncilDepartment | null {
+  // Determine department based on notice type
+  const deptType = noticeType.startsWith('licensing') ? 'licensing' :
+                   noticeType.startsWith('planning') ? 'planning' :
+                   noticeType.startsWith('tro') ? 'highways' :
+                   'licensing';
+  
+  return {
+    type: deptType as DepartmentType,
+    email: `${DEFAULT_EMAIL_PREFIX[deptType as DepartmentType] || 'enquiries'}@council.gov.uk`,
+    phone: undefined,
+    webForm: undefined,
+    notes: undefined,
+  };
 }
