@@ -103,6 +103,11 @@ export function getCouncil(id: CouncilId | string): Council | undefined {
 }
 
 /**
+ * Get a council by its ID (alias for getCouncil)
+ */
+export const getCouncilById = getCouncil;
+
+/**
  * Get all councils as an array
  */
 export function listCouncils(): Council[] {
