@@ -132,7 +132,7 @@ export function findCouncilByName(name: string): Council | undefined {
 }
 
 /**
- * Get a specific department from a council
+ * Get a specific department from a council by department name
  */
 export function getDepartment(
   councilId: CouncilId | string,
@@ -143,4 +143,18 @@ export function getDepartment(
   return council.departments.find(
     (dept) => dept.name.toLowerCase() === departmentName.toLowerCase()
   );
+}
+
+/**
+ * Get the department that handles a specific notice type for a council
+ * Searches by notice type ID (e.g., 'premises-licence') rather than department name
+ */
+export function getCouncilDepartment(
+  councilId: CouncilId | string,
+  noticeType: string
+): CouncilDepartment | undefined {
+  const council = getCouncil(councilId);
+  if (!council) return undefined;
+
+  return council.departments.find((dept) => dept.handles.includes(noticeType));
 }

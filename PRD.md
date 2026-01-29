@@ -252,7 +252,7 @@ Create each council file in `/councils/` with this structure:
 
 - [x] Create `/src/data/councils/index.ts` that imports all council JSON files and exports them as a typed object.
 - [x] Create a `getCouncilById(id: string)` function that returns council data.
-- [ ] Create a `getCouncilDepartment(councilId: string, noticeType: string)` function that returns the right department contact.
+- [x] Create a `getCouncilDepartment(councilId: string, noticeType: string)` function that returns the right department contact.
 - [ ] Run `npm run typecheck` to verify all council data types.
 
 ## Phase 2: Notification System
